@@ -123,7 +123,8 @@ footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direct
         <div class="view"><svg id="bands" viewBox="0 0 320 240" role="img" aria-label="Share of mass and share of I by distance from the axis"></svg>
           <div class="legend" style="justify-content:center"><span><i style="background:var(--mass)"></i>share of mass</span><span><i style="background:var(--c1)"></i>share of I</span></div></div>
       </div>
-      <div class="slider"><label for="squash">Squash the body along its axis</label><input type="range" id="squash" min="0" max="1" step="0.01" value="0"><output id="squashv">0%</output></div>
+      <div class="slider"><label for="slide">Slide the mass along the axis</label><input type="range" id="slide" min="0" max="1" step="0.01" value="0"><output id="slidev">0%</output></div>
+      <div class="slider"><label for="pull">Pull the mass toward the axis</label><input type="range" id="pull" min="0" max="0.6" step="0.01" value="0"><output id="pullv">r⊥ × 1.00</output></div>
       <p class="cap key" id="cap1"></p>
     </div>
 
@@ -229,13 +230,13 @@ const BODIES=[
  {id:'ring', name:'Ring',            b:1,   bf:'1',   M:r=>r>=1?1:0, I:r=>r>=1?1:0,
   note:'Every bit of mass is at distance R, so I = MR², the largest possible for mass within radius R.'},
  {id:'pipe', name:'Thin pipe',       b:1,   bf:'1',   M:r=>r>=1?1:0, I:r=>r>=1?1:0,
-  note:'A ring stretched along the axis. Squash it and you get the ring back: every bit is still at R, so I = MR².'},
+  note:'A ring stretched along the axis: every bit is still at R, so I = MR², whatever its length.'},
  {id:'hsph', name:'Hollow sphere',   b:2/3, bf:'2/3', M:r=>1-Math.sqrt(Math.max(0,1-r*r)), I:r=>2/3-Math.sqrt(Math.max(0,1-r*r))*(r*r+2)/3,
   note:'The shell near the poles is close to the axis; around the equator it is at R. Seen down the axis the mass piles up toward the rim, so I = ⅔MR²: between a ring and a disc.'},
  {id:'disc', name:'Disc',            b:1/2, bf:'1/2', M:r=>r*r, I:r=>r**4/2,
   note:'Mass spread evenly over the face. Most of it sits in the outer bands (there is more area there), giving I = ½MR².'},
  {id:'cyl',  name:'Solid cylinder',  b:1/2, bf:'1/2', M:r=>r*r, I:r=>r**4/2,
-  note:'A disc stretched along the axis. Squash it: the view down the axis does not change, so I = ½MR², whatever its length.'},
+  note:'A disc stretched along the axis: the view down the axis is the same as the disc\'s, so I = ½MR², whatever its length.'},
  {id:'ssph', name:'Solid sphere',    b:2/5, bf:'2/5', M:r=>1-Math.pow(Math.max(0,1-r*r),1.5),
   I:r=>{const u=Math.max(0,1-r*r);return 1.5*((2/3-2/5)-(2/3*Math.pow(u,1.5)-2/5*Math.pow(u,2.5)));},
   note:'Much of the mass is near the axis (the sphere is thickest there), so I = ⅖MR², the smallest of the round bodies.'},
@@ -321,7 +322,7 @@ function makeDrag(svg,onPoint){
 }
 
 /* =================== 1 · BODY VIEWS =================== */
-let body='disc', squash=0;
+let body='disc', slide=0, pull=0;
 {const s=load('moi-body'); if(BODIES.some(b=>b.id===s)) body=s;}
 const PTS={};
 function samplePts(id){
@@ -337,28 +338,33 @@ function samplePts(id){
     else if(id==='hsph'){const y=2*u-1,s=Math.sqrt(1-y*y);p=[s*Math.cos(a),y,s*Math.sin(a)];}
     else if(id==='ssph'){const r=Math.cbrt(u),y=2*v-1,s=Math.sqrt(1-y*y);p=[r*s*Math.cos(a),r*y,r*s*Math.sin(a)];}
     else p=[2*u-1,0,0];
+    p.push(2*R()-1);
     out.push(p);
   }
   return PTS[id]=out;
 }
 $('bchips').innerHTML=BODIES.map(b=>`<button class="chip" data-b="${b.id}">${b.name}</button>`).join('');
 $('bchips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c){body=c.dataset.b;store('moi-body',body);render1();}});
-$('squash').addEventListener('input',e=>{squash=+e.target.value;render1();});
+$('slide').addEventListener('input',e=>{slide=+e.target.value;render1();});
+$('pull').addEventListener('input',e=>{pull=+e.target.value;render1();});
 
 function render1(){
-  const B=BODIES.find(b=>b.id===body), P=samplePts(body), S=86, c=120, t=0.34, ct=Math.cos(t), st=Math.sin(t), k=Math.sqrt(B.b);
+  const B=BODIES.find(b=>b.id===body), P=samplePts(body), S=86, c=120, t=0.34, ct=Math.cos(t), st=Math.sin(t);
+  /* slide: each bit moves parallel to the axis (r⊥ fixed). pull: each r⊥ is scaled by sq, so I scales by sq². */
+  const sq=1-pull, Ib=B.b*sq*sq, k=Math.sqrt(Ib);
   document.querySelectorAll('#bchips .chip').forEach(x=>x.setAttribute('aria-pressed',x.dataset.b===body));
-  $('squashv').textContent=Math.round(squash*100)+'%';
+  $('slidev').textContent=Math.round(slide*100)+'%';
+  $('pullv').textContent='r⊥ × '+sq.toFixed(2);
   /* side view: back dots, axis, front dots */
-  const dot=(p,front)=>`<circle cx="${(c+S*p[0]).toFixed(1)}" cy="${(c-S*p[1]*(1-squash)*ct+S*p[2]*st).toFixed(1)}" r="1.9" fill="var(--ink)" opacity="${front?0.75:0.28}"/>`;
+  const dot=(p,front)=>`<circle cx="${(c+S*sq*p[0]).toFixed(1)}" cy="${(c-S*(p[1]*(1-slide)+0.85*p[3]*slide)*ct+S*sq*p[2]*st).toFixed(1)}" r="1.9" fill="var(--ink)" opacity="${front?0.75:0.28}"/>`;
   let g='', fr='';
   for(const p of P){ if(p[2]<0) g+=dot(p,false); else fr+=dot(p,true); }
   g+=`<line x1="${c}" x2="${c}" y1="6" y2="234" stroke="var(--axis)" stroke-width="1.6" stroke-dasharray="7 5"/>`+fr;
   g+=`<text x="${c+6}" y="18" font-size="11" fill="var(--axis)">axis</text>`;
   $('side').innerHTML=g;
-  /* top view (unchanged by squashing) */
+  /* top view: unchanged by sliding, shrinks when pulled in (outline = original radius R) */
   let h=`<circle cx="${c}" cy="${c}" r="${S}" fill="none" stroke="var(--line)" stroke-width="1"/>`;
-  for(const p of P) h+=`<circle cx="${(c+S*p[0]).toFixed(1)}" cy="${(c+S*p[2]).toFixed(1)}" r="1.9" fill="var(--ink)" opacity="0.5"/>`;
+  for(const p of P) h+=`<circle cx="${(c+S*sq*p[0]).toFixed(1)}" cy="${(c+S*sq*p[2]).toFixed(1)}" r="1.9" fill="var(--ink)" opacity="0.5"/>`;
   h+=`<circle cx="${c}" cy="${c}" r="${(S*k).toFixed(1)}" fill="none" stroke="var(--c1)" stroke-width="2" stroke-dasharray="5 4"/>`;
   h+=`<text x="${c+S*k*0.71+4}" y="${c-S*k*0.71-4}" font-size="12" font-weight="600" fill="var(--c1)">k</text>`;
   h+=axisDot(c,c,6);
@@ -366,7 +372,8 @@ function render1(){
   $('top').innerHTML=h;
   /* bands: share of mass vs share of I, by distance from the axis */
   const L=44,Rr=308,T=14,Bm=192, bands=[];
-  for(let i=0;i<10;i++){const lo=i/10,hi=(i+1)/10;bands.push({m:Math.max(0,B.M(hi)-B.M(lo)),i:Math.max(0,(B.I(hi)-B.I(lo))/B.b)});}
+  const sc=r=>Math.min(1,r/sq+1e-9);
+  for(let i=0;i<10;i++){const lo=sc(i/10),hi=sc((i+1)/10);bands.push({m:Math.max(0,B.M(hi)-B.M(lo)),i:Math.max(0,(B.I(hi)-B.I(lo))/B.b)});}
   const mx=Math.max(...bands.map(b=>Math.max(b.m,b.i))), top=Math.min(1,Math.ceil(mx*10-1e-9)/10);
   const X=r=>L+r*(Rr-L), Y=v=>Bm-v/top*(Bm-T), bw=(Rr-L)/10;
   let q='';
@@ -382,9 +389,12 @@ function render1(){
   q+=`<text x="${(L+Rr)/2}" y="${Bm+32}" text-anchor="middle" font-size="12" fill="var(--ink)">distance from the axis, r⊥</text>`;
   $('bands').innerHTML=q;
   /* caption + numbers */
-  $('cap1').innerHTML=B.note+(squash>0.02?` <b>Squashed ${Math.round(squash*100)}%:</b> no bit of mass moved toward or away from the axis, so the middle view and I are unchanged (the “stretch rule”).`:'');
-  $('ibig').textContent=`I = ${B.bf} MR²`;
-  $('ikv').innerHTML=`<dt>I / MR²</dt><dd>${f3(B.b)}</dd><dt>radius of gyration k</dt><dd>√(I/M) = ${f3(k)} R</dd>`;
+  let cap=B.note;
+  if(slide>0.02) cap+=` <b>Slid along the axis:</b> the side view changed shape, but no bit got closer to or further from the axis, so the middle view, the bars and I are all unchanged. This is why a disc and a solid cylinder share ½MR², and a ring and a pipe share MR².`;
+  if(pull>0.01) cap+=` <b>Pulled in:</b> every bit is now ${sq.toFixed(2)}× as far from the axis, so every r⊥² is ${(sq*sq).toFixed(2)}× as big and I drops to ${(sq*sq).toFixed(2)}× its value. Same mass, smaller I: distance from the axis is the only thing that counts.`;
+  $('cap1').innerHTML=cap;
+  $('ibig').textContent=pull>0.01?`I = ${B.bf} × ${sq.toFixed(2)}² MR² = ${f3(Ib)} MR²`:`I = ${B.bf} MR²`;
+  $('ikv').innerHTML=`<dt>I / MR²</dt><dd>${f3(Ib)}</dd><dt>radius of gyration k</dt><dd>√(I/M) = ${f3(k)} R</dd>`;
   $('ladder').querySelectorAll('.lad').forEach(x=>x.setAttribute('aria-pressed',x.dataset.b===body));
 }
 $('ladder').innerHTML=BODIES.map(b=>`<button class="lad" data-b="${b.id}"><span>${b.name}</span><span><span class="bar" style="display:block;width:${b.b*100}%"></span></span><span class="v">${b.bf}</span></button>`).join('');
