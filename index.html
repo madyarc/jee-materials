@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JEE Materials</title>
+<meta name="description" content="Interactive tools for building intuition across the JEE syllabus: physics, chemistry and maths.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} [hidden]{display:none!important}
+/* Layout: one column — title, one-line idea, list of modules as rows, planned list, footer */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8; --accent:#2c56cc;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root{--bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c; --accent:#7d9dff; color-scheme:dark}}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 56px}
+.wrap{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(30px,5vw,46px);line-height:1.05;margin:0;letter-spacing:-.015em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0}
+p{margin:0}
+.lede{color:var(--muted);max-width:62ch;margin-top:10px}
+.mods{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.mod{display:grid;grid-template-columns:52px minmax(0,1fr);gap:14px;padding:18px 0;border-bottom:1px solid var(--line);text-decoration:none;color:inherit}
+.mod.soon{cursor:default}
+.mod.soon h2{color:var(--muted)}
+.mod:not(.soon):hover h2,.mod:not(.soon):focus-visible h2{color:var(--accent)}
+.mod:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.num{font:500 13px var(--f-mono);color:var(--muted);padding-top:4px}
+.mod p{color:var(--muted);font-size:15px;margin-top:4px}
+.tags{font:500 12px var(--f-mono);color:var(--muted);margin-top:6px}
+.planned{font-size:15px;color:var(--muted)}
+.planned ul{margin:6px 0 0;padding-left:18px}
+.back a{font-size:14px;color:var(--muted);text-decoration:none}
+.back a:hover{color:var(--accent)}
+footer{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>JEE Materials</h1>
+    <p class="lede">Interactive tools for seeing why things happen, not just memorising them. Every number is checked against a published source, and every rule of thumb is labelled as one.</p>
+  </header>
+
+  <nav class="mods" aria-label="Subjects">
+    <a class="mod" href="chemistry/index.html">
+      <span class="num">CH</span>
+      <div><h2>Chemistry</h2>
+      <p>Atom-size periodic table, electronic effects ladder, mechanism player.</p>
+      <p class="tags">3 modules · inorganic · organic</p></div>
+    </a>
+    <div class="mod soon">
+      <span class="num">PH</span>
+      <div><h2>Physics</h2>
+      <p>Planned.</p></div>
+    </div>
+    <div class="mod soon">
+      <span class="num">MA</span>
+      <div><h2>Mathematics</h2>
+      <p>Planned.</p></div>
+    </div>
+  </nav>
+
+  <footer>Built for CBSE + JEE preparation. Data sources are listed on each page and in each subject's DATA-SOURCES.md.</footer>
+</div>
+</body>
+</html>

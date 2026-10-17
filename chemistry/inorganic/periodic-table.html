@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Atom-Size Periodic Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: one working column — controls, size-scaled table, then detail/compare and the trend strip side by side on wide screens */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --seq-lo:#e6ebf6; --seq-hi:#173a9c;
+  --s-block:#d9952c; --p-block:#1f8f87; --d-block:#7a52c7; --flag:#cf3f33; --ok:#2d8a4e;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --seq-lo:#1d2431; --seq-hi:#93b2ff;
+  --s-block:#e8ab4a; --p-block:#3cb8ad; --d-block:#a585f0; --flag:#ff7b6f; --ok:#5cc983; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --seq-lo:#1d2431; --seq-hi:#93b2ff;
+  --s-block:#e8ab4a; --p-block:#3cb8ad; --d-block:#a585f0; --flag:#ff7b6f; --ok:#5cc983; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-family:var(--f-display);font-weight:600;font-size:19px;margin:0 0 8px;text-wrap:balance}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.model{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.model>div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:0}
+.model b{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.eq{font-family:var(--f-mono);font-size:14px}
+.tag{font-size:11px;font-family:var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;margin-left:4px;white-space:nowrap}
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{font:500 13px var(--f-body);color:var(--ink);background:transparent;border:0;padding:8px 12px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.seg button:focus-visible,.cell:focus-visible,.btn:focus-visible,select:focus-visible,label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+label.chk{display:flex;gap:6px;align-items:center;font-size:13px;cursor:pointer}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer}
+.tablebox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;overflow-x:auto}
+.ptable{display:grid;grid-template-columns:22px repeat(18,minmax(40px,1fr));grid-auto-rows:auto;gap:3px;min-width:800px}
+.gh,.ph{font:500 11px var(--f-mono);color:var(--muted);text-align:center;align-self:center}
+.cell{all:unset;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:1px;
+  height:72px;border-radius:6px;cursor:pointer;position:relative;padding-bottom:3px}
+.cell:hover{background:color-mix(in oklab,var(--line) 55%,transparent)}
+.cell .dotbox{flex:1;display:flex;align-items:center;justify-content:center;width:100%}
+.cell .dot{border-radius:50%;transition:background .2s}
+.cell .sym{font:600 12px var(--f-body);line-height:1}
+.cell .val{font:400 10px var(--f-mono);color:var(--muted);line-height:1.1;font-variant-numeric:tabular-nums}
+.cell.flag .dot{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--flag)}
+.cell.selA{background:color-mix(in oklab,var(--accent) 16%,transparent)}
+.cell.selB{background:color-mix(in oklab,var(--flag) 14%,transparent)}
+.cell .badge{position:absolute;top:2px;right:3px;font:600 9px var(--f-mono)}
+.selA .badge{color:var(--accent)} .selB .badge{color:var(--flag)}
+.note{grid-column:2 / span 18;font-size:12px;color:var(--muted);padding-top:6px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:12px;color:var(--muted);margin-top:10px}
+.ramp{width:160px;height:10px;border-radius:5px;background:linear-gradient(90deg,rgb(0,0,128),rgb(0,0,255) 12.5%,rgb(0,255,255) 37.5%,rgb(255,255,0) 62.5%,rgb(255,0,0) 87.5%,rgb(128,0,0));border:1px solid var(--line)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:16px}
+@media (max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
+.why{font-size:13.5px;border-left:3px solid var(--flag);padding:4px 0 4px 10px;margin-top:8px}
+.why.okc{border-color:var(--ok)}
+.muted{color:var(--muted);font-size:13px}
+table.cmp{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px}
+table.cmp th,table.cmp td{text-align:left;padding:6px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+table.cmp th{font-weight:500;color:var(--muted);font-size:12px}
+table.cmp td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{font:600 11px var(--f-mono);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.pill.ok{color:var(--ok);border:1px solid var(--ok)} .pill.bad{color:var(--flag);border:1px solid var(--flag)} .pill.na{color:var(--muted);border:1px solid var(--line)}
+.stripbox{overflow-x:auto}
+select{font:500 13px var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.exlist{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
+.ex{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13.5px;min-width:0}
+.ex b{font-family:var(--f-mono);font-weight:500}
+.ex .k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--flag);display:block;margin-bottom:2px}
+footer{font-size:12px;color:var(--muted);max-width:90ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Chemistry</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Atom-Size Periodic Table</h1>
+    <p class="lede">Each circle's area is proportional to the square of the atom's covalent radius, so you see size directly. Switch the colour overlay to a property and watch it track size. Then turn on the exception spotlight to see exactly where size stops predicting the answer, and why.</p>
+  </header>
+
+  <section class="model" aria-label="The model">
+    <div><b>Core picture</b><span class="eq">grip on outer e⁻ ∝ Z<sub>eff</sub> / r²</span><span class="tag">simplified model</span><p class="muted" style="margin-top:4px">Coulomb-style picture. Good for trends, not a quantitative law.</p></div>
+    <div><b>Smaller atom, higher Z<sub>eff</sub> gives</b><p>IE ↑ (harder to remove e⁻)<br>Δ<sub>eg</sub>H more negative (gains e⁻ more readily)<br>EN ↑ (pulls bonding e⁻ harder)</p></div>
+    <div><b>Where size fails</b><p>1. Subshell energy & stability (s vs p, half-filled, filled)<br>2. e⁻–e⁻ repulsion in very compact shells (2p)<br>3. Poor shielding by d and f electrons</p></div>
+  </section>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Overlay" id="propSeg"></div>
+    <label class="chk"><input type="checkbox" id="spot"> Exception spotlight</label>
+    <label class="chk"><input type="checkbox" id="vals" checked> Show values</label>
+    <button class="btn" id="clr">Clear selection</button>
+  </div>
+
+  <div class="tablebox">
+    <div class="ptable" id="pt"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="grid2">
+    <section class="panel" id="detail"></section>
+    <section class="panel">
+      <h2>Trend strip</h2>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:6px">
+        <select id="stripSel" aria-label="Choose period or group"></select>
+        <span class="muted">Bars: covalent radius. Line: current property. <span style="color:var(--flag)">Red segments</span> are where the property moves against the size prediction.</span>
+      </div>
+      <div class="stripbox"><svg id="strip" viewBox="0 0 640 250" style="width:100%;min-width:520px;height:auto" role="img" aria-label="Trend strip chart"></svg></div>
+    </section>
+  </div>
+
+  <section>
+    <h2 id="exHead">Exceptions</h2>
+    <div class="exlist" id="exlist"></div>
+  </section>
+
+  <footer>
+    Data: covalent radii from Cordero et al., Dalton Trans. 2008 (Mn, Fe, Co use low-spin values). First ionization enthalpies from NIST. Δ<sub>eg</sub>H = −(electron affinity), electron affinities from the CRC Handbook; "&gt; 0" means the anion is not stable (no bound state), the Po value (marked ≈) is calculated, not measured. Δ<sub>eg</sub>H is not shown for d-block elements (not needed for JEE and many values are poorly known). Electronegativity: Pauling scale (CRC); Pb value is for Pb(IV). Z<sub>eff</sub> is computed live from Slater's rules for the outermost electron, which is a crude approximation. Lanthanides (58–71) and period 7 are omitted.
+    Noble-gas covalent radii are not comparable to the van der Waals radii in NCERT tables, which is why NCERT shows noble gases as the largest in their period.
+  </footer>
+</div>
+
+<script>
+const RAW = `1 H Hydrogen 1 1 31 1312.0 72.8 2.20
+2 He Helium 18 1 28 2372.3 u -
+3 Li Lithium 1 2 128 520.2 59.6 0.98
+4 Be Beryllium 2 2 96 899.5 u 1.57
+5 B Boron 13 2 84 800.6 26.7 2.04
+6 C Carbon 14 2 76 1086.5 121.8 2.55
+7 N Nitrogen 15 2 71 1402.3 u 3.04
+8 O Oxygen 16 2 66 1313.9 141.0 3.44
+9 F Fluorine 17 2 57 1681.0 328.0 3.98
+10 Ne Neon 18 2 58 2080.7 u -
+11 Na Sodium 1 3 166 495.8 52.8 0.93
+12 Mg Magnesium 2 3 141 737.7 u 1.31
+13 Al Aluminium 13 3 121 577.5 41.8 1.61
+14 Si Silicon 14 3 111 786.5 134.1 1.90
+15 P Phosphorus 15 3 107 1011.8 72.0 2.19
+16 S Sulfur 16 3 105 999.6 200.4 2.58
+17 Cl Chlorine 17 3 102 1251.2 348.6 3.16
+18 Ar Argon 18 3 106 1520.6 u -
+19 K Potassium 1 4 203 418.8 48.4 0.82
+20 Ca Calcium 2 4 176 589.8 2.4 1.00
+21 Sc Scandium 3 4 170 633.1 - 1.36
+22 Ti Titanium 4 4 160 658.8 - 1.54
+23 V Vanadium 5 4 153 650.9 - 1.63
+24 Cr Chromium 6 4 139 652.9 - 1.66
+25 Mn Manganese 7 4 139 717.3 - 1.55
+26 Fe Iron 8 4 132 762.5 - 1.83
+27 Co Cobalt 9 4 126 760.4 - 1.88
+28 Ni Nickel 10 4 124 737.1 - 1.91
+29 Cu Copper 11 4 132 745.5 - 1.90
+30 Zn Zinc 12 4 122 906.4 - 1.65
+31 Ga Gallium 13 4 122 578.8 29.1 1.81
+32 Ge Germanium 14 4 120 762.2 118.9 2.01
+33 As Arsenic 15 4 119 947.0 77.6 2.18
+34 Se Selenium 16 4 120 941.0 195.0 2.55
+35 Br Bromine 17 4 120 1139.9 324.5 2.96
+36 Kr Krypton 18 4 116 1350.8 u 3.00
+37 Rb Rubidium 1 5 220 403.0 46.9 0.82
+38 Sr Strontium 2 5 195 549.5 5.0 0.95
+39 Y Yttrium 3 5 190 600.0 - 1.22
+40 Zr Zirconium 4 5 175 640.1 - 1.33
+41 Nb Niobium 5 5 164 652.1 - 1.6
+42 Mo Molybdenum 6 5 154 684.3 - 2.16
+43 Tc Technetium 7 5 147 686.9 - 1.9
+44 Ru Ruthenium 8 5 146 710.2 - 2.2
+45 Rh Rhodium 9 5 142 719.7 - 2.28
+46 Pd Palladium 10 5 139 804.4 - 2.20
+47 Ag Silver 11 5 145 731.0 - 1.93
+48 Cd Cadmium 12 5 144 867.8 - 1.69
+49 In Indium 13 5 142 558.3 37.0 1.78
+50 Sn Tin 14 5 139 708.6 107.3 1.96
+51 Sb Antimony 15 5 139 834 101.1 2.05
+52 Te Tellurium 16 5 138 869.3 190.2 2.1
+53 I Iodine 17 5 139 1008.4 295.2 2.66
+54 Xe Xenon 18 5 140 1170.4 u 2.6
+55 Cs Caesium 1 6 244 375.7 45.5 0.79
+56 Ba Barium 2 6 215 502.9 14.0 0.89
+57 La Lanthanum 3 6 207 538.1 - 1.10
+72 Hf Hafnium 4 6 175 658.5 - 1.3
+73 Ta Tantalum 5 6 170 761 - 1.5
+74 W Tungsten 6 6 162 770 - 2.36
+75 Re Rhenium 7 6 151 760 - 1.9
+76 Os Osmium 8 6 144 840 - 2.2
+77 Ir Iridium 9 6 141 880 - 2.20
+78 Pt Platinum 10 6 136 870 - 2.28
+79 Au Gold 11 6 136 890.1 - 2.54
+80 Hg Mercury 12 6 132 1007.1 - 2.00
+81 Tl Thallium 13 6 145 589.4 30.9 1.62
+82 Pb Lead 14 6 146 715.6 34.4 2.33
+83 Bi Bismuth 15 6 148 703 90.9 2.02
+84 Po Polonium 16 6 140 812.1 ~136 2.0
+85 At Astatine 17 6 150 899.0 233 2.2
+86 Rn Radon 18 6 150 1037 u -`;
+
+const EL = RAW.split('\n').map(l=>{
+  const [z,sym,name,g,p,r,ie,ea,en]=l.trim().split(/\s+/);
+  const e={z:+z,sym,name,g:+g,p:+p,r:+r,ie:+ie,en:en==='-'?null:+en};
+  e.eaUnbound = ea==='u'; e.eaNone = ea==='-'; e.eaApprox = ea.startsWith('~');
+  e.ea = (e.eaUnbound||e.eaNone)?null:+ea.replace('~','');
+  e.block = (e.sym==='He'||e.g<=2)?'s':(e.g>=13?'p':'d');
+  return e;
+});
+const BY = Object.fromEntries(EL.map(e=>[e.sym,e]));
+
+/* ---------- electron configuration + Slater ---------- */
+const ORDER=['1s','2s','2p','3s','3p','4s','3d','4p','5s','4d','5p','6s','4f','5d','6p'];
+const CAP={s:2,p:6,d:10,f:14};
+const EXC={24:{'3d':5,'4s':1},29:{'3d':10,'4s':1},41:{'4d':4,'5s':1},42:{'4d':5,'5s':1},44:{'4d':7,'5s':1},
+  45:{'4d':8,'5s':1},46:{'4d':10,'5s':0},47:{'4d':10,'5s':1},57:{'4f':0,'5d':1},78:{'5d':9,'6s':1},79:{'5d':10,'6s':1}};
+function occ(z){
+  const o={};let left=z;
+  for(const s of ORDER){if(left<=0)break;const c=Math.min(CAP[s[1]],left);o[s]=c;left-=c;}
+  if(EXC[z]) Object.assign(o,EXC[z]);
+  return o;
+}
+const LORD={s:0,p:1,d:2,f:3};
+function sortSub(a,b){return (+a[0]-+b[0])||(LORD[a[1]]-LORD[b[1]]);}
+function sup(n){return String(n).split('').map(d=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[d]).join('');}
+function config(z){
+  const cores=[[86,'Rn'],[54,'Xe'],[36,'Kr'],[18,'Ar'],[10,'Ne'],[2,'He']];
+  const o=occ(z); let core=null;
+  for(const [cz,cs] of cores){ if(z>cz){core=[cz,cs];break;} }
+  const co=core?occ(core[0]):{};
+  const parts=Object.keys(o).filter(s=>o[s]-(co[s]||0)>0).sort(sortSub).map(s=>s+sup(o[s]-(co[s]||0)));
+  if(z===46) parts.push('5s⁰');
+  return (core?'['+core[1]+'] ':'')+parts.join(' ');
+}
+const SGROUPS=[['1s'],['2s','2p'],['3s','3p'],['3d'],['4s','4p'],['4d'],['4f'],['5s','5p'],['5d'],['6s','6p']];
+function slater(z){
+  const o=occ(z); const cnt=g=>g.reduce((a,s)=>a+(o[s]||0),0);
+  let ti=-1; SGROUPS.forEach((g,i)=>{if(cnt(g)>0)ti=i;});
+  const tg=SGROUPS[ti], n=+tg[0][0], sp=('sp'.includes(tg[0][1]));
+  let S=(cnt(tg)-1)*(tg[0]==='1s'?0.30:0.35);
+  for(let i=0;i<ti;i++){const g=SGROUPS[i],c=cnt(g),nj=+g[0][0];
+    if(!c)continue;
+    if(sp){S+= nj===n-1? 0.85*c : (nj<n-1? 1.0*c : 0.35*c);} else S+=1.0*c;}
+  return {zeff:+(z-S).toFixed(2), on:tg.join('/')};
+}
+EL.forEach(e=>{const s=slater(e.z);e.zeff=s.zeff;e.zon=s.on;e.cfg=config(e.z);});
+
+/* ---------- properties ---------- */
+const PROPS={
+  r:{label:'Size only',short:'r',unit:'pm',get:e=>e.r,fmt:e=>e.r+'',axis:'covalent radius (pm)'},
+  ie:{label:'Ionization enthalpy',short:'IE₁',unit:'kJ/mol',get:e=>e.ie,fmt:e=>Math.round(e.ie)+'',axis:'IE₁ (kJ/mol)'},
+  ege:{label:'Electron gain enthalpy',short:'ΔegH',unit:'kJ/mol',get:e=>e.eaNone?null:(e.eaUnbound?0:e.ea),
+       fmt:e=>e.eaNone?'—':(e.eaUnbound?'> 0':(e.eaApprox?'≈':'')+'−'+Math.round(e.ea)),axis:'energy released on gaining e⁻ = −ΔegH (kJ/mol)'},
+  en:{label:'Electronegativity',short:'EN',unit:'Pauling',get:e=>e.en,fmt:e=>e.en==null?'—':e.en.toFixed(2),axis:'EN (Pauling)'},
+  zeff:{label:'Z_eff (Slater)',short:'Z_eff',unit:'',get:e=>e.zeff,fmt:e=>e.zeff.toFixed(2),axis:'Z_eff on outermost e⁻ (Slater)'}
+};
+
+/* ---------- exceptions ---------- */
+const EX=[
+ {p:'ie',a:'Be',b:'B',why:'B loses a 2p electron. 2p is higher in energy than 2s and is partly shielded by the 2s² pair, so it comes off more easily even though B is smaller.'},
+ {p:'ie',a:'Mg',b:'Al',why:'Al loses a 3p electron, which is higher in energy than 3s and shielded by the 3s² pair. Same story as Be → B.'},
+ {p:'ie',a:'N',b:'O',why:'O’s fourth 2p electron has to pair up in an orbital that already holds one. The pairing repulsion makes it easier to remove. N’s 2p³ is half-filled with no pairing.'},
+ {p:'ie',a:'P',b:'S',why:'S’s fourth 3p electron is paired, so pairing repulsion lowers IE. Same story as N → O.'},
+ {p:'ie',a:'As',b:'Se',why:'Se’s fourth 4p electron is paired. Same story as N → O, smaller gap because 4p is more diffuse.'},
+ {p:'ie',a:'Al',b:'Ga',why:'Ga comes right after the ten 3d electrons. d electrons shield the nucleus poorly, so Z_eff jumps (Slater: Al 3.50, Ga 5.00) and cancels the effect of the extra shell.'},
+ {p:'ie',a:'In',b:'Tl',why:'Tl sits after 4f¹⁴ and 5d¹⁰, which shield poorly (lanthanide contraction). Relativistic stabilisation of the 6s electrons adds to it.'},
+ {p:'ie',a:'Sn',b:'Pb',why:'Same cause as In → Tl: poor 4f/5d shielding plus relativistic 6s stabilisation.'},
+ {p:'ie',a:'Ag',b:'Au',why:'Lanthanide contraction plus strong relativistic contraction of Au’s 6s orbital hold the outer electron tighter.'},
+ {p:'r',a:'Al',b:'Ga',why:'Expected: Ga clearly bigger (one extra shell). Actual: almost equal. Poorly shielding 3d¹⁰ raises Z_eff and pulls the shell in (d-block contraction).'},
+ {p:'r',a:'Zr',b:'Hf',why:'Expected: Hf bigger. Actual: equal (175 pm). The 14 4f electrons shield poorly and contract Hf (lanthanide contraction). This is why Zr and Hf are so hard to separate chemically.'},
+ {p:'ege',a:'F',b:'Cl',why:'F’s 2p shell is very compact. The incoming electron is crowded by the seven already there, and that repulsion outweighs the size advantage. Cl’s larger 3p shell spreads the charge out.'},
+ {p:'ege',a:'O',b:'S',why:'Same as F vs Cl: compact 2p in O means strong repulsion for the incoming electron.'},
+ {p:'ege',a:'C',b:'N',why:'N has a half-filled 2p³. The added electron must pair, and the anion is not stable (ΔegH ≈ 0 or positive). C (2p²) adds into an empty orbital.'},
+ {p:'ege',a:'Si',b:'P',why:'P has a half-filled 3p³, so the added electron must pair. Si (3p²) adds into an empty orbital.'},
+ {p:'ege',a:'Li',b:'Be',why:'Be has a full 2s². The added electron must go into the higher-energy 2p, so the anion is not stable.'},
+ {p:'ege',a:'Na',b:'Mg',why:'Mg has a full 3s², so the added electron must enter 3p. Same story as Li → Be.'},
+ {p:'en',a:'Al',b:'Ga',why:'Ga’s higher Z_eff from poor 3d shielding raises its EN above Al, even though Ga is a period lower.'}
+];
+
+/* ---------- state ---------- */
+let prop='r', spot=false, showVals=true, A=null, B=null, strip='p2';
+try{const s=JSON.parse(localStorage.getItem('ast')||'{}'); if(PROPS[s.prop])prop=s.prop; if(s.strip)strip=s.strip;}catch(e){}
+function save(){try{localStorage.setItem('ast',JSON.stringify({prop,strip}));}catch(e){}}
+
+const $=id=>document.getElementById(id);
+
+/* ---------- controls ---------- */
+$('propSeg').innerHTML=Object.entries(PROPS).map(([k,v])=>`<button data-p="${k}" aria-pressed="${k===prop}">${v.label}</button>`).join('');
+$('propSeg').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;prop=b.dataset.p;save();renderAll();});
+$('spot').addEventListener('change',e=>{spot=e.target.checked;renderAll();});
+$('vals').addEventListener('change',e=>{showVals=e.target.checked;renderAll();});
+$('clr').addEventListener('click',()=>{A=null;B=null;renderAll();});
+const stripOpts=[['p2','Period 2'],['p3','Period 3'],['p4','Period 4'],['p5','Period 5'],['p6','Period 6'],
+  ['g1','Group 1'],['g2','Group 2'],['g13','Group 13'],['g14','Group 14'],['g15','Group 15'],['g16','Group 16'],['g17','Group 17'],['g18','Group 18'],
+  ['g11','Group 11 (Cu, Ag, Au)'],['g4','Group 4 (Ti, Zr, Hf)']];
+$('stripSel').innerHTML=stripOpts.map(([k,v])=>`<option value="${k}"${k===strip?' selected':''}>${v}</option>`).join('');
+$('stripSel').addEventListener('change',e=>{strip=e.target.value;save();renderStrip();});
+
+/* ---------- table ---------- */
+function range(){const vals=EL.map(PROPS[prop].get).filter(v=>v!=null);return [Math.min(...vals),Math.max(...vals)];}
+const RMAX=244;
+function color(e){
+  if(prop==='r') return `var(--${e.block}-block)`;
+  const v=PROPS[prop].get(e); if(v==null) return 'transparent';
+  const [lo,hi]=range(); return jet((v-lo)/(hi-lo));
+}
+function jet(t){
+  const c=x=>Math.round(255*Math.max(0,Math.min(1,x)));
+  return `rgb(${c(1.5-Math.abs(4*t-3))},${c(1.5-Math.abs(4*t-2))},${c(1.5-Math.abs(4*t-1))})`;
+}
+function flagged(e){return spot && EX.some(x=>x.p===prop&&(x.a===e.sym||x.b===e.sym));}
+function renderTable(){
+  let h='<div></div>';
+  for(let g=1;g<=18;g++) h+=`<div class="gh">${g}</div>`;
+  for(let p=1;p<=6;p++){
+    h+=`<div class="ph" style="grid-row:${p+1};grid-column:1">${p}</div>`;
+  }
+  for(const e of EL){
+    const d=Math.max(4,(e.r/RMAX)*44);
+    const c=color(e), hollow=(c==='transparent');
+    const cls=['cell',flagged(e)?'flag':'',A===e.sym?'selA':'',B===e.sym?'selB':''].join(' ');
+    const badge=A===e.sym?'A':(B===e.sym?'B':'');
+    h+=`<button class="${cls}" style="grid-row:${e.p+1};grid-column:${e.g+1}" data-s="${e.sym}" aria-label="${e.name}, ${PROPS[prop].label} ${PROPS[prop].fmt(e)}">
+      ${badge?`<span class="badge">${badge}</span>`:''}
+      <span class="dotbox"><span class="dot" style="width:${d}px;height:${d}px;background:${c};${hollow?'border:1px dashed var(--muted)':''}"></span></span>
+      <span class="sym">${e.sym}</span>${showVals?`<span class="val">${PROPS[prop].fmt(e)}</span>`:''}</button>`;
+  }
+  h+=`<div class="note" style="grid-row:8">Period 6, group 3 shows La; lanthanides Ce–Lu (58–71) omitted. Tap one element for details, a second to compare.</div>`;
+  $('pt').innerHTML=h;
+  const [lo,hi]=range(), P=PROPS[prop];
+  $('legend').innerHTML = prop==='r'
+    ? `<span><span class="sw" style="background:var(--s-block)"></span>s-block</span><span><span class="sw" style="background:var(--p-block)"></span>p-block</span><span><span class="sw" style="background:var(--d-block)"></span>d-block</span><span>Circle area ∝ r². Smallest: He 28 pm. Largest: Cs 244 pm.</span>`
+    : `<span>${prop==='ege'?'less released':'low'} ${prop==='ege'?'':lo+' '+P.unit}</span><span class="ramp"></span><span>${prop==='ege'?'more released (ΔegH more negative)':hi+' '+P.unit}</span><span>Circle size is still radius. Dashed circle = no data.</span>`;
+}
+$('pt').addEventListener('click',ev=>{
+  const b=ev.target.closest('.cell'); if(!b)return; const s=b.dataset.s;
+  if(!A||B||s===A){A=s;B=null;} else B=s;
+  renderAll();
+});
+
+/* ---------- detail & compare ---------- */
+function egeTxt(e){return PROPS.ege.fmt(e)+(e.eaNone?'':' kJ/mol');}
+function predict(p,a,b){
+  const ga=PROPS[p].get(a), gb=PROPS[p].get(b);
+  if(ga==null||gb==null) return {res:'na',txt:'no data'};
+  if(p==='ege'&&a.eaUnbound&&b.eaUnbound) return {res:'na',txt:'both unstable anions'};
+  if(Math.abs(a.r-b.r)<2) return {res:'na',txt:'sizes nearly equal; size can’t decide',act:ga===gb?'equal':(ga>gb?a.sym:b.sym)};
+  const small = a.r<b.r?a:b;
+  const act = ga===gb?'equal':(ga>gb?a.sym:b.sym);
+  return {res: act===small.sym?'ok':'bad', pred:small.sym, act};
+}
+function exFor(p,a,b){return EX.find(x=>x.p===p&&((x.a===a&&x.b===b)||(x.a===b&&x.b===a)));}
+function renderDetail(){
+  const el=$('detail');
+  if(!A){el.innerHTML=`<h2>Pick an element</h2><p class="muted">Tap any element to see its numbers and configuration. Tap a second one to test the size rule on that pair.</p>
+    <p class="muted" style="margin-top:8px">Try: Be then B, N then O, F then Cl, Al then Ga, Zr then Hf.</p>`;return;}
+  const a=BY[A];
+  const row=e=>`<dl class="kv">
+    <dt>Configuration</dt><dd>${e.cfg}</dd>
+    <dt>Covalent radius</dt><dd>${e.r} pm</dd>
+    <dt>IE₁</dt><dd>${e.ie} kJ/mol</dd>
+    <dt>Δ<sub>eg</sub>H</dt><dd>${egeTxt(e)}</dd>
+    <dt>EN (Pauling)</dt><dd>${e.en==null?'—':e.en}</dd>
+    <dt>Z<sub>eff</sub> (Slater)</dt><dd>${e.zeff} on ${e.zon}</dd></dl>`;
+  if(!B){
+    const rel=EX.filter(x=>x.a===A||x.b===A);
+    el.innerHTML=`<h2>${a.name} <span class="muted">Z = ${a.z} · ${a.block}-block</span></h2>${row(a)}
+      ${rel.length?`<p class="muted" style="margin-top:10px">Involved in ${rel.length} exception${rel.length>1?'s':''}:</p>`+rel.map(x=>`<div class="why"><b>${PROPS[x.p].short}: ${x.a} vs ${x.b}.</b> ${x.why}</div>`).join(''):''}`;
+    return;
+  }
+  const b=BY[B];
+  const rows=['ie','ege','en'].map(p=>{
+    const r=predict(p,a,b), x=exFor(p,A,B);
+    const pill=r.res==='ok'?'<span class="pill ok">size works</span>':(r.res==='bad'?'<span class="pill bad">size fails</span>':'<span class="pill na">n/a</span>');
+    const higher = p==='ege'?'more negative ΔegH':'higher';
+    let note = r.res==='na'?r.txt+(r.act?` Actual ${higher}: ${r.act}.`:''):`Size predicts ${r.pred} ${higher}; actual ${r.act==='equal'?'equal':r.act}.`;
+    if(r.res==='bad') note += x?`<div class="why">${x.why}</div>`:`<div class="why">No stored explanation for this pair. Compare the configurations and Z<sub>eff</sub> above: look for a half-filled or filled subshell, an s vs p difference, or a filled d/f shell underneath.</div>`;
+    else if(x) note += `<div class="why okc">${x.why}</div>`;
+    return `<tr><td>${PROPS[p].short}</td><td class="n">${PROPS[p].fmt(a)}</td><td class="n">${PROPS[p].fmt(b)}</td><td>${pill}<div style="margin-top:4px">${note}</div></td></tr>`;
+  }).join('');
+  const rx=exFor('r',A,B);
+  el.innerHTML=`<h2>${a.sym} <span style="color:var(--accent)">A</span> vs ${b.sym} <span style="color:var(--flag)">B</span></h2>
+    <table class="cmp"><tr><th></th><th>${a.sym}</th><th>${b.sym}</th><th>Size rule: smaller atom wins</th></tr>
+    <tr><td>Config</td><td class="n" style="white-space:normal">${a.cfg}</td><td class="n" style="white-space:normal">${b.cfg}</td><td></td></tr>
+    <tr><td>r</td><td class="n">${a.r} pm</td><td class="n">${b.r} pm</td><td>${rx?`<div class="why">${rx.why}</div>`:''}</td></tr>
+    <tr><td>Z<sub>eff</sub></td><td class="n">${a.zeff}</td><td class="n">${b.zeff}</td><td class="muted">Slater, outermost e⁻</td></tr>
+    ${rows}</table>
+    <p class="muted" style="margin-top:8px">The size rule is a heuristic. Across diagonals or between distant groups it often fails for reasons beyond size.</p>`;
+}
+
+/* ---------- strip ---------- */
+function stripEls(){
+  const k=strip[0], n=+strip.slice(1);
+  return EL.filter(e=>k==='p'?e.p===n:e.g===n).sort((x,y)=>k==='p'?x.g-y.g:x.p-y.p);
+}
+function renderStrip(){
+  const els=stripEls(), P=PROPS[prop], svg=$('strip');
+  const W=640,H=250,L=48,R=16,T=18,Bm=46, iw=W-L-R, ih=H-T-Bm;
+  const step=iw/els.length, rmax=Math.max(...els.map(e=>e.r));
+  const vals=els.map(P.get), real=vals.filter(v=>v!=null);
+  let lo=Math.min(...real), hi=Math.max(...real); if(prop==='ege')lo=Math.min(0,lo);
+  if(hi===lo){hi=lo+1;}
+  const pad=(hi-lo)*0.08; lo=prop==='ege'?lo:lo-pad; hi+=pad;
+  const y=v=>T+ih-(v-lo)/(hi-lo)*ih;
+  let g=`<text x="${L}" y="12" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${prop==='r'?'covalent radius (pm)':P.axis}</text>`;
+  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4, yy=y(v);
+    g+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--line)" stroke-width="1"/>
+        <text x="${L-6}" y="${yy+4}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${prop==='en'||prop==='zeff'?v.toFixed(1):Math.round(v)}</text>`;}
+  els.forEach((e,i)=>{
+    const cx=L+step*(i+.5), bh=(e.r/rmax)*ih*0.9, bw=Math.min(28,step*0.55);
+    if(prop!=='r') g+=`<rect x="${cx-bw/2}" y="${T+ih-bh}" width="${bw}" height="${bh}" rx="3" fill="var(--line)"/>`;
+    g+=`<text x="${cx}" y="${H-Bm+16}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)" font-family="IBM Plex Sans,sans-serif">${e.sym}</text>
+        <text x="${cx}" y="${H-Bm+30}" text-anchor="middle" font-size="9.5" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${e.r} pm</text>`;
+  });
+  if(prop==='r'){
+    els.forEach((e,i)=>{const cx=L+step*(i+.5),yy=y(e.r);g+=`<rect x="${cx-Math.min(14,step*.28)}" y="${yy}" width="${Math.min(28,step*.55)}" height="${T+ih-yy}" rx="3" fill="var(--${e.block}-block)"/>`;});
+  }else{
+    for(let i=0;i<els.length-1;i++){
+      const a=els[i],b=els[i+1],va=vals[i],vb=vals[i+1]; if(va==null||vb==null)continue;
+      const sizeSays=Math.abs(a.r-b.r)<2?0:(a.r>b.r?1:-1), act=Math.sign(vb-va);
+      const bad= sizeSays!==0 && act!==0 && act!==sizeSays;
+      g+=`<line x1="${L+step*(i+.5)}" y1="${y(va)}" x2="${L+step*(i+1.5)}" y2="${y(vb)}" stroke="${bad?'var(--flag)':'var(--accent)'}" stroke-width="${bad?3:2}" stroke-linecap="round"/>`;
+    }
+    els.forEach((e,i)=>{const v=vals[i]; if(v==null)return; const cx=L+step*(i+.5);
+      const hollow=prop==='ege'&&e.eaUnbound;
+      g+=`<circle cx="${cx}" cy="${y(v)}" r="4" fill="${hollow?'var(--surface)':'var(--accent)'}" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="${cx}" y="${y(v)-8}" text-anchor="middle" font-size="9.5" fill="var(--ink)" font-family="IBM Plex Mono,monospace">${P.fmt(e)}</text>`;});
+  }
+  svg.innerHTML=g;
+}
+
+/* ---------- exception list ---------- */
+function renderEx(){
+  const list=EX.filter(x=>prop==='zeff'?false:(prop==='r'?x.p==='r':x.p===prop));
+  $('exHead').textContent = list.length?`Exceptions: ${PROPS[prop].label}`:'Exceptions';
+  $('exlist').innerHTML = list.length? list.map(x=>{const a=BY[x.a],b=BY[x.b];
+    return `<div class="ex"><span class="k">${x.a} vs ${x.b}</span><b>${x.a} ${PROPS[x.p].fmt(a)} · ${x.b} ${PROPS[x.p].fmt(b)}</b> ${PROPS[x.p].unit}<p style="margin-top:4px">${x.why}</p></div>`;}).join('')
+    : `<p class="muted">Pick Size only, Ionization enthalpy, Electron gain enthalpy or Electronegativity to see the stored exceptions for that property. Z<sub>eff</sub> is a model input, so it has no exceptions of its own.</p>`;
+}
+
+function renderAll(){
+  document.querySelectorAll('#propSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===prop));
+  renderTable();renderDetail();renderStrip();renderEx();
+}
+renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mechanism Player</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: mechanism chips → stage (curved-arrow scene + step controls) beside rate law and energy profile → factors + predict question → SN1/SN2/E1/E2 decision table */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --arrow:#d0402f; --flag:#cf3f33; --ok:#2d8a4e; --plus:#2c56cc; --minus:#c7741a;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --arrow:#ff7b62; --flag:#ff7b6f; --ok:#5cc983; --plus:#7d9dff; --minus:#f0a04b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --arrow:#ff7b62; --flag:#ff7b6f; --ok:#5cc983; --plus:#7d9dff; --minus:#f0a04b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1140px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 6px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 6px}
+p{margin:0}
+.lede{max-width:74ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stage{overflow-x:auto}
+.stage svg{width:100%;min-width:520px;height:auto;display:block}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.btn[disabled]{opacity:.45;cursor:default}
+.dots{display:flex;gap:5px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line);border:0;padding:0;cursor:pointer}
+.dot[aria-current="true"]{background:var(--accent)}
+.cap{margin-top:10px;font-size:15px;min-height:3em}
+.cap b{font-family:var(--f-mono);font-weight:500;color:var(--muted);font-size:12px;letter-spacing:.04em;margin-right:6px}
+.rate{font-family:var(--f-mono);font-size:14px;background:var(--bg);border-radius:6px;padding:8px 10px;margin-bottom:10px;overflow-wrap:anywhere}
+.factors{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.sel{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+.sel label{min-width:0;max-width:100%;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+select{font:500 14px var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 8px;max-width:100%;width:100%;min-width:0}
+.verdict{margin-top:12px;font-family:var(--f-display);font-size:24px;font-weight:600}
+.tablebox{overflow-x:auto;margin-top:12px}
+table.dt{border-collapse:collapse;font-size:13px;min-width:560px;width:100%}
+table.dt th,table.dt td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+table.dt th{color:var(--muted);font-weight:500;background:var(--bg)}
+table.dt td.on{background:color-mix(in oklab,var(--accent) 16%,transparent);font-weight:600}
+svg text{font-family:"IBM Plex Sans",sans-serif}
+.arrowp{fill:none;stroke:var(--arrow);stroke-width:2.2;stroke-linecap:round}
+@keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.arrowp.anim{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .7s ease-out forwards}
+@media (prefers-reduced-motion:reduce){.arrowp.anim{animation:none;stroke-dashoffset:0}}
+footer{font-size:12px;color:var(--muted);max-width:92ch}
+
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Chemistry</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Mechanism Player</h1>
+    <p class="lede">Step through each mechanism one electron move at a time. A red curved arrow always runs <b>from</b> an electron pair (lone pair or bond) <b>to</b> where that pair ends up. Each step links back to the effects from Module 2: a step happens because its intermediate is stabilised by them.</p>
+  </header>
+
+  <div class="chips" id="mchips" role="group" aria-label="Choose mechanism"></div>
+
+  <div class="grid">
+    <section class="panel">
+      <h2 id="mname"></h2>
+      <div class="stage"><svg id="stage" viewBox="0 0 640 245" role="img" aria-label="Mechanism step"></svg></div>
+      <div class="ctrl">
+        <button class="btn" id="prev">← Prev</button>
+        <button class="btn primary" id="next">Next →</button>
+        <button class="btn" id="replay">Replay arrows</button>
+        <div class="dots" id="dots"></div>
+      </div>
+      <p class="cap" id="cap"></p>
+    </section>
+    <section class="panel">
+      <h3>Rate law</h3>
+      <div class="rate" id="rate"></div>
+      <h3>Energy profile <span class="hw">schematic, not to scale</span></h3>
+      <svg id="prof" viewBox="0 0 360 200" style="width:100%;height:auto" role="img" aria-label="Energy profile"></svg>
+    </section>
+  </div>
+
+  <div class="two">
+    <section class="panel"><h3>What controls it</h3><ul class="factors" id="factors"></ul></section>
+    <section class="panel"><h3>Predict</h3><p id="qq"></p><div class="opts" id="qopts"></div><div id="qwhy"></div></section>
+  </div>
+
+  <section class="panel">
+    <h2>SN1, SN2, E1 or E2?</h2>
+    <p class="lede">Pick the substrate and the reagent. This is the standard textbook decision table for alkyl halides <span class="hw">heuristic: real reactions often give mixtures</span>.</p>
+    <div class="sel" style="margin-top:10px">
+      <label>Substrate<select id="dsub">
+        <option value="0">CH₃–X (methyl)</option><option value="1">1° (RCH₂–X)</option><option value="2" selected>2° (R₂CH–X)</option><option value="3">3° (R₃C–X)</option></select></label>
+      <label>Reagent<select id="drea">
+        <option value="0">Strong nucleophile, weak base (I⁻, Br⁻, CN⁻, N₃⁻, RS⁻)</option>
+        <option value="1" selected>Strong base and strong nucleophile (OH⁻, CH₃O⁻, C₂H₅O⁻)</option>
+        <option value="2">Strong bulky base (t-BuO⁻)</option>
+        <option value="3">Weak nucleophile, weak base (H₂O, ROH)</option></select></label>
+    </div>
+    <div class="verdict" id="dverd"></div>
+    <p class="muted" id="dnote" style="margin-top:4px"></p>
+    <div class="tablebox"><table class="dt" id="dtab"></table></div>
+  </section>
+
+  <footer>Mechanisms follow the standard textbook treatment (NCERT Class 11/12; Clayden; Klein). Energy profiles are schematic: they show the number of steps and which step is slowest, not real energies. The SN1 profile leaves out the fast final proton transfer.</footer>
+</div>
+
+<script>
+/* ---------- scene helpers ---------- */
+function hex(cx,cy,R){return [0,1,2,3,4,5].map(k=>{const a=(90-60*k)*Math.PI/180;return [cx+R*Math.cos(a),cy-R*Math.sin(a)];});}
+function ring(cx,cy,R,doubles,base){ // returns {a,b} with blank-label atoms
+  const v=hex(cx,cy,R); const a=v.map(p=>['',p[0],p[1]]); const b=[];
+  for(let k=0;k<6;k++) b.push([base+k,base+(k+1)%6,doubles.includes(k)?2:1,'ring',cx,cy]);
+  return {a,b,v};
+}
+const mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];
+
+/* ---------- mechanisms ---------- */
+const M={};
+M.sn2={name:'SN2: CH₃Br + OH⁻',chip:'SN2',
+ rate:'rate = k[R–X][Nu⁻]  (second order, one step)',
+ steps:[
+  {a:[['HO',110,120,{q:'−',lp:[0],r:20}],['C',320,120],['H',296,72],['H',296,168],['H',276,138],['Br',420,120,{lp:[90,270,0],r:18}]],
+   b:[[1,2],[1,3],[1,4,1,'dash'],[1,5]],
+   r:[[133,120,308,114,-40],[370,123,412,134,20]],
+   t:[[320,232,'nucleophile approaches the back side, 180° from Br',12]],
+   cap:'One step. The O lone pair attacks carbon from the side opposite Br, and at the same time the C–Br bond pair leaves onto Br.'},
+  {a:[['HO',190,120,{q:'δ−'}],['C',320,120],['H',320,62],['H',280,165],['H',360,165],['Br',450,120,{q:'δ−'}]],
+   b:[[0,1,1,'dash'],[1,2],[1,3],[1,4],[1,5,1,'dash']],
+   t:[[150,152,'[',96],[495,152,']',96],[515,64,'‡',20],[320,232,'transition state: five groups around C, the three H’s flattened into one plane',12]],
+   cap:'Transition state: the O–C bond is half-formed while the C–Br bond is half-broken. Crowding at carbon raises this energy, which is why bulky substrates react slowly.'},
+  {a:[['HO',200,120],['C',282,120],['H',306,72],['H',306,168],['H',328,138],['Br',470,120,{q:'−',lp:[0,90,180,270],r:18}]],
+   b:[[0,1],[1,2],[1,3],[1,4,1,'dash']],
+   t:[[320,232,'the H’s now lean the other way: configuration inverted (Walden inversion)',12]],
+   cap:'Product: CH₃OH + Br⁻. The carbon has turned inside out like an umbrella in the wind, so a chiral substrate gives the inverted product.'}
+ ],
+ prof:{pts:[60,160,35],lab:['R–Br + OH⁻','‡','R–OH + Br⁻']},
+ factors:['<b>Substrate:</b> CH₃ > 1° > 2° ≫ 3° (no SN2 at 3°). Bulk blocks the backside approach (steric).',
+   '<b>Nucleophile:</b> strong, usually anionic (OH⁻, CN⁻, I⁻, RS⁻).',
+   '<b>Leaving group:</b> I⁻ > Br⁻ > Cl⁻ ≫ F⁻. The weaker base leaves more easily.',
+   '<b>Solvent:</b> polar aprotic (acetone, DMSO, DMF) helps, because the nucleophile is not caged by H-bonds.',
+   '<b>Stereochemistry:</b> inversion at the attacked carbon.'],
+ quiz:{q:'Which reacts fastest with NaI in acetone (SN2)?',o:['CH₃CH₂Br','(CH₃)₂CHBr','(CH₃)₃CBr'],a:0,
+   why:'Least crowded carbon. SN2 rate falls CH₃ > 1° > 2°, and 3° essentially does not react by SN2.'}};
+
+const tBu=(cx,q)=>q?[['C',cx,120,{q:'+'}],['CH₃',cx,55],['H₃C',cx-55,155],['CH₃',cx+55,155]]:[['C',cx,120],['CH₃',cx,55],['H₃C',cx-55,162],['H₃C',cx-58,88]];
+M.sn1={name:'SN1: (CH₃)₃C–Br + H₂O',chip:'SN1',
+ rate:'rate = k[R–X]  (first order; ionisation is rate-determining)',
+ steps:[
+  {a:[...tBu(300,false),['Br',400,120,{lp:[90,270,0],r:18}]],b:[[0,1],[0,2],[0,3],[0,4]],
+   r:[[350,123,394,134,20]],t:[[320,232,'slow step: C–Br breaks on its own, no nucleophile involved',12]],
+   cap:'Step 1 (slow): the C–Br bond pair leaves with Br. Only the substrate is involved, so rate = k[R–X].'},
+  {a:[...tBu(300,true),['Br',480,120,{q:'−',lp:[0,90,180,270],r:18}]],b:[[0,1],[0,2],[0,3]],
+   t:[[320,225,'planar sp² carbocation with an empty p orbital',12],[320,241,'9 α C–H bonds feed it by hyperconjugation (Module 2, ladder 6)',12]],
+   cap:'Intermediate: a flat 3° carbocation. It forms because 3° cations are well stabilised. A 1° cation would be too unstable, so 1° halides don’t go SN1.'},
+  {a:[...tBu(300,true),['H₂O',130,120,{lp:[0],r:22}]],b:[[0,1],[0,2],[0,3]],
+   r:[[154,120,286,117,-38]],t:[[320,232,'water can attack either face of the flat cation',12]],
+   cap:'Step 2 (fast): a water lone pair attacks the empty p orbital. Both faces are open, so a chiral carbon gives a racemic (or nearly racemic) product.'},
+  {a:[['C',220,120],['CH₃',220,55],['H₃C',165,155],['CH₃',220,185],['O',310,120,{q:'+',qd:[-4,-18]}],['H',350,85],['H',350,155],['H₂O',490,175,{lp:[180],r:22}]],
+   b:[[0,1],[0,2],[0,3],[0,4],[4,5],[4,6]],
+   r:[[466,175,360,160,18],[334,142,314,138,12]],t:[[320,232,'fast proton transfer to a second water molecule',12]],
+   cap:'Step 3 (fast): a second water removes H⁺ from the oxonium ion, and the O–H bond pair stays on O.'},
+  {a:[],b:[],t:[[320,110,'(CH₃)₃C–OH   +   H₃O⁺   +   Br⁻',20],[320,150,'tert-butyl alcohol',13]],
+   cap:'Product: tert-butyl alcohol. Overall, Br has been replaced by OH via a carbocation.'}
+ ],
+ prof:{pts:[60,170,115,135,35],lab:['R–Br','‡₁','R⁺ + Br⁻','‡₂','R–OH₂⁺']},
+ factors:['<b>Substrate:</b> 3° > 2° ≫ 1°, CH₃. This follows carbocation stability; benzylic and allylic halides also go SN1.',
+   '<b>Nucleophile:</b> not in the rate law. Weak ones (H₂O, ROH) are fine.',
+   '<b>Leaving group:</b> same order as SN2, I⁻ > Br⁻ > Cl⁻.',
+   '<b>Solvent:</b> polar protic (water, alcohols) stabilises both ions formed in the slow step.',
+   '<b>Stereochemistry:</b> racemisation, often with a slight excess of inversion.',
+   '<b>Rearrangement:</b> a 1,2-H or 1,2-methyl shift happens if it gives a more stable cation.'],
+ quiz:{q:'Optically active 3-bromo-3-methylhexane is warmed in water. The alcohol formed is:',o:['the same single enantiomer','the opposite single enantiomer','racemic, or nearly so'],a:2,
+   why:'The planar 3° carbocation is attacked from both faces, giving both enantiomers.'}};
+
+M.e2={name:'E2: (CH₃)₂CHBr + C₂H₅O⁻',chip:'E2',
+ rate:'rate = k[R–X][Base]  (second order, one step)',
+ steps:[
+  {a:[['C',260,130],['C',340,130],['H',260,62],['Br',340,200,{lp:[0,180,270],r:18}],['H',208,130],['H',238,180],['CH₃',396,100],['H',386,165],['EtO',112,62,{q:'−',lp:[0],r:22}]],
+   b:[[0,1],[0,2],[0,4],[0,5],[1,3],[1,6],[1,7]],
+   r:[[136,62,250,62,-26],[262,98,298,126,16],[344,150,354,186,-12]],
+   t:[[320,240,'one step: the β-H and Br are anti-periplanar (180° apart)',12]],
+   cap:'Three arrows, one step. The base pulls off a β-H, that C–H pair becomes the new π bond, and the C–Br pair leaves with Br.'},
+  {a:[['H₂C',240,120],['CH',320,120],['CH₃',400,120]],b:[[0,1,2],[1,2]],
+   t:[[320,180,'propene   +   C₂H₅OH   +   Br⁻',16]],
+   cap:'Product: propene. With 2-bromobutane, the more substituted but-2-ene is the major product (Zaitsev).'}
+ ],
+ prof:{pts:[60,155,30],lab:['R–Br + B⁻','‡','alkene']},
+ factors:['<b>Base:</b> strong (OH⁻, RO⁻). Bulky bases such as t-BuO⁻ favour E2 over SN2.',
+   '<b>Geometry:</b> the β-H and the leaving group must be anti-periplanar.',
+   '<b>Regiochemistry:</b> Zaitsev (more substituted, more hyperconjugated alkene) is usually major. A bulky base gives more Hofmann (less substituted) alkene.',
+   '<b>Substrate:</b> 3° > 2° > 1°, the opposite of SN2.',
+   '<b>Heat</b> favours elimination over substitution.'],
+ quiz:{q:'2-Bromobutane + C₂H₅O⁻ in ethanol, heated. The major alkene is:',o:['but-1-ene','but-2-ene','equal amounts of both'],a:1,
+   why:'Zaitsev: with a small base, the more substituted (more stable) alkene is major. trans-But-2-ene is the main isomer.'}};
+
+M.e1={name:'E1: (CH₃)₃C–Br in ethanol, heat',chip:'E1',
+ rate:'rate = k[R–X]  (first order; same slow step as SN1)',
+ steps:[
+  {a:[...tBu(300,false),['Br',400,120,{lp:[90,270,0],r:18}]],b:[[0,1],[0,2],[0,3],[0,4]],
+   r:[[350,123,394,134,20]],t:[[320,232,'slow step: ionisation, identical to SN1',12]],
+   cap:'Step 1 (slow): the C–Br bond breaks to give the 3° carbocation, exactly as in SN1.'},
+  {a:[['C',320,110,{q:'+'}],['CH₃',320,48],['CH₃',380,145],['C',255,145],['H',255,205],['H',205,140],['H',225,100],['EtOH',112,205,{lp:[0],r:28}]],
+   b:[[0,1],[0,2],[0,3],[3,4],[3,5],[3,6]],
+   r:[[142,205,245,206,22],[258,174,286,130,14]],
+   t:[[320,240,'a weak base (the solvent) removes a β-H next to C⁺',12]],
+   cap:'Step 2 (fast): ethanol takes a β-H, and the C–H bond pair moves in to form the C=C.'},
+  {a:[],b:[],t:[[320,110,'(CH₃)₂C=CH₂   +   C₂H₅OH₂⁺   +   Br⁻',20],[320,150,'2-methylpropene',13]],
+   cap:'Product: 2-methylpropene. The same carbocation also gives the SN1 ether, so E1 and SN1 always compete.'}
+ ],
+ prof:{pts:[60,170,115,130,40],lab:['R–Br','‡₁','R⁺','‡₂','alkene']},
+ factors:['<b>Substrate:</b> 3° > 2°, because it needs a stable carbocation.',
+   '<b>Base:</b> weak (H₂O, ROH). A strong base switches the reaction to E2.',
+   '<b>Competition:</b> always competes with SN1. Higher temperature favours E1.',
+   '<b>Product:</b> Zaitsev alkene is major, and carbocation rearrangements are possible.'],
+ quiz:{q:'(CH₃)₃C–Br in ethanol. Raising the temperature mainly increases:',o:['the SN1 ether product','the E1 alkene','neither'],a:1,
+   why:'Elimination makes more product molecules, so its ΔS is larger. A higher T makes the −TΔS term count more, favouring elimination.'}};
+
+M.ea={name:'Electrophilic addition: CH₃CH=CH₂ + HBr',chip:'Addition to C=C',
+ rate:'rate = k[alkene][HX]; H⁺ addition is the slow step',
+ steps:[
+  {a:[['H₂C',220,130],['CH',300,130],['CH₃',380,130],['H',250,50],['Br',340,50,{lp:[0,270],r:18}]],
+   b:[[0,1,2],[1,2],[3,4]],
+   r:[[262,125,252,63,-22],[296,47,328,38,-14]],
+   t:[[320,232,'the π electrons attack H; the H–Br pair leaves with Br',12]],
+   cap:'Step 1 (slow): the π electrons grab H⁺. H attaches to the CH₂ end, leaving the + charge on the middle carbon.'},
+  {a:[['H₃C',220,120],['CH',300,120,{q:'+'}],['CH₃',380,120],['Br',300,200,{q:'−',lp:[90,0,180],r:18}]],
+   b:[[0,1],[1,2]],r:[[300,184,300,134,18]],
+   t:[[505,65,'2° cation formed,',12],[505,82,'not the 1° ⁺CH₂CH₂CH₃',12]],
+   cap:'Step 2 (fast): Br⁻ attacks C⁺. Markovnikov’s rule is really "form the more stable carbocation": 2° (6 α C–H) beats 1° (2 α C–H).'},
+  {a:[['H₃C',220,115],['CH',300,115],['CH₃',380,115],['Br',300,185,{lp:[0,180,270],r:18}]],b:[[0,1],[1,2],[1,3]],
+   t:[[320,240,'2-bromopropane (major product)',13]],
+   cap:'Product: 2-bromopropane.'}
+ ],
+ prof:{pts:[70,165,110,125,30],lab:['alkene + HBr','‡₁','R⁺ Br⁻','‡₂','R–Br']},
+ factors:['<b>Regiochemistry (Markovnikov):</b> H⁺ adds so that the more stable carbocation forms.',
+   '<b>Rearrangement:</b> the carbocation can shift a hydride or methyl to become more stable.',
+   '<b>HX reactivity:</b> HI > HBr > HCl, following acid strength.',
+   '<b>Peroxide effect:</b> HBr with peroxide reacts by a radical path and gives the anti-Markovnikov product. This happens with HBr only.'],
+ quiz:{q:'(CH₃)₂C=CH₂ + HBr (no peroxide). The product is:',o:['(CH₃)₂CH–CH₂Br','(CH₃)₃C–Br'],a:1,
+   why:'H⁺ adds to the CH₂ carbon to give the 3° cation, and Br⁻ then adds there.'}};
+
+(function(){ // EAS scenes built from ring helper
+  const s1=ring(220,130,52,[0,2,4],0); const v=s1.v;
+  const a1=[...s1.a,['O',360,52],['N',410,52,{q:'+'}],['O',460,52]];
+  const b1=[...s1.b,[6,7,2],[7,8,2]];
+  const m01=mid(v[0],v[1]);
+  // arenium helper with substituents on v0
+  function aren(cx,cy,R,plusAt,doubles,base){
+    const r=ring(cx,cy,R,doubles,base), w=r.v;
+    const a=[...r.a,['H',w[0][0]-22,w[0][1]-26],['NO₂',w[0][0]+26,w[0][1]-26]];
+    const b=[...r.b,[base,base+6],[base,base+7]];
+    const p=w[plusAt], dx=p[0]-cx, dy=p[1]-cy, L=Math.hypot(dx,dy);
+    const t=[[p[0]+dx/L*16,p[1]+dy/L*16+5,'+',18,'middle','plus']];
+    return {a,b,t,w};
+  }
+  const f1=aren(110,125,38,1,[2,4],0), f2=aren(320,125,38,3,[1,4],8), f3=aren(530,125,38,5,[1,3],16);
+  const big=aren(220,135,52,1,[2,4],0), w=big.w;
+  const hPos=[w[0][0]-22,w[0][1]-26];
+  const s4=ring(220,135,52,[0,2,4],0);
+  M.eas={name:'Electrophilic aromatic substitution: nitration of benzene',chip:'Aromatic substitution',
+   rate:'rate = k[ArH][NO₂⁺]; forming the arenium ion is the slow step',
+   steps:[
+    {a:[],b:[],t:[[320,90,'HNO₃ + 2 H₂SO₄   ⇌   NO₂⁺ + H₃O⁺ + 2 HSO₄⁻',18],[320,135,'H₂SO₄ protonates HNO₃, which loses water to give the nitronium ion NO₂⁺',12],[320,155,'NO₂⁺ is the electrophile',12]],
+     cap:'Step 0: make a strong electrophile. Benzene’s π cloud is too stable to react with HNO₃ directly.'},
+    {a:a1,b:b1,r:[[m01[0]+2,m01[1]-4,409,64,-26]],t:[[320,232,'benzene’s π electrons attack N; aromaticity is lost (slow)',12]],
+     cap:'Step 1 (slow): one π pair of the ring attacks NO₂⁺. The ring loses aromaticity, which is why this step is uphill and slow.'},
+    {a:[...f1.a,...f2.a,...f3.a],b:[...f1.b,...f2.b,...f3.b],t:[...f1.t,...f2.t,...f3.t,[215,130,'↔',22],[425,130,'↔',22],[320,225,'+ sits on the two ortho carbons and the para carbon (relative to the new C–N bond)',12]],
+     cap:'The arenium ion (σ-complex) spreads + over three carbons: ortho, ortho and para. A substituent sitting on one of these carbons can stabilise (+R, +I) or destabilise (−R, −I) the charge. That is the origin of o/p vs m directing.'},
+    {a:[...big.a,['HSO₄',92,48,{q:'−',lp:[0],r:28}]],b:big.b,t:[...big.t,[320,240,'HSO₄⁻ removes H⁺; the C–H pair restores the aromatic ring (fast)',12]],
+     r:[[122,48,hPos[0]-10,hPos[1],-14],[(w[0][0]+hPos[0])/2+4,(w[0][1]+hPos[1])/2+6,(w[0][0]+w[1][0])/2-2,(w[0][1]+w[1][1])/2+4,16]],
+     cap:'Step 2 (fast): a base removes H⁺ from the sp³ carbon. The C–H bond pair moves back into the ring and aromaticity returns. Substitution, not addition, because keeping aromaticity wins.'},
+    {a:[...s4.a,['NO₂',220,40]],b:[...s4.b,[0,6]],t:[[400,140,'+  H₂SO₄',18]],cap:'Product: nitrobenzene.'}
+   ],
+   prof:{pts:[60,170,130,145,35],lab:['ArH + NO₂⁺','‡₁','arenium','‡₂','ArNO₂']},
+   factors:['<b>Electrophile</b> must be strong: NO₂⁺, Br⁺ (from Br₂/FeBr₃), R⁺ (from RCl/AlCl₃).',
+     '<b>Activating, o/p-directing:</b> +R donors (–OH, –OR, –NH₂) and alkyls (+I, hyperconjugation).',
+     '<b>Deactivating, m-directing:</b> –NO₂, –CN, –CHO, –COOH (−R and −I); –N⁺R₃ (−I only).',
+     '<b>Halogens:</b> deactivating (−I wins) but o/p-directing (the +R lone pair stabilises the o/p arenium).',
+     'Module 2’s σ map gives these I/R splits as numbers.'],
+   quiz:{q:'Nitration of anisole (C₆H₅–OCH₃). The main products are:',o:['meta-nitroanisole','ortho- and para-nitroanisole','no reaction'],a:1,
+     why:'In o/p attack one arenium form puts + on the carbon bearing OCH₃. The O lone pair (+R) stabilises it, so o/p attack is faster.'}};
+})();
+
+M.cn={name:'Nucleophilic addition to C=O: acetone + HCN',chip:'Addition to C=O',
+ rate:'⁻CN adds to the C=O carbon (slow), then O⁻ is protonated (fast)',
+ steps:[
+  {a:[['C',300,130],['O',380,130,{lp:[45,315],r:14}],['H₃C',300,66],['H₃C',300,194],['N≡C',140,130,{q:'−',lp:[0],r:26}]],
+   b:[[0,1,2],[0,2],[0,3]],
+   r:[[168,130,288,129,-14],[340,125,374,116,-16]],
+   t:[[320,232,'⁻CN attacks the δ+ carbonyl carbon; the π pair moves onto O',12]],
+   cap:'Step 1 (slow): cyanide’s carbon lone pair attacks the δ+ carbon of C=O, and the π bond pair moves onto oxygen. The carbon goes from flat sp² to tetrahedral sp³.'},
+  {a:[['C',300,130],['O',380,130,{q:'−',lp:[45,270,315],r:14}],['H₃C',262,82],['H₃C',262,180],['NC',220,130],['H',468,68],['CN',540,68]],
+   b:[[0,1],[0,2],[0,3],[0,4],[5,6]],
+   r:[[391,121,460,74,-16],[504,66,530,78,12]],
+   t:[[320,232,'the alkoxide takes H⁺ from HCN, regenerating ⁻CN',12]],
+   cap:'Step 2 (fast): the alkoxide O⁻ takes H⁺ from HCN. This regenerates ⁻CN, so only a little base is needed (base catalysis).'},
+  {a:[],b:[],t:[[320,110,'(CH₃)₂C(OH)CN   +   ⁻CN',20],[320,150,'acetone cyanohydrin',13]],
+   cap:'Product: acetone cyanohydrin.'}
+ ],
+ prof:{pts:[70,150,95,110,50],lab:['C=O + ⁻CN','‡₁','alkoxide','‡₂','cyanohydrin']},
+ factors:['<b>Aldehydes > ketones:</b> alkyl groups crowd the carbon (steric) and lower its δ+ (+I).',
+   '<b>Electron-withdrawing groups</b> near C=O (e.g. Cl₃C in chloral) increase reactivity.',
+   '<b>Stereochemistry:</b> attack from either face of the flat C=O, giving a racemic product if a stereocentre forms.',
+   '<b>HCN</b> needs a little base to supply ⁻CN.'],
+ quiz:{q:'Which is most reactive toward HCN?',o:['HCHO','CH₃CHO','CH₃COCH₃'],a:0,
+   why:'HCHO has no alkyl groups, so it has the least steric hindrance and the most δ+ on carbon. Order: HCHO > CH₃CHO > CH₃COCH₃.'}};
+
+/* ---------- renderer ---------- */
+const $=id=>document.getElementById(id);
+const KEYS=['sn2','sn1','e2','e1','ea','eas','cn'];
+let cur='sn2', step=0;
+try{const s=localStorage.getItem('mp-cur'); if(M[s])cur=s;}catch(e){}
+$('mchips').innerHTML=KEYS.map(k=>`<button class="chip" data-k="${k}">${M[k].chip}</button>`).join('');
+$('mchips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;cur=b.dataset.k;step=0;try{localStorage.setItem('mp-cur',cur);}catch(err){}renderAll();});
+
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+function trim(lab){return !lab?0:(lab.length===1?11:(lab.length===2?15:19));}
+function drawScene(sc){
+  let g=`<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--arrow)"/></marker></defs>`;
+  const A=sc.a||[];
+  for(const bd of (sc.b||[])){
+    const [i,j,ord=1,sty,rcx,rcy]=bd, p=A[i], q=A[j];
+    let dx=q[1]-p[1], dy=q[2]-p[2]; const L=Math.hypot(dx,dy); dx/=L; dy/=L;
+    const t1=trim(p[0]), t2=trim(q[0]);
+    const x1=p[1]+dx*t1, y1=p[2]+dy*t1, x2=q[1]-dx*t2, y2=q[2]-dy*t2;
+    const dash=sty==='dash'?' stroke-dasharray="5 4"':'';
+    const sw=sty==='ring'?1.8:2;
+    if(ord===1) g+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--ink)" stroke-width="${sw}"${dash}/>`;
+    else{
+      if(sty==='ring'){ // inner second line toward ring centre
+        const nx=-dy, ny=dx, o=5, mx=rcx, my=rcy;
+        const sgn=((mx-(x1+x2)/2)*nx+(my-(y1+y2)/2)*ny)>0?1:-1;
+        g+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--ink)" stroke-width="${sw}"/>`;
+        g+=`<line x1="${x1+nx*o*sgn+dx*6}" y1="${y1+ny*o*sgn+dy*6}" x2="${x2+nx*o*sgn-dx*6}" y2="${y2+ny*o*sgn-dy*6}" stroke="var(--ink)" stroke-width="${sw}"/>`;
+      } else {
+        const nx=-dy*2.6, ny=dx*2.6;
+        g+=`<line x1="${x1+nx}" y1="${y1+ny}" x2="${x2+nx}" y2="${y2+ny}" stroke="var(--ink)" stroke-width="2"/><line x1="${x1-nx}" y1="${y1-ny}" x2="${x2-nx}" y2="${y2-ny}" stroke="var(--ink)" stroke-width="2"/>`;
+      }
+    }
+  }
+  for(const at of A){
+    const [lab,x,y,o={}]=at; if(!lab)continue;
+    g+=`<text x="${x}" y="${y+6}" text-anchor="middle" font-size="18" font-weight="500" fill="var(--ink)">${esc(lab)}</text>`;
+    if(o.q){const qx=o.qd?x+o.qd[0]:x+(lab.length>1?lab.length*5.5+4:12), col=o.q.includes('+')?'var(--plus)':'var(--minus)';
+      g+=`<text x="${qx}" y="${o.qd?y+o.qd[1]:y-8}" font-size="${o.q.length>1?12:16}" font-weight="700" fill="${col}">${o.q}</text>`;}
+    for(const ang of (o.lp||[])){
+      const r=o.r||14, a=ang*Math.PI/180, cx=x+r*Math.cos(a), cy=y-r*Math.sin(a), px=-Math.sin(a)*3.2, py=-Math.cos(a)*3.2;
+      g+=`<circle cx="${cx+px}" cy="${cy+py}" r="1.9" fill="var(--ink)"/><circle cx="${cx-px}" cy="${cy-py}" r="1.9" fill="var(--ink)"/>`;
+    }
+  }
+  for(const t of (sc.t||[])){
+    const [x,y,s,size=13,anchor='middle',cls]=t;
+    const fill=cls==='plus'?'var(--plus)':(size<=13?'var(--muted)':'var(--ink)');
+    g+=`<text x="${x}" y="${y}" text-anchor="${anchor}" font-size="${size}" font-weight="${cls==='plus'?700:400}" fill="${fill}">${esc(s)}</text>`;
+  }
+  (sc.r||[]).forEach((r,k)=>{
+    const [x1,y1,x2,y2,bend]=r, mx=(x1+x2)/2, my=(y1+y2)/2, L=Math.hypot(x2-x1,y2-y1);
+    const nx=-(y2-y1)/L, ny=(x2-x1)/L, cx=mx+nx*bend*2, cy=my+ny*bend*2;
+    g+=`<path class="arrowp anim" pathLength="1" style="animation-delay:${k*0.55}s" d="M${x1},${y1} Q${cx},${cy} ${x2},${y2}" marker-end="url(#ah)"/>`;
+  });
+  return g;
+}
+function drawProfile(p){
+  const W=360,H=200,L=30,R=12,T=24,B=30, pts=p.pts, n=pts.length, iw=W-L-R, ih=H-T-B;
+  const X=i=>L+iw*i/(n-1), Y=v=>T+ih-(v/185)*ih;
+  let d=`M${X(0)-8},${Y(pts[0])} L${X(0)},${Y(pts[0])}`;
+  for(let i=0;i<n-1;i++){for(let s=1;s<=20;s++){const t=s/20,u=(1-Math.cos(Math.PI*t))/2;d+=` L${X(i)+(X(i+1)-X(i))*t},${Y(pts[i]+(pts[i+1]-pts[i])*u)}`;}}
+  d+=` L${X(n-1)+8},${Y(pts[n-1])}`;
+  let g=`<line x1="${L}" y1="${T-6}" x2="${L}" y2="${H-B}" stroke="var(--muted)"/><line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" stroke="var(--muted)"/>`;
+  g+=`<text x="12" y="${(T+H-B)/2}" transform="rotate(-90 12 ${(T+H-B)/2})" text-anchor="middle" font-size="11" fill="var(--muted)">energy</text>`;
+  g+=`<text x="${W-R}" y="${H-10}" text-anchor="end" font-size="11" fill="var(--muted)">reaction progress →</text>`;
+  g+=`<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/>`;
+  let maxI=-1; pts.forEach((v,i)=>{if(p.lab[i].startsWith('‡')&&(maxI<0||v>pts[maxI]))maxI=i;});
+  pts.forEach((v,i)=>{
+    const ts=p.lab[i].startsWith('‡');
+    g+=`<text x="${Math.min(Math.max(X(i),L+24),W-R-24)}" y="${Y(v)+(ts?-8:16)}" text-anchor="middle" font-size="10.5" fill="${ts&&i===maxI?'var(--arrow)':'var(--ink)'}" font-weight="${ts&&i===maxI?600:400}">${esc(p.lab[i])}${ts&&i===maxI&&pts.length>3?' slow':''}</text>`;
+  });
+  return g;
+}
+function renderStep(){
+  const m=M[cur], sc=m.steps[step];
+  $('stage').innerHTML=drawScene(sc);
+  $('cap').innerHTML=`<b>STEP ${step+1}/${m.steps.length}</b>${sc.cap}`;
+  $('prev').disabled=step===0; $('next').disabled=step===m.steps.length-1;
+  $('dots').innerHTML=m.steps.map((_,i)=>`<button class="dot" aria-label="Step ${i+1}" aria-current="${i===step}" data-i="${i}"></button>`).join('');
+}
+$('prev').onclick=()=>{if(step>0){step--;renderStep();}};
+$('next').onclick=()=>{if(step<M[cur].steps.length-1){step++;renderStep();}};
+$('replay').onclick=renderStep;
+$('dots').addEventListener('click',e=>{const d=e.target.closest('.dot');if(d){step=+d.dataset.i;renderStep();}});
+document.addEventListener('keydown',e=>{if(e.target.closest('select'))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+
+function renderQuiz(){
+  const q=M[cur].quiz;
+  $('qq').textContent=q.q; $('qwhy').innerHTML='';
+  $('qopts').innerHTML=q.o.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o)}</button>`).join('');
+  $('qopts').querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i;
+    $('qopts').querySelectorAll('.opt').forEach(x=>{const j=+x.dataset.i;x.classList.toggle('right',j===q.a);x.classList.toggle('wrong',j===i&&i!==q.a);});
+    $('qwhy').innerHTML=`<div class="why"><b>${i===q.a?'Correct.':'Not quite.'}</b> ${q.why}</div>`;
+  });
+}
+function renderAll(){
+  const m=M[cur];
+  document.querySelectorAll('#mchips .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===cur));
+  $('mname').textContent=m.name; $('rate').textContent=m.rate;
+  $('prof').innerHTML=drawProfile(m.prof);
+  $('factors').innerHTML=m.factors.map(f=>`<li>${f}</li>`).join('');
+  renderStep(); renderQuiz();
+}
+
+/* ---------- decision table ---------- */
+const SUBS=['CH₃–X','1°','2°','3°'];
+const REAS=['Strong Nu⁻, weak base','Strong base + strong Nu⁻','Strong bulky base','Weak Nu, weak base'];
+const DT=[
+ ['SN2','SN2','SN2','no useful reaction'],
+ ['SN2','SN2 major (E2 minor)','E2','no useful reaction'],
+ ['SN2','E2 major (SN2 minor)','E2','SN1 + E1 (slow)'],
+ ['SN1 (E1 minor)','E2','E2','SN1 + E1']
+];
+const WHY=[
+ ['Unhindered carbon, no β-H: only SN2 is possible.','No β-H to eliminate, so SN2 even with a strong base.','No β-H, so SN2 (slow with a bulky nucleophile).','Methyl cation is far too unstable for SN1, and a weak nucleophile is too slow for SN2.'],
+ ['Open backside, and a 1° cation is too unstable for SN1.','Backside still open, so SN2 beats E2.','A bulky base can’t reach the carbon but can reach a β-H.','A 1° cation is too unstable, and a weak nucleophile is too slow for SN2.'],
+ ['A weak base doesn’t eliminate; SN2 is still possible at 2°.','The crowded 2° carbon slows SN2, and a strong base takes a β-H instead.','Bulky base: elimination.','A weak nucleophile in a protic solvent: carbocation route, which is slow at 2°. Heat favours E1.'],
+ ['Backside is blocked, so the reaction goes via the 3° cation.','Backside is blocked, and a strong base readily takes a β-H.','Bulky base: elimination (more Hofmann alkene).','Stable 3° cation: SN1 at low temperature, E1 with heat.']
+];
+function renderDT(){
+  const s=+$('dsub').value, r=+$('drea').value;
+  $('dverd').textContent=DT[s][r];
+  $('dnote').textContent=WHY[s][r]+' Heating shifts any mixture toward elimination.';
+  let h='<tr><th>Substrate ↓ / reagent →</th>'+REAS.map(x=>`<th>${x}</th>`).join('')+'</tr>';
+  DT.forEach((row,i)=>{h+=`<tr><th>${SUBS[i]}</th>`+row.map((c,j)=>`<td class="${i===s&&j===r?'on':''}">${c}</td>`).join('')+'</tr>';});
+  $('dtab').innerHTML=h;
+}
+$('dsub').onchange=renderDT; $('drea').onchange=renderDT;
+
+renderAll(); renderDT();
+</script>
+</body>
+</html>

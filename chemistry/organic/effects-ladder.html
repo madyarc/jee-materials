@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Electronic Effects Ladder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: single column — four effect cards, substituent σ-map with detail, then data ladders with a rank-it quiz */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --tI:#c7741a; --tR:#7a52c7; --tH:#1f8f87; --tS:#5a6375; --tX:#b0377a;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --tI:#f0a04b; --tR:#a585f0; --tH:#3cb8ad; --tS:#97a0b0; --tX:#e86fae; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --tI:#f0a04b; --tR:#a585f0; --tH:#3cb8ad; --tS:#97a0b0; --tX:#e86fae; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:74ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.tag{display:inline-block;font:600 11px var(--f-mono);border-radius:4px;padding:0 6px;border:1px solid currentColor;white-space:nowrap}
+.tag.I{color:var(--tI)} .tag.R{color:var(--tR)} .tag.H{color:var(--tH)} .tag.S{color:var(--tS)} .tag.X{color:var(--tX)}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.card dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:0;font-size:13.5px}
+.card dt{color:var(--muted)} .card dd{margin:0;min-width:0}
+.rule{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14px}
+.split{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px}
+@media (max-width:880px){.split{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.svgbox{overflow-x:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font:500 12.5px var(--f-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.qitem:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin-top:8px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.verdict{margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+.ladnav{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.lrow{display:grid;grid-template-columns:minmax(150px,220px) minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.lrow:last-child{border-bottom:0}
+.lab{font-family:var(--f-mono);font-size:13.5px;min-width:0;overflow-wrap:anywhere}
+.bar{height:14px;border-radius:3px;background:var(--accent);min-width:2px}
+.barcell{min-width:0}
+.val{font:500 13px var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.note{font-size:12.5px;color:var(--muted);margin-top:2px}
+.lesson{margin-top:12px;border-left:3px solid var(--accent);padding:4px 0 4px 10px;font-size:14px}
+.qgrid{display:flex;flex-wrap:wrap;gap:8px}
+.qitem{font:500 13.5px var(--f-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;display:flex;gap:8px;align-items:center}
+.qitem .num{font:600 12px var(--f-mono);color:var(--accent);min-width:14px}
+.qitem[disabled]{opacity:.55;cursor:default}
+.res.ok{color:var(--ok)} .res.bad{color:var(--flag)}
+@media (max-width:560px){.lrow{grid-template-columns:minmax(0,1fr) auto}.barcell{grid-column:1 / -1;grid-row:2}}
+footer{font-size:12px;color:var(--muted);max-width:92ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Chemistry</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Electronic Effects Ladder</h1>
+    <p class="lede">Every "order" in organic chemistry comes from four effects pushing or pulling electron density. Instead of memorising lists, this page uses measured numbers (Hammett σ constants, pK<sub>a</sub> values, heats of hydrogenation) so you can see each effect's size and where it wins or loses.</p>
+  </header>
+
+  <section>
+    <h2>The four effects</h2>
+    <div class="cards" style="margin-top:10px">
+      <div class="card"><h3><span class="tag I">I</span> Inductive</h3>
+        <dl><dt>What moves</dt><dd>σ-bond electrons are polarised toward the more electronegative atom (permanent).</dd>
+        <dt>Range</dt><dd>Fades fast with each bond; small beyond about 3 bonds (see ladder 3).</dd>
+        <dt>Needs</dt><dd>Just a σ-bond path.</dd>
+        <dt>Signs</dt><dd>−I pulls (halogens, NO₂, CN, N⁺R₃). +I pushes (alkyl, O⁻, COO⁻).</dd></dl></div>
+      <div class="card"><h3><span class="tag R">R / M</span> Resonance</h3>
+        <dl><dt>What moves</dt><dd>π electrons and lone pairs delocalise through overlapping p orbitals.</dd>
+        <dt>Range</dt><dd>Carried along a conjugated chain without fading per bond; acts only at positions linked by conjugation (ortho/para on benzene, not meta).</dd>
+        <dt>Needs</dt><dd>Conjugation and roughly coplanar p orbitals.</dd>
+        <dt>Signs</dt><dd>+R donates a lone pair (NH₂, OH, OR, halogens). −R accepts into a π* (NO₂, CN, C=O).</dd></dl></div>
+      <div class="card"><h3><span class="tag H">H</span> Hyperconjugation</h3>
+        <dl><dt>What moves</dt><dd>Electrons from a C–H σ bond next door spill into an empty p orbital or π*.</dd>
+        <dt>Range</dt><dd>Only from the adjacent (α) carbon.</dd>
+        <dt>Needs</dt><dd>α C–H bonds. More α-H, more stabilisation (count them).</dd>
+        <dt>Shows up in</dt><dd>Carbocation, radical and alkene stability.</dd></dl></div>
+      <div class="card"><h3><span class="tag S">S</span> Steric</h3>
+        <dl><dt>What it is</dt><dd>Not electronic. Bulky groups crowd each other or block an approach.</dd>
+        <dt>Effects</dt><dd>Raises energy (cis vs trans alkenes), twists groups out of conjugation (switches off R), blocks attack (S<sub>N</sub>2 at 3° carbon).</dd></dl></div>
+      <div class="card"><h3><span class="tag X">Solv</span> Solvation</h3>
+        <dl><dt>What it is</dt><dd>Not an electronic effect either. In water, ions are stabilised by H-bonding to solvent.</dd>
+        <dt>Why it's here</dt><dd>It breaks some "pure +I/−I" predictions in water (see ladder 7).</dd></dl></div>
+    </div>
+  </section>
+
+  <section class="rule">
+    <b>Priority rule:</b> resonance &gt; hyperconjugation &gt; inductive <span class="hw">rule of thumb, not a law</span>
+    <p class="muted" style="margin-top:4px">It holds when the groups compared act at the same position. The classic failure is halogens on benzene: −I outweighs +R for overall reactivity (Cl: σ<sub>p</sub> = +0.23, net withdrawing), yet the +R lone pair still decides where an electrophile attacks (ortho/para). Check Cl on the σ map below.</p>
+  </section>
+
+  <section>
+    <h2>Substituent σ map: separating I from R</h2>
+    <p class="lede">Hammett σ measures how much a substituent on a benzene ring raises the acidity of benzoic acid: σ = pK<sub>a</sub>(benzoic acid) − pK<sub>a</sub>(substituted). Positive means withdrawing, negative means donating. At <b>meta</b> the group acts mostly by induction. At <b>para</b> it acts by induction plus resonance. So the gap σ<sub>p</sub> − σ<sub>m</sub> gives a rough read of the resonance part <span class="hw">approximate split</span>.</p>
+    <div class="split" style="margin-top:12px">
+      <div class="panel">
+        <div class="svgbox"><svg id="smap" viewBox="0 0 600 420" style="width:100%;min-width:480px;height:auto" role="img" aria-label="Scatter of sigma meta versus sigma para"></svg></div>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="panel" id="sdetail"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Ladders: real numbers, one effect at a time</h2>
+    <p class="lede">Each ladder changes one thing and shows the measured result. Use <b>Rank it</b> to predict the order before revealing it.</p>
+    <div class="ladnav" id="ladnav" role="group" aria-label="Choose ladder"></div>
+    <div class="panel" id="ladder"></div>
+  </section>
+
+  <footer>
+    All values were checked against published tables. Hammett σ<sub>m</sub>, σ<sub>p</sub>: Hansch, Leo &amp; Taft, Chem. Rev. 1991, 91, 165, and Hansch &amp; Leo, Substituent Constants (1979). For NHCOCH₃, tables disagree; the more common pair is used. Aqueous pK<sub>a</sub> at 25 °C: CRC Handbook. The chlorobutanoic acids, methoxyphenols and p-cresol were confirmed in one compiled table only. Heats of hydrogenation: NIST WebBook, gas phase (Kistiakowsky). Carbocation HIA: gas-phase values as tabulated in Anslyn &amp; Dougherty; other compilations differ by a few kcal/mol but give the same order, and the order in solution can differ. Amine gas-phase order from proton affinities (854 &lt; 896 &lt; 923 &lt; 942 kJ/mol). Small differences (≤ 0.1 pK<sub>a</sub> unit) should not be over-read.
+  </footer>
+</div>
+
+<script>
+/* ---------- Hammett data ---------- */
+const SUB=[
+ {s:'NMe₂',m:-0.16,p:-0.83,dx:8,dy:4},
+ {s:'NH₂',m:-0.16,p:-0.66,dx:8,dy:4},
+ {s:'OH',m:0.12,p:-0.37,dx:8,dy:4},
+ {s:'OMe',m:0.12,p:-0.27,dx:8,dy:4},
+ {s:'CMe₃',m:-0.10,p:-0.20,dx:-8,dy:4,end:1},
+ {s:'CH₃',m:-0.07,p:-0.17,dx:8,dy:10},
+ {s:'H',m:0,p:0,dx:-8,dy:-4,end:1},
+ {s:'Ph',m:0.06,p:-0.01,dx:8,dy:-4},
+ {s:'NHCOMe',m:0.21,p:0.00,dx:8,dy:12},
+ {s:'F',m:0.34,p:0.06,dx:8,dy:4},
+ {s:'I',m:0.35,p:0.18,dx:-8,dy:8,end:1},
+ {s:'Cl',m:0.37,p:0.23,dx:-8,dy:-4,end:1},
+ {s:'Br',m:0.39,p:0.23,dx:8,dy:6},
+ {s:'CHO',m:0.35,p:0.42,dx:-8,dy:10,end:1},
+ {s:'COOH',m:0.37,p:0.45,dx:-8,dy:-3,end:1},
+ {s:'COMe',m:0.38,p:0.50,dx:0,dy:-9,mid:1},
+ {s:'CF₃',m:0.43,p:0.54,dx:8,dy:2},
+ {s:'CN',m:0.56,p:0.66,dx:8,dy:4},
+ {s:'NO₂',m:0.71,p:0.78,dx:8,dy:4},
+ {s:'NMe₃⁺',m:0.88,p:0.82,dx:-8,dy:16,end:1}
+];
+let sel='OMe';
+const $=id=>document.getElementById(id);
+const f2=v=>(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2);
+
+function renderMap(){
+  const W=600,H=420,L=56,R=20,T=20,B=48;
+  const xmin=-0.55,xmax=1.0,ymin=-0.9,ymax=0.9;
+  const X=v=>L+(v-xmin)/(xmax-xmin)*(W-L-R), Y=v=>T+(ymax-v)/(ymax-ymin)*(H-T-B);
+  let g='';
+  // region shading: below diagonal (σp<σm) = +R donors
+  g+=`<polygon points="${X(xmin)},${Y(xmin)} ${X(xmax)},${Y(xmax)} ${X(xmax)},${Y(ymin)} ${X(xmin)},${Y(ymin)}" fill="var(--tR)" opacity="0.07"/>`;
+  for(let v=-0.5;v<=1.0001;v+=0.25){g+=`<line x1="${X(v)}" x2="${X(v)}" y1="${T}" y2="${H-B}" stroke="var(--line)"/><text x="${X(v)}" y="${H-B+16}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${v.toFixed(2)}</text>`;}
+  for(let v=-0.75;v<=0.7501;v+=0.25){g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${v.toFixed(2)}</text>`;}
+  g+=`<line x1="${X(0)}" x2="${X(0)}" y1="${T}" y2="${H-B}" stroke="var(--muted)" stroke-width="1"/><line x1="${L}" x2="${W-R}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)" stroke-width="1"/>`;
+  g+=`<line x1="${X(-0.55)}" y1="${Y(-0.55)}" x2="${X(0.9)}" y2="${Y(0.9)}" stroke="var(--muted)" stroke-dasharray="4 4"/>`;
+  g+=`<text x="${X(0.62)}" y="${Y(0.86)}" font-size="11" fill="var(--muted)" font-family="IBM Plex Sans,sans-serif">σp = σm (no resonance)</text>`;
+  g+=`<text x="${X(0.55)}" y="${Y(-0.62)}" font-size="12" fill="var(--tR)" font-family="IBM Plex Sans,sans-serif" font-weight="600">below line: +R donor</text>`;
+  g+=`<text x="${X(-0.5)}" y="${Y(0.62)}" font-size="12" fill="var(--muted)" font-family="IBM Plex Sans,sans-serif" font-weight="600">above line: −R acceptor</text>`;
+  g+=`<text x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="IBM Plex Sans,sans-serif">σ<tspan baseline-shift="sub" font-size="9">meta</tspan> (mostly inductive) →  withdrawing</text>`;
+  g+=`<text transform="translate(14 ${(T+H-B)/2}) rotate(-90)" text-anchor="middle" font-size="12" fill="var(--ink)" font-family="IBM Plex Sans,sans-serif">σ<tspan baseline-shift="sub" font-size="9">para</tspan> (inductive + resonance) → withdrawing</text>`;
+  for(const d of SUB){
+    const on=d.s===sel, cx=X(d.m), cy=Y(d.p);
+    g+=`<g data-s="${d.s}" style="cursor:pointer"><circle cx="${cx}" cy="${cy}" r="${on?7:5}" fill="${on?'var(--accent)':'var(--surface)'}" stroke="var(--accent)" stroke-width="2"/>
+      <text x="${cx+d.dx}" y="${cy+d.dy}" text-anchor="${d.end?'end':(d.mid?'middle':'start')}" font-size="${on?13:11.5}" font-weight="${on?700:500}" fill="var(--ink)" font-family="IBM Plex Mono,monospace">${d.s}</text></g>`;
+  }
+  $('smap').innerHTML=g;
+}
+$('smap').addEventListener('click',e=>{const g=e.target.closest('g[data-s]');if(g){sel=g.dataset.s;renderSub();}});
+$('chips').innerHTML=SUB.map(d=>`<button class="chip" data-s="${d.s}">${d.s}</button>`).join('');
+$('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(b){sel=b.dataset.s;renderSub();}});
+
+function renderDetail(){
+  const d=SUB.find(x=>x.s===sel), r=+(d.p-d.m).toFixed(2);
+  const ind = Math.abs(d.m)<0.03?'≈ 0, little inductive effect':(d.m>0?'withdraws by induction (−I)':'donates by induction (+I)');
+  const res = Math.abs(r)<0.05?'≈ 0, little resonance effect':(r<0?'donates by resonance (+R)':'withdraws by resonance (−R)');
+  const net = Math.abs(d.p)<0.03?'roughly neutral':(d.p>0?'net withdrawing':'net donating');
+  let tension='';
+  if(d.m>0.03 && r<-0.05) tension = d.p>0
+    ? `<div class="verdict"><b>I and R fight; I wins at para.</b> The group withdraws by induction and donates by resonance, and is still net withdrawing at para. This is the halogen pattern: deactivates the ring, yet directs ortho/para.</div>`
+    : `<div class="verdict"><b>I and R fight; R wins at para.</b> Withdraws by induction (meta σ &gt; 0) but donates by resonance strongly enough to be net donating at para. Example: anisole (OMe) is activated, ortho/para directing.</div>`;
+  else if(d.m>0.03 && r>0.05) tension=`<div class="verdict"><b>I and R pull the same way.</b> Both withdraw, so the effect is strongest at para. Strong deactivator, meta directing.</div>`;
+  else if(d.m<-0.03 && r<-0.05) tension=`<div class="verdict"><b>I and R push the same way.</b> Both donate, so the ring is strongly activated, ortho/para directing.</div>`;
+  $('sdetail').innerHTML=`<h3 style="font-family:var(--f-mono);font-size:20px">–${d.s}</h3>
+    <dl class="kv"><dt>σ<sub>m</sub></dt><dd>${f2(d.m)}</dd><dt>σ<sub>p</sub></dt><dd>${f2(d.p)}</dd><dt>σ<sub>p</sub> − σ<sub>m</sub></dt><dd>${f2(r)}</dd></dl>
+    <p style="margin-top:10px;font-size:14px">Inductive: <b>${ind}</b><br>Resonance: <b>${res}</b><br>At para overall: <b>${net}</b></p>
+    ${tension}
+    <p class="muted" style="margin-top:10px">Benzoic acid check: pK<sub>a</sub> of the para-substituted acid ≈ 4.20 − σ<sub>p</sub> = ${(4.20-d.p).toFixed(2)}.</p>`;
+}
+function renderSub(){renderMap();renderDetail();document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.s===sel));}
+
+/* ---------- ladders ---------- */
+const LAD=[
+ {id:'hal',title:'1 · −I strength of halogens',measure:'pKa',better:'low',prompt:'Tap from most acidic to least acidic.',
+  items:[{l:'CH₃COOH',v:4.76,t:[]},{l:'ICH₂COOH',v:3.18,t:['I']},{l:'BrCH₂COOH',v:2.90,t:['I']},{l:'ClCH₂COOH',v:2.87,t:['I']},{l:'FCH₂COOH',v:2.59,t:['I']}],
+  lesson:'More electronegative halogen, stronger −I, more stable carboxylate, stronger acid. −I order: F > Cl > Br > I, following electronegativity (Module 1). Cl vs Br is nearly a tie (2.87 vs 2.90; some tables list both as 2.86).'},
+ {id:'add',title:'2 · −I effects add up',measure:'pKa',better:'low',prompt:'Tap from most acidic to least acidic.',
+  items:[{l:'CH₃COOH',v:4.76,t:[]},{l:'ClCH₂COOH',v:2.87,t:['I']},{l:'Cl₂CHCOOH',v:1.35,t:['I']},{l:'Cl₃CCOOH',v:0.66,t:['I']}],
+  lesson:'Each extra Cl adds more −I pull. Acidity rises with every substitution, though not by equal steps.'},
+ {id:'dist',title:'3 · −I dies with distance',measure:'pKa',better:'low',prompt:'Tap from most acidic to least acidic.',
+  items:[{l:'CH₃CH₂CH₂COOH',v:4.82,t:[],n:'no Cl'},{l:'ClCH₂CH₂CH₂COOH',v:4.52,t:['I'],n:'Cl at C-4 (γ)'},{l:'CH₃CHClCH₂COOH',v:4.05,t:['I'],n:'Cl at C-3 (β)'},{l:'CH₃CH₂CHClCOOH',v:2.86,t:['I'],n:'Cl at C-2 (α)'}],
+  lesson:'Moving Cl one carbon away cuts the pKa drop from about 2.0 units (α) to 0.8 (β) to 0.3 (γ). Induction is a short-range effect. Compare resonance, which acts at para on benzene, four bonds away.'},
+ {id:'alk',title:'4 · +I of alkyl groups',measure:'pKa',better:'low',prompt:'Tap from most acidic to least acidic.',
+  items:[{l:'HCOOH',v:3.75,t:[]},{l:'CH₃COOH',v:4.76,t:['I']},{l:'CH₃CH₂COOH',v:4.87,t:['I']},{l:'(CH₃)₃CCOOH',v:5.03,t:['I']}],
+  lesson:'Alkyl groups push electron density (+I) and destabilise the carboxylate, so acidity drops: H > CH₃ > C₂H₅ > C(CH₃)₃. The H → CH₃ step is the big one; beyond that the steps are small. Solvation also contributes to these small differences.'},
+ {id:'phen',title:'5 · Phenols: resonance needs ortho/para',measure:'pKa',better:'low',prompt:'Tap from most acidic to least acidic.',
+  items:[{l:'phenol',v:9.99,t:[]},{l:'p-nitrophenol',v:7.15,t:['I','R']},{l:'o-nitrophenol',v:7.23,t:['I','R']},{l:'m-nitrophenol',v:8.36,t:['I']},{l:'m-chlorophenol',v:9.12,t:['I']},{l:'p-chlorophenol',v:9.41,t:['I','R']},{l:'m-methoxyphenol',v:9.65,t:['I']},{l:'p-methoxyphenol',v:10.21,t:['I','R']},{l:'p-cresol',v:10.26,t:['I','H']}],
+  lesson:'NO₂ at para or ortho takes the phenoxide charge onto its O atoms by resonance (−R). At meta only −I acts, so m-nitrophenol is weaker. OMe flips sign with position: at meta only −I acts (more acidic than phenol), at para +R wins (less acidic). Cl at meta is more acidic than at para because at para its +R partly cancels −I.'},
+ {id:'cat',title:'6 · Carbocation stability',measure:'HIA (kcal/mol)',better:'low',prompt:'Tap from most stable to least stable.',
+  items:[{l:'(CH₃)₃C⁺ (3°)',v:231,t:['H','I'],n:'9 α C–H'},{l:'C₆H₅CH₂⁺ (benzyl)',v:234,t:['R'],n:'charge spread into ring'},{l:'(CH₃)₂CH⁺ (2°)',v:246,t:['H','I'],n:'6 α C–H'},{l:'CH₂=CHCH₂⁺ (allyl)',v:256,t:['R'],n:'charge on two carbons'},{l:'CH₃CH₂⁺ (1°)',v:273,t:['H','I'],n:'3 α C–H'},{l:'CH₃⁺ (methyl)',v:312,t:[],n:'nothing'}],
+  lesson:'Hydride ion affinity (HIA) is the energy released when the cation grabs H⁻ in the gas phase. Lower HIA means a more stable cation. Hyperconjugation scales with the number of α C–H bonds: 9 > 6 > 3 > 0. Resonance puts benzyl and allyl in among the alkyl cations rather than above all of them. 3° vs benzyl differ by only 3 kcal/mol, so treat them as close. Allyl comes out below 2° here, despite the common “allyl ≈ 2°” claim.'},
+ {id:'ene',title:'7 · Alkene stability (hyperconjugation + sterics)',measure:'ΔH hydrog. (kJ/mol)',better:'low',prompt:'Tap from most stable (least heat released) to least stable.',
+  items:[{l:'CH₂=CH₂',v:136,t:[],n:'0 α C–H'},{l:'CH₂=CHCH₂CH₃',v:126,t:['H'],n:'2 α C–H'},{l:'cis-CH₃CH=CHCH₃',v:119,t:['H','S'],n:'6 α C–H, methyls clash'},{l:'trans-CH₃CH=CHCH₃',v:115,t:['H'],n:'6 α C–H'},{l:'(CH₃)₂C=CHCH₃',v:112,t:['H'],n:'9 α C–H'},{l:'(CH₃)₂C=C(CH₃)₂',v:110,t:['H'],n:'12 α C–H'}],
+  lesson:'Less heat released on hydrogenation means a more stable alkene. More alkyl groups on the C=C (more α C–H) give more stability. Same substitution, cis vs trans: the difference (about 4 kJ/mol) is pure sterics.'},
+ {id:'amine',title:'8 · Amines in water: where +I alone fails',measure:'pKaH',better:'high',prompt:'Tap from most basic to least basic (in water).',
+  items:[{l:'(CH₃)₂NH (2°)',v:10.73,t:['I','X']},{l:'CH₃NH₂ (1°)',v:10.66,t:['I','X']},{l:'(CH₃)₃N (3°)',v:9.80,t:['I','X','S']},{l:'NH₃',v:9.25,t:['X']}],
+  lesson:'+I alone predicts 3° > 2° > 1° > NH₃, and that is the gas-phase order. In water, the protonated amine is stabilised by H-bonds through its N–H bonds. (CH₃)₃NH⁺ has only one, so solvation drops and 3° falls below 1°. Higher pKaH of the conjugate acid means a stronger base.'}
+];
+let lad='hal', quiz=null;
+try{const s=localStorage.getItem('efl-lad'); if(LAD.some(x=>x.id===s))lad=s;}catch(e){}
+$('ladnav').innerHTML=LAD.map(L=>`<button class="chip" data-l="${L.id}">${L.title}</button>`).join('');
+$('ladnav').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;lad=b.dataset.l;quiz=null;try{localStorage.setItem('efl-lad',lad);}catch(err){}renderLadder();});
+
+const tagHTML=t=>t.map(k=>`<span class="tag ${k}">${k==='X'?'Solv':k}</span>`).join('');
+function sorted(L){return [...L.items].sort((a,b)=>L.better==='low'?a.v-b.v:b.v-a.v);}
+function renderLadder(){
+  document.querySelectorAll('#ladnav .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.l===lad));
+  const L=LAD.find(x=>x.id===lad), el=$('ladder');
+  if(quiz){ renderQuiz(L); return; }
+  const S=sorted(L), vals=S.map(i=>i.v), vmax=Math.max(...vals), vmin=Math.min(...vals);
+  const head = L.measure==='rank'?'Most stable at top':(L.better==='low'?`Strongest at top (lowest ${L.measure})`:`Strongest at top (highest ${L.measure})`);
+  const rows=S.map(i=>{
+    let w = L.measure==='rank'?100*(S.length-i.v+1)/S.length : 100*(i.v/vmax);
+    if(L.id==='ene') w = 100*(i.v-100)/(vmax-100);
+    return `<div class="lrow"><div class="lab">${i.l}<div class="tags">${tagHTML(i.t)}</div>${i.n?`<div class="note">${i.n}</div>`:''}</div>
+      <div class="barcell"><div class="bar" style="width:${Math.max(2,w)}%"></div></div>
+      <div class="val">${L.measure==='rank'?'#'+i.v:i.v.toFixed((L.id==='ene'||L.id==='cat')?0:2)}</div></div>`;}).join('');
+  const barNote = L.measure==='rank'?'Bars show rank only.':(L.id==='ene'?'Bar length starts from 100 kJ/mol to show the differences.':`Bar length = ${L.measure} value.`);
+  el.innerHTML=`<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center">
+      <div><h3>${L.title}</h3><p class="muted">${head}. ${barNote}</p></div>
+      <button class="btn primary" id="qstart">Rank it first</button></div>
+    <div style="margin-top:8px">${rows}</div><div class="lesson">${L.lesson}</div>`;
+  $('qstart').onclick=()=>{quiz={order:[],shuffled:shuffle([...L.items])};renderLadder();};
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function renderQuiz(L){
+  const el=$('ladder'), done=quiz.order.length===L.items.length;
+  const btns=quiz.shuffled.map((i,k)=>{const pos=quiz.order.indexOf(i);
+    return `<button class="qitem" data-k="${k}" ${pos>=0?'disabled':''}><span class="num">${pos>=0?pos+1:''}</span>${i.l}</button>`;}).join('');
+  let result='';
+  if(done){
+    const S=sorted(L); let right=0;
+    const rows=quiz.order.map((i,k)=>{const ok=(L.measure==='rank'?i.v===S[k].v:i.v===S[k].v); if(ok)right++;
+      return `<div class="lrow"><div class="lab">${k+1}. ${i.l}</div><div class="barcell res ${ok?'ok':'bad'}">${ok?'✓ correct position':'✗ should be '+S[k].l}</div><div class="val">${L.measure==='rank'?'':i.v}</div></div>`;}).join('');
+    result=`<p style="margin-top:12px;font-weight:600">${right} / ${S.length} in the right place.</p><div>${rows}</div>
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn primary" id="qreveal">Show the ladder with reasons</button><button class="btn" id="qagain">Try again</button></div>`;
+  }
+  el.innerHTML=`<h3>${L.title}</h3><p class="muted">${L.prompt}</p><div class="qgrid" style="margin-top:10px">${btns}</div>
+    ${!done&&quiz.order.length?'<button class="btn" id="qundo" style="margin-top:10px">Undo last</button>':''}${result}`;
+  el.querySelectorAll('.qitem').forEach(b=>b.onclick=()=>{quiz.order.push(quiz.shuffled[+b.dataset.k]);renderLadder();});
+  const u=$('qundo'); if(u)u.onclick=()=>{quiz.order.pop();renderLadder();};
+  const r=$('qreveal'); if(r)r.onclick=()=>{quiz=null;renderLadder();};
+  const a=$('qagain'); if(a)a.onclick=()=>{quiz={order:[],shuffled:shuffle([...L.items])};renderLadder();};
+}
+
+renderSub(); renderLadder();
+</script>
+</body>
+</html>
