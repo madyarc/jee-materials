@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rolling Motion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) wheel with velocity arrows: v_cm and ωR sliders, state presets, trace of a rim point
+   (2) incline race by shape number β, with µ-needed and energy-split charts  (3) slipping → rolling on a floor: v and ωR graph + strobe
+   (4) where to push: friction vs height of the force  (5) predict-then-check questions */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --b1:#7a52c7; --b2:#1f8f87; --b3:#b0377a; --b4:#8a6d1f;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --b1:#a585f0; --b2:#3cb8ad; --b3:#e86fae; --b4:#d4b44a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --b1:#a585f0; --b2:#3cb8ad; --b3:#e86fae; --b4:#d4b44a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:7.5em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:5.5em;text-align:right}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Rolling Motion</h1>
+    <p class="lede">A rolling wheel does two things at once: its centre moves forward at v, and it spins at ω. Rolling without slipping is the special case where the two match, v = ωR, so the bottom point is momentarily at rest. Everything on this page (who wins a race down a ramp, which way friction acts, how a skidding ball starts to roll) follows from comparing v with ωR.</p>
+  </header>
+
+  <!-- 1 · the wheel -->
+  <section class="stack">
+    <div>
+      <h2>1 · Every point of the wheel</h2>
+      <p class="lede">Blue arrows are the velocities of points on the wheel, measured from the ground. Set the centre’s speed v and the rim’s spinning speed ωR separately, or pick a named case.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="wchips" role="group" aria-label="Choose a state of motion"></div>
+        <div class="svgbox"><svg id="wheel" viewBox="0 0 640 280" role="img" aria-label="Wheel with velocity arrows" style="min-width:420px"></svg></div>
+        <div class="slider"><label for="wv">centre speed v</label><input type="range" id="wv" min="0" max="1.5" step="0.05" value="1"><output id="wvo"></output></div>
+        <div class="slider"><label for="ww">spin speed ωR</label><input type="range" id="ww" min="-1" max="1.5" step="0.05" value="1"><output id="wwo"></output></div>
+        <div class="row"><button class="btn primary" id="wplay">Play</button><label class="muted"><input type="checkbox" id="wtrace" checked> trace of the marked rim point</label><label class="muted"><input type="checkbox" id="wic" checked> zero-velocity point</label></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="wstate"></p>
+        <dl class="kv" id="wkv"></dl>
+        <p class="cap key" id="wcap"></p>
+        <p class="cap">Every arrow is the centre’s v plus the spin’s ωR along the rim. On the ground, the bottom point moves at v − ωR. That one number, the <b>slip velocity</b>, tells you whether the wheel rolls (0), skids (&gt; 0) or spins its wheels (&lt; 0), and kinetic friction always points against it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · race -->
+  <section class="stack">
+    <div>
+      <h2>2 · The race down the incline</h2>
+      <p class="lede">Ring, hollow sphere, disc and solid sphere, all released together on the same rough ramp. Same height, so the same energy is released, but some of it must go into spinning. Predict the winner, then run it.</p>
+    </div>
+    <div class="panel stack">
+      <div class="row"><span class="muted">Who reaches the bottom first?</span><div class="chips" id="rpick" role="group" aria-label="Your prediction"></div></div>
+      <div class="svgbox"><svg id="race" viewBox="0 0 640 262" role="img" aria-label="Race lanes" style="min-width:520px;max-width:780px;margin:0 auto"></svg></div>
+      <div class="row"><button class="btn primary" id="rrun">Run the race</button><button class="btn" id="rreset">Reset</button></div>
+      <p class="verdict" id="rverdict">Pick your winner, then run.</p>
+      <div class="two">
+        <div class="stack">
+          <div class="slider"><label for="rth">ramp angle θ</label><input type="range" id="rth" min="5" max="60" step="1" value="30"><output id="rtho"></output></div>
+          <div class="slider"><label for="rmu">friction µ</label><input type="range" id="rmu" min="0" max="1" step="0.01" value="0.5"><output id="rmuo"></output></div>
+          <svg id="fbd" viewBox="0 0 300 190" role="img" aria-label="Forces on a disc on the incline" style="width:100%;max-width:320px;height:auto;display:block"></svg>
+        </div>
+        <div class="stack">
+          <div><h3>µ needed to roll at this angle</h3><svg id="much" viewBox="0 0 320 150" role="img" aria-label="Minimum friction coefficient for each body" style="width:100%;max-width:400px;height:auto;display:block"></svg></div>
+          <div><h3>Where the energy goes, if it rolls</h3><svg id="kech" viewBox="0 0 320 140" role="img" aria-label="Kinetic energy split" style="width:100%;max-width:400px;height:auto;display:block"></svg>
+          <div class="legend"><span><i style="background:var(--vel);height:10px;width:10px"></i>moving forward</span><span><i style="background:var(--spin);height:10px;width:10px"></i>spinning</span></div></div>
+        </div>
+      </div>
+      <p class="cap key">Write I = βMR², where β = k²/R² is a pure number fixed by the shape: ring 1, hollow sphere 2/3, disc 1/2, solid sphere 2/5. Rolling down, a = g sin θ / (1 + β). Mass and radius cancel; only β matters, and the smallest β wins. Friction points <b>up</b> the slope with f = β/(1 + β) · Mg sin θ, so rolling needs µ ≥ β/(1 + β) · tan θ.</p>
+      <p class="cap">Lower µ below a body’s bar and it slips: kinetic friction µMg cos θ is then too weak to spin it up in step, a = g(sin θ − µ cos θ) is <i>larger</i> than when rolling, and the extra energy is lost to friction instead. The grey block slides with no friction at all (β = 0 in effect): nothing can beat it.</p>
+    </div>
+  </section>
+
+  <!-- 3 · slip to roll -->
+  <section class="stack">
+    <div>
+      <h2>3 · Slipping turns into rolling</h2>
+      <p class="lede">Throw a ball along a rough floor without spin, or spin a disc and set it down. At first v ≠ ωR, so the contact point slides and kinetic friction acts against that sliding. It changes v and ωR in opposite directions until they meet. From then on the ball rolls and friction drops to zero.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="spre" role="group" aria-label="Presets"></div>
+        <div class="svgbox"><svg id="sgraph" viewBox="0 0 600 250" role="img" aria-label="v and ωR against time" style="min-width:420px"></svg></div>
+        <div class="legend"><span><i style="background:var(--vel)"></i>centre speed v</span><span><i style="background:var(--spin)"></i>spin speed ωR</span><span><i style="background:var(--ink)"></i>rolling: v = ωR</span></div>
+        <div class="svgbox"><svg id="sstrobe" viewBox="0 0 600 80" role="img" aria-label="Positions at equal time steps" style="min-width:420px"></svg></div>
+        <p class="muted">Strobe: the ball every equal time step. Hollow = slipping, filled = rolling.</p>
+      </div>
+      <div class="panel stack">
+        <div class="chips" id="sbody" role="group" aria-label="Choose body"></div>
+        <div class="slider"><label for="sv">start v₀</label><input type="range" id="sv" min="0" max="10" step="0.1" value="7"><output id="svo"></output></div>
+        <div class="slider"><label for="sw">start ω₀R</label><input type="range" id="sw" min="-10" max="10" step="0.1" value="0"><output id="swo"></output></div>
+        <div class="slider"><label for="smu">µ</label><input type="range" id="smu" min="0.05" max="0.6" step="0.01" value="0.2"><output id="smuo"></output></div>
+        <dl class="kv" id="skv"></dl>
+        <p class="cap key" id="scap"></p>
+        <p class="cap">Shortcut for the final speed: friction acts along the floor, so it has no turning effect about any point on the floor, and angular momentum about such a point stays fixed: Mv₀R + βMR²ω₀ = MvR + βMR²(v/R). So v<sub>final</sub> = (v₀ + βω₀R)/(1 + β), whatever µ is. µ only decides how long it takes.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · where to push -->
+  <section class="stack">
+    <div>
+      <h2>4 · Where to push so no friction is needed</h2>
+      <p class="lede">A horizontal force F acts on a rolling body at height h above its centre (a string, a cue, a hand). Slide the height and watch the friction the floor must supply to keep it rolling.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="hbody" role="group" aria-label="Choose body"></div>
+        <div class="svgbox"><svg id="push" viewBox="0 0 400 250" role="img" aria-label="Force at height h and the friction needed" style="min-width:320px;max-width:440px;margin:0 auto"></svg></div>
+        <div class="slider"><label for="hh">height h / R</label><input type="range" id="hh" min="-1" max="1" step="0.01" value="1"><output id="hho"></output></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="hkv"></dl>
+        <p class="cap key" id="hcap"></p>
+        <p class="cap">Take torques about the contact point (friction and the normal force pass through it): F(R + h) = I<sub>P</sub>α with I<sub>P</sub> = MR²(1 + β). Then Ma = F + f gives f = F(h/R − β)/(1 + β). It vanishes at h = βR = k²/R. For a billiard ball that is 2R/5 above the centre: struck there, it rolls at once without skidding.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · quiz -->
+  <section class="stack">
+    <div>
+      <h2>5 · Predict, then check</h2>
+      <p class="lede">Classic exam questions. Choose first; the reasoning appears after.</p>
+    </div>
+    <div class="qgrid" id="quiz"></div>
+    <div><button class="btn" id="qreset">Reset answers</button></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> rigid round bodies, uniform density, centre of mass at the centre; a single contact point on a rigid surface; constant kinetic friction µN while slipping; no rolling resistance or air drag (that is why a freely rolling ball here never stops). Sections 2–3 use g = 9.8 m s⁻²; quiz items state their own g. Arrow lengths are to scale within each picture; the race is shown in slow motion.</p>
+    <p><b>Sources:</b> NCERT Physics Part I, Class XI, "System of Particles and Rotational Motion" (Ch. 7 in pre-2023 editions; rolling motion and kinetic energy of rolling). H. C. Verma, <i>Concepts of Physics</i> Vol. 1, Ch. 10 "Rotational Mechanics" (rolling, friction in rolling, angular momentum about the contact point). Halliday, Resnick &amp; Walker, <i>Fundamentals of Physics</i>, Ch. 11 (rolling down a ramp). Questions adapted from a study compendium on moment of inertia and rolling; every result was re-derived from Newton’s laws for translation and rotation.</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+const G=9.8; // m s^-2
+/* β = I_cm/(MR²) about the rolling axis */
+const BODY=[
+ {id:'ring', name:'Ring',          b:1,   bf:'1',   col:'var(--b1)'},
+ {id:'hsph', name:'Hollow sphere', b:2/3, bf:'2/3', col:'var(--b2)'},
+ {id:'disc', name:'Disc',          b:1/2, bf:'1/2', col:'var(--b3)'},
+ {id:'ssph', name:'Solid sphere',  b:2/5, bf:'2/5', col:'var(--b4)'}
+];
+/* Section 1 presets: v and ωR in arbitrary speed units */
+const WPRE=[
+ {id:'trans', l:'Pure translation', v:1,   w:0},
+ {id:'rot',   l:'Pure rotation',    v:0,   w:1, lifted:true},
+ {id:'roll',  l:'Rolling',          v:1,   w:1},
+ {id:'skid',  l:'Skidding (v > ωR)',v:1.2, w:0.5},
+ {id:'spin',  l:'Wheel-spin (v < ωR)',v:0.5,w:1.3}
+];
+/* Section 3 presets (from the source's worked examples, re-derived; there g = 10, here 9.8) */
+const SPRE=[
+ {l:'Bowling ball: thrown, no spin', b:'ssph', v:7, w:0,  mu:0.2},
+ {l:'Disc spun, then set down',      b:'disc', v:0, w:3,  mu:0.1},
+ {l:'Ring with backspin',            b:'ring', v:4, w:-6, mu:0.2}
+];
+const QUIZ=[
+ {q:'A ball rolls without slipping at constant speed on a level floor; nothing else pushes it. What friction acts on it?',
+  o:['Backward, to slow it down','Forward, to keep it spinning','Zero'],a:2,
+  why:'Already rolling, nothing to change: v and ω stay constant, so no force or torque is needed and static friction is zero. (Real balls slow down because they and the floor deform, which is outside this model.)'},
+ {q:'A solid sphere rolls without slipping from rest down a ramp of vertical height 7 m (take g = 10 m s⁻²). Its speed at the bottom?',
+  o:['about 11.8 m s⁻¹','10 m s⁻¹','about 8.4 m s⁻¹','7 m s⁻¹'],a:1,
+  why:'Static friction does no work (the contact point does not move), so Mgh = ½Mv²(1 + β) with β = 2/5: v² = 10gh/7 = 100, v = 10 m s⁻¹. 11.8 m s⁻¹ is the frictionless slide, √(2gh): no energy goes into spin.'},
+ {q:'A disc rolls without slipping <i>up</i> an incline, slowing down. Which way does friction act on it?',
+  o:['Down the slope, with gravity','Up the slope','Zero'],a:1,
+  why:'Gravity alone would slow v but not ω, so the contact point would start sliding backward. Friction resists that by acting up the slope; its torque slows the spin to keep ωR = v. Free rolling up or down, friction points up the slope.'},
+ {q:'A wheel rolls at v = 5 m s⁻¹. How fast is the rim point 60° round from the contact point (angle measured at the centre)?',
+  o:['2.5 m s⁻¹','5 m s⁻¹','7.1 m s⁻¹','10 m s⁻¹'],a:1,
+  why:'Rolling is pure rotation about the contact point P. The point is 2R sin 30° = R from P, so its speed is ωR = v = 5 m s⁻¹.'},
+ {q:'A string wound round a disc is pulled horizontally from the top with force F; the disc rolls without slipping. Friction from the floor is:',
+  o:['F/3 backward','F/3 forward','Zero','F/2 backward'],a:1,
+  why:'About the contact point: F·2R = (3/2)MR²·(a/R), so a = 4F/3M. Then F + f = Ma gives f = +F/3, forward. The force is above h = k²/R = R/2, so it over-spins the disc and friction must push forward to keep up.'},
+ {q:'A small solid ball rolls without slipping into a vertical loop of radius R (ball much smaller than R). Lowest release height to get round?',
+  o:['2.5R','2.7R','3R','2R'],a:1,
+  why:'At the top it needs v² ≥ gR. Energy: Mgh = Mg·2R + ½Mv²(1 + 2/5) = 2MgR + 0.7MgR. So h = 2.7R. A frictionless sliding block needs only 2.5R; the extra 0.2R pays for the spin.'},
+ {q:'Two solid cylinders of the same material roll down the same ramp from rest. One has twice the radius (so 4× the mass for equal length). Which arrives first?',
+  o:['The bigger one','The smaller one','They tie'],a:2,
+  why:'a = g sin θ/(1 + β) and both have β = 1/2. Mass and radius cancel. Only the shape, through β, matters.'}
+];
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const f2=v=>v.toFixed(2), sgn=v=>(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(2);
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function arrow(x1,y1,x2,y2,col,w,head){
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy); if(L<1.5) return '';
+  const h=Math.min(head||9,L*0.6), ux=dx/L, uy=dy/L, bx=x2-ux*h, by=y2-uy*h, px=-uy*h*0.5, py=ux*h*0.5;
+  return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="${w||2}" stroke-linecap="round"/><polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px).toFixed(1)},${(by+py).toFixed(1)} ${(bx-px).toFixed(1)},${(by-py).toFixed(1)}" fill="${col}"/>`;
+}
+function chipsHTML(list,key){return list.map(x=>`<button class="chip" data-k="${x[key]}">${x.l||x.name}</button>`).join('');}
+function press(sel,k){document.querySelectorAll(sel+' .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===k));}
+
+/* =================== 1 · WHEEL =================== */
+const W={v:1,w:1,lifted:false,x:250,th:0.5,R:66,cy:150,ground:216,K:44,play:false,last:0};
+{const s=load('roll-wheel'); const p=WPRE.find(x=>x.id===s); if(p){W.v=p.v;W.w=p.w;W.lifted=!!p.lifted;}}
+$('wchips').innerHTML=chipsHTML(WPRE,'id');
+$('wchips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;const p=WPRE.find(x=>x.id===c.dataset.k);
+  W.v=p.v;W.w=p.w;W.lifted=!!p.lifted;$('wv').value=p.v;$('ww').value=p.w;store('roll-wheel',p.id);drawWheel();});
+$('wv').value=W.v; $('ww').value=W.w;
+$('wv').addEventListener('input',e=>{W.v=+e.target.value;W.lifted=false;drawWheel();});
+$('ww').addEventListener('input',e=>{W.w=+e.target.value;W.lifted=false;drawWheel();});
+$('wtrace').addEventListener('change',drawWheel); $('wic').addEventListener('change',drawWheel);
+function wheelState(){
+  const v=W.v,w=W.w,s=v-w;
+  if(Math.abs(v)<1e-9&&Math.abs(w)<1e-9) return {n:'At rest',c:'Nothing moves. Move a slider.'};
+  if(W.lifted) return {n:'Pure rotation (axle held)',c:'The wheel is lifted off the ground and spins about a fixed axle. Every point moves in a circle, with speed proportional to its distance from the centre; the centre itself is still. Top and bottom move in opposite directions.'};
+  if(Math.abs(w)<1e-9) return {n:'Pure translation (sliding)',c:'No spin: every point has the same velocity v, the bottom point included. It slides over the ground, so kinetic friction acts backward. On a rough floor that friction also starts the wheel spinning (section 3).'};
+  if(Math.abs(s)<1e-6) return {n:'Rolling without slipping',c:'v = ωR. The bottom point is at rest: forward v and backward ωR cancel there, and they add at the top to give 2v. The whole wheel is turning about the contact point at that instant: each arrow is perpendicular to the line from the contact point, with length proportional to the distance from it. Friction here is static: zero, forward or backward, set by the other forces.'};
+  if(s>0) return {n:w<0?'Skidding with backspin':'Skidding (forward slip)',c:'v > ωR: the wheel spins too slowly for its speed, and the bottom point slides forward over the ground (a locked or under-spun wheel). Kinetic friction acts backward: it slows v and speeds up ω until they match.'};
+  return {n:'Wheel-spin (backward slip)',c:'v < ωR: the wheel spins too fast for its speed, and the bottom point slides backward (a car pulling away on ice). Kinetic friction acts forward: it speeds up v and slows ω until they match.'};
+}
+function drawWheel(){
+  const {v,w,R,cy,K}=W, ground=W.ground, lift=W.lifted?14:0, cyy=cy-lift, x=W.x;
+  press('#wchips',(WPRE.find(p=>Math.abs(p.v-v)<1e-9&&Math.abs(p.w-w)<1e-9&&!!p.lifted===W.lifted)||{}).id||'');
+  $('wvo').textContent=f2(v); $('wwo').textContent=sgn(w).replace('+','');
+  let g=`<line x1="0" x2="640" y1="${ground}" y2="${ground}" stroke="var(--muted)" stroke-width="1.5"/>`;
+  for(let i=0;i<32;i++) g+=`<line x1="${i*20+4}" x2="${i*20-6}" y1="${ground+1}" y2="${ground+10}" stroke="var(--line)"/>`;
+  if(W.lifted) g+=`<line x1="${x}" x2="${x}" y1="${cyy}" y2="${ground}" stroke="var(--muted)" stroke-width="3"/><text x="${x+8}" y="${ground-4}" font-size="11" fill="var(--muted)">axle held fixed</text>`;
+  /* trace of the marked rim point (starts at angle th) */
+  if($('wtrace').checked && (Math.abs(v)>1e-6||Math.abs(w)>1e-6)){
+    const tm=Math.min(Math.abs(v)>1e-6?720/Math.abs(v):1e9, Math.abs(w)>1e-6?(Math.abs(v)<1e-6?2*Math.PI*R/Math.abs(w):8*Math.PI*R/Math.abs(w)):1e9);
+    let d='';
+    for(let i=0;i<=400;i++){const t=-tm+2*tm*i/400, ps=W.th+w*t/R, px=x+v*t-R*Math.sin(ps), py=cyy+R*Math.cos(ps);d+=(i?'L':'M')+px.toFixed(1)+' '+py.toFixed(1);}
+    g+=`<path d="${d}" fill="none" stroke="var(--spin)" stroke-width="1.2" opacity=".55"/>`;
+  }
+  /* wheel */
+  g+=`<circle cx="${x}" cy="${cyy}" r="${R}" fill="var(--ink)" fill-opacity=".06" stroke="var(--ink)" stroke-opacity=".6" stroke-width="2"/>`;
+  for(let j=0;j<4;j++){const ps=W.th+j*Math.PI/4;g+=`<line x1="${x+R*Math.sin(ps)}" y1="${cyy-R*Math.cos(ps)}" x2="${x-R*Math.sin(ps)}" y2="${cyy+R*Math.cos(ps)}" stroke="var(--ink)" stroke-opacity=".18"/>`;}
+  /* zero-velocity point */
+  if($('wic').checked && Math.abs(w)>1e-6){
+    const icy=cyy+R*v/w;
+    if(icy>4&&icy<276){
+      for(let j=0;j<8;j++){const ps=W.th+j*Math.PI/4;g+=`<line x1="${x}" y1="${icy}" x2="${x-R*Math.sin(ps)}" y2="${cyy+R*Math.cos(ps)}" stroke="var(--muted)" stroke-dasharray="2 4" opacity=".7"/>`;}
+      g+=`<path d="M${x-6} ${icy-6}L${x+6} ${icy+6}M${x-6} ${icy+6}L${x+6} ${icy-6}" stroke="var(--ink)" stroke-width="2"/><text x="${x-10}" y="${icy+ (icy>ground-4?16:-8)}" font-size="11" fill="var(--ink)" text-anchor="end" dx="-4">zero-velocity point</text>`;
+    }
+  }
+  /* velocity arrows: rim points and centre. Point at angle ψ from the bottom (clockwise): rel=(−R sinψ, −R cosψ) with y up */
+  const vel=(rx,ry)=>[v+w*ry/R,-w*rx/R]; // y up, speed units
+  for(let j=0;j<8;j++){
+    const ps=W.th+j*Math.PI/4, rx=-R*Math.sin(ps), ry=-R*Math.cos(ps), px=x+rx, py=cyy-ry, [vx,vy]=vel(rx,ry);
+    g+=arrow(px,py,px+K*vx,py-K*vy,'var(--vel)',2);
+    g+=`<circle cx="${px}" cy="${py}" r="${j?3:5}" fill="${j?'var(--ink)':'var(--spin)'}"/>`;
+  }
+  g+=arrow(x,cyy,x+K*v,cyy,'var(--vel)',2.6)+`<circle cx="${x}" cy="${cyy}" r="3.5" fill="var(--ink)"/>`;
+  /* contact point and friction */
+  const slip=v-w;
+  if(!W.lifted){
+    g+=arrow(x,ground,x+K*slip,ground,'var(--vel)',2.6);
+    g+=`<circle cx="${x}" cy="${ground}" r="4.5" fill="var(--axis)"/>`;
+    if(Math.abs(slip)>1e-6){const d=slip>0?-1:1;g+=arrow(x,ground+14,x+d*48,ground+14,'var(--force)',2.6)+`<text x="${x+d*52}" y="${ground+18}" font-size="11.5" fill="var(--force)" text-anchor="${d>0?'start':'end'}">kinetic friction</text>`;}
+  }
+  /* labels: top speed */
+  const topv=v+w;
+  g+=`<text x="${x+8}" y="${cyy-R-8}" font-size="11.5" fill="var(--vel)">${'top: '+f2(topv)}</text>`;
+  $('wheel').innerHTML=g;
+  const st=wheelState();
+  $('wstate').textContent=st.n; $('wcap').innerHTML=st.c;
+  $('wkv').innerHTML=`<dt>centre, v</dt><dd>${f2(v)}</dd><dt>spin, ωR</dt><dd>${sgn(w)}</dd><dt>top point</dt><dd>v + ωR = ${f2(topv)}</dd>`+
+    (W.lifted?`<dt>contact point</dt><dd>not touching</dd>`:`<dt>slip, v − ωR</dt><dd>${sgn(slip)}</dd><dt>friction</dt><dd>${Math.abs(slip)<1e-6?'static (any direction, ≤ µN)':slip>0?'kinetic, backward':'kinetic, forward'}</dd>`);
+}
+function stepWheel(dt){
+  const sp=70; // px per second per speed unit
+  W.x+=W.v*sp*dt; W.th+=W.w*sp*dt/W.R;
+  if(W.x>640+W.R) W.x-=640+2*W.R;
+  if(W.th>2*Math.PI) W.th-=2*Math.PI; if(W.th<0) W.th+=2*Math.PI;
+}
+function loopWheel(ts){
+  if(!W.play) return;
+  const dt=W.last?Math.min(0.05,(ts-W.last)/1000):0; W.last=ts;
+  stepWheel(dt); drawWheel(); requestAnimationFrame(loopWheel);
+}
+if(RM) $('wplay').textContent='Step →';
+$('wplay').addEventListener('click',()=>{
+  if(RM){stepWheel(0.4);drawWheel();return;}
+  W.play=!W.play; $('wplay').textContent=W.play?'Pause':'Play';
+  if(W.play){W.last=0;requestAnimationFrame(loopWheel);}
+});
+
+/* =================== 2 · RACE =================== */
+const RC={th:30,mu:0.5,pick:null,t:0,run:false,done:false,last:0,snap:false,gen:0};
+const LANES=[...BODY,{id:'block',name:'Frictionless block',b:0,bf:'0',col:'var(--muted)',ref:true}];
+$('rpick').innerHTML=BODY.map(b=>`<button class="chip" data-k="${b.id}">${b.name}</button>`).join('');
+$('rpick').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;RC.pick=c.dataset.k;press('#rpick',RC.pick);if(RC.done)verdict();else $('rverdict').textContent='Now run the race.';});
+function accel(b){ /* returns {a, rolls} in m s^-2 */
+  const th=RC.th*Math.PI/180, s=Math.sin(th), c=Math.cos(th);
+  if(b.ref) return {a:G*s,rolls:false,slide:true};
+  const need=b.b/(1+b.b)*Math.tan(th);
+  if(RC.mu>=need-1e-12) return {a:G*s/(1+b.b),rolls:true,need};
+  return {a:G*(s-RC.mu*c),rolls:false,need};
+}
+const TR0=150, TR1=572, TANIM=3.2;
+function racePos(b){
+  const A=LANES.map(x=>accel(x).a), amin=Math.min(...A), amax=Math.max(...A), a=accel(b).a;
+  if(RC.snap) return Math.min(1,a/amax);
+  return Math.min(1,(a/amin)*Math.pow(RC.t/TANIM,2));
+}
+function drawRace(){
+  $('rtho').textContent=RC.th+'°'; $('rmuo').textContent=f2(RC.mu);
+  let g=`<line x1="${TR0}" x2="${TR0}" y1="6" y2="256" stroke="var(--line)" stroke-width="2"/><line x1="${TR1}" x2="${TR1}" y1="6" y2="256" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 3"/>`;
+  g+=`<text x="${TR0}" y="258" font-size="10.5" fill="var(--muted)" text-anchor="middle" dy="0">start</text><text x="${TR1}" y="258" font-size="10.5" fill="var(--muted)" text-anchor="middle">bottom</text>`;
+  LANES.forEach((b,i)=>{
+    const y=30+i*48, A=accel(b), p=racePos(b), x=TR0+p*(TR1-TR0), r=15;
+    g+=`<line x1="${TR0}" x2="${TR1}" y1="${y+r}" y2="${y+r}" stroke="var(--line)"/>`;
+    g+=`<text x="4" y="${y-1}" font-size="12.5" font-weight="600" fill="${b.col}">${b.name}</text>`;
+    g+=`<text x="4" y="${y+14}" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${b.ref?'no spin, no friction':'β = '+b.bf+(A.rolls?'':' · slips')}</text>`;
+    /* rotation angle: rolling s/r; slipping only the friction-driven part */
+    let ang=0; const s=p*(TR1-TR0);
+    if(!b.ref){
+      if(A.rolls) ang=s/r;
+      else { const th=RC.th*Math.PI/180, num=RC.mu*Math.cos(th)/b.b, den=Math.sin(th)-RC.mu*Math.cos(th); ang=den>0?s*(num/den)/r:0; }
+    }
+    if(b.ref) g+=`<rect x="${x-r}" y="${y-r+2}" width="${2*r}" height="${2*r-2}" rx="3" fill="var(--muted)" fill-opacity=".35" stroke="var(--muted)"/>`;
+    else {
+      const body= b.id==='ring'?`<circle cx="${x}" cy="${y}" r="${r-2}" fill="none" stroke="${b.col}" stroke-width="4"/>`
+        : b.id==='hsph'?`<circle cx="${x}" cy="${y}" r="${r-1.5}" fill="${b.col}" fill-opacity=".18" stroke="${b.col}" stroke-width="3"/>`
+        : b.id==='disc'?`<circle cx="${x}" cy="${y}" r="${r}" fill="${b.col}" fill-opacity=".55"/>`
+        : `<circle cx="${x}" cy="${y}" r="${r}" fill="${b.col}"/>`;
+      g+=body+`<line x1="${x}" y1="${y}" x2="${(x+(r-2)*Math.sin(ang)).toFixed(1)}" y2="${(y-(r-2)*Math.cos(ang)).toFixed(1)}" stroke="var(--surface)" stroke-width="2.4"/>`;
+    }
+    if(p>=1||RC.done){
+      const ratio=Math.sqrt(G*Math.sin(RC.th*Math.PI/180)/A.a);
+      g+=`<text x="${TR1+22}" y="${y+4}" font-size="11" fill="var(--ink)" font-family="IBM Plex Mono,monospace">${ratio.toFixed(2)}×</text>`;
+    }
+  });
+  if(RC.done) g+=`<text x="636" y="10" font-size="10" fill="var(--muted)" text-anchor="end">time ÷ block’s</text>`;
+  $('race').innerHTML=g;
+  drawFBD(); drawMu(); drawKE();
+}
+function verdict(){
+  const A=BODY.map(b=>accel(b).a), amax=Math.max(...A), win=BODY.filter((b,i)=>A[i]>amax-1e-9);
+  const names=win.map(b=>b.name.toLowerCase()).join(' and ');
+  const anySlip=BODY.some(b=>!accel(b).rolls);
+  let t=(win.length>1?`Tie: ${names} (all slipping, so they share a = g(sin θ − µ cos θ)). `:`First among the round bodies: the ${names}. `);
+  if(RC.pick) t=(win.some(b=>b.id===RC.pick)?'<b>Your prediction was right.</b> ':'<b>Not this time.</b> ')+t;
+  t+=anySlip?'Some bodies slip at this µ; raise µ to make them all roll.':'Order: smallest β first. Mass at the rim needs more energy to spin, leaving less for moving forward.';
+  t+=` <span class="muted">${RC.snap?'Reduced motion: snapshot taken when the first body arrives. ':''}Numbers on the right: time taken ÷ the frictionless block’s time.</span>`;
+  $('rverdict').innerHTML=t;
+}
+function loopRace(ts,gen){
+  if(!RC.run||gen!==RC.gen) return;
+  const dt=RC.last?Math.min(0.05,(ts-RC.last)/1000):0; RC.last=ts; RC.t+=dt;
+  if(LANES.every(b=>racePos(b)>=1)){RC.run=false;RC.done=true;drawRace();verdict();return;}
+  drawRace(); requestAnimationFrame(t=>loopRace(t,gen));
+}
+function resetRace(){RC.run=false;RC.done=false;RC.t=0;RC.snap=false;drawRace();$('rverdict').textContent=RC.pick?'Now run the race.':'Pick your winner, then run.';}
+$('rrun').addEventListener('click',()=>{
+  resetRace();
+  if(RM){RC.snap=true;RC.done=true;drawRace();verdict();return;}
+  RC.run=true;RC.last=0;const gen=++RC.gen;requestAnimationFrame(t=>loopRace(t,gen));
+});
+$('rreset').addEventListener('click',resetRace);
+$('rth').addEventListener('input',e=>{RC.th=+e.target.value;resetRace();});
+$('rmu').addEventListener('input',e=>{RC.mu=+e.target.value;resetRace();});
+function drawFBD(){
+  const th=RC.th*Math.PI/180, c=Math.cos(th), s=Math.sin(th), disc=BODY[2], A=accel(disc);
+  const x0=20,y0=170,Lr=250; // ramp: high on the left, down-slope direction on screen = (c, s)
+  const top=[x0, y0-Lr*s/c>10?y0-Lr*s/c:10];
+  const run=(y0-top[1])/Math.tan(th);
+  const P=[x0+run,y0], Q=[x0,top[1]];
+  let g=`<polygon points="${Q[0]},${Q[1]} ${P[0]},${P[1]} ${x0},${y0}" fill="var(--ink)" fill-opacity=".06" stroke="var(--ink)" stroke-opacity=".5"/>`;
+  g+=`<path d="M${P[0]-34} ${y0} A34 34 0 0 1 ${(P[0]-34*c).toFixed(1)} ${(y0-34*s).toFixed(1)}" fill="none" stroke="var(--muted)"/><text x="${P[0]-44}" y="${y0-6}" font-size="12" fill="var(--muted)" text-anchor="end">θ</text>`;
+  /* disc touching the middle of the slope; outward normal of the surface on screen n = (s, −c) */
+  const m=0.5, cx0=Q[0]+(P[0]-Q[0])*m, cy0=Q[1]+(P[1]-Q[1])*m, r=24, nx=s, ny=-c;
+  const cx=cx0+nx*r, cy=cy0+ny*r;
+  g+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="var(--b3)" fill-opacity=".45" stroke="var(--b3)"/>`;
+  const F=46;
+  g+=arrow(cx,cy,cx,cy+F,'var(--force)',2.2)+`<text x="${cx+5}" y="${cy+F+12}" font-size="11.5" fill="var(--force)">Mg</text>`;
+  g+=arrow(cx0,cy0,cx0+nx*F*c,cy0+ny*F*c,'var(--force)',2.2)+`<text x="${cx0+nx*F*c+6}" y="${cy0+ny*F*c}" font-size="11.5" fill="var(--force)">N</text>`;
+  const fl=A.rolls?F*s*disc.b/(1+disc.b):F*RC.mu*c;
+  g+=arrow(cx0,cy0,cx0-c*fl*1.4,cy0-s*fl*1.4,'var(--force)',2.6)+`<text x="${cx0-c*fl*1.4-6}" y="${cy0-s*fl*1.4+14}" font-size="11.5" font-weight="600" fill="var(--force)" text-anchor="end">f</text>`;
+  g+=`<text x="296" y="16" font-size="11" fill="var(--muted)" text-anchor="end">forces on the disc</text>`;
+  g+=`<text x="296" y="31" font-size="11" fill="var(--muted)" text-anchor="end">friction f points up the slope</text>`;
+  $('fbd').innerHTML=g;
+}
+function drawMu(){
+  const th=RC.th*Math.PI/180, needs=BODY.map(b=>b.b/(1+b.b)*Math.tan(th));
+  const mx=Math.max(needs[0],RC.mu)*1.15||1, L=96, Rr=304, X=v=>L+v/mx*(Rr-L);
+  let g='';
+  BODY.forEach((b,i)=>{const y=12+i*30, ok=RC.mu>=needs[i]-1e-12;
+    g+=`<text x="${L-6}" y="${y+12}" font-size="12" fill="${b.col}" text-anchor="end" font-weight="600">${b.name}</text>`;
+    g+=`<rect x="${L}" y="${y+2}" width="${(X(needs[i])-L).toFixed(1)}" height="14" rx="2" fill="${ok?b.col:'var(--flag)'}" fill-opacity="${ok?0.75:0.35}"/>`;
+    g+=`<text x="${X(needs[i])+4}" y="${y+13}" font-size="10.5" fill="var(--ink)" font-family="IBM Plex Mono,monospace">${needs[i].toFixed(2)}${ok?'':' slips'}</text>`;
+  });
+  g+=`<line x1="${X(RC.mu)}" x2="${X(RC.mu)}" y1="6" y2="132" stroke="var(--ink)" stroke-width="2"/><text x="${X(RC.mu)}" y="146" font-size="11" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono,monospace">µ = ${f2(RC.mu)}</text>`;
+  $('much').innerHTML=g;
+}
+function drawKE(){
+  const L=96, Rr=304; let g='';
+  BODY.forEach((b,i)=>{const y=8+i*30, tr=1/(1+b.b), w=Rr-L;
+    g+=`<text x="${L-6}" y="${y+12}" font-size="12" fill="${b.col}" text-anchor="end" font-weight="600">${b.name}</text>`;
+    g+=`<rect x="${L}" y="${y+2}" width="${(w*tr).toFixed(1)}" height="14" fill="var(--vel)" fill-opacity=".8"/><rect x="${(L+w*tr).toFixed(1)}" y="${y+2}" width="${(w*(1-tr)).toFixed(1)}" height="14" fill="var(--spin)" fill-opacity=".8"/>`;
+    g+=`<text x="${L+4}" y="${y+13}" font-size="10.5" fill="var(--surface)" font-family="IBM Plex Mono,monospace">${Math.round(tr*100)}%</text>`;
+  });
+  g+=`<text x="${L}" y="134" font-size="11" fill="var(--muted)">spinning share = β/(1 + β)</text>`;
+  $('kech').innerHTML=g;
+}
+
+/* =================== 3 · SLIP → ROLL =================== */
+const SL={b:'ssph',v:7,w:0,mu:0.2};
+$('spre').innerHTML=SPRE.map((p,i)=>`<button class="chip" data-k="${i}">${p.l}</button>`).join('');
+$('spre').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;const p=SPRE[+c.dataset.k];
+  Object.assign(SL,{b:p.b,v:p.v,w:p.w,mu:p.mu});$('sv').value=p.v;$('sw').value=p.w;$('smu').value=p.mu;drawSlip();});
+$('sbody').innerHTML=BODY.map(b=>`<button class="chip" data-k="${b.id}">${b.name}</button>`).join('');
+$('sbody').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c){SL.b=c.dataset.k;drawSlip();}});
+$('sv').addEventListener('input',e=>{SL.v=+e.target.value;drawSlip();});
+$('sw').addEventListener('input',e=>{SL.w=+e.target.value;drawSlip();});
+$('smu').addEventListener('input',e=>{SL.mu=+e.target.value;drawSlip();});
+function slipModel(){
+  const b=BODY.find(x=>x.id===SL.b).b, s0=SL.v-SL.w, sg=Math.sign(s0), mg=SL.mu*G;
+  const tr=Math.abs(s0)*b/((1+b)*mg), vf=(SL.v+b*SL.w)/(1+b);
+  const V=t=>t<tr?SL.v-sg*mg*t:vf, Wt=t=>t<tr?SL.w+sg*mg*t/b:vf;
+  const xr=SL.v*tr-0.5*sg*mg*tr*tr, X=t=>t<tr?SL.v*t-0.5*sg*mg*t*t:xr+vf*(t-tr);
+  const K0=SL.v*SL.v+b*SL.w*SL.w, Kf=(1+b)*vf*vf;
+  return {b,s0,sg,tr,vf,V,Wt,X,xr,lost:K0>0?1-Kf/K0:0};
+}
+function drawSlip(){
+  press('#sbody',SL.b);
+  press('#spre',String(SPRE.findIndex(p=>p.b===SL.b&&p.v===SL.v&&p.w===SL.w&&p.mu===SL.mu)));
+  $('svo').textContent=SL.v.toFixed(1)+' m/s'; $('swo').textContent=SL.w.toFixed(1)+' m/s'; $('smuo').textContent=f2(SL.mu);
+  const M=slipModel(), tmax=Math.max(M.tr*1.6,0.4);
+  const ys=[0,SL.v,SL.w,M.vf], ymin=Math.min(...ys), ymax=Math.max(...ys), pad=(ymax-ymin)*0.08||1;
+  const L=46,Rr=588,T=12,B=212, X=t=>L+t/tmax*(Rr-L), Y=v=>B-(v-(ymin-pad))/((ymax+pad)-(ymin-pad))*(B-T);
+  let g='';
+  const step=niceStep((ymax-ymin+2*pad)/5);
+  for(let v=Math.ceil((ymin-pad)/step)*step;v<=ymax+pad;v+=step) g+=`<line x1="${L}" x2="${Rr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(v)+4}" font-size="10.5" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono,monospace">${+v.toFixed(2)}</text>`;
+  if(ymin-pad<0) g+=`<line x1="${L}" x2="${Rr}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)"/>`;
+  const ts=niceStep(tmax/5);
+  for(let t=0;t<=tmax+1e-9;t+=ts) g+=`<text x="${X(t)}" y="${B+15}" font-size="10.5" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono,monospace">${+t.toFixed(2)}</text>`;
+  g+=`<text x="${(L+Rr)/2}" y="${B+32}" font-size="12" fill="var(--ink)" text-anchor="middle">time (s)</text><text transform="translate(12 ${(T+B)/2}) rotate(-90)" font-size="12" fill="var(--ink)" text-anchor="middle">speed (m/s)</text>`;
+  if(M.tr>1e-9){
+    g+=`<line x1="${X(0)}" y1="${Y(SL.v)}" x2="${X(M.tr)}" y2="${Y(M.vf)}" stroke="var(--vel)" stroke-width="2.6"/>`;
+    g+=`<line x1="${X(0)}" y1="${Y(SL.w)}" x2="${X(M.tr)}" y2="${Y(M.vf)}" stroke="var(--spin)" stroke-width="2.6" stroke-dasharray="7 4"/>`;
+    g+=`<line x1="${X(M.tr)}" x2="${X(M.tr)}" y1="${T}" y2="${B}" stroke="var(--muted)" stroke-dasharray="3 4"/>`;
+    g+=`<text x="${X(M.tr)+5}" y="${T+10}" font-size="11" fill="var(--muted)">rolling starts</text>`;
+    g+=`<text x="${X(0)+6}" y="${Y(SL.v)+(SL.v>=SL.w?-6:14)}" font-size="11.5" fill="var(--vel)">v</text><text x="${X(0)+6}" y="${Y(SL.w)+(SL.w>SL.v?-6:14)}" font-size="11.5" fill="var(--spin)">ωR</text>`;
+  }
+  g+=`<line x1="${X(M.tr)}" y1="${Y(M.vf)}" x2="${X(tmax)}" y2="${Y(M.vf)}" stroke="var(--ink)" stroke-width="2.6"/><circle cx="${X(M.tr)}" cy="${Y(M.vf)}" r="4.5" fill="var(--ink)"/>`;
+  g+=`<text x="${X(tmax)-4}" y="${Y(M.vf)+(M.vf>=0?-7:15)}" font-size="11.5" fill="var(--ink)" text-anchor="end">v = ωR = ${f2(M.vf)}</text>`;
+  $('sgraph').innerHTML=g;
+  /* strobe */
+  const N=13, xs=[...Array(N)].map((_,i)=>M.X(tmax*i/(N-1))), xmn=Math.min(...xs), xmx=Math.max(...xs), span=xmx-xmn;
+  const col=BODY.find(x=>x.id===SL.b).col, SX=x=>span>1e-6?30+(x-xmn)/span*540:300;
+  let s=`<line x1="10" x2="590" y1="62" y2="62" stroke="var(--muted)"/>`;
+  xs.forEach((x,i)=>{const t=tmax*i/(N-1), rolling=t>=M.tr-1e-9, yy=50-(i%2)*14;
+    s+=`<circle cx="${SX(x).toFixed(1)}" cy="${yy}" r="7" fill="${rolling?col:'none'}" stroke="${col}" stroke-width="2" opacity="${0.45+0.55*i/(N-1)}"/>`;});
+  s+=`<text x="10" y="76" font-size="10.5" fill="var(--muted)">${span>1e-6?f2(xmn)+' m':''}</text><text x="590" y="76" font-size="10.5" fill="var(--muted)" text-anchor="end">${span>1e-6?f2(xmx)+' m':''}</text>`;
+  $('sstrobe').innerHTML=s;
+  $('skv').innerHTML=`<dt>slip at start, v₀ − ω₀R</dt><dd>${sgn(M.s0)} m/s</dd><dt>friction while slipping</dt><dd>${M.s0>0?'backward':M.s0<0?'forward':'none needed'}</dd>
+    <dt>rolling after</dt><dd>${M.tr.toFixed(2)} s</dd><dt>final speed</dt><dd>${sgn(M.vf)} m/s</dd><dt>distance till then</dt><dd>${f2(M.xr)} m</dd><dt>kinetic energy lost</dt><dd>${Math.round(M.lost*100)}%</dd>`;
+  let c;
+  if(Math.abs(M.s0)<1e-9) c='v₀ = ω₀R already: it simply rolls on, and friction stays zero.';
+  else if(M.s0>0) c=`The ball moves faster than it spins, so its bottom slides forward. Friction pushes backward: v falls (blue) while the same force’s torque spins it up (purple).`+(SL.w<0?' With backspin, ωR first passes through zero.':'')+(M.vf<0?' <b>Backspin wins here:</b> v passes through zero and it ends up rolling back toward you.':'');
+  else c='It spins faster than it moves, so its bottom slides backward. Friction pushes forward: v rises (blue) while the spin slows (purple).';
+  $('scap').innerHTML=c+' Kinetic friction does negative work while slipping, so energy is lost; once rolling, none is.';
+}
+function niceStep(x){const p=Math.pow(10,Math.floor(Math.log10(x))), m=x/p;return (m<1.5?1:m<3.5?2:m<7.5?5:10)*p;}
+
+/* =================== 4 · PUSH HEIGHT =================== */
+const PH={b:'disc',h:1};
+const PHB=[BODY[0],BODY[2],BODY[3]];
+$('hbody').innerHTML=PHB.map(b=>`<button class="chip" data-k="${b.id}">${b.name}</button>`).join('');
+$('hbody').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c){PH.b=c.dataset.k;drawPush();}});
+$('hh').addEventListener('input',e=>{PH.h=+e.target.value;drawPush();});
+function drawPush(){
+  press('#hbody',PH.b);
+  const B=BODY.find(x=>x.id===PH.b), b=B.b, h=PH.h, fF=(h-b)/(1+b), aa=(1+h)/(1+b);
+  $('hho').textContent=sgn(h).replace('+','')+'R';
+  const cx=210, cy=118, R=82, gy=cy+R;
+  let g=`<line x1="0" x2="400" y1="${gy}" y2="${gy}" stroke="var(--muted)" stroke-width="1.5"/>`;
+  g+= B.id==='ring'?`<circle cx="${cx}" cy="${cy}" r="${R-3}" fill="none" stroke="${B.col}" stroke-width="6"/>`:`<circle cx="${cx}" cy="${cy}" r="${R}" fill="${B.col}" fill-opacity="${B.id==='disc'?0.35:0.6}" stroke="${B.col}"/>`;
+  /* sweet spot */
+  const ys=cy-b*R;
+  g+=`<line x1="${cx-R-10}" x2="${cx+R+40}" y1="${ys}" y2="${ys}" stroke="var(--ink)" stroke-dasharray="3 4" opacity=".7"/><text x="${cx+R+44}" y="${ys-4}" font-size="11" fill="var(--ink)">h = k²/R</text>`;
+  g+=`<circle cx="${cx}" cy="${cy}" r="3" fill="var(--ink)"/>`;
+  /* force line */
+  const yF=cy-h*R, xe=cx-Math.sqrt(Math.max(0,R*R-(h*R)*(h*R)));
+  g+=`<line x1="${xe}" x2="${cx}" y1="${yF}" y2="${yF}" stroke="var(--force)" stroke-dasharray="3 3" opacity=".7"/>`;
+  g+=arrow(xe-86,yF,xe,yF,'var(--force)',3,11)+`<text x="${xe-90}" y="${yF+4}" font-size="13" font-weight="600" fill="var(--force)" text-anchor="end">F</text>`;
+  /* friction at contact */
+  const fl=70*fF;
+  if(Math.abs(fF)>0.005) g+=arrow(cx,gy+12,cx+fl,gy+12,'var(--force)',3,10)+`<text x="${cx+fl+(fl>0?6:-6)}" y="${gy+17}" font-size="12.5" font-weight="600" fill="var(--force)" text-anchor="${fl>0?'start':'end'}">f</text>`;
+  else g+=`<text x="${cx}" y="${gy+20}" font-size="12" fill="var(--ok)" text-anchor="middle" font-weight="600">f = 0</text>`;
+  g+=`<circle cx="${cx}" cy="${gy}" r="4" fill="var(--axis)"/>`;
+  $('push').innerHTML=g;
+  $('hkv').innerHTML=`<dt>β = k²/R²</dt><dd>${B.bf}</dd><dt>no-friction height</dt><dd>h = ${B.bf}R</dd><dt>acceleration a</dt><dd>${f2(aa)} F/M</dd><dt>friction f</dt><dd>${Math.abs(fF)<0.005?'0':f2(Math.abs(fF))+' F, '+(fF>0?'forward':'backward')}</dd>`;
+  $('hcap').innerHTML=Math.abs(fF)<0.005?'Right at the sweet spot: F alone gives exactly the spin that matches the speed, so the floor need not help.'
+    :fF>0?'Pushed above the sweet spot, F spins the body up too much for its speed. To keep it rolling the floor pushes <b>forward</b>, helping it along.'
+    :'Pushed below the sweet spot (or through the centre), F speeds the body up more than it spins it. The floor pushes <b>backward</b> to supply the missing spin.';
+}
+
+/* =================== 5 · QUIZ =================== */
+function renderQuiz(){
+  $('quiz').innerHTML=QUIZ.map((q,i)=>`<div class="panel"><p class="qn">Q${i+1}</p><p>${q.q}</p>
+    <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');
+}
+$('quiz').addEventListener('click',e=>{
+  const b=e.target.closest('.opt'); if(!b||b.disabled) return;
+  const box=b.parentElement, q=QUIZ[+box.dataset.i], j=+b.dataset.j;
+  box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+  const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+});
+$('qreset').onclick=renderQuiz;
+
+drawWheel(); drawRace(); drawSlip(); drawPush(); renderQuiz();
+</script>
+</body>
+</html>

@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Equations and Inverses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: single column. 1) wave + draggable line y = k with all intersections, predict items with a small plot  2) sliding branch window + reflection in y = x  3) sin⁻¹(sin x) sawtooth  4) tan⁻¹ addition map over the xy-plane */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --p1:#16865f; --p2:#c7741a; --sin:#d1491f; --cos:#2563c9; --tan:#16865f; --cot:#8a6d00; --sec:#7a52c7; --csc:#b0377a; --arc:#c7741a;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --p1:#4fd1a5; --p2:#f0a04b; --sin:#ff8a5c; --cos:#7aa7ff; --tan:#4fd1a5; --cot:#d9c25a; --sec:#b493ff; --csc:#ef7ab8; --arc:#f0a04b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --p1:#4fd1a5; --p2:#f0a04b; --sin:#ff8a5c; --cos:#7aa7ff; --tan:#4fd1a5; --cot:#d9c25a; --sec:#b493ff; --csc:#ef7ab8; --arc:#f0a04b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:74ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.bn{font:500 11px var(--f-mono);color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;white-space:nowrap;font-weight:500}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip .sw{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.split{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px}
+@media (max-width:900px){.split{grid-template-columns:minmax(0,1fr)}}
+.fig{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,6fr);align-items:start}
+@media (max-width:640px){.fig{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.qsplit{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;margin-top:4px}
+@media (max-width:760px){.qsplit{grid-template-columns:minmax(0,1fr)}}
+svg.draw{width:100%;height:auto;display:block;user-select:none;-webkit-user-select:none}
+svg.drag2d{touch-action:none;cursor:grab}
+svg.dragx{touch-action:pan-y;cursor:ew-resize}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:10px}
+.row label{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center;flex:1 1 220px}
+input[type=range]{accent-color:var(--accent);flex:1;min-width:120px}
+.big{font:500 22px var(--f-mono);font-variant-numeric:tabular-nums}
+table.vals{border-collapse:collapse;width:100%;margin-top:8px;font-size:14px}
+table.vals td{padding:4px 6px;border-bottom:1px solid var(--line)}
+table.vals td.v{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.vals tr.off td{color:var(--muted)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.quads{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:10px;font-size:12.5px}
+.quads div{border:1px solid var(--line);border-radius:6px;padding:4px 8px;background:var(--bg)}
+.quads div.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.quads b{font-family:var(--f-mono);font-weight:500;color:var(--muted);margin-right:6px}
+ul.caps{margin:12px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;max-width:80ch}
+.eq{font-family:var(--f-mono);font-size:13.5px;background:var(--bg);border-radius:4px;padding:0 5px;white-space:normal;overflow-wrap:break-word;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.k-sin{color:var(--sin)} .k-cos{color:var(--cos)} .k-tan{color:var(--tan)} .k-cot{color:var(--cot)} .k-sec{color:var(--sec)} .k-csc{color:var(--csc)}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.qq{font:500 16px var(--f-mono);margin-top:6px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0;display:flex;flex-direction:column;gap:8px;font-size:14px}
+svg text{font-family:var(--f-body);fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+svg .ax{stroke:var(--muted);stroke-width:1}
+svg .gl{stroke:var(--line);stroke-width:1}
+svg .circ{fill:none;stroke:var(--ink);stroke-width:1.5}
+svg .lbl{fill:var(--muted);font:500 12px var(--f-mono)}
+svg .tick{fill:var(--muted);font:500 12px var(--f-mono)}
+footer{font-size:12px;color:var(--muted);max-width:92ch}
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Mathematics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Equations and Inverses</h1>
+    <p class="lede">Solving sin x = k means finding every place where the wave meets the horizontal line y = k. An inverse function picks <i>one</i> of those places, by keeping only one piece of the wave. Both ideas are one picture: a wave, a line, and a choice of piece.</p>
+  </header>
+
+  <!-- ============ 1. general solutions ============ -->
+  <section>
+    <h2>1 · General solutions: where the line meets the wave</h2>
+    <p class="lede">Move the line y = k (slider, or drag up and down on the graph). The bold piece of the wave is the principal branch; the one crossing on it is the principal value α. Every other crossing is a copy of α, repeated by the period and by the wave's symmetry.</p>
+    <div class="panel" style="margin-top:10px">
+      <div class="row" style="margin-top:0">
+        <div class="chips" id="efn" role="group" aria-label="Function"></div>
+        <div class="chips" id="eopt">
+          <button class="chip" id="ecount" aria-pressed="false">count in [0, 2π]</button>
+          <button class="chip" id="esq" aria-pressed="false">also y = −k (squared equation)</button>
+        </div>
+      </div>
+      <div class="svgbox"><svg id="eq" class="draw" viewBox="0 -152 760 304" role="img" aria-label="Graph with a horizontal line and its intersections" style="margin-top:8px;min-width:600px;touch-action:pan-x;cursor:ns-resize"></svg></div>
+      <div class="row">
+        <label>k <input type="range" id="ek" min="-1.3" max="1.3" step="0.01"><span class="eq" id="eko"></span></label>
+        <div class="chips" id="eks" aria-label="Standard values of k"></div>
+      </div>
+      <div id="eread" style="margin-top:10px;font-size:14.5px"></div>
+    </div>
+    <div class="panel" style="margin-top:12px">
+      <div class="qhead"><h3>Predict, then check</h3><button class="btn" id="q1next">Next question →</button></div>
+      <div class="qsplit">
+        <div><div class="qq" id="q1q"></div><div class="opts" id="q1opts"></div><div id="q1why"></div></div>
+        <div><svg id="qplot" class="draw" viewBox="0 -110 520 230" role="img" aria-label="Graph of the equation after answering" hidden></svg><p class="muted" id="qplotcap"></p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2. restricted branch ============ -->
+  <section>
+    <h2>2 · Inverse functions: keep one piece, then reflect</h2>
+    <p class="lede">sin x takes every value in [−1, 1] infinitely often, so "the angle whose sine is 1/2" is ambiguous until we keep a single piece of the wave. Slide the window (always one half-period wide) and see which pieces work. Reflecting the kept piece in the line y = x gives the inverse graph.</p>
+    <div class="split" style="margin-top:10px">
+      <div class="panel">
+        <div class="row" style="margin-top:0">
+          <div class="chips" id="bfn" role="group" aria-label="Function"></div>
+          <button class="chip" id="brefl" aria-pressed="true">reflect in y = x</button>
+          <button class="btn" id="bprin">Principal branch</button>
+        </div>
+        <svg id="br" class="draw" viewBox="-260 -215 520 430" role="img" aria-label="Graph with a sliding window and its reflection" style="margin-top:8px"></svg>
+        <div class="row"><label>window start <input type="range" id="bs" min="-24" max="12" step="1"><span class="eq" id="bso"></span></label></div>
+      </div>
+      <div class="panel">
+        <h3>Is this piece a good inverse?</h3>
+        <div id="bcheck" style="font-size:14.5px;margin-top:6px"></div>
+        <p class="muted" style="margin-top:12px">Principal ranges: sin⁻¹ → [−π/2, π/2], cos⁻¹ → [0, π], tan⁻¹ → (−π/2, π/2). The other three follow the same pattern: cot⁻¹ → (0, π), sec⁻¹ → [0, π] without π/2, cosec⁻¹ → [−π/2, π/2] without 0.</p>
+        <div class="qhead" style="margin-top:14px"><h3>Predict, then check</h3><button class="btn" id="q2next">Next →</button></div>
+        <div class="qq" id="q2q"></div>
+        <div class="opts" id="q2opts"></div>
+        <div id="q2why"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3. sawtooth ============ -->
+  <section>
+    <h2>3 · sin⁻¹(sin x) is not x: the sawtooth <span class="bn">beyond NCERT</span></h2>
+    <p class="lede">sin⁻¹(sin x) asks: which angle <i>in the principal range</i> has the same sine as x? Inside the range the answer is x itself. Outside, the answer folds back, giving a zig-zag that only touches the dashed line y = x on the principal range. Drag along the graph.</p>
+    <div class="panel" style="margin-top:10px">
+      <div class="chips" id="sfn" role="group" aria-label="Which composition"></div>
+      <div class="svgbox"><svg id="saw" class="draw" viewBox="0 -170 760 270" role="img" aria-label="Graph of the inverse of the function of x" style="margin-top:8px;min-width:600px;touch-action:pan-y;cursor:ew-resize"></svg></div>
+      <div id="sread" style="margin-top:8px;font-size:14.5px"></div>
+    </div>
+    <div class="panel" style="margin-top:12px;max-width:720px">
+      <div class="qhead"><h3>Predict, then check</h3><button class="btn" id="q3next">Next question →</button></div>
+      <div class="qq" id="q3q"></div>
+      <div class="opts" id="q3opts"></div>
+      <div id="q3why"></div>
+    </div>
+  </section>
+
+  <!-- ============ 4. tan-1 addition ============ -->
+  <section>
+    <h2>4 · tan⁻¹x + tan⁻¹y: when the formula needs ±π <span class="bn">beyond NCERT</span></h2>
+    <p class="lede">Each tan⁻¹ is an angle between −π/2 and π/2, so their sum can be anywhere in (−π, π). But tan⁻¹((x + y)/(1 − xy)) can only report an angle in (−π/2, π/2). When the true sum is too big, the formula is off by exactly π. Drag the point (x, y) to see where.</p>
+    <div class="split" style="margin-top:10px">
+      <div class="panel">
+        <svg id="tp" class="draw drag2d" viewBox="-205 -205 410 410" role="img" aria-label="xy-plane split by the hyperbola xy = 1" style="max-width:480px;margin:0 auto"></svg>
+      </div>
+      <div class="panel">
+        <div id="tread" style="font-size:14.5px"></div>
+        <div class="qhead" style="margin-top:14px"><h3>Predict, then check</h3><button class="btn" id="q4next">Next →</button></div>
+        <div class="qq" id="q4q"></div>
+        <div class="opts" id="q4opts"></div>
+        <div id="q4why"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    General-solution templates (sin x = sin α ⇒ x = nπ + (−1)ⁿα; cos x = cos α ⇒ x = 2nπ ± α; tan x = tan α ⇒ x = nπ + α): NCERT Mathematics Class 11, Chapter 3, and S. L. Loney, <i>Plane Trigonometry</i>. Inverse functions and principal value branches: NCERT Mathematics Class 12, Chapter 2. The sawtooth graphs and the tan⁻¹ addition branches (±π) are beyond the current NCERT text but standard JEE material; the page computes both sides of every identity numerically so you can check them. Worked examples adapted from the <i>Trigonometry JEE Compendium</i> (study notes; Examples 6.4, 6.6, 6.8, 6.13, 6.14, 7.1–7.4, 7.14), each re-derived before use. Note: that compendium says the special cases sin x = ±1, cos x = ±1 cannot be obtained from the general templates; they can (the template simply lists each solution twice), as section 1 shows at k = ±1.
+  </footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const PI=Math.PI, TAU=2*PI, D=PI/180;
+const P2=v=>v.toFixed(2);
+const fmt=(v,n=3)=>(v<-5e-10?'−':'')+Math.abs(v).toFixed(n);
+function svgPt(svg,e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
+function draggable(svg,onPt){
+  let on=false;
+  svg.addEventListener('pointerdown',e=>{on=true;try{svg.setPointerCapture(e.pointerId);}catch(_){} onPt(svgPt(svg,e));});
+  svg.addEventListener('pointermove',e=>{if(on)onPt(svgPt(svg,e));});
+  const end=()=>{on=false;};
+  svg.addEventListener('pointerup',end); svg.addEventListener('pointercancel',end);
+}
+function piStr(x){ // radians -> "5π/6" when it is a nice multiple of π, else decimal
+  if(Math.abs(x)<1e-9) return '0';
+  for(const d of [1,2,3,4,6,12]){const n=x/PI*d; if(Math.abs(n-Math.round(n))<1e-6){const k=Math.round(n), a=Math.abs(k); return (k<0?'−':'')+(a===1?'':a)+'π'+(d===1?'':'/'+d);}}
+  return fmt(x);
+}
+function kpi(k){return k===0?'0':(k===1?'π':k===-1?'−π':(k<0?'−':'')+Math.abs(k)+'π');}
+function pathF(f,X,Y,a,b,N,lim,jump){let d='',pen=false,prev=null;for(let i=0;i<=N;i++){const t=a+(b-a)*i/N,v=f(t); if(!isFinite(v)||Math.abs(v)>lim){pen=false;prev=null;continue;} if(pen&&jump&&prev!==null&&Math.abs(v-prev)>jump)pen=false; d+=(pen?'L':'M')+P2(X(t))+' '+P2(Y(v)); pen=true; prev=v;} return d;}
+function quiz(items,ids,onAnswer){
+  let i=0;
+  function show(){
+    const q=items[i];
+    $(ids.q).innerHTML=q.q; $(ids.why).innerHTML='';
+    $(ids.opts).innerHTML=q.o.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('');
+    if(ids.onShow) ids.onShow(q);
+    $(ids.opts).querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+      const k=+b.dataset.k;
+      $(ids.opts).querySelectorAll('.opt').forEach(x=>{const j=+x.dataset.k; x.classList.toggle('right',j===q.a); x.classList.toggle('wrong',j===k&&k!==q.a);});
+      $(ids.why).innerHTML=`<div class="why"><b>${k===q.a?'Right.':'Not quite.'}</b> ${q.why}</div>`;
+      if(onAnswer) onAnswer(q);
+    });
+  }
+  $(ids.next).onclick=()=>{i=(i+1)%items.length; show();};
+  show();
+}
+const tanS=t=>Math.abs(Math.cos(t))<1e-12?NaN:Math.tan(t);
+
+/* ================= 1. general solutions ================= */
+const EF={
+  sin:{f:Math.sin, inv:Math.asin, ys:100, kmax:1.3, prin:[-PI/2,PI/2], inv_l:'sin⁻¹', bounded:true,
+       ks:[[0,'0'],[0.5,'1/2'],[Math.SQRT1_2,'1/√2'],[Math.sqrt(3)/2,'√3/2'],[1,'1'],[-0.5,'−1/2']]},
+  cos:{f:Math.cos, inv:Math.acos, ys:100, kmax:1.3, prin:[0,PI], inv_l:'cos⁻¹', bounded:true,
+       ks:[[0,'0'],[0.5,'1/2'],[Math.SQRT1_2,'1/√2'],[Math.sqrt(3)/2,'√3/2'],[1,'1'],[-0.5,'−1/2']]},
+  tan:{f:tanS, inv:Math.atan, ys:55, kmax:2.5, prin:[-PI/2,PI/2], inv_l:'tan⁻¹', bounded:false,
+       ks:[[0,'0'],[1/Math.sqrt(3),'1/√3'],[1,'1'],[Math.sqrt(3),'√3'],[-1,'−1']]}
+};
+let ef='sin', ek=0.5, ekL='1/2', ecount=false, esq=false;
+try{const s=localStorage.getItem('trig-eq-fn'); if(EF[s]) ef=s;}catch(e){}
+const EX=t=>380+t*360/(3*PI);
+function sols(fn,k){ // all solutions in [−3π, 3π]; fam: 'e' (+α family) or 'o'
+  const F=EF[fn], out=[];
+  if(F.bounded&&Math.abs(k)>1+1e-12) return out;
+  const a=F.inv(Math.max(-1e9,Math.min(1e9,F.bounded?Math.max(-1,Math.min(1,k)):k)));
+  for(let n=-5;n<=5;n++){
+    let c=[];
+    if(fn==='sin') c=[[n*PI+(n%2===0?a:-a), n%2===0?'e':'o', n]];
+    if(fn==='cos') c=[[2*n*PI+a,'e',n],[2*n*PI-a,'o',n]];
+    if(fn==='tan') c=[[n*PI+a,'e',n]];
+    for(const [x,fam,nn] of c) if(x>=-3*PI-1e-9&&x<=3*PI+1e-9&&!out.some(o=>Math.abs(o.x-x)<1e-9)) out.push({x,fam,n:nn});
+  }
+  return out.sort((p,q)=>p.x-q.x);
+}
+function renderEq(){
+  const F=EF[ef], ys=F.ys, Y=v=>-v*ys;
+  let g=`<defs><clipPath id="eclip"><rect x="0" y="-150" width="760" height="282"/></clipPath></defs>`;
+  if(ecount) g+=`<rect x="${P2(EX(0))}" y="-150" width="${P2(EX(TAU)-EX(0))}" height="282" fill="var(--accent)" opacity=".07"/>`;
+  for(let k=-6;k<=6;k++){const x=EX(k*PI/2); g+=`<line class="gl" x1="${P2(x)}" x2="${P2(x)}" y1="-150" y2="132"/>`; if(k%2===0) g+=`<text class="tick" x="${P2(x)}" y="148" text-anchor="middle">${kpi(k/2)}</text>`;}
+  const yt=F.bounded?[-1,1]:[-2,-1,1,2];
+  for(const v of yt) g+=`<line class="gl" x1="0" x2="760" y1="${Y(v)}" y2="${Y(v)}"/><text class="tick" x="${P2(EX(0)-5)}" y="${Y(v)-3}" text-anchor="end">${v<0?'−':''}${Math.abs(v)}</text>`;
+  g+=`<line class="ax" x1="0" x2="760" y1="0" y2="0"/><line class="ax" x1="${EX(0)}" x2="${EX(0)}" y1="-150" y2="132"/>`;
+  g+=`<g clip-path="url(#eclip)">`;
+  g+=`<path d="${pathF(F.f,EX,Y,-3*PI,3*PI,1600,9,3)}" fill="none" stroke="var(--ink)" stroke-width="1.6" opacity=".55"/>`;
+  g+=`<path d="${pathF(F.f,EX,Y,F.prin[0]+1e-6,F.prin[1]-1e-6,400,9,3)}" fill="none" stroke="var(--accent)" stroke-width="4" opacity=".9"/>`;
+  const lines=[ek]; if(esq&&Math.abs(ek)>1e-9) lines.push(-ek);
+  for(const k of lines) g+=`<line x1="0" x2="760" y1="${P2(Y(k))}" y2="${P2(Y(k))}" stroke="var(--flag)" stroke-width="1.6" ${k===ek?'':'stroke-dasharray="6 4"'}/>`;
+  const S=sols(ef,ek), S2=esq&&Math.abs(ek)>1e-9?sols(ef,-ek):[];
+  const famCol=f=>f==='e'?'var(--p1)':'var(--p2)';
+  for(const s of S2) g+=`<circle cx="${P2(EX(s.x))}" cy="${P2(Y(-ek))}" r="5.5" fill="var(--surface)" stroke="${famCol(s.fam)}" stroke-width="2"/>`;
+  for(const s of S) g+=`<circle cx="${P2(EX(s.x))}" cy="${P2(Y(ek))}" r="5.5" fill="${famCol(s.fam)}" stroke="var(--surface)" stroke-width="1.5"/>`;
+  if(ef!=='tan') for(const s of S) g+=`<text x="${P2(EX(s.x))}" y="${P2(Y(ek)+(ek>0.6?20:-10))}" font-size="10.5" text-anchor="middle" fill="var(--muted)">${ef==='sin'?'n='+s.n:(s.fam==='e'?'+':'−')+'α'}</text>`;
+  // principal value marker
+  if(!(F.bounded&&Math.abs(ek)>1)){const a=F.inv(ek); g+=`<line x1="${P2(EX(a))}" x2="${P2(EX(a))}" y1="0" y2="${P2(Y(ek))}" stroke="var(--accent)" stroke-dasharray="3 3"/><circle cx="${P2(EX(a))}" cy="${P2(Y(ek))}" r="8" fill="none" stroke="var(--accent)" stroke-width="2"/><text x="${P2(EX(a)+4)}" y="${ek>=0?14:-6}" font-size="13" font-weight="600" fill="var(--accent)">α</text>`;}
+  g+=`</g>`;
+  g+=`<text x="8" y="${P2(Y(ek)-5)}" font-size="12" font-weight="600" fill="var(--flag)">y = k</text>`;
+  $('eq').innerHTML=g;
+  // controls
+  $('efn').innerHTML=Object.keys(EF).map(k=>`<button class="chip" data-f="${k}" aria-pressed="${k===ef}">${k} x = k</button>`).join('');
+  $('eks').innerHTML=F.ks.map(([v,l])=>`<button class="chip" data-v="${v}" data-l="${l}" aria-pressed="${ekL===l}">${l}</button>`).join('');
+  const r=$('ek'); r.min=-F.kmax; r.max=F.kmax; r.value=ek; $('eko').textContent=ekL||fmt(ek,2);
+  $('ecount').setAttribute('aria-pressed',ecount); $('esq').setAttribute('aria-pressed',esq);
+  // readout
+  const kS=ekL||fmt(ek,2); let h='';
+  if(F.bounded&&Math.abs(ek)>1+1e-12) h=`<p><b>No solution.</b> The line y = ${kS} misses the wave completely, because ${ef} x never leaves [−1, 1].</p>`;
+  else{
+    const a=F.inv(ek), aS=piStr(a);
+    h=`<p>Principal value <span class="eq">α = ${F.inv_l}(${kS}) = ${aS}</span>${aS.includes('π')||aS==='0'?'':' rad'}</p>`;
+    if(ef==='sin') h+=`<p style="margin-top:6px"><span class="eq">x = nπ + (−1)ⁿ α</span>. The wave is symmetric about its peaks, so crossings come in mirror pairs: <span style="color:var(--p1)">●</span> even n give 2mπ + α, <span style="color:var(--p2)">●</span> odd n give (2m + 1)π − α. The (−1)ⁿ is just "flip α every other time".</p>`;
+    if(ef==='cos') h+=`<p style="margin-top:6px"><span class="eq">x = 2nπ ± α</span>. cos is symmetric about x = 0, so the crossings pair up as <span style="color:var(--p1)">●</span> +α and <span style="color:var(--p2)">●</span> −α, then repeat every 2π.</p>`;
+    if(ef==='tan') h+=`<p style="margin-top:6px"><span class="eq">x = nπ + α</span>. tan rises through every value exactly once per period π, so there is one family, spaced π apart.</p>`;
+    if(F.bounded&&Math.abs(Math.abs(ek)-1)<1e-12) h+=`<p class="muted" style="margin-top:6px">At k = ±1 the line only touches the wave, so the two dots of each pair merge. The template still works, it just names each solution twice: the set is the single family ${ef==='sin'?(ek>0?'x = 2nπ + π/2':'x = 2nπ − π/2'):(ek>0?'x = 2nπ':'x = (2n + 1)π')}.</p>`;
+    if(esq&&Math.abs(ek)>1e-9) h+=`<p style="margin-top:6px">With y = −k as well (hollow dots), you are solving ${ef}²x = k². Squaring forgets the sign, and the two families merge into <span class="eq">x = nπ ± α</span>, for sin, cos and tan alike.</p>`;
+    if(ecount){const all=[...S,...S2].filter(s=>s.x>=-1e-9&&s.x<=TAU+1e-9).map(s=>s.x).sort((p,q)=>p-q).filter((x,i,arr)=>i===0||Math.abs(x-arr[i-1])>1e-9);
+      h+=`<p style="margin-top:6px">In [0, 2π] (shaded): <b>${all.length}</b> solution${all.length===1?'':'s'}${all.length?': '+all.map(piStr).join(', '):''}.</p>`;}
+  }
+  $('eread').innerHTML=h;
+}
+$('efn').addEventListener('click',e=>{const b=e.target.closest('.chip'); if(!b)return; ef=b.dataset.f; const F=EF[ef]; if(Math.abs(ek)>F.kmax){ek=F.ks[1][0];ekL=F.ks[1][1];} try{localStorage.setItem('trig-eq-fn',ef);}catch(err){} renderEq();});
+$('eks').addEventListener('click',e=>{const b=e.target.closest('.chip'); if(!b)return; ek=+b.dataset.v; ekL=b.dataset.l; renderEq();});
+$('ek').addEventListener('input',e=>{ek=+e.target.value; ekL=null; renderEq();});
+$('ecount').addEventListener('click',()=>{ecount=!ecount; renderEq();});
+$('esq').addEventListener('click',()=>{esq=!esq; renderEq();});
+draggable($('eq'),p=>{const F=EF[ef]; ek=Math.max(-F.kmax,Math.min(F.kmax,Math.round(-p.y/F.ys*100)/100)); ekL=null; renderEq();});
+renderEq();
+
+/* predict items with a small plot on [0, 2π] */
+const QX=t=>20+t/TAU*490;
+const Q1=[
+ {q:'How many solutions does sin x + sin 3x + sin 5x = 0 have in [0, 2π]?',o:['4','6','7','11'],a:2,ym:3,
+  fs:[t=>Math.sin(t)+Math.sin(3*t)+Math.sin(5*t)], roots:[0,1,2,3,4,5,6].map(k=>k*PI/3),
+  why:'Pair the outer terms: sin 5x + sin x = 2 sin 3x cos 2x, so the equation is sin 3x (2 cos 2x + 1) = 0. sin 3x = 0 gives x = kπ/3: 7 points in [0, 2π]. cos 2x = −1/2 gives π/3, 2π/3, 4π/3, 5π/3, which are already on that list. Counting the families separately (7 + 4 = 11) double-counts.',
+  cap:'The 7 zeros. Every root of the second factor is already a root of sin 3x.'},
+ {q:'How many solutions does cos x + cos 2x + cos 3x = 0 have in [0, 2π]?',o:['4','6','7','8'],a:1,ym:3,
+  fs:[t=>Math.cos(t)+Math.cos(2*t)+Math.cos(3*t)], roots:[PI/4,2*PI/3,3*PI/4,5*PI/4,4*PI/3,7*PI/4],
+  why:'cos 3x + cos x = 2 cos 2x cos x, so the equation is cos 2x (2 cos x + 1) = 0. cos 2x = 0 gives π/4, 3π/4, 5π/4, 7π/4; cos x = −1/2 gives 2π/3, 4π/3. No overlaps: 6.',
+  cap:'Two families, no shared points: 4 + 2 = 6.'},
+ {q:'Squaring sin x − cos x = 1 gives sin 2x = 0, i.e. x = 0, π/2, π, 3π/2 in [0, 2π). Which are real solutions?',o:['all four','π/2 and π','0 and 3π/2','only π/2'],a:1,ym:1.7,
+  fs:[t=>Math.sin(t)-Math.cos(t), t=>1], roots:[PI/2,PI], open:[0,3*PI/2],
+  why:'At 0 and 3π/2, sin x − cos x = −1, not 1: those come from the line y = −1, which squaring cannot tell apart from y = 1. Safer route: √2 sin(x − π/4) = 1, so x = 2nπ + π/2 or x = (2n + 1)π.',
+  cap:'Filled: real roots. Hollow: roots of the squared equation that hit y = −1 instead.'},
+ {q:'How many solutions does tan x + sec x = 2 cos x have in [0, 2π]?',o:['1','2','3','4'],a:1,ym:3,
+  fs:[t=>{const c=Math.cos(t); return Math.abs(c)<1e-9?NaN:(Math.sin(t)+1)/c;}, t=>2*Math.cos(t)], roots:[PI/6,5*PI/6], open:[3*PI/2],
+  why:'Multiply by cos x: 1 + sin x = 2 cos²x = 2 − 2 sin²x, so (2 sin x − 1)(sin x + 1) = 0. sin x = 1/2 gives π/6 and 5π/6. sin x = −1 gives 3π/2, but there cos x = 0 and tan x, sec x do not exist. The two graphs run into the same point, which is a hole in the left-hand side.',
+  cap:'Hollow dot: x = 3π/2 solves the cleared equation but is outside the domain.'},
+ {q:'How many solutions does 2 sin²x + 3 cos x = 0 have in [0, 2π]?',o:['0','2','3','4'],a:1,ym:3.5,
+  fs:[t=>2*Math.sin(t)**2+3*Math.cos(t)], roots:[2*PI/3,4*PI/3],
+  why:'Write sin²x = 1 − cos²x: 2 cos²x − 3 cos x − 2 = 0, so cos x = 2 or cos x = −1/2. cos x = 2 is impossible (outside [−1, 1]). cos x = −1/2 gives 2π/3 and 4π/3.',
+  cap:'Only the root cos x = −1/2 survives.'}
+];
+const fcol=['var(--accent)','var(--flag)'];
+function drawQ(q){
+  const svg=$('qplot'), Y=v=>-v*92/q.ym;
+  let g=`<defs><clipPath id="qclip"><rect x="0" y="-104" width="520" height="208"/></clipPath></defs>`;
+  for(let k=0;k<=4;k++){const x=QX(k*PI/2); g+=`<line class="gl" x1="${P2(x)}" x2="${P2(x)}" y1="-100" y2="100"/><text class="tick" x="${P2(x)}" y="118" text-anchor="middle">${['0','π/2','π','3π/2','2π'][k]}</text>`;}
+  g+=`<line class="ax" x1="0" x2="520" y1="0" y2="0"/>`;
+  g+=`<g clip-path="url(#qclip)">`+q.fs.map((f,i)=>`<path d="${pathF(f,QX,Y,0,TAU,700,99,3*q.ym)}" fill="none" stroke="${fcol[i]}" stroke-width="${i?1.6:2.6}"/>`).join('')+`</g>`;
+  const yAt=x=>{const v=q.fs[q.fs.length-1](x); return q.fs.length>1?v:0;};
+  for(const x of (q.open||[])){let y=q.fs[0](x); if(!isFinite(y)) y=q.fs[1](x); g+=`<circle cx="${P2(QX(x))}" cy="${P2(Y(y))}" r="6" fill="var(--surface)" stroke="var(--flag)" stroke-width="2"/>`;}
+  for(const x of q.roots){g+=`<circle cx="${P2(QX(x))}" cy="${P2(Y(yAt(x)))}" r="5.5" fill="var(--ok)" stroke="var(--surface)" stroke-width="1.5"/>`;}
+  svg.innerHTML=g; svg.removeAttribute('hidden'); $('qplotcap').textContent=q.cap;
+}
+quiz(Q1,{q:'q1q',opts:'q1opts',why:'q1why',next:'q1next',onShow:()=>{$('qplot').setAttribute('hidden','');$('qplotcap').textContent='Answer to see the graph.';}},drawQ);
+
+/* ================= 2. restricted branch ================= */
+const BU=50, BX=v=>P2(v*BU), BY=v=>P2(-v*BU);
+const BF={sin:{f:Math.sin,p:-6,inv:'sin⁻¹'}, cos:{f:Math.cos,p:0,inv:'cos⁻¹'}, tan:{f:tanS,p:-6,inv:'tan⁻¹'}};
+let bf='sin', bj=-6, brefl=true;
+function branchCheck(fn,j){
+  const s=j*PI/12, f=BF[fn].f, N=600; let inc=0,dec=0,mn=Infinity,mx=-Infinity,prev=null,jumpy=false;
+  for(let i=1;i<N;i++){const t=s+PI*i/N, v=f(t); if(!isFinite(v)){jumpy=true;prev=null;continue;}
+    mn=Math.min(mn,v); mx=Math.max(mx,v);
+    if(prev!==null){ if(fn==='tan'&&Math.abs(v-prev)>5) jumpy=true; else if(v>prev+1e-12) inc++; else if(v<prev-1e-12) dec++; }
+    prev=v;}
+  const one = !jumpy && (inc===0||dec===0);
+  const full = fn==='tan' ? (mn<-50&&mx>50) : (mn<=-0.999&&mx>=0.999);
+  const acute = s<=1e-9 && s+PI>=PI/2-1e-9;
+  return {one,full,acute};
+}
+function renderBr(){
+  const B=BF[bf], s=bj*PI/12, e=s+PI, c=branchCheck(bf,bj), good=c.one&&c.full, col=good?'var(--ok)':'var(--flag)';
+  let g=`<defs><clipPath id="bclip"><rect x="-258" y="-212" width="516" height="424"/></clipPath></defs>`;
+  for(let k=-5;k<=5;k++){ if(k) g+=`<line class="gl" x1="${BX(k)}" x2="${BX(k)}" y1="-212" y2="212" opacity=".5"/><line class="gl" y1="${BY(k)}" y2="${BY(k)}" x1="-258" x2="258" opacity=".5"/>`; }
+  g+=`<line class="ax" x1="-258" x2="258" y1="0" y2="0"/><line class="ax" x1="0" x2="0" y1="-212" y2="212"/>`;
+  for(const [v,l] of [[-PI,'−π'],[-PI/2,'−π/2'],[PI/2,'π/2'],[PI,'π']]){g+=`<line x1="${BX(v)}" x2="${BX(v)}" y1="-4" y2="4" stroke="var(--muted)"/><text class="tick" x="${BX(v)}" y="18" text-anchor="middle">${l}</text><line y1="${BY(v)}" y2="${BY(v)}" x1="-4" x2="4" stroke="var(--muted)"/><text class="tick" x="-8" y="${P2(-v*BU+4)}" text-anchor="end">${l}</text>`;}
+  g+=`<text class="tick" x="${BX(1)}" y="18" text-anchor="middle">1</text><text class="tick" x="-8" y="${P2(-BU+4)}" text-anchor="end">1</text>`;
+  g+=`<rect x="${BX(s)}" y="-212" width="${P2(PI*BU)}" height="424" fill="${col}" opacity=".07"/>`;
+  g+=`<g clip-path="url(#bclip)">`;
+  g+=`<path d="${pathF(B.f,v=>v*BU,v=>-v*BU,-5.3,5.3,1200,5,3)}" fill="none" stroke="var(--ink)" stroke-width="1.4" opacity=".4"/>`;
+  g+=`<path d="${pathF(B.f,v=>v*BU,v=>-v*BU,s+1e-4,e-1e-4,600,5,3)}" fill="none" stroke="${col}" stroke-width="4"/>`;
+  if(brefl){
+    g+=`<line x1="-212" y1="212" x2="212" y2="-212" stroke="var(--muted)" stroke-dasharray="6 5"/>`;
+    // mirror image: points (f(t), t)
+    let d='',pen=false,prev=null; for(let i=0;i<=600;i++){const t=s+1e-4+(PI-2e-4)*i/600, v=B.f(t); if(!isFinite(v)||Math.abs(v)>5){pen=false;prev=null;continue;} if(pen&&prev!==null&&Math.abs(v-prev)>3)pen=false; d+=(pen?'L':'M')+P2(v*BU)+' '+P2(-t*BU); pen=true; prev=v;}
+    g+=`<path d="${d}" fill="none" stroke="${col}" stroke-width="2.5" stroke-dasharray="${good?'none':'5 4'}" opacity=".85"/>`;
+  }
+  g+=`</g>`;
+  if(brefl) g+=`<text x="205" y="-200" font-size="12" fill="var(--muted)" text-anchor="end">y = x</text>`;
+  $('br').innerHTML=g;
+  $('bfn').innerHTML=Object.keys(BF).map(k=>`<button class="chip" data-f="${k}" aria-pressed="${k===bf}">${k}</button>`).join('');
+  $('brefl').setAttribute('aria-pressed',brefl);
+  $('bs').value=bj; $('bso').textContent=`[${piStr(s)}, ${piStr(e)}]`;
+  const mark=b=>b?'<b style="color:var(--ok)">✓</b>':'<b style="color:var(--flag)">✗</b>';
+  const rangeTxt=bf==='tan'?'all real numbers':'all of [−1, 1]';
+  $('bcheck').innerHTML=`<p>${mark(c.one)} <b>One-to-one</b>: every horizontal line meets the kept piece at most once. ${c.one?'':'Here some value is hit twice, so the reflected curve fails the vertical-line test (dashed): it is not a function.'}</p>
+    <p style="margin-top:6px">${mark(c.full)} <b>Covers ${rangeTxt}</b>, so ${B.inv}x is defined for every x it should be.</p>
+    <p style="margin-top:6px">${mark(c.acute)} <b>Contains the acute angles</b> [0, π/2], so ${B.inv} of a positive number is the angle you already know from triangles.</p>
+    <p style="margin-top:10px">${good&&c.acute?`<b>This is the principal branch.</b> Its reflection is the graph of y = ${B.inv}x.`:good?'This piece would work as an inverse, but it is not the standard choice: it misses the acute angles.':'This piece does not give an inverse function.'}</p>`;
+}
+$('bfn').addEventListener('click',e=>{const b=e.target.closest('.chip'); if(!b)return; bf=b.dataset.f; renderBr();});
+$('brefl').addEventListener('click',()=>{brefl=!brefl; renderBr();});
+$('bprin').addEventListener('click',()=>{bj=BF[bf].p; renderBr();});
+$('bs').addEventListener('input',e=>{bj=+e.target.value; renderBr();});
+renderBr();
+quiz([
+ {q:'sin x = 1/2 at x = π/6 and at x = 5π/6. Why is sin⁻¹(1/2) = π/6?',o:['π/6 is smaller','only π/6 lies in the principal range [−π/2, π/2]','5π/6 is not a solution','by convention, no reason'],a:1,
+  why:'Both angles have sine 1/2. The inverse function keeps only the piece of the wave on [−π/2, π/2] (green), and π/6 is the crossing on that piece. 5π/6 lies on the falling side, outside the window.',set:()=>{bf='sin';bj=-6;}},
+ {q:'For which x is cos⁻¹x &gt; sin⁻¹x?',o:['[−1, 1/√2)','(1/√2, 1]','[−1, 0)','all of [−1, 1]'],a:0,
+  why:'cos⁻¹x = π/2 − sin⁻¹x, so the inequality says sin⁻¹x &lt; π/4. sin⁻¹ is increasing on [−1, 1], so this means x &lt; sin(π/4) = 1/√2. With the domain: x ∈ [−1, 1/√2). The two reflected curves cross at x = 1/√2, where both equal π/4.'}
+],{q:'q2q',opts:'q2opts',why:'q2why',next:'q2next'},q=>{if(q.set){q.set();renderBr();}});
+
+/* ================= 3. sawtooth ================= */
+const SF={
+ sin:{lab:'sin⁻¹(sin x)', g:x=>Math.asin(Math.max(-1,Math.min(1,Math.sin(x)))), prin:[-PI/2,PI/2]},
+ cos:{lab:'cos⁻¹(cos x)', g:x=>Math.acos(Math.max(-1,Math.min(1,Math.cos(x)))), prin:[0,PI]},
+ tan:{lab:'tan⁻¹(tan x)', g:x=>{const t=tanS(x); return isFinite(t)?Math.atan(t):NaN;}, prin:[-PI/2,PI/2]}
+};
+let sf='sin', sx=5*PI/6;
+const SXs=720/(6*PI), SX=t=>20+(t+2*PI)*SXs, SY=v=>-v*SXs;
+function piece(fn,x){ // returns [interval string, formula string]
+  if(fn==='sin'){const k=Math.round(x/PI); const f=k===0?'x':(k%2===0?(k>0?'x − '+kpi(k):'x + '+kpi(-k)):kpi(k)+' − x');
+    return [`[${piStr(k*PI-PI/2)}, ${piStr(k*PI+PI/2)}]`, f];}
+  if(fn==='cos'){const m=Math.floor(x/PI+1e-12); const f=m%2===0?(m===0?'x':(m>0?'x − '+kpi(m):'x + '+kpi(-m))):kpi(m+1)+' − x';
+    return [`[${piStr(m*PI)}, ${piStr((m+1)*PI)}]`, f];}
+  const k=Math.round(x/PI); const f=k===0?'x':(k>0?'x − '+kpi(k):'x + '+kpi(-k));
+  return [`(${piStr(k*PI-PI/2)}, ${piStr(k*PI+PI/2)})`, f];
+}
+function renderSaw(){
+  const F=SF[sf];
+  let g=`<defs><clipPath id="sclip"><rect x="0" y="-168" width="760" height="246"/></clipPath></defs>`;
+  for(let k=-4;k<=8;k++){const x=SX(k*PI/2); g+=`<line class="gl" x1="${P2(x)}" x2="${P2(x)}" y1="-168" y2="78"/>`; if(k%2===0) g+=`<text class="tick" x="${P2(x)}" y="94" text-anchor="middle">${kpi(k/2)}</text>`;}
+  for(const [v,l] of [[-PI/2,'−π/2'],[PI/2,'π/2'],[PI,'π']]) g+=`<line class="gl" x1="0" x2="760" y1="${P2(SY(v))}" y2="${P2(SY(v))}"/><text class="tick" x="${P2(SX(0)-5)}" y="${P2(SY(v)-3)}" text-anchor="end">${l}</text>`;
+  g+=`<line class="ax" x1="0" x2="760" y1="0" y2="0"/><line class="ax" x1="${P2(SX(0))}" x2="${P2(SX(0))}" y1="-168" y2="78"/>`;
+  g+=`<g clip-path="url(#sclip)">`;
+  g+=`<line x1="${P2(SX(-2))}" y1="${P2(SY(-2))}" x2="${P2(SX(4))}" y2="${P2(SY(4))}" stroke="var(--muted)" stroke-dasharray="6 5"/>`;
+  g+=`<rect x="${P2(SX(F.prin[0]))}" y="-168" width="${P2(SX(F.prin[1])-SX(F.prin[0]))}" height="246" fill="var(--ok)" opacity=".07"/>`;
+  g+=`<path d="${pathF(F.g,SX,SY,-2*PI,4*PI,2400,9,1)}" fill="none" stroke="var(--accent)" stroke-width="2.6"/>`;
+  const y=F.g(sx);
+  g+=`<line x1="${P2(SX(sx))}" x2="${P2(SX(sx))}" y1="0" y2="${P2(isFinite(y)?SY(y):0)}" stroke="var(--flag)" stroke-dasharray="3 3"/>`;
+  if(isFinite(y)) g+=`<line x1="${P2(SX(0))}" x2="${P2(SX(sx))}" y1="${P2(SY(y))}" y2="${P2(SY(y))}" stroke="var(--flag)" stroke-dasharray="3 3"/><circle cx="${P2(SX(sx))}" cy="${P2(SY(y))}" r="6.5" fill="var(--flag)" stroke="var(--surface)" stroke-width="1.5"/>`;
+  g+=`</g>`;
+  g+=`<text x="${P2(SX(F.prin[0])+4)}" y="-154" font-size="11.5" fill="var(--ok)">principal range: here it equals x</text>`;
+  $('saw').innerHTML=g;
+  $('sfn').innerHTML=Object.keys(SF).map(k=>`<button class="chip" data-f="${k}" aria-pressed="${k===sf}">${SF[k].lab}</button>`).join('');
+  const [iv,fx]=piece(sf,sx);
+  $('sread').innerHTML= isFinite(y)
+    ? `<p>x = ${piStr(sx)}${piStr(sx).includes('π')?` (≈ ${fmt(sx)})`:''}: &nbsp;<span class="eq">${F.lab} = ${piStr(y)}</span>. On ${iv} the graph is the line <span class="eq">y = ${fx}</span>.</p>`
+    : `<p>x = ${piStr(sx)}: tan x is undefined here, so ${F.lab} is undefined (the jumps in the graph).</p>`;
+}
+$('sfn').addEventListener('click',e=>{const b=e.target.closest('.chip'); if(!b)return; sf=b.dataset.f; renderSaw();});
+draggable($('saw'),p=>{let x=(p.x-20)/SXs-2*PI; x=Math.max(-2*PI,Math.min(4*PI,x)); const sn=Math.round(x/(PI/12))*(PI/12); sx=Math.abs(sn-x)<0.06?sn:x; renderSaw();});
+renderSaw();
+quiz([
+ {q:'sin⁻¹(sin 5π/6) = ?',o:['5π/6','π/6','−π/6','−5π/6'],a:1,set:['sin',5*PI/6],
+  why:'5π/6 is outside [−π/2, π/2]. sin(5π/6) = sin(π − 5π/6) = sin(π/6), and π/6 is inside, so the answer is π/6. On the graph this piece is y = π − x.'},
+ {q:'cos⁻¹(cos 7π/6) = ?',o:['7π/6','5π/6','π/6','−π/6'],a:1,set:['cos',7*PI/6],
+  why:'7π/6 is outside [0, π]. cos(7π/6) = cos(2π − 7π/6) = cos(5π/6), and 5π/6 is inside [0, π]. The piece is y = 2π − x.'},
+ {q:'tan⁻¹(tan 3π/4) = ?',o:['3π/4','π/4','−π/4','−3π/4'],a:2,set:['tan',3*PI/4],
+  why:'tan repeats every π: tan(3π/4) = tan(3π/4 − π) = tan(−π/4), and −π/4 is in (−π/2, π/2). The piece is y = x − π.'},
+ {q:'sin⁻¹(sin 10) = ? (10 is in radians)',o:['10','10 − 3π','3π − 10','10 − 4π'],a:2,set:['sin',10],
+  why:'10 is close to 3π ≈ 9.42, inside [3π − π/2, 3π + π/2]. On that piece (odd multiple of π) the graph falls: y = 3π − x, so the answer is 3π − 10 ≈ −0.575, which is indeed in [−π/2, π/2]. Quick check: sin(3π − 10) = sin(10).'}
+],{q:'q3q',opts:'q3opts',why:'q3why',next:'q3next'},q=>{sf=q.set[0]; sx=q.set[1]; renderSaw();});
+
+/* ================= 4. tan-1 addition ================= */
+const TU=44, TL=4.4;
+let tx=2, ty=3;
+function renderTp(){
+  const X=v=>P2(v*TU), Y=v=>P2(-v*TU);
+  let g='';
+  // regions xy > 1
+  const hyp=sg=>{let pts=[]; for(let i=0;i<=60;i++){const x=1/TL+(TL-1/TL)*i/60; pts.push([sg*x,sg/x]);} return pts;};
+  const h1=hyp(1), h3=hyp(-1);
+  g+=`<polygon points="${h1.map(p=>X(p[0])+','+Y(p[1])).join(' ')} ${X(TL)},${Y(TL)}" fill="var(--p2)" opacity=".16"/>`;
+  g+=`<polygon points="${h3.map(p=>X(p[0])+','+Y(p[1])).join(' ')} ${X(-TL)},${Y(-TL)}" fill="var(--sec)" opacity=".16"/>`;
+  for(let k=-4;k<=4;k++) if(k) g+=`<line class="gl" x1="${X(k)}" x2="${X(k)}" y1="-200" y2="200" opacity=".6"/><line class="gl" y1="${Y(k)}" y2="${Y(k)}" x1="-200" x2="200" opacity=".6"/><text class="tick" x="${X(k)}" y="14" text-anchor="middle">${k<0?'−':''}${Math.abs(k)}</text>`;
+  g+=`<line class="ax" x1="-200" x2="200" y1="0" y2="0"/><line class="ax" x1="0" x2="0" y1="-200" y2="200"/>`;
+  g+=`<polyline points="${h1.map(p=>X(p[0])+','+Y(p[1])).join(' ')}" fill="none" stroke="var(--ink)" stroke-width="1.5"/><polyline points="${h3.map(p=>X(p[0])+','+Y(p[1])).join(' ')}" fill="none" stroke="var(--ink)" stroke-width="1.5"/>`;
+  g+=`<text x="${X(3.4)}" y="${Y(1.3)}" font-size="14" font-weight="600" fill="var(--p2)" text-anchor="middle">add π</text><text x="${X(-3.2)}" y="${Y(-1.3)}" font-size="14" font-weight="600" fill="var(--sec)" text-anchor="middle">subtract π</text>`;
+  g+=`<text x="${X(-2.4)}" y="${Y(2.6)}" font-size="13" fill="var(--muted)" text-anchor="middle">plain formula</text><text x="${X(2.4)}" y="${Y(-2.6)}" font-size="13" fill="var(--muted)" text-anchor="middle">plain formula</text>`;
+  g+=`<text x="${X(0.95)}" y="${Y(1.45)}" font-size="12" fill="var(--ink)">xy = 1</text>`;
+  g+=`<circle cx="${X(tx)}" cy="${Y(ty)}" r="8" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/><text x="${P2(tx*TU+11)}" y="${P2(-ty*TU-9)}" font-size="12.5" font-weight="600">(${fmt(tx,1).replace('.0','')}, ${fmt(ty,1).replace('.0','')})</text>`;
+  $('tp').innerHTML=g;
+  const L=Math.atan(tx)+Math.atan(ty), xy=tx*ty;
+  let h=`<p><span class="eq">tan⁻¹x + tan⁻¹y</span> = ${piStr(L)}${piStr(L).includes('π')?'':' rad'}</p>`;
+  if(Math.abs(xy-1)<1e-9) h+=`<p style="margin-top:6px">On the curve xy = 1 the denominator 1 − xy is 0: the sum is exactly ${L>0?'π/2':'−π/2'} and the formula has nothing to say.</p>`;
+  else{const Rv=Math.atan((tx+ty)/(1-xy)), corr=Math.round((L-Rv)/PI);
+    h+=`<p style="margin-top:6px"><span class="eq">tan⁻¹((x + y)/(1 − xy))</span> = ${piStr(Rv)}${piStr(Rv).includes('π')?'':' rad'}</p>
+      <p style="margin-top:8px">${corr===0?'They agree: <b>xy &lt; 1</b>, so the sum already lies in (−π/2, π/2).':corr>0?'They differ by <b>+π</b>: x, y &gt; 0 and xy &gt; 1, so the true sum is past π/2 and tan⁻¹ can only report it shifted down by π.':'They differ by <b>−π</b>: x, y &lt; 0 and xy &gt; 1, so the true sum is below −π/2.'}</p>`;}
+  h+=`<p class="muted" style="margin-top:8px">Sanity check that catches most errors: if x and y are both positive, the sum must be positive (and below π).</p>`;
+  $('tread').innerHTML=h;
+}
+draggable($('tp'),p=>{tx=Math.max(-TL,Math.min(TL,Math.round(p.x/TU*10)/10)); ty=Math.max(-TL,Math.min(TL,Math.round(-p.y/TU*10)/10)); renderTp();});
+renderTp();
+function centreOn(svg,frac){const box=svg.parentElement; if(box.scrollWidth>box.clientWidth) box.scrollLeft=Math.max(0,frac*box.scrollWidth-box.clientWidth/2);}
+centreOn($('eq'),EX(PI/4)/760); centreOn($('saw'),SX(PI/2)/760);
+quiz([
+ {q:'tan⁻¹(1/2) + tan⁻¹(1/3) = ?',o:['π/6','π/4','π/3','3π/4'],a:1,pt:[0.5,1/3],
+  why:'xy = 1/6 &lt; 1, so the plain formula applies: tan⁻¹((1/2 + 1/3)/(1 − 1/6)) = tan⁻¹(1) = π/4. The point sits in the plain region.'},
+ {q:'tan⁻¹1 + tan⁻¹2 + tan⁻¹3 = ?',o:['0','π/2','π','3π/2'],a:2,pt:[2,3],
+  why:'For 2 and 3: xy = 6 &gt; 1 with both positive, so tan⁻¹2 + tan⁻¹3 = π + tan⁻¹(5/(−5)) = π − π/4 = 3π/4. Adding tan⁻¹1 = π/4 gives π. Without the +π you would get 0, impossible for three positive angles.'},
+ {q:'Solving tan⁻¹2x + tan⁻¹3x = π/4 with the plain formula gives 6x² + 5x − 1 = 0, so x = 1/6 or x = −1. Which are solutions?',o:['both','only 1/6','only −1','neither'],a:1,pt:[-2,-3],
+  why:'x = 1/6 gives (1/3, 1/2): xy &lt; 1, the formula was valid, and the sum is π/4. x = −1 gives (−2, −3): xy = 6 &gt; 1 with both negative, the region where the formula is off by −π. The true sum is negative (−3π/4), so it cannot be π/4. Reject x = −1.'}
+],{q:'q4q',opts:'q4opts',why:'q4why',next:'q4next'},q=>{[tx,ty]=q.pt; renderTp();});
+</script>
+</body>
+</html>

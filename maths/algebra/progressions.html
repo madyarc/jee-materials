@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Progressions: Add or Multiply</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: AP staircase (bars + flipped copy) → GP hops on a number line → AP or GP? (classifier, two machines, phrase sorter) → AGP area picture. Predict-then-check cards sit under each picture. */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --ap:#2c56cc; --copy:#1f8f87; --gp:#c7741a; --alt:#7a52c7;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --ap:#7d9dff; --copy:#3cb8ad; --gp:#f0a04b; --alt:#a585f0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --ap:#7d9dff; --copy:#3cb8ad; --gp:#f0a04b; --alt:#a585f0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:74ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.bn{font:500 11px var(--f-mono);color:var(--alt);border:1px solid var(--alt);border-radius:4px;padding:0 5px;white-space:nowrap;vertical-align:middle}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.svgbox{overflow-x:auto}
+.svgbox svg{width:100%;height:auto;display:block}
+svg text{font-family:"IBM Plex Mono",monospace;font-size:11px;fill:var(--muted);paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+svg text.ink{fill:var(--ink)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.ctl{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:10px;align-items:center}
+.rng{display:flex;align-items:center;gap:8px;font:500 13px var(--f-mono)}
+.rng input{width:150px;accent-color:var(--accent)}
+.rng output{min-width:3.2em;display:inline-block;font-variant-numeric:tabular-nums}
+.tog{display:flex;align-items:center;gap:6px;font-size:13.5px;cursor:pointer}
+.tog input{accent-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 11px;cursor:pointer}
+.cap{margin-top:12px;font-size:14.5px;display:flex;flex-direction:column;gap:4px}
+.cap .f{font-family:var(--f-mono);font-size:13.5px;font-variant-numeric:tabular-nums}
+.lesson{margin-top:10px;border-left:3px solid var(--accent);padding:4px 0 4px 10px;font-size:14px}
+.pqs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pq{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.pq .tagp{font:600 11px var(--f-mono);color:var(--accent);letter-spacing:.05em;text-transform:uppercase}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{font:500 13.5px var(--f-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok);font-weight:600} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{border-left:3px solid var(--ok);padding:2px 0 2px 10px;font-size:13.5px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.why .res{font-weight:600}
+.fig svg{width:100%;max-width:300px;height:auto;display:block}
+table.dt{border-collapse:collapse;font:500 12.5px var(--f-mono);font-variant-numeric:tabular-nums;margin-top:10px}
+table.dt td{padding:3px 4px;text-align:center;white-space:nowrap}
+table.dt td.rh{text-align:left;color:var(--muted);padding-right:10px;font-family:var(--f-body)}
+table.dt tr.const td:not(.rh){color:var(--ok);font-weight:600}
+table.dt tr.terms td:not(.rh){color:var(--ink);font-size:13.5px}
+.tblbox{overflow-x:auto}
+.verdict{margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+.guess{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;font-size:13.5px}
+.phr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.phr:last-child{border-bottom:0}
+.phr .opts{justify-content:flex-end}
+.phr .why{grid-column:1 / -1}
+@media (max-width:560px){.phr{grid-template-columns:minmax(0,1fr)}.phr .opts{justify-content:flex-start}}
+details{margin-top:10px;font-size:14px}
+details summary{cursor:pointer;color:var(--accent)}
+.mono{font-family:var(--f-mono);font-size:13.5px}
+footer{font-size:12px;color:var(--muted);max-width:92ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Mathematics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Progressions: add or multiply</h1>
+    <p class="lede">An arithmetic progression (AP) adds the same step every time. A geometric progression (GP) multiplies by the same factor every time. Almost everything in this chapter follows from two pictures: a staircase for the AP and a chain of shrinking hops for the GP. Move the sliders first and read the formulas afterwards. They are captions on what you see.</p>
+  </header>
+
+  <!-- ============ 1. AP ============ -->
+  <section>
+    <h2>1 · AP: a staircase</h2>
+    <p class="lede">Each bar is one term. Every bar is <i>d</i> taller than the one before it, so the tops lie on a straight line. Turn on the flipped copy: put the same staircase upside down on top and every column reaches the same height.</p>
+    <div class="panel" style="margin-top:12px">
+      <div class="svgbox"><svg id="apSvg" viewBox="0 0 640 300" role="img" aria-label="Bars of an arithmetic progression"></svg></div>
+      <div class="svgbox"><svg id="apRun" viewBox="0 0 640 96" role="img" aria-label="Running sums S1 to Sn"></svg></div>
+      <div class="ctl">
+        <label class="rng">a <input type="range" id="apA" min="-10" max="30" step="0.5" value="2"><output id="apAo"></output></label>
+        <label class="rng">d <input type="range" id="apD" min="-5" max="5" step="0.5" value="3"><output id="apDo"></output></label>
+        <label class="rng">n <input type="range" id="apN" min="1" max="24" step="1" value="8"><output id="apNo"></output></label>
+      </div>
+      <div class="ctl">
+        <label class="tog"><input type="checkbox" id="apPair"> add the flipped copy</label>
+        <label class="tog"><input type="checkbox" id="apAvg"> show the average height</label>
+      </div>
+      <div class="cap" id="apCap"></div>
+    </div>
+    <div class="pqs" id="apPQ"></div>
+  </section>
+
+  <!-- ============ 2. GP ============ -->
+  <section>
+    <h2>2 · GP: hops that scale</h2>
+    <p class="lede">Start at 0 and hop forward by <i>a</i>. Each later hop is <i>r</i> times the previous one. Each row is one hop, so read the picture from the top down. When |r| &lt; 1 the hops shrink and pile up against a fixed point. Remove the first hop and what's left is the whole series again, scaled by r. So S = a + rS, which gives S<sub>∞</sub> = a/(1 − r).</p>
+    <div class="panel" style="margin-top:12px">
+      <div class="svgbox"><svg id="gpSvg" viewBox="0 0 640 320" role="img" aria-label="Hops of a geometric progression on a number line"></svg></div>
+      <div class="ctl">
+        <label class="rng">a <input type="range" id="gpA" min="1" max="10" step="1" value="6"><output id="gpAo"></output></label>
+        <label class="rng">r <input type="range" id="gpR" min="-1.5" max="1.5" step="0.05" value="0.5"><output id="gpRo"></output></label>
+        <label class="rng">n <input type="range" id="gpN" min="1" max="12" step="1" value="6"><output id="gpNo"></output></label>
+      </div>
+      <div class="cap" id="gpCap"></div>
+    </div>
+    <div class="pqs" id="gpPQ"></div>
+  </section>
+
+  <!-- ============ 3. AP or GP ============ -->
+  <section>
+    <h2>3 · Add or multiply? Telling them apart</h2>
+    <p class="lede">Most marks in this chapter are lost by using the right formula on the wrong kind of sequence. Plot the terms twice. An AP has equal gaps, so its points lie on a straight line on ordinary axes. A GP with positive terms has equal ratios, so its points lie on a straight line on a <b>log</b> axis, because log turns "× r" into "+ log r".</p>
+    <div class="panel" style="margin-top:12px">
+      <div class="chips" id="idChips" role="group" aria-label="Choose a sequence"></div>
+      <div class="two" style="margin-top:12px">
+        <div><p class="muted">ordinary axis</p><div class="svgbox"><svg id="idLin" viewBox="0 0 320 190" role="img" aria-label="Terms on a linear axis"></svg></div></div>
+        <div><p class="muted">log axis</p><div class="svgbox"><svg id="idLog" viewBox="0 0 320 190" role="img" aria-label="Terms on a logarithmic axis"></svg></div></div>
+      </div>
+      <div class="guess" id="idGuess"></div>
+      <div id="idOut"></div>
+    </div>
+    <p class="muted" style="margin-top:8px">Two terms never settle it: 2, 6 starts both the AP 2, 6, 10 and the GP 2, 6, 18. Each new term gives one more difference and one more ratio to check. Use four terms when you have them, then predict a fifth to confirm.</p>
+
+    <h3 style="margin-top:22px">Same start, same word "loses"</h3>
+    <p class="lede">Two machines each cost ₹15,625. One loses 20% of its <i>current</i> value each year (GP, r = 0.8). The other loses a flat ₹2,500 a year (AP, d = −2,500).</p>
+    <div class="panel" style="margin-top:10px">
+      <div class="svgbox"><svg id="mcSvg" viewBox="0 0 640 230" role="img" aria-label="Value of two machines over ten years"></svg></div>
+      <div class="ctl"><label class="rng">year <input type="range" id="mcT" min="0" max="10" step="1" value="5"><output id="mcTo"></output></label></div>
+      <div class="cap" id="mcCap"></div>
+    </div>
+    <div class="pqs" id="mcPQ"></div>
+
+    <h3 style="margin-top:22px">Read the words: amount or percentage?</h3>
+    <p class="lede">If the change is an amount with units (₹500, 2 seats), the sequence is an AP. If it is a pure number or a percentage of the current value (8%, half), it is a GP. For rates and speeds, flip to reciprocals (HP). <span class="hw">rule of thumb, check the base</span></p>
+    <div class="panel" style="margin-top:10px" id="phrases"></div>
+  </section>
+
+  <!-- ============ 4. AGP ============ -->
+  <section>
+    <h2>4 · AP × GP: the arithmetico-geometric series <span class="bn">beyond NCERT</span></h2>
+    <p class="lede">Term k is (a + (k−1)d)·r<sup>k−1</sup>. Draw it as a column: its width is r<sup>k−1</sup> (shrinking, GP) and its height is a + (k−1)d (growing, AP), so its <b>area</b> is the term. Read the same cells row by row and every row is a plain GP.</p>
+    <div class="panel" style="margin-top:12px">
+      <div class="svgbox"><svg id="agSvg" viewBox="0 0 640 300" role="img" aria-label="Arithmetico-geometric series as columns of cells"></svg></div>
+      <div class="ctl">
+        <label class="rng">a <input type="range" id="agA" min="0.5" max="3" step="0.5" value="1"><output id="agAo"></output></label>
+        <label class="rng">d <input type="range" id="agD" min="0" max="2" step="0.5" value="1"><output id="agDo"></output></label>
+        <label class="rng">r <input type="range" id="agR" min="0" max="8" step="1" value="2"><output id="agRo"></output></label>
+      </div>
+      <div class="ctl chips" id="agMode" role="group" aria-label="Read by">
+        <button class="chip" data-m="col" aria-pressed="true">read by columns (the terms)</button>
+        <button class="chip" data-m="row" aria-pressed="false">read by rows (GPs)</button>
+      </div>
+      <div class="cap" id="agCap"></div>
+      <details><summary>The exam method: multiply by r and subtract</summary>
+        <div id="agAlg" class="mono" style="margin-top:6px;line-height:1.7"></div>
+        <p class="muted" style="margin-top:6px">Shifting rS one place right lines up terms whose AP coefficients differ by exactly d, so the middle becomes a plain GP. This is the same idea as the rows of the picture. Derive the finite-n version this way each time rather than memorising it.</p>
+      </details>
+    </div>
+    <div class="pqs" id="agPQ"></div>
+  </section>
+
+  <footer>
+    Results checked against NCERT Mathematics Class 11, Chapter 8 "Sequences and Series" (AP, GP, sum to infinity, AM–GM). The arithmetico-geometric series and its sum follow S. L. Loney / Hall &amp; Knight, <i>Higher Algebra</i> (Ch. on series). Worked examples are adapted from a study compendium (<i>Sequences &amp; Series: JEE Compendium</i>) and re-derived. Every number shown is computed by the page's script, not typed in. One error in the compendium is corrected here: in its deposit example (₹500 at the start of each year, 10%), the intermediate factor is ((1.1)<sup>10</sup> − 1)/0.1 ≈ 15.937, not 6.137. Its final ₹8,765.58 is right. The pictures show particular cases. The general statements are the formulas in the captions.
+  </footer>
+</div>
+
+<script>
+/* ================= helpers ================= */
+const $=id=>document.getElementById(id);
+const fmt=(v,dp=2)=>{if(v===Infinity)return '∞';if(!isFinite(v))return '—';let s=String(+v.toFixed(dp));if(s==='-0')s='0';return s.replace('-','−');};
+const money=v=>'₹'+Math.round(v).toLocaleString('en-IN');
+function ticks(min,max,cnt){const span=(max-min)||1;let st=Math.pow(10,Math.floor(Math.log10(span/cnt)));const m=span/cnt/st;st*=m>5?10:m>2?5:m>1?2:1;const out=[];for(let v=Math.ceil(min/st-1e-9)*st;v<=max+1e-9;v+=st)out.push(+v.toFixed(10));return out;}
+function bindRange(id,fn,show){const el=$(id),o=$(id+'o');const up=()=>{o.textContent=show?show(+el.value):fmt(+el.value);fn();};el.addEventListener('input',up);return up;}
+function setRange(id,v){$(id).value=v;$(id).dispatchEvent(new Event('input'));}
+const SUBD='₀₁₂₃₄₅₆₇₈₉';const sb=n=>String(n).split('').map(c=>SUBD[+c]??c).join('');
+
+/* SVG drawing width follows the container (min 340) so text stays legible on phones */
+function vw(id){const w=$(id).parentNode.clientWidth;return Math.round(Math.max(340,Math.min(640,w||640)));}
+let rzT;addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{renderAP();renderGP();renderMC();renderAG();},150);});
+
+/* predict-then-check card */
+function mountPQ(host,item){
+  const el=document.createElement('div');el.className='pq';
+  el.innerHTML=`<span class="tagp">Predict, then check</span><p>${item.q}</p>${item.fig?`<div class="fig">${item.fig}</div>`:''}
+    <div class="opts">${item.opts.map((o,i)=>`<button class="opt" data-i="${i}">${o}</button>`).join('')}</div>
+    <div class="why" hidden><span class="res"></span><span>${item.why}</span>${item.act?`<button class="btn" data-act>${item.act.label}</button>`:''}</div>`;
+  el.querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>{
+    const pick=+b.dataset.i;
+    el.querySelectorAll('.opt').forEach(x=>{x.disabled=true;const j=+x.dataset.i;if(j===item.ans)x.classList.add('right');else if(j===pick)x.classList.add('wrong');});
+    const res=el.querySelector('.res');res.textContent=pick===item.ans?'Right.':'Not this one. The answer is marked.';res.style.color=pick===item.ans?'var(--ok)':'var(--flag)';
+    el.querySelector('.why').hidden=false;}));
+  if(item.act)el.querySelector('[data-act]').addEventListener('click',item.act.fn);
+  host.appendChild(el);
+}
+
+/* ================= 1. AP staircase ================= */
+function apTerms(a,d,n){return Array.from({length:n},(_,k)=>a+k*d);}
+function renderAP(){
+  const a=+$('apA').value,d=+$('apD').value,n=+$('apN').value,pair=$('apPair').checked,avg=$('apAvg').checked;
+  const T=apTerms(a,d,n),l=T[n-1],top=a+l,S=T.reduce((s,v)=>s+v,0);
+  const W=vw('apSvg'),H=300,L=44,R=14,TP=18,B=26;$('apSvg').setAttribute('viewBox',`0 0 ${W} ${H}`);$('apRun').setAttribute('viewBox',`0 0 ${W} 96`);
+  const vals=[0,...T];if(pair)vals.push(top);
+  let lo=Math.min(...vals),hi=Math.max(...vals);if(hi-lo<1){hi+=1;}
+  const pad=(hi-lo)*0.08;lo-=lo<0?pad:0;hi+=pad;
+  const Y=v=>TP+(hi-v)/(hi-lo)*(H-TP-B);
+  const cw=(W-L-R)/n,bw=Math.min(cw*0.74,60);
+  let g='';
+  for(const t of ticks(lo,hi,5)){g+=`<line x1="${L}" x2="${W-R}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(t)+4}" text-anchor="end">${fmt(t)}</text>`;}
+  g+=`<line x1="${L}" x2="${W-R}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)"/>`;
+  T.forEach((t,k)=>{
+    const x=L+k*cw+(cw-bw)/2,y0=Y(0),y1=Y(t);
+    g+=`<rect x="${x}" y="${Math.min(y0,y1)}" width="${bw}" height="${Math.max(1.5,Math.abs(y1-y0))}" fill="var(--ap)" rx="1.5"/>`;
+    if(pair){const c=T[n-1-k],ya=Y(t),yb=Y(t+c);
+      g+=`<rect x="${x}" y="${Math.min(ya,yb)}" width="${bw}" height="${Math.max(1.5,Math.abs(yb-ya))}" fill="var(--copy)" fill-opacity=".38" stroke="var(--copy)" stroke-width="1.2" rx="1.5"/>`;
+      if(cw>=26&&Math.abs(yb-ya)>14)g+=`<text x="${x+bw/2}" y="${(ya+yb)/2+4}" text-anchor="middle" style="fill:var(--copy)">${fmt(c,1)}</text>`;}
+    if(cw>=26){const lab=t>=0?Math.min(y0,y1)-4:Math.max(y0,y1)+12;
+      if(!(pair&&t>=0))g+=`<text x="${x+bw/2}" y="${lab}" text-anchor="middle" class="ink">${fmt(t,1)}</text>`;
+      else if(Math.abs(y1-y0)>14)g+=`<text x="${x+bw/2}" y="${(y0+y1)/2+4}" text-anchor="middle" style="fill:var(--surface)">${fmt(t,1)}</text>`;}
+    if(cw>=16)g+=`<text x="${x+bw/2}" y="${H-6}" text-anchor="middle">${k+1}</text>`;
+  });
+  if(pair){g+=`<line x1="${L}" x2="${W-R}" y1="${Y(top)}" y2="${Y(top)}" stroke="var(--copy)" stroke-width="1.5" stroke-dasharray="5 4"/>
+    <text x="${W-R}" y="${Y(top)-5}" text-anchor="end" style="fill:var(--copy)" font-weight="600">every column = a + l = ${fmt(top)}</text>`;}
+  if(avg){g+=`<line x1="${L}" x2="${W-R}" y1="${Y(top/2)}" y2="${Y(top/2)}" stroke="var(--gp)" stroke-width="1.5" stroke-dasharray="2 3"/>
+    <text x="${L+4}" y="${Y(top/2)-5}" style="fill:var(--gp)" font-weight="600">average height (a + l)/2 = ${fmt(top/2)}</text>`;}
+  $('apSvg').innerHTML=g;
+
+  /* running sums */
+  const Ssum=[];T.reduce((s,v,k)=>(Ssum[k]=s+v),0);
+  const smax=Math.max(...Ssum),slo=Math.min(0,...Ssum),shi=Math.max(0,...Ssum)||1;
+  const h2=96,t2=14,b2=6,Y2=v=>t2+(shi-v)/((shi-slo)||1)*(h2-t2-b2);
+  let r='';r+=`<text x="${L-6}" y="10" text-anchor="end" font-size="10">S<tspan font-size="8" baseline-shift="sub">k</tspan></text>`;
+  r+=`<line x1="${L}" x2="${W-R}" y1="${Y2(0)}" y2="${Y2(0)}" stroke="var(--muted)"/>`;
+  Ssum.forEach((s,k)=>{const x=L+k*cw+(cw-bw)/2,best=Math.abs(s-smax)<1e-9;
+    r+=`<rect x="${x}" y="${Math.min(Y2(0),Y2(s))}" width="${bw}" height="${Math.max(1,Math.abs(Y2(s)-Y2(0)))}" fill="${best?'var(--ok)':'var(--line)'}"/>`;});
+  const bestK=Ssum.map((s,k)=>Math.abs(s-smax)<1e-9?k+1:0).filter(Boolean);
+  r+=`<text x="${W-R}" y="10" text-anchor="end">running sum Sₖ; largest at k = ${bestK.join(' and ')}</text>`;
+  $('apRun').innerHTML=r;
+
+  let cap=`<div class="f">last term l = T${sb(n)} = a + (n−1)d = ${fmt(a)} + ${n-1}·(${fmt(d)}) = <b>${fmt(l)}</b></div>
+    <div class="f">S${sb(n)} = n(a + l)/2 = ${n}·(${fmt(a)} + ${fmt(l)})/2 = <b>${fmt(top*n/2)}</b> <span class="muted">(adding the bars one by one: ${fmt(S)})</span></div>`;
+  if(pair)cap+=`<div>Column k holds T<sub>k</sub> and the bar from the other end, T<sub>n+1−k</sub>. Every column reaches a + l, so the n columns hold 2S<sub>n</sub> = n(a + l).${T.some(v=>v<0)?' Bars below the axis count as negative, and the column heights still all come out to a + l.':''}</div>`;
+  if(avg)cap+=`<div>S<sub>n</sub> = n × (average height). In an AP the average is (first + last)/2.${n%2?` For odd n it is exactly the middle bar, T${sb((n+1)/2)} = ${fmt(T[(n-1)/2])}.`:''}</div>`;
+  if(a>0&&d<0)cap+=`<div>Here the bars shrink and eventually go negative. S<sub>k</sub> grows while the bars you add are positive and falls once they are negative. Its maximum is at the last non-negative term.</div>`;
+  $('apCap').innerHTML=cap;
+}
+['apA','apD','apN'].forEach(id=>bindRange(id,renderAP));
+['apPair','apAvg'].forEach(id=>$(id).addEventListener('change',renderAP));
+function setAP(a,d,n,pair,avg){$('apA').value=a;$('apD').value=d;$('apN').value=n;if(pair!==undefined)$('apPair').checked=pair;if(avg!==undefined)$('apAvg').checked=avg;['apA','apD','apN'].forEach(id=>$(id+'o').textContent=fmt(+$(id).value));renderAP();}
+
+/* AP predict items — every number below is computed */
+(function(){
+  const host=$('apPQ');
+  // Ex: max sum of 25, 22.5, 20, ...
+  {const a=25,d=-2.5;let S=0,best=-Infinity,ks=[];for(let k=1;k<=30;k++){S+=a+(k-1)*d;if(S>best+1e-9){best=S;ks=[k];}else if(Math.abs(S-best)<1e-9)ks.push(k);}
+   mountPQ(host,{q:'For the AP 25, 22.5, 20, …, at which n is S<sub>n</sub> largest?',
+    opts:['n = 10 only','n = 11 only',`n = ${ks.join(' and ')}`,'n = 21'],ans:2,
+    why:`T${sb(11)} = 25 − 10·2.5 = 0 exactly. Adding a zero bar leaves the sum unchanged, so S${sb(ks[0])} = S${sb(ks[1])} = ${fmt(best)}. Give both values of n. To find the peak, look for the last non-negative term rather than differentiating and rounding.`,
+    act:{label:'Load it into the staircase',fn:()=>setAP(25,-2.5,14,false,false)}});}
+  // Ex: three-digit multiples of 7
+  {const first=Math.ceil(100/7)*7,last=Math.floor(999/7)*7,n=(last-first)/7+1,S=n*(first+last)/2;
+   mountPQ(host,{q:'How many three-digit numbers are multiples of 7?',
+    opts:[String(n-1),String(n),String(n+1),String(Math.floor(999/7))],ans:1,
+    why:`First ${first}, last ${last}. Count = (l − a)/d + 1 = ${(last-first)/7} + 1 = ${n}. The "+1" is the fencepost: from 3 to 11 in steps of 2 there are 5 terms, not 4. Then the sum is ${n}·(${first} + ${last})/2 = ${S.toLocaleString('en-IN')}.`});}
+  // Ex: Sn with a constant term
+  {const Sf=n=>2*n*n+3*n+1,T=[1,2,3,4,5,6].map(n=>n===1?Sf(1):Sf(n)-Sf(n-1));
+   const W=260,H=90,mx=Math.max(...T),bw=26;let f=`<svg viewBox="0 0 ${W} ${H}">`;T.forEach((t,k)=>{const h=t/mx*(H-26);f+=`<rect x="${12+k*40}" y="${H-14-h}" width="${bw}" height="${h}" fill="${k===0?'var(--flag)':'var(--ap)'}"/><text x="${25+k*40}" y="${H-17-h}" text-anchor="middle" class="ink">${t}</text><text x="${25+k*40}" y="${H-2}" text-anchor="middle">T${sb(k+1)}</text>`;});f+='</svg>';
+   mountPQ(host,{q:'S<sub>n</sub> = 2n² + 3n + 1. Is the sequence an AP?',
+    opts:['yes, from the first term','only from the second term on','no, never'],ans:1,
+    why:`T<sub>n</sub> = S<sub>n</sub> − S<sub>n−1</sub> = 4n + 1 works only for n ≥ 2. T${sb(1)} = S${sb(1)} = ${T[0]}, not 5. The terms are ${T.join(', ')}, …, so the first gap is ${T[1]-T[0]} and the rest are 4. An AP always has S<sub>n</sub> = An² + Bn with no constant term (S${sb(0)} = 0).`});
+   host.lastChild.querySelector('.why').insertAdjacentHTML('beforeend',`<div class="fig">${f}</div>`);}
+  // Ex: ratio of sums -> ratio of terms
+  {const m=11,n=2*m-1,num=7*n+1,den=4*n+27,g=(x,y)=>y?g(y,x%y):x,k=g(num,den);
+   mountPQ(host,{q:'Two APs have S<sub>n</sub> : S′<sub>n</sub> = (7n + 1) : (4n + 27). What is T<sub>11</sub> : T′<sub>11</sub>?',
+    opts:['78 : 71',`${num/k} : ${den/k}`,'7 : 4','148 : 71'],ans:1,
+    why:`T${sb(11)} is the middle bar of the first 21 bars, so it equals their average: T${sb(11)} = S${sb(21)}/21. The same holds for the second AP, so the 21s cancel. Put n = 2·11 − 1 = 21: (7·21 + 1)/(4·21 + 27) = ${num}/${den} = ${num/k}/${den/k}.`,
+    act:{label:'See the middle bar',fn:()=>setAP(2,3,21,false,true)}});}
+})();
+
+/* ================= 2. GP hops ================= */
+function renderGP(){
+  const a=+$('gpA').value,r=Math.round(+$('gpR').value*100)/100,n=+$('gpN').value;
+  $('gpRo').textContent=fmt(r);
+  const W=vw('gpSvg'),L=20,R=20,TP=16,rowH=22,H=TP+n*rowH+42;
+  $('gpSvg').setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const s=[0];for(let k=1;k<=n;k++)s.push(s[k-1]+a*Math.pow(r,k-1));
+  const conv=Math.abs(r)<1&&r!==0,Sinf=a/(1-r);
+  const vals=[...s];if(conv)vals.push(Sinf);
+  let lo=Math.min(...vals),hi=Math.max(...vals);const pad=(hi-lo||1)*0.05;lo-=pad;hi+=pad;
+  const X=v=>L+(v-lo)/(hi-lo)*(W-L-R),axY=TP+n*rowH+8;
+  let g=`<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L10,5 L0,9 z" fill="var(--gp)"/></marker></defs>`;
+  for(const t of ticks(lo,hi,6)){g+=`<line x1="${X(t)}" x2="${X(t)}" y1="${TP-6}" y2="${axY}" stroke="var(--line)"/><text x="${X(t)}" y="${axY+16}" text-anchor="middle">${fmt(t)}</text>`;}
+  g+=`<line x1="${L}" x2="${W-R}" y1="${axY}" y2="${axY}" stroke="var(--muted)"/>`;
+  if(r===0){g+=`<text x="${W/2}" y="${TP+20}" text-anchor="middle" class="ink">r = 0 is not allowed: every term after the first vanishes and ratios are undefined.</text>`;}
+  if(conv){g+=`<line x1="${X(Sinf)}" x2="${X(Sinf)}" y1="${TP-8}" y2="${axY}" stroke="var(--ok)" stroke-width="1.6" stroke-dasharray="5 4"/>
+    <text x="${X(Sinf)}" y="${axY+32}" text-anchor="middle" style="fill:var(--ok)" font-weight="600">S∞ = ${fmt(Sinf,3)}</text>`;}
+  if(r!==0)for(let k=1;k<=n;k++){
+    const y=TP+(k-1)*rowH+rowH/2,x0=X(s[k-1]),x1=X(s[k]),len=Math.abs(x1-x0);
+    g+=`<line x1="${x0}" x2="${x0}" y1="${y-rowH+4}" y2="${y}" stroke="var(--muted)" stroke-dasharray="1 3"/>`;
+    g+=`<line x1="${x0}" x2="${x1}" y1="${y}" y2="${y}" stroke="var(--gp)" stroke-width="3" stroke-linecap="round" ${len>8?'marker-end="url(#ah)"':''}/>`;
+    const term=a*Math.pow(r,k-1);
+    if(len>46){g+=`<text x="${(x0+x1)/2}" y="${y-5}" text-anchor="middle" class="ink" font-size="10">${fmt(term,3)}</text>`;}
+  }
+  $('gpSvg').innerHTML=g;
+  const Sn=r===1?n*a:a*(1-Math.pow(r,n))/(1-r);
+  let cap=`<div class="f">T${sb(n)} = a·r<sup>n−1</sup> = ${fmt(a*Math.pow(r,n-1),4)} &nbsp; S${sb(n)} = ${r===1?'na':'a(1 − rⁿ)/(1 − r)'} = <b>${fmt(Sn,4)}</b></div>`;
+  if(conv){const gap=a*Math.pow(r,n)/(1-r);
+    cap+=`<div class="f">S∞ = a/(1 − r) = ${a}/(1 − ${fmt(r)}) = <b>${fmt(Sinf,4)}</b> &nbsp; gap still left after ${n} hops = a·rⁿ/(1 − r) = ${fmt(gap,4)}</div>`;
+    cap+=`<div>${r>0?'Every hop covers the same fraction (1 − r) of the gap that remains, so the gap shrinks by a factor r each time and never quite closes.':'With negative r the hops alternate direction, overshooting and undershooting. They still shrink, so the partial sums zig-zag in on S∞.'}</div>`;}
+  else if(r===1)cap+=`<div>r = 1: every hop is the same size. It is still a GP, but S<sub>n</sub> = na grows without limit, and the formula a(rⁿ − 1)/(r − 1) would divide by zero.</div>`;
+  else if(r!==0)cap+=`<div><b>|r| ≥ 1: no sum to infinity.</b> ${r>1?'Each hop is longer than the last, so the partial sums run off past any bound.':r===-1?'The hops never shrink, so the partial sums bounce between two values forever and settle nowhere.':'The hops alternate direction and grow, so the partial sums swing wider and wider.'} Answering "the series has no sum" is a full answer.</div>`;
+  $('gpCap').innerHTML=cap;
+}
+['gpA','gpN'].forEach(id=>bindRange(id,renderGP));bindRange('gpR',renderGP,v=>fmt(Math.round(v*100)/100));
+
+(function(){
+  const host=$('gpPQ');
+  // bouncing ball
+  {const h=10,r=0.6,D=h+2*h*r/(1-r),wrong=2*h/(1-r);
+   let f='<svg viewBox="0 0 300 110">',x=20,base=100,sc=8;f+=`<line x1="10" x2="290" y1="${base}" y2="${base}" stroke="var(--muted)"/>`;
+   f+=`<path d="M${x},${base-h*sc} L${x},${base}" stroke="var(--gp)" stroke-width="2" fill="none"/><text x="${x+4}" y="${base-h*sc+10}">10 m</text>`;
+   let hk=h*r;for(let k=0;k<7;k++){const w=Math.sqrt(hk)*28;f+=`<path d="M${x},${base} Q${x+w/2},${base-2*hk*sc} ${x+w},${base}" stroke="var(--gp)" stroke-width="2" fill="none"/>`;if(k<2)f+=`<text x="${x+w/2}" y="${base-hk*sc-4}" text-anchor="middle">${fmt(hk)}</text>`;x+=w;hk*=r;}
+   f+='</svg>';
+   mountPQ(host,{q:'A ball is dropped from 10 m and each bounce rises to 60% of the previous height. Total distance travelled?',fig:f,
+    opts:[`${fmt(wrong)} m`,`${fmt(D)} m`,`${fmt(h/(1-r))} m`,'no finite total'],ans:1,
+    why:`The 10 m drop happens once. Every rebound height is travelled twice (up and down): 10 + 2·(6/(1 − 0.6)) = 10 + 2·${fmt(h*r/(1-r))} = ${fmt(D)} m. Doubling everything gives ${fmt(wrong)} m, which counts the first drop twice.`});}
+  // nested squares
+  {let P=[[20,20],[140,20],[140,140],[20,140]],f='<svg viewBox="0 0 300 160">';
+   for(let k=0;k<6;k++){f+=`<polygon points="${P.map(p=>p.join(',')).join(' ')}" fill="var(--ap)" fill-opacity="${0.08+0.07*k}" stroke="var(--ap)" stroke-width="1"/>`;P=P.map((p,i)=>{const q=P[(i+1)%4];return [(p[0]+q[0])/2,(p[1]+q[1])/2];});}
+   f+=`<text x="160" y="40">side s → s/√2</text><text x="160" y="58">area A → A/2</text><text x="160" y="76">so areas: r = ½</text></svg>`;
+   mountPQ(host,{q:'Join the midpoints of a square of side a, then repeat forever. Sum of all the areas?',fig:f,
+    opts:['a²','2a²','4a²','no finite sum'],ans:1,
+    why:`Each new side is the hypotenuse of a right triangle with legs s/2, so it is s/√2. Areas scale by (1/√2)² = ½: a²/(1 − ½) = 2a². The perimeters scale by 1/√2, giving 4a/(1 − 1/√2) = (8 + 4√2)a ≈ ${fmt(4/(1-1/Math.SQRT2),3)}a. One construction produces two different ratios.`});}
+  // recurring decimal
+  {const a=36/100,r=1/100,S=a/(1-r),g=(x,y)=>y?g(y,x%y):x,k=g(36,99);
+   mountPQ(host,{q:'0.363636… as a fraction?',opts:['36/100','9/25',`${36/k}/${99/k}`,'36/90'],ans:2,
+    why:`0.36 + 0.0036 + 0.000036 + … is a GP with a = 36/100 and r = 1/100. S∞ = (36/100)/(99/100) = 36/99 = ${36/k}/${99/k} = ${fmt(S,6)}…. Every recurring decimal is a GP with rational a and r, so it is rational.`});}
+  // two series
+  {const sols=[];for(const r of [0.25,0.75]){const a=4*(1-r);if(Math.abs(a*r-0.75)<1e-9)sols.push([a,r]);}
+   mountPQ(host,{q:'An infinite GP has second term ¾ and sum 4. How many such series are there?',opts:['none','exactly one','two'],ans:2,
+    why:`a = 4(1 − r) and ar = ¾ give 16r² − 16r + 3 = 0, so r = ¼ or ¾. Both satisfy |r| &lt; 1, so both are valid: ${sols.map(([a,r])=>`a = ${fmt(a)}, r = ${fmt(r)}`).join('; ')}. Always check |r| &lt; 1. In many versions of this problem it rules out one root, but here it rules out neither.`});}
+})();
+
+/* ================= 3. AP or GP? ================= */
+const SEQ=[
+ {id:'ap',lab:'2, 6, 10, 14, 18',v:[2,6,10,14,18],kind:'AP',say:'Equal gaps (d = 4): straight on the ordinary axis, bending on the log axis.'},
+ {id:'gp',lab:'2, 6, 18, 54, 162',v:[2,6,18,54,162],kind:'GP',say:'Equal ratios (r = 3): curving up on the ordinary axis, straight on the log axis. It starts 2, 6 just like the AP.'},
+ {id:'si',lab:'10000, 11000, 12000, 13000',v:[10000,11000,12000,13000],kind:'AP',say:'Simple interest at 10%: the same ₹1,000 is added each year because it is computed on the original sum. AP.'},
+ {id:'ci',lab:'10000, 11000, 12100, 13310',v:[10000,11000,12100,13310],kind:'GP',say:'Compound interest at 10%: each year multiplies by 1.1. GP. The first two terms match simple interest exactly. Only the third term separates them.'},
+ {id:'k',lab:'5, 5, 5, 5',v:[5,5,5,5],kind:'Both',say:'Constant: d = 0 and r = 1. Constant sequences are the only ones that are both. If a, b, c are in AP and GP, then 2b = a + c and b² = ac force (b − a)² = 0.'},
+ {id:'hp',lab:'1/2, 1/5, 1/8, 1/11',v:[1/2,1/5,1/8,1/11],d:['1/2','1/5','1/8','1/11'],kind:'HP',flip:true,say:'Neither gaps nor ratios are constant, but the reciprocals 2, 5, 8, 11 have constant gap 3. So it is an HP with T<sub>n</sub> = 1/(3n − 1). There is no HP sum formula. Flip to the AP, work there, and flip back.'},
+ {id:'q',lab:'3, 7, 13, 21, 31',v:[3,7,13,21,31],kind:'Neither',second:true,say:'Not an AP, GP or HP. But the gaps 4, 6, 8, 10 form an AP, so T<sub>n</sub> is quadratic. Fitting An² + Bn + C to three terms gives T<sub>n</sub> = n² + n + 1. <span class="bn">beyond NCERT</span>'},
+ {id:'agp',lab:'3/2, 5/4, 7/8, 9/16',v:[3/2,5/4,7/8,9/16],d:['3/2','5/4','7/8','9/16'],kind:'Neither',say:'Not an AP, GP or HP. The numerators 3, 5, 7, 9 form an AP and the denominators 2, 4, 8, 16 form a GP, so this is an AP × GP (section 4).'}
+];
+let seq='gp',guessed=null;
+try{const s=localStorage.getItem('prog-seq');if(SEQ.some(x=>x.id===s))seq=s;}catch(e){}
+$('idChips').innerHTML=SEQ.map(s=>`<button class="chip" data-s="${s.id}">${s.lab}</button>`).join('');
+$('idChips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;seq=b.dataset.s;guessed=null;try{localStorage.setItem('prog-seq',seq);}catch(err){}renderID();});
+function plotSeq(svg,v,log){
+  const W=320,H=190,L=46,R=12,T=12,B=26,n=v.length;
+  const f=log?Math.log10:x=>x;let lo=Math.min(...v.map(f)),hi=Math.max(...v.map(f));
+  if(hi-lo<1e-9){lo-=log?0.5:1;hi+=log?0.5:1;}const pad=(hi-lo)*0.08;lo-=pad;hi+=pad;if(!log&&lo>0&&lo<(hi-lo)*0.6)lo=0;
+  const X=i=>L+i*(W-L-R)/(n-1),Y=x=>T+(hi-f(x))/(hi-lo)*(H-T-B);
+  let g='';
+  if(log){const e0=Math.floor(lo),e1=Math.ceil(hi);for(let e=e0;e<=e1;e++)for(const m of [1,2,5]){const val=m*Math.pow(10,e),lv=Math.log10(val);if(lv<lo||lv>hi)continue;const y=T+(hi-lv)/(hi-lo)*(H-T-B);g+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${L-5}" y="${y+4}" text-anchor="end" font-size="10">${fmt(val,3)}</text>`;}}
+  else for(const t of ticks(lo,hi,4)){const y=Y(t);g+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${L-5}" y="${y+4}" text-anchor="end" font-size="10">${fmt(t,3)}</text>`;}
+  g+=`<polyline points="${v.map((x,i)=>`${X(i)},${Y(x)}`).join(' ')}" fill="none" stroke="var(--muted)" stroke-dasharray="3 3"/>`;
+  v.forEach((x,i)=>{g+=`<circle cx="${X(i)}" cy="${Y(x)}" r="4.5" fill="${log?'var(--gp)':'var(--ap)'}"/><text x="${X(i)}" y="${H-8}" text-anchor="middle" font-size="10">${i+1}</text>`;});
+  svg.innerHTML=g;
+}
+function rowCells(vals,offset){ // offset 0: terms; 1: between terms; 2: second differences
+  let h='';if(offset)h+=`<td colspan="${offset}"></td>`;vals.forEach(x=>h+=`<td colspan="2">${x}</td>`);return h;}
+const isConst=a=>a.every(x=>Math.abs(x-a[0])<1e-9*Math.max(1,Math.abs(a[0])));
+function renderID(){
+  document.querySelectorAll('#idChips .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.s===seq));
+  const S=SEQ.find(x=>x.id===seq),v=S.v;
+  plotSeq($('idLin'),v,false);plotSeq($('idLog'),v,true);
+  const kinds=['AP','GP','HP','Both','Neither'];
+  $('idGuess').innerHTML=`<span class="muted">Your call:</span>`+kinds.map(k=>`<button class="opt" data-k="${k}" ${guessed?'disabled':''}>${k}</button>`).join('');
+  $('idGuess').querySelectorAll('.opt').forEach(b=>{if(guessed){if(b.dataset.k===S.kind)b.classList.add('right');else if(b.dataset.k===guessed)b.classList.add('wrong');}
+    b.addEventListener('click',()=>{guessed=b.dataset.k;renderID();});});
+  if(!guessed){$('idOut').innerHTML='<p class="muted" style="margin-top:8px">Look at both plots, make your call, and the differences and ratios appear.</p>';return;}
+  const disp=S.d||v.map(x=>fmt(x,3));
+  const dif=v.slice(1).map((x,i)=>x-v[i]),rat=v.slice(1).map((x,i)=>x/v[i]);
+  let rows=`<tr class="terms"><td class="rh">terms</td>${rowCells(disp,0)}</tr>
+    <tr class="${isConst(dif)?'const':''}"><td class="rh">differences</td>${rowCells(dif.map(x=>fmt(x,4)),1)}</tr>`;
+  if(S.second){const d2=dif.slice(1).map((x,i)=>x-dif[i]);rows+=`<tr class="${isConst(d2)?'const':''}"><td class="rh">differences of those</td>${rowCells(d2.map(x=>fmt(x,4)),2)}</tr>`;}
+  rows+=`<tr class="${isConst(rat)?'const':''}"><td class="rh">ratios</td>${rowCells(rat.map(x=>fmt(x,4)),1)}</tr>`;
+  if(S.flip){const rv=v.map(x=>1/x),rd=rv.slice(1).map((x,i)=>x-rv[i]);rows+=`<tr><td class="rh">reciprocals</td>${rowCells(rv.map(x=>fmt(x,4)),0)}</tr><tr class="${isConst(rd)?'const':''}"><td class="rh">their differences</td>${rowCells(rd.map(x=>fmt(x,4)),1)}</tr>`;}
+  if(S.id==='q'){const ok=v.every((x,i)=>{const n=i+1;return n*n+n+1===x;});rows+=`<tr><td class="rh">n² + n + 1</td>${rowCells(v.map((_,i)=>(i+1)**2+(i+1)+1),0)}</tr>`;S._chk=ok;}
+  $('idOut').innerHTML=`<div class="tblbox"><table class="dt">${rows}</table></div><div class="verdict"><b>${guessed===S.kind?'Right.':'It is: '+S.kind+'.'}</b> ${S.say}</div><p class="muted" style="margin-top:6px">Green rows are constant.</p>`;
+}
+
+/* two machines */
+const MC={cost:15625,r:0.8,dep:2500};
+function renderMC(){
+  const t=+$('mcT').value,W=vw('mcSvg'),H=230;$('mcSvg').setAttribute('viewBox',`0 0 ${W} ${H}`);const L=58,R=16,T=14,B=30,X=x=>L+x/10*(W-L-R),Y=v=>T+(1-v/16000)*(H-T-B);
+  const gp=y=>MC.cost*Math.pow(MC.r,y),ap=y=>Math.max(0,MC.cost-MC.dep*y),zero=MC.cost/MC.dep;
+  let g='';for(const v of ticks(0,16000,4)){g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end">${v.toLocaleString('en-IN')}</text>`;}
+  for(let y=0;y<=10;y++)g+=`<text x="${X(y)}" y="${H-10}" text-anchor="middle">${y}</text>`;
+  g+=`<text x="${W-R}" y="${H-10+0}" text-anchor="end" dy="-14">years</text>`;
+  g+=`<line x1="${X(t)}" x2="${X(t)}" y1="${T}" y2="${H-B}" stroke="var(--muted)" stroke-dasharray="3 3"/>`;
+  g+=`<polyline points="${X(0)},${Y(MC.cost)} ${X(zero)},${Y(0)}" fill="none" stroke="var(--ap)" stroke-width="2.2"/>`;
+  g+=`<line x1="${X(zero)}" x2="${X(10)}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--ap)" stroke-width="2.2" stroke-dasharray="2 4"/>`;
+  g+=`<polyline points="${Array.from({length:11},(_,y)=>`${X(y)},${Y(gp(y))}`).join(' ')}" fill="none" stroke="var(--gp)" stroke-width="2.2"/>`;
+  for(let y=0;y<=10;y++){g+=`<circle cx="${X(y)}" cy="${Y(gp(y))}" r="3" fill="var(--gp)"/>`;if(y<=zero)g+=`<circle cx="${X(y)}" cy="${Y(ap(y))}" r="3" fill="var(--ap)"/>`;}
+  g+=`<text x="${X(3.2)}" y="${Y(ap(3.2))-8}" style="fill:var(--ap)" font-weight="600">−₹2,500 a year (AP)</text>`;
+  g+=`<text x="${X(7.2)}" y="${Y(gp(7.2))-10}" style="fill:var(--gp)" font-weight="600">×0.8 a year (GP)</text>`;
+  $('mcSvg').innerHTML=g;
+  $('mcCap').innerHTML=`<div class="f">after ${t} yr: GP ${money(gp(t))} &nbsp;·&nbsp; AP ${MC.cost-MC.dep*t>=0?money(ap(t)):'₹0 (hit zero at '+fmt(zero)+' yr)'}</div>
+    <div>The AP line falls by the same amount every year and reaches zero, after ${fmt(zero)} years. The GP curve loses less each year, because 20% of a smaller value is smaller, so it never reaches zero. Approaching zero without reaching it is the signature of a GP with 0 &lt; r &lt; 1.</div>`;
+}
+bindRange('mcT',renderMC,v=>v);
+(function(){const g5=MC.cost*Math.pow(MC.r,5),a5=MC.cost-MC.dep*5;
+  mountPQ($('mcPQ'),{q:'Before moving the slider: after 5 years, which machine is worth more?',opts:['the 20% machine','the ₹2,500 machine','they are equal'],ans:g5>a5?0:(g5<a5?1:2),
+   why:`20% machine: 15,625 × 0.8⁵ = ${money(g5)}. Flat machine: 15,625 − 5 × 2,500 = ${money(a5)}. The gap is ${money(g5-a5)}. The 20% machine loses ₹3,125 in year 1, more than ₹2,500, but its losses shrink every year after that.`});
+  const T0=1000,dr=0.1;mountPQ($('mcPQ'),{q:'A 1000 L tank loses 10% of its current contents each day. When is it empty?',opts:['day 10','day 11','never exactly'],ans:2,
+   why:`Contents after n days = 1000 × 0.9ⁿ, for example ${fmt(T0*Math.pow(1-dr,7),1)} L after 7 days. That is positive for every n. Draining a fixed 100 L a day (an AP) would empty it on day 10.`});})();
+
+/* phrase sorter */
+const PHR=[
+ {p:'Salary rises by ₹500 every year.',a:'AP',w:'A fixed amount with units is added, so d = 500.'},
+ {p:'Salary rises by 8% every year.',a:'GP',w:'A percentage of the current salary, so r = 1.08 (not 0.08).'},
+ {p:'Value rises by 20% of the <i>original</i> value each year.',a:'AP',w:'The 20% is always taken of the same base, so the added amount is fixed. "Of the original" makes it an AP.'},
+ {p:'A machine depreciates by 10% per year.',a:'GP',w:'Reducing balance: r = 0.9 each year.'},
+ {p:'Each row of a theatre has 2 more seats than the row before.',a:'AP',w:'d = 2 seats.'},
+ {p:'Each bounce reaches 60% of the previous height.',a:'GP',w:'r = 0.6.'},
+ {p:'Average speed over two equal distances at u and v km/h.',a:'HP',w:`The time taken is distance ÷ speed, so average the reciprocals. Average speed = 2uv/(u + v), the harmonic mean. At 40 and 60 km/h it is ${fmt(2*40*60/100)} km/h, not 50.`},
+ {p:'Money doubles every 7 years. Year-by-year amounts?',a:'GP',w:`GP, but the yearly ratio is 2<sup>1/7</sup> ≈ ${fmt(Math.pow(2,1/7),4)}, not 2. Check what n counts before fixing r.`}
+];
+(function(){const host=$('phrases');PHR.forEach((x,i)=>{const d=document.createElement('div');d.className='phr';
+  d.innerHTML=`<div>${x.p}</div><div class="opts">${['AP','GP','HP'].map(k=>`<button class="opt" data-k="${k}">${k}</button>`).join('')}</div><div class="why" hidden><span><b class="res"></b> ${x.w}</span></div>`;
+  d.querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>{d.querySelectorAll('.opt').forEach(o=>{o.disabled=true;if(o.dataset.k===x.a)o.classList.add('right');else if(o===b)o.classList.add('wrong');});
+    const r=d.querySelector('.res');r.textContent=b.dataset.k===x.a?'Right.':`${x.a}.`;r.style.color=b.dataset.k===x.a?'var(--ok)':'var(--flag)';d.querySelector('.why').hidden=false;}));
+  host.appendChild(d);});})();
+
+/* ================= 4. AGP ================= */
+const RLIST=[0.2,0.25,1/3,0.4,0.5,0.6,2/3,0.75,0.8],RLAB=['0.2','1/4','1/3','0.4','1/2','0.6','2/3','3/4','0.8'];
+let agMode='col';
+$('agMode').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;agMode=b.dataset.m;document.querySelectorAll('#agMode .chip').forEach(c=>c.setAttribute('aria-pressed',c===b));renderAG();});
+function renderAG(){
+  const a=+$('agA').value,d=+$('agD').value,ri=+$('agR').value,r=RLIST[ri];
+  const W=vw('agSvg'),H=300,L=16,R=16,T=12,B=30;$('agSvg').setAttribute('viewBox',`0 0 ${W} ${H}`);const tot=1/(1-r),ux=(W-L-R)/tot;
+  let K=1;while(K<80&&ux*Math.pow(r,K)>=0.8)K++;
+  const hmax=a+(K-1)*d,uy=(H-T-B)/hmax,base=H-B;
+  let g='',x=L;
+  for(let k=1;k<=K;k++){const w=ux*Math.pow(r,k-1);
+    for(let j=1;j<=k;j++){ if(j>1&&d===0)break;
+      const y0=j===1?0:a+(j-2)*d,h=j===1?a:d;
+      const col=agMode==='col'?(k%2?'var(--ap)':'var(--copy)'):(j===1?'var(--gp)':(j%2?'var(--alt)':'var(--copy)'));
+      const op=agMode==='col'?0.75:0.7;
+      g+=`<rect x="${x}" y="${base-(y0+h)*uy}" width="${w}" height="${h*uy}" fill="${col}" fill-opacity="${op}" stroke="var(--surface)" stroke-width="${w>4?0.8:0}"/>`;}
+    if(agMode==='col'&&w>34)g+=`<text x="${x+w/2}" y="${base+14}" text-anchor="middle">T${sb(k)}</text><text x="${x+w/2}" y="${base-(a+(k-1)*d)*uy-4}" text-anchor="middle" class="ink" font-size="10">${fmt((a+(k-1)*d)*Math.pow(r,k-1),3)}</text>`;
+    x+=w;}
+  g+=`<line x1="${L}" x2="${W-R}" y1="${base}" y2="${base}" stroke="var(--muted)"/>`;
+  g+=`<text x="${W-R}" y="${base+26}" text-anchor="end">total width 1 + r + r² + … = 1/(1 − r) = ${fmt(tot,3)}</text>`;
+  if(agMode==='row'){g+=`<text x="${L+6}" y="${base-a*uy/2+4}" class="ink" font-weight="600">bottom row: a/(1 − r) = ${fmt(a*tot,3)}</text>`;
+    if(d>0&&K>2){const xs=L+ux*1;g+=`<text x="${xs+6}" y="${base-(a+d/2)*uy+4}" class="ink" font-size="10">row 2: d·r/(1 − r) = ${fmt(d*r*tot,3)}</text>`;}}
+  $('agSvg').innerHTML=g;
+  $('agRo').textContent=RLAB[ri];
+  const S=a*tot+d*r*tot*tot;let chk=0;for(let k=1;k<=400;k++)chk+=(a+(k-1)*d)*Math.pow(r,k-1);
+  $('agCap').innerHTML=`<div class="f">S∞ = a/(1 − r) + d·r/(1 − r)² = ${fmt(a*tot,4)} + ${fmt(d*r*tot*tot,4)} = <b>${fmt(S,4)}</b> <span class="muted">(400 terms added directly: ${fmt(chk,4)})</span></div>
+    <div>${agMode==='col'?'Each column is one term: width r<sup>k−1</sup> times height a + (k−1)d.':'The bottom row (height a) runs the full width, so it holds a/(1 − r). Row j above it (height d) starts after j − 1 columns, so it holds d·r<sup>j−1</sup>/(1 − r). Adding these rows is itself a GP: d·r/(1 − r)².'} ${d===0?'With d = 0 the series is just a GP.':''} The infinite sum needs |r| &lt; 1. The picture uses 0 &lt; r &lt; 1.</div>`;
+  const A=fmt(a),D=fmt(d),Rr=RLAB[ri];
+  $('agAlg').innerHTML=`S &nbsp;= ${A} + ${fmt(a+d)}·r + ${fmt(a+2*d)}·r² + ${fmt(a+3*d)}·r³ + …<br>rS = &nbsp;&nbsp;&nbsp;&nbsp; ${A}·r + ${fmt(a+d)}·r² + ${fmt(a+2*d)}·r³ + …<br>(1 − r)S = ${A} + ${D}·(r + r² + r³ + …) = ${A} + ${D}·r/(1 − r)<br>with r = ${Rr}: S = ${fmt(S,4)}`;
+}
+['agA','agD'].forEach(id=>bindRange(id,renderAG));bindRange('agR',renderAG,v=>RLAB[v]);
+function setAG(a,d,ri){$('agA').value=a;$('agD').value=d;$('agR').value=ri;$('agAo').textContent=fmt(a);$('agDo').textContent=fmt(d);renderAG();}
+(function(){
+  const host=$('agPQ'),S=(a,d,r)=>a/(1-r)+d*r/((1-r)*(1-r));
+  const s1=S(1,1,1/3);
+  mountPQ(host,{q:'1 + 2/3 + 3/9 + 4/27 + … = ?',opts:['3/2','2',fmt(s1)==='2.25'?'9/4':fmt(s1),'3'],ans:2,
+   why:`a = 1, d = 1, r = 1/3. S − S/3 = 1 + 1/3 + 1/9 + … = 3/2, so S = (3/2)/(2/3) = ${fmt(s1)} = 9/4.`,act:{label:'Draw it',fn:()=>setAG(1,1,2)}});
+  const s2=S(1.5,1,0.5);
+  mountPQ(host,{q:'3/2 + 5/4 + 7/8 + 9/16 + … = ?',opts:['4',String(fmt(s2)),'6','no finite sum'],ans:1,
+   why:`Term k = (2k + 1)/2<sup>k</sup> = (3/2 + (k−1)·1)·(1/2)<sup>k−1</sup>, so a = 3/2, d = 1, r = 1/2. Then S = (3/2)/(1/2) + 1·(1/2)/(1/4) = 3 + 2 = ${fmt(s2)}.`,act:{label:'Draw it',fn:()=>setAG(1.5,1,4)}});
+})();
+
+/* ---------- init ---------- */
+['apA','apD','apN','gpA','gpN','agA','agD'].forEach(id=>$(id+'o').textContent=fmt(+$(id).value));
+$('gpRo').textContent=fmt(+$('gpR').value);$('mcTo').textContent=$('mcT').value;
+renderAP();renderGP();renderID();renderMC();renderAG();
+</script>
+</body>
+</html>

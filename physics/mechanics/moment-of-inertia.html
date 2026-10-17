@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moment of Inertia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) body picker: side view, view down the axis, mass-vs-distance bands, then the same-M-same-R ladder
+   (2) parallel axis: drag the axis, I-vs-d parabola  (3) perpendicular axes: rotate the in-plane pair, drag a mass point
+   (4) remember one number: reveal-the-family chains  (5) predict-then-check questions */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a;
+  --c1:#1f8f87; --c2:#7a52c7; --mass:#aab3c2;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b;
+  --c1:#3cb8ad; --c2:#a585f0; --mass:#4a5466; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b;
+  --c1:#3cb8ad; --c2:#a585f0; --mass:#4a5466; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.views{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.view{min-width:0}
+.view svg{width:100%;height:auto;display:block;max-width:340px;margin:0 auto}
+.vcap{font-size:12px;color:var(--muted);text-align:center;margin-top:2px}
+.split{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split{grid-template-columns:minmax(0,1fr)}}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,.cc:focus-visible,.lad:focus-visible,svg:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:0}
+.slider input{flex:1 1 160px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:4.5em;text-align:right}
+.big{font:500 22px var(--f-mono);font-variant-numeric:tabular-nums}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.lad{display:grid;grid-template-columns:minmax(110px,150px) minmax(0,1fr) 4.5em;gap:10px;align-items:center;width:100%;text-align:left;
+  font:500 13.5px var(--f-body);background:none;color:var(--ink);border:0;border-bottom:1px solid var(--line);padding:6px 2px;cursor:pointer}
+.lad:last-child{border-bottom:0}
+.lad .bar{height:12px;border-radius:3px;background:var(--mass)}
+.lad[aria-pressed="true"]{font-weight:700}
+.lad[aria-pressed="true"] .bar{background:var(--c1)}
+.lad .v{font:500 13px var(--f-mono);text-align:right}
+.stackbar{display:flex;height:16px;border-radius:3px;overflow:hidden;background:var(--bg);border:1px solid var(--line)}
+.stackbar span{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+svg text{font-family:var(--f-body)}
+svg.drag{touch-action:none;cursor:crosshair}
+.chain{display:flex;flex-direction:column;gap:10px}
+.crow{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.cc{display:flex;flex-direction:column;align-items:center;gap:2px;width:128px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 4px 8px;cursor:pointer;color:var(--ink);font:inherit}
+.cc svg{width:96px;height:72px}
+.cc .nm{font-size:11.5px;color:var(--muted);line-height:1.2;text-align:center}
+.cc .val{font:500 15px var(--f-mono)}
+.cc[data-shown="false"] .val{color:var(--muted)}
+.cc.start{border-color:var(--c1)}
+.cc.ghost{opacity:.55;cursor:default}
+.op{display:flex;flex-direction:column;align-items:center;font:500 12px var(--f-mono);color:var(--muted);min-width:56px;text-align:center}
+.op .arr{font-size:18px;line-height:1;color:var(--ink)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Moment of Inertia</h1>
+    <p class="lede">Moment of inertia is how hard a body is to spin about a given axis. It depends on one thing only: how far each bit of mass sits from that axis. Every bit counts by the <i>square</i> of its distance. Pick a body, move the axis, and see the number follow the picture.</p>
+  </header>
+
+  <!-- 1 · distance from the axis -->
+  <section class="stack">
+    <div>
+      <h2>1 · Only the distance from the axis counts</h2>
+      <p class="lede">All bodies here have the same mass M and the same outer radius R, and spin about their symmetry axis (red dashed line). The middle view looks straight down the axis. That view is all that matters: it shows how far each bit of mass is from the axis.</p>
+    </div>
+    <div class="panel stack">
+      <div class="chips" id="bchips" role="group" aria-label="Choose body"></div>
+      <div class="views">
+        <div class="view"><svg id="side" viewBox="0 0 240 240" role="img" aria-label="Side view of the body with its axis"></svg><p class="vcap">side view</p></div>
+        <div class="view"><svg id="top" viewBox="0 0 240 240" role="img" aria-label="View down the axis"></svg><p class="vcap">looking down the axis · dashed circle = radius of gyration k</p></div>
+        <div class="view"><svg id="bands" viewBox="0 0 320 240" role="img" aria-label="Share of mass and share of I by distance from the axis"></svg>
+          <div class="legend" style="justify-content:center"><span><i style="background:var(--mass)"></i>share of mass</span><span><i style="background:var(--c1)"></i>share of I</span></div></div>
+      </div>
+      <div class="slider"><label for="squash">Squash the body along its axis</label><input type="range" id="squash" min="0" max="1" step="0.01" value="0"><output id="squashv">0%</output></div>
+      <p class="cap key" id="cap1"></p>
+    </div>
+
+    <div class="split">
+      <div class="panel">
+        <h3>Same M, same R: the ladder</h3>
+        <p class="muted">Bar length = I in units of MR² (tap a row to view that body).</p>
+        <div id="ladder" style="margin-top:6px"></div>
+      </div>
+      <div class="panel stack">
+        <div><span class="muted">this body</span><div class="big" id="ibig"></div></div>
+        <dl class="kv" id="ikv"></dl>
+        <p class="cap">The more mass sits near the rim, the larger I. Each bit counts by r<sub>⊥</sub>², so the bands near the rim count far more than their share of mass (compare the two bar colours above).</p>
+        <p class="cap"><b>Radius of gyration k:</b> squeeze all the mass onto one thin ring of radius k and you get the same I. So I = Mk², and k is a kind of "average distance" of the mass from the axis, weighted by squares. It is not the distance of the centre of mass from the axis.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · parallel axis -->
+  <section class="stack">
+    <div>
+      <h2>2 · Move the axis: parallel-axis theorem</h2>
+      <p class="lede">Drag the axis (⊙, perpendicular to the page) anywhere. The new axis is parallel to the one through the centre of mass (CM). Moving it a distance d adds exactly Md², whatever the body.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="pachips" role="group" aria-label="Choose body"></div>
+        <svg id="pasvg" class="drag" viewBox="0 0 400 300" tabindex="0" role="application" aria-label="Drag to move the axis; arrow keys also move it" style="width:100%;height:auto;display:block"></svg>
+        <div class="chips" id="pasnap" role="group" aria-label="Snap the axis to a named point"></div>
+      </div>
+      <div class="panel stack">
+        <svg id="pagraph" viewBox="0 0 300 200" role="img" aria-label="I against distance d from the CM" style="width:100%;height:auto;display:block"></svg>
+        <div>
+          <div class="stackbar" id="pabar"></div>
+          <div class="legend" style="margin-top:4px"><span><i style="background:var(--c1)"></i>I<sub>cm</sub> (fixed)</span><span><i style="background:var(--c2)"></i>Md² (grows with d)</span></div>
+        </div>
+        <p class="big" id="pabig" style="font-size:18px"></p>
+        <p class="cap key" id="pacap"></p>
+      </div>
+    </div>
+    <p class="cap"><b>Watch for:</b> the theorem must start from the axis through the CM. To go from an axis A (not through the CM) to a parallel axis B, step through the CM: I<sub>B</sub> = I<sub>A</sub> − Md<sub>A</sub>² + Md<sub>B</sub>². Every axis on the faint circle has the same I, and the smallest I of the whole family is at the CM.</p>
+  </section>
+
+  <!-- 3 · perpendicular axes -->
+  <section class="stack">
+    <div>
+      <h2>3 · Flat bodies: perpendicular-axis theorem</h2>
+      <p class="lede">For a flat sheet (a lamina), take two perpendicular axes x′ and y′ in its plane and a third axis z through the same point, sticking out of the page. Turn the x′y′ pair or change the shape: I<sub>x′</sub> and I<sub>y′</sub> trade off, but their sum never moves. Drag the small mass dm to see why.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="pechips" role="group" aria-label="Choose lamina"></div>
+        <svg id="pesvg" class="drag" viewBox="0 0 320 300" role="application" aria-label="Lamina with axes; drag the mass element" style="width:100%;height:auto;display:block;max-width:440px;margin:0 auto"></svg>
+        <div class="slider"><label for="phi">Turn the x′y′ pair</label><input type="range" id="phi" min="0" max="180" step="1" value="0"><output id="phiv">0°</output></div>
+        <div class="slider" id="aspwrap"><label for="asp">Short side b / long side a</label><input type="range" id="asp" min="0.05" max="1" step="0.01" value="0.5"><output id="aspv">0.50</output></div>
+      </div>
+      <div class="panel stack">
+        <h3>The bars add up</h3>
+        <div id="pebars"></div>
+        <p class="cap key" id="pecap"></p>
+        <p class="cap">For the small mass: its distance to z is the hypotenuse of a right triangle whose legs are its distances to x′ and y′, so r² = x′² + y′². This works only because all three distances lie in the plane of the sheet.</p>
+        <p class="cap"><b>Only for laminae.</b> For a cube, every axis through the centre has I = Ma²/6, so I<sub>x</sub> + I<sub>y</sub> = Ma²/3 ≠ I<sub>z</sub>. A bit of mass at height h off the x–y plane gets h² added to its squared distance from x and from y, but not from z. So for a solid body I<sub>x</sub> + I<sub>y</sub> = I<sub>z</sub> + 2Σ m h², which is more than I<sub>z</sub>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · remember one number -->
+  <section class="stack">
+    <div>
+      <h2>4 · Remember one number, derive the family</h2>
+      <p class="lede">For each shape you need one value; the two theorems give every other standard axis. Work out each box from the arrow before you tap it.</p>
+    </div>
+    <div class="panel stack">
+      <div class="chips" id="chchips" role="group" aria-label="Choose body"></div>
+      <div class="chain" id="chain"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="chall">Reveal all</button><button class="btn" id="chhide">Hide again</button></div>
+      <p class="cap" id="chcap"></p>
+    </div>
+  </section>
+
+  <!-- 5 · predict then check -->
+  <section class="stack">
+    <div>
+      <h2>5 · Predict, then check</h2>
+      <p class="lede">Classic exam questions. Choose an answer first; the reasoning appears after.</p>
+    </div>
+    <div class="qgrid" id="quiz"></div>
+    <div><button class="btn" id="qreset">Reset answers</button></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> rigid bodies of uniform density; "thin" rings, pipes and shells have all their mass at one radius; laminae have zero thickness. Mass dots in section 1 are a random sample drawn from the exact distribution, for the picture only; the bars and numbers are computed exactly.</p>
+    <p><b>Sources:</b> NCERT Physics Part I, Class XI, "System of Particles and Rotational Motion" (Ch. 7 in pre-2023 editions; standard-body table and both axis theorems). H. C. Verma, <i>Concepts of Physics</i> Vol. 1, Ch. 10 "Rotational Mechanics". Halliday, Resnick &amp; Walker, <i>Fundamentals of Physics</i>, Ch. 10 (table of rotational inertias). Questions adapted from a study compendium on moment of inertia and rolling; every result on this page was re-derived from I = Σ m r<sub>⊥</sub>² and checked against these texts.</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+/* Section 1. Round bodies of mass M, outer radius R, about the symmetry axis. b = I/(MR²).
+   M(r): fraction of mass within perpendicular distance r·R of the axis.
+   I(r): ∫ (r⊥/R)² dm/M over that region (so I(1) = b). Derived by slicing into coaxial cylindrical shells. */
+const BODIES=[
+ {id:'ring', name:'Ring',            b:1,   bf:'1',   M:r=>r>=1?1:0, I:r=>r>=1?1:0,
+  note:'Every bit of mass is at distance R, so I = MR², the largest possible for mass within radius R.'},
+ {id:'pipe', name:'Thin pipe',       b:1,   bf:'1',   M:r=>r>=1?1:0, I:r=>r>=1?1:0,
+  note:'A ring stretched along the axis. Squash it and you get the ring back: every bit is still at R, so I = MR².'},
+ {id:'hsph', name:'Hollow sphere',   b:2/3, bf:'2/3', M:r=>1-Math.sqrt(Math.max(0,1-r*r)), I:r=>2/3-Math.sqrt(Math.max(0,1-r*r))*(r*r+2)/3,
+  note:'The shell near the poles is close to the axis; around the equator it is at R. Seen down the axis the mass piles up toward the rim, so I = ⅔MR²: between a ring and a disc.'},
+ {id:'disc', name:'Disc',            b:1/2, bf:'1/2', M:r=>r*r, I:r=>r**4/2,
+  note:'Mass spread evenly over the face. Most of it sits in the outer bands (there is more area there), giving I = ½MR².'},
+ {id:'cyl',  name:'Solid cylinder',  b:1/2, bf:'1/2', M:r=>r*r, I:r=>r**4/2,
+  note:'A disc stretched along the axis. Squash it: the view down the axis does not change, so I = ½MR², whatever its length.'},
+ {id:'ssph', name:'Solid sphere',    b:2/5, bf:'2/5', M:r=>1-Math.pow(Math.max(0,1-r*r),1.5),
+  I:r=>{const u=Math.max(0,1-r*r);return 1.5*((2/3-2/5)-(2/3*Math.pow(u,1.5)-2/5*Math.pow(u,2.5)));},
+  note:'Much of the mass is near the axis (the sphere is thickest there), so I = ⅖MR², the smallest of the round bodies.'},
+ {id:'rod',  name:'Rod, length 2R',  b:1/3, bf:'1/3', M:r=>r, I:r=>r**3/3,
+  note:'Axis through the middle, perpendicular to the rod. Mass is spread evenly from 0 to R, so I = ⅓MR² = ML²/12 with L = 2R.'}
+];
+
+/* Section 2. I_cm about an axis ⊥ page through the CM, in units of MR² (R = 70 px reference). */
+const PA={
+ disc:{name:'Disc',icm:1/2,
+   snaps:[{l:'centre',p:[0,0],t:'I = ½MR² (centre)'},{l:'rim',p:[1,0],t:'I = ½MR² + MR² = 3/2 MR² (axis through a rim point, ⊥ plane)'}]},
+ ring:{name:'Ring',icm:1,
+   snaps:[{l:'centre',p:[0,0],t:'I = MR² (centre)'},{l:'rim',p:[1,0],t:'I = MR² + MR² = 2MR² (axis through a rim point, ⊥ plane)'}]},
+ rod:{name:'Rod (L = 2R)',icm:1/3,
+   snaps:[{l:'middle',p:[0,0],t:'I = ML²/12 (middle)'},{l:'end',p:[1,0],t:'I = ML²/12 + M(L/2)² = ML²/3 (one end)'},
+          {l:'L/4 from an end',p:[0.5,0],t:'I = ML²/12 + M(L/4)² = 7ML²/48'}]},
+ square:{name:'Square plate (side 2R)',icm:2/3,
+   snaps:[{l:'centre',p:[0,0],t:'I = Ma²/6 (centre, a = side)'},{l:'edge midpoint',p:[1,0],t:'I = Ma²/6 + M(a/2)² = 5Ma²/12'},
+          {l:'corner',p:[1,1],t:'I = Ma²/6 + M(a/√2)² = 2Ma²/3'}]}
+};
+
+/* Section 4. "Remember one number" chains. v = value in units of the stated unit. */
+const CHAINS={
+ ring:{name:'Ring',unit:'MR²',shape:'ring',rows:[
+   [{ax:'perp',v:'1',nm:'⊥ plane, centre',start:1},{op:'÷ 2',why:'⊥-axis theorem'},{ax:'diam',v:'½',nm:'diameter'},{op:'+ MR²',why:'parallel axis, d = R'},{ax:'tanIn',v:'3/2',nm:'tangent in plane'}],
+   [{ax:'perp',v:'1',nm:'⊥ plane, centre',ghost:1},{op:'+ MR²',why:'parallel axis, d = R'},{ax:'tanPerp',v:'2',nm:'⊥ plane, through rim'}]],
+   cap:'Two equal diameters add up to the ⊥ axis (perpendicular-axis theorem), so each is half of it. Then shift by R with +MR².'},
+ disc:{name:'Disc',unit:'MR²',shape:'disc',rows:[
+   [{ax:'perp',v:'½',nm:'⊥ plane, centre',start:1},{op:'÷ 2',why:'⊥-axis theorem'},{ax:'diam',v:'¼',nm:'diameter'},{op:'+ MR²',why:'parallel axis, d = R'},{ax:'tanIn',v:'5/4',nm:'tangent in plane'}],
+   [{ax:'perp',v:'½',nm:'⊥ plane, centre',ghost:1},{op:'+ MR²',why:'parallel axis, d = R'},{ax:'tanPerp',v:'3/2',nm:'⊥ plane, through rim'}]],
+   cap:'Same moves as the ring, starting from ½. The last box, 3/2 MR², is the disc turning about the point where it touches the ground: you will meet it again in rolling.'},
+ ssph:{name:'Solid sphere',unit:'MR²',shape:'ssph',rows:[
+   [{ax:'diam',v:'2/5',nm:'diameter',start:1},{op:'+ MR²',why:'parallel axis, d = R'},{ax:'tanIn',v:'7/5',nm:'tangent'}]],
+   cap:'A sphere is not flat, so the perpendicular-axis theorem does not apply. Only the parallel shift is available.'},
+ hsph:{name:'Hollow sphere',unit:'MR²',shape:'hsph',rows:[
+   [{ax:'diam',v:'2/3',nm:'diameter',start:1},{op:'+ MR²',why:'parallel axis, d = R'},{ax:'tanIn',v:'5/3',nm:'tangent'}]],
+   cap:'Another way to remember 2/3: every bit of a thin shell is at distance R from the centre, and the three perpendicular axes share that equally, so 3I = 2MR².'},
+ rod:{name:'Rod',unit:'ML²',shape:'rod',rows:[
+   [{ax:'perp',v:'1/12',nm:'⊥ rod, middle',start:1},{op:'+ M(L/2)²',why:'parallel axis, d = L/2'},{ax:'tanPerp',v:'1/3',nm:'⊥ rod, one end'}]],
+   cap:'A rectangular plate about an axis parallel to one side is the same rod stretched along the axis, so it also gives Ma²/12 (middle) and Ma²/3 (edge).'}
+};
+
+/* Section 5. Questions adapted from the source compendium (re-derived). a = index of the correct option. */
+const QUIZ=[
+ {q:'A thin ring has I = 4 kg m² about the axis through its centre, perpendicular to its plane. What is I about an axis through a point on the rim, perpendicular to its plane?',
+  o:['4 kg m²','6 kg m²','8 kg m²','2 kg m²'],a:2,
+  why:'MR² = 4. Shift by R: MR² + MR² = 2MR² = 8 kg m². No mass or radius needed.'},
+ {q:'A uniform rod of mass M and length L. What is I about a perpendicular axis through a point L/4 from one end?',
+  o:['ML²/3 − ML²/16 = 13ML²/48','ML²/12 + ML²/16 = 7ML²/48','ML²/3 + ML²/16 = 19ML²/48','ML²/12'],a:1,
+  why:'The point is L/4 from the centre, so I = ML²/12 + M(L/4)² = 7ML²/48. The first option shifts from the end axis directly, which the parallel-axis theorem does not allow: always go through the CM.'},
+ {q:'From a uniform disc (mass M, radius R) a circular hole of radius R/2 is cut, its rim touching the disc’s centre O. What is I of the rest about the axis through O, perpendicular to the plane?',
+  fig:'hole',
+  o:['3/8 MR²','13/32 MR²','15/32 MR²','7/16 MR²'],a:1,
+  why:'Treat the hole as negative mass. Its area is ¼ of the disc’s, so its mass is M/4, centred R/2 from O. Its I about O = ½(M/4)(R/2)² + (M/4)(R/2)² = 3MR²/32. Remaining: 16/32 − 3/32 = 13/32 MR² (M = mass of the original full disc).'},
+ {q:'A uniform semicircular disc (mass M, radius R). What is I about the axis through its own centre of mass, perpendicular to its plane?',
+  o:['½MR²','about 0.32 MR²','about 0.68 MR²','¼MR²'],a:1,
+  why:'About the centre O of the full circle, I = ½MR² (half a disc has the same distances). But O is not the CM: the CM is 4R/(3π) from O. Going back through the parallel-axis theorem: ½MR² − M(4R/3π)² ≈ 0.32 MR².'},
+ {q:'The same wire (mass M, length L) is bent into a circular ring, or into a square frame. About the axis through the centre perpendicular to the plane, which has the larger I?',
+  o:['The ring, about 1.2 times larger','The square, about 1.2 times larger','They are equal'],a:0,
+  why:'Ring: R = L/2π, I = ML²/4π² ≈ 0.0253 ML². Square of side L/4: each side gives (M/4)(L/4)²/12 + (M/4)(L/8)², total ML²/48 ≈ 0.0208 ML². Ratio 12/π² ≈ 1.22. In the square, the middle of each side comes in closer to the centre.'},
+ {q:'A uniform cube. Compare I about a body diagonal with I about an axis through the centres of two opposite faces.',
+  o:['Diagonal is larger','Face axis is larger','They are equal'],a:2,
+  why:'By symmetry, the three face axes through the centre have the same I = Ma²/6. When the three principal moments are equal, every axis through that point has the same I, the body diagonal included.'},
+ {q:'Two discs have the same mass and thickness, but disc A is made of a denser material than disc B. Which has the larger I about its own axis?',
+  o:['A (denser)','B (less dense)','Equal: same mass'],a:1,
+  why:'Same mass and thickness, so the less dense disc must be wider: R² ∝ 1/ρ. I = ½MR² ∝ 1/ρ. The wider disc puts its mass further from the axis.'}
+];
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const f2=v=>v.toFixed(2), f3=v=>v.toFixed(3);
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function svgPoint(svg,e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.getScreenCTM().inverse());return [q.x,q.y];}
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function axisDot(x,y,r){return `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--surface)" stroke="var(--axis)" stroke-width="2"/><circle cx="${x}" cy="${y}" r="${r*0.3}" fill="var(--axis)"/>`;}
+function makeDrag(svg,onPoint){
+  let on=false;
+  svg.addEventListener('pointerdown',e=>{on=true;try{svg.setPointerCapture(e.pointerId);}catch(err){}onPoint(svgPoint(svg,e));e.preventDefault();});
+  svg.addEventListener('pointermove',e=>{if(on)onPoint(svgPoint(svg,e));});
+  const end=()=>{on=false;};
+  svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end);
+}
+
+/* =================== 1 · BODY VIEWS =================== */
+let body='disc', squash=0;
+{const s=load('moi-body'); if(BODIES.some(b=>b.id===s)) body=s;}
+const PTS={};
+function samplePts(id){
+  if(PTS[id]) return PTS[id];
+  const R=rng(20240917), N=id==='rod'?90:460, out=[];
+  for(let i=0;i<N;i++){
+    const u=R(), v=R(), a=2*Math.PI*R();
+    let p;
+    if(id==='ring') p=[Math.cos(a),0,Math.sin(a)];
+    else if(id==='pipe') p=[Math.cos(a),(2*u-1)*0.85,Math.sin(a)];
+    else if(id==='disc'){const r=Math.sqrt(u);p=[r*Math.cos(a),0,r*Math.sin(a)];}
+    else if(id==='cyl'){const r=Math.sqrt(u);p=[r*Math.cos(a),(2*v-1)*0.85,r*Math.sin(a)];}
+    else if(id==='hsph'){const y=2*u-1,s=Math.sqrt(1-y*y);p=[s*Math.cos(a),y,s*Math.sin(a)];}
+    else if(id==='ssph'){const r=Math.cbrt(u),y=2*v-1,s=Math.sqrt(1-y*y);p=[r*s*Math.cos(a),r*y,r*s*Math.sin(a)];}
+    else p=[2*u-1,0,0];
+    out.push(p);
+  }
+  return PTS[id]=out;
+}
+$('bchips').innerHTML=BODIES.map(b=>`<button class="chip" data-b="${b.id}">${b.name}</button>`).join('');
+$('bchips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c){body=c.dataset.b;store('moi-body',body);render1();}});
+$('squash').addEventListener('input',e=>{squash=+e.target.value;render1();});
+
+function render1(){
+  const B=BODIES.find(b=>b.id===body), P=samplePts(body), S=86, c=120, t=0.34, ct=Math.cos(t), st=Math.sin(t), k=Math.sqrt(B.b);
+  document.querySelectorAll('#bchips .chip').forEach(x=>x.setAttribute('aria-pressed',x.dataset.b===body));
+  $('squashv').textContent=Math.round(squash*100)+'%';
+  /* side view: back dots, axis, front dots */
+  const dot=(p,front)=>`<circle cx="${(c+S*p[0]).toFixed(1)}" cy="${(c-S*p[1]*(1-squash)*ct+S*p[2]*st).toFixed(1)}" r="1.9" fill="var(--ink)" opacity="${front?0.75:0.28}"/>`;
+  let g='', fr='';
+  for(const p of P){ if(p[2]<0) g+=dot(p,false); else fr+=dot(p,true); }
+  g+=`<line x1="${c}" x2="${c}" y1="6" y2="234" stroke="var(--axis)" stroke-width="1.6" stroke-dasharray="7 5"/>`+fr;
+  g+=`<text x="${c+6}" y="18" font-size="11" fill="var(--axis)">axis</text>`;
+  $('side').innerHTML=g;
+  /* top view (unchanged by squashing) */
+  let h=`<circle cx="${c}" cy="${c}" r="${S}" fill="none" stroke="var(--line)" stroke-width="1"/>`;
+  for(const p of P) h+=`<circle cx="${(c+S*p[0]).toFixed(1)}" cy="${(c+S*p[2]).toFixed(1)}" r="1.9" fill="var(--ink)" opacity="0.5"/>`;
+  h+=`<circle cx="${c}" cy="${c}" r="${(S*k).toFixed(1)}" fill="none" stroke="var(--c1)" stroke-width="2" stroke-dasharray="5 4"/>`;
+  h+=`<text x="${c+S*k*0.71+4}" y="${c-S*k*0.71-4}" font-size="12" font-weight="600" fill="var(--c1)">k</text>`;
+  h+=axisDot(c,c,6);
+  h+=`<text x="${c+S+2}" y="${c+4}" font-size="11" fill="var(--muted)" text-anchor="end" dx="-4" dy="-8">R</text>`;
+  $('top').innerHTML=h;
+  /* bands: share of mass vs share of I, by distance from the axis */
+  const L=44,Rr=308,T=14,Bm=192, bands=[];
+  for(let i=0;i<10;i++){const lo=i/10,hi=(i+1)/10;bands.push({m:Math.max(0,B.M(hi)-B.M(lo)),i:Math.max(0,(B.I(hi)-B.I(lo))/B.b)});}
+  const mx=Math.max(...bands.map(b=>Math.max(b.m,b.i))), top=Math.min(1,Math.ceil(mx*10-1e-9)/10);
+  const X=r=>L+r*(Rr-L), Y=v=>Bm-v/top*(Bm-T), bw=(Rr-L)/10;
+  let q='';
+  for(const v of [top/2,top]) q+=`<line x1="${L}" x2="${Rr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${Math.round(v*100)}%</text>`;
+  q+=`<line x1="${L}" x2="${Rr}" y1="${Bm}" y2="${Bm}" stroke="var(--muted)"/>`;
+  bands.forEach((b,i)=>{
+    const x0=X(i/10);
+    q+=`<rect x="${(x0+2).toFixed(1)}" y="${Y(b.m).toFixed(1)}" width="${(bw/2-2).toFixed(1)}" height="${(Bm-Y(b.m)).toFixed(1)}" fill="var(--mass)"/>`;
+    q+=`<rect x="${(x0+bw/2).toFixed(1)}" y="${Y(b.i).toFixed(1)}" width="${(bw/2-2).toFixed(1)}" height="${(Bm-Y(b.i)).toFixed(1)}" fill="var(--c1)"/>`;
+  });
+  q+=`<line x1="${X(k)}" x2="${X(k)}" y1="${T}" y2="${Bm}" stroke="var(--c1)" stroke-dasharray="4 3"/><text x="${X(k)-4}" y="${T+10}" text-anchor="end" font-size="11" font-weight="600" fill="var(--c1)">k</text>`;
+  for(const [v,l] of [[0,'0'],[0.5,'R/2'],[1,'R']]) q+=`<text x="${X(v)}" y="${Bm+15}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${l}</text>`;
+  q+=`<text x="${(L+Rr)/2}" y="${Bm+32}" text-anchor="middle" font-size="12" fill="var(--ink)">distance from the axis, r⊥</text>`;
+  $('bands').innerHTML=q;
+  /* caption + numbers */
+  $('cap1').innerHTML=B.note+(squash>0.02?` <b>Squashed ${Math.round(squash*100)}%:</b> no bit of mass moved toward or away from the axis, so the middle view and I are unchanged (the “stretch rule”).`:'');
+  $('ibig').textContent=`I = ${B.bf} MR²`;
+  $('ikv').innerHTML=`<dt>I / MR²</dt><dd>${f3(B.b)}</dd><dt>radius of gyration k</dt><dd>√(I/M) = ${f3(k)} R</dd>`;
+  $('ladder').querySelectorAll('.lad').forEach(x=>x.setAttribute('aria-pressed',x.dataset.b===body));
+}
+$('ladder').innerHTML=BODIES.map(b=>`<button class="lad" data-b="${b.id}"><span>${b.name}</span><span><span class="bar" style="display:block;width:${b.b*100}%"></span></span><span class="v">${b.bf}</span></button>`).join('');
+$('ladder').addEventListener('click',e=>{const r=e.target.closest('.lad');if(r){body=r.dataset.b;store('moi-body',body);render1();}});
+
+/* =================== 2 · PARALLEL AXIS =================== */
+const PC=[200,150], U=70, DMAX=2.4;
+let pa='disc', ax=[PC[0]+1.3*U,PC[1]-0.55*U];
+$('pachips').innerHTML=Object.entries(PA).map(([k,b])=>`<button class="chip" data-k="${k}">${b.name}</button>`).join('');
+$('pachips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c){pa=c.dataset.k;renderSnaps();renderPA();}});
+function renderSnaps(){
+  $('pasnap').innerHTML='<span class="muted" style="align-self:center">snap to:</span>'+PA[pa].snaps.map((s,i)=>`<button class="chip" data-i="${i}">${s.l}</button>`).join('');
+}
+$('pasnap').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;const s=PA[pa].snaps[+c.dataset.i];ax=[PC[0]+s.p[0]*U,PC[1]-s.p[1]*U];renderPA();});
+function setAx(p){
+  let x=Math.min(388,Math.max(12,p[0])), y=Math.min(288,Math.max(12,p[1]));
+  const dx=x-PC[0], dy=y-PC[1], d=Math.hypot(dx,dy);
+  if(d>DMAX*U){x=PC[0]+dx/d*DMAX*U;y=PC[1]+dy/d*DMAX*U;}
+  for(const s of PA[pa].snaps){const sx=PC[0]+s.p[0]*U, sy=PC[1]-s.p[1]*U; if(Math.hypot(x-sx,y-sy)<7){x=sx;y=sy;}}
+  ax=[x,y]; renderPA();
+}
+makeDrag($('pasvg'),setAx);
+$('pasvg').addEventListener('keydown',e=>{
+  const m={ArrowLeft:[-5,0],ArrowRight:[5,0],ArrowUp:[0,-5],ArrowDown:[0,5]}[e.key];
+  if(m){e.preventDefault();setAx([ax[0]+m[0],ax[1]+m[1]]);}
+});
+function shapePA(k){
+  const [cx,cy]=PC;
+  if(k==='disc') return `<circle cx="${cx}" cy="${cy}" r="${U}" fill="var(--ink)" fill-opacity=".09" stroke="var(--ink)" stroke-opacity=".55" stroke-width="1.5"/>`;
+  if(k==='ring') return `<circle cx="${cx}" cy="${cy}" r="${U}" fill="none" stroke="var(--ink)" stroke-opacity=".6" stroke-width="5"/>`;
+  if(k==='rod') return `<rect x="${cx-U}" y="${cy-4}" width="${2*U}" height="8" rx="2" fill="var(--ink)" fill-opacity=".45"/>`;
+  return `<rect x="${cx-U}" y="${cy-U}" width="${2*U}" height="${2*U}" fill="var(--ink)" fill-opacity=".09" stroke="var(--ink)" stroke-opacity=".55" stroke-width="1.5"/>`;
+}
+function renderPA(){
+  const B=PA[pa], [cx,cy]=PC;
+  document.querySelectorAll('#pachips .chip').forEach(x=>x.setAttribute('aria-pressed',x.dataset.k===pa));
+  const dx=(ax[0]-cx)/U, dy=(ax[1]-cy)/U, d=Math.hypot(dx,dy), d2=d*d, I=B.icm+d2;
+  const snap=B.snaps.find(s=>Math.abs(s.p[0]-dx)<1e-6&&Math.abs(-s.p[1]-dy)<1e-6);
+  document.querySelectorAll('#pasnap .chip').forEach(x=>x.setAttribute('aria-pressed',snap?B.snaps[+x.dataset.i]===snap:false));
+  let g=shapePA(pa);
+  if(d>0.04) g+=`<circle cx="${cx}" cy="${cy}" r="${(d*U).toFixed(1)}" fill="none" stroke="var(--muted)" stroke-dasharray="2 5" opacity=".7"/>`;
+  g+=`<line x1="${cx-6}" x2="${cx+6}" y1="${cy}" y2="${cy}" stroke="var(--ink)" stroke-width="1.5"/><line x1="${cx}" x2="${cx}" y1="${cy-6}" y2="${cy+6}" stroke="var(--ink)" stroke-width="1.5"/>`;
+  g+=`<text x="${cx-8}" y="${cy+18}" font-size="11.5" fill="var(--ink)" text-anchor="end">CM</text>`;
+  if(d>0.04){
+    g+=`<line x1="${cx}" y1="${cy}" x2="${ax[0]}" y2="${ax[1]}" stroke="var(--c2)" stroke-width="2.2"/>`;
+    const mx=(cx+ax[0])/2, my=(cy+ax[1])/2, nx=-(ax[1]-cy)/(d*U), ny=(ax[0]-cx)/(d*U);
+    g+=`<text x="${(mx+nx*14).toFixed(1)}" y="${(my+ny*14+4).toFixed(1)}" font-size="12.5" font-weight="600" fill="var(--c2)" text-anchor="middle">d</text>`;
+  }
+  g+=`<circle cx="${ax[0]}" cy="${ax[1]}" r="18" fill="transparent"/>`+axisDot(ax[0],ax[1],7.5);
+  g+=`<line x1="22" x2="${22+U}" y1="284" y2="284" stroke="var(--muted)"/><line x1="22" x2="22" y1="280" y2="288" stroke="var(--muted)"/><line x1="${22+U}" x2="${22+U}" y1="280" y2="288" stroke="var(--muted)"/><text x="${22+U/2}" y="278" font-size="11" fill="var(--muted)" text-anchor="middle">R</text>`;
+  $('pasvg').innerHTML=g;
+  /* graph I vs d */
+  const W=300,L=40,Rr=290,T=12,Bm=168,YM=Math.ceil(B.icm+DMAX*DMAX);
+  const X=v=>L+v/DMAX*(Rr-L), Y=v=>Bm-v/YM*(Bm-T);
+  let p='';
+  for(let v=0;v<=YM;v+=2) p+=`<line x1="${L}" x2="${Rr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${v}</text>`;
+  for(const v of [0,1,2]) p+=`<text x="${X(v)}" y="${Bm+14}" text-anchor="middle" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${v?v+'R':'0'}</text>`;
+  p+=`<line x1="${L}" x2="${Rr}" y1="${Y(B.icm)}" y2="${Y(B.icm)}" stroke="var(--c1)" stroke-dasharray="4 3"/><text x="${Rr}" y="${Y(B.icm)-4}" text-anchor="end" font-size="11" fill="var(--c1)">I<tspan baseline-shift="sub" font-size="8">cm</tspan></text>`;
+  let path='';
+  for(let i=0;i<=60;i++){const v=DMAX*i/60;path+=(i?'L':'M')+X(v).toFixed(1)+' '+Y(B.icm+v*v).toFixed(1);}
+  p+=`<path d="${path}" fill="none" stroke="var(--ink)" stroke-width="1.6"/>`;
+  p+=`<line x1="${X(d)}" x2="${X(d)}" y1="${Y(B.icm)}" y2="${Y(I)}" stroke="var(--c2)" stroke-width="2.5"/>`;
+  p+=`<circle cx="${X(d)}" cy="${Y(I)}" r="5" fill="var(--axis)"/>`;
+  p+=`<text x="${(L+Rr)/2}" y="${Bm+29}" text-anchor="middle" font-size="12" fill="var(--ink)">distance d of the axis from the CM</text>`;
+  p+=`<text transform="translate(12 ${(T+Bm)/2}) rotate(-90)" text-anchor="middle" font-size="12" fill="var(--ink)">I (units of MR²)</text>`;
+  $('pagraph').innerHTML=p;
+  $('pabar').innerHTML=`<span style="width:${B.icm/YM*100}%;background:var(--c1)"></span><span style="width:${d2/YM*100}%;background:var(--c2)"></span>`;
+  $('pabig').innerHTML=`I = ${f3(B.icm)} + ${f3(d2)} = ${f3(I)} MR²`;
+  $('pacap').innerHTML=`d = ${f2(d)}R. I = I<sub>cm</sub> + Md².`+(snap?` <b>${snap.t}</b>`:' Snap to a named point to see the textbook result.');
+}
+
+/* =================== 3 · PERPENDICULAR AXES =================== */
+const PE=[160,150], A=200; // centre, long side a in px (also disc diameter)
+let pe='rect', phi=0, asp=0.5, dm=[PE[0]+60,PE[1]-30];
+const PESH={rect:'Rectangle',square:'Square',disc:'Disc',ring:'Ring'};
+{const s=load('moi-lamina'); if(PESH[s]) pe=s;}
+$('pechips').innerHTML=Object.entries(PESH).map(([k,n])=>`<button class="chip" data-k="${k}">${n}</button>`).join('');
+$('pechips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c){pe=c.dataset.k;store('moi-lamina',pe);dm=clampDm(dm);renderPE();}});
+$('phi').addEventListener('input',e=>{phi=+e.target.value;renderPE();});
+$('asp').addEventListener('input',e=>{asp=+e.target.value;dm=clampDm(dm);renderPE();});
+function halfDims(){const r=pe==='square'?1:asp;return [A/2,A/2*r];}
+function clampDm(p){
+  let x=p[0]-PE[0], y=p[1]-PE[1];
+  if(pe==='disc'||pe==='ring'){
+    const r=Math.hypot(x,y)||1, R=A/2;
+    if(pe==='ring'){x=x/r*R;y=y/r*R;} else if(r>R){x=x/r*R;y=y/r*R;}
+  } else {const [hx,hy]=halfDims();x=Math.max(-hx,Math.min(hx,x));y=Math.max(-hy,Math.min(hy,y));}
+  return [PE[0]+x,PE[1]+y];
+}
+makeDrag($('pesvg'),p=>{dm=clampDm(p);renderPE();});
+function renderPE(){
+  document.querySelectorAll('#pechips .chip').forEach(x=>x.setAttribute('aria-pressed',x.dataset.k===pe));
+  $('aspwrap').hidden=pe!=='rect';
+  $('phiv').textContent=phi+'°'; $('aspv').textContent=f2(asp);
+  const [cx,cy]=PE, ph=phi*Math.PI/180, c=Math.cos(ph), s=Math.sin(ph), [hx,hy]=halfDims();
+  let g='';
+  if(pe==='disc') g+=`<circle cx="${cx}" cy="${cy}" r="${A/2}" fill="var(--ink)" fill-opacity=".09" stroke="var(--ink)" stroke-opacity=".55" stroke-width="1.5"/>`;
+  else if(pe==='ring') g+=`<circle cx="${cx}" cy="${cy}" r="${A/2}" fill="none" stroke="var(--ink)" stroke-opacity=".6" stroke-width="5"/>`;
+  else g+=`<rect x="${cx-hx}" y="${cy-hy}" width="${2*hx}" height="${2*hy}" fill="var(--ink)" fill-opacity=".09" stroke="var(--ink)" stroke-opacity=".55" stroke-width="1.5"/>`;
+  /* in-plane axes: x′ along (c,−s) on screen (y down), y′ along (s,c) */
+  const Lx=145;
+  g+=`<line x1="${cx-Lx*c}" y1="${cy+Lx*s}" x2="${cx+Lx*c}" y2="${cy-Lx*s}" stroke="var(--axis)" stroke-width="1.6" stroke-dasharray="7 5"/>`;
+  g+=`<line x1="${cx-Lx*s}" y1="${cy-Lx*c}" x2="${cx+Lx*s}" y2="${cy+Lx*c}" stroke="var(--axis)" stroke-width="1.6" stroke-dasharray="7 5"/>`;
+  g+=`<text x="${cx+(Lx-4)*c+8*s}" y="${cy-(Lx-4)*s+8*c+4}" font-size="13" font-weight="600" fill="var(--axis)" text-anchor="middle">x′</text>`;
+  g+=`<text x="${cx+(Lx-4)*s-10*c}" y="${cy+(Lx-4)*c+8*s+4}" font-size="13" font-weight="600" fill="var(--axis)" text-anchor="middle">y′</text>`;
+  /* mass element: distances to the axes */
+  const px=dm[0]-cx, py=dm[1]-cy;
+  const tX=px*c-py*s;           // coordinate along x′ (screen frame)
+  const tY=px*s+py*c;           // coordinate along y′
+  const fX=[cx+tX*c, cy-tX*s];  // foot on x′ axis
+  const fY=[cx+tY*s, cy+tY*c];  // foot on y′ axis
+  g+=`<line x1="${dm[0]}" y1="${dm[1]}" x2="${fX[0]}" y2="${fX[1]}" stroke="var(--c2)" stroke-width="2.4"/>`;
+  g+=`<line x1="${dm[0]}" y1="${dm[1]}" x2="${fY[0]}" y2="${fY[1]}" stroke="var(--c1)" stroke-width="2.4"/>`;
+  g+=`<line x1="${cx}" y1="${cy}" x2="${dm[0]}" y2="${dm[1]}" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="3 3"/>`;
+  g+=axisDot(cx,cy,7)+`<text x="${cx-10}" y="${cy+20}" font-size="13" font-weight="600" fill="var(--axis)" text-anchor="end">z</text>`;
+  g+=`<circle cx="${dm[0]}" cy="${dm[1]}" r="16" fill="transparent"/><circle cx="${dm[0]}" cy="${dm[1]}" r="6" fill="var(--ink)"/><text x="${dm[0]+9}" y="${dm[1]-9}" font-size="12" fill="var(--ink)">dm</text>`;
+  $('pesvg').innerHTML=g;
+  /* exact I values */
+  let Ix,Iy,Iz,unit,cap;
+  if(pe==='disc'){Ix=Iy=0.25;Iz=0.5;unit='MR²';cap='A disc looks the same from every direction in its plane, so every diameter gives the same I: half of I<sub>z</sub>, ¼MR².';}
+  else if(pe==='ring'){Ix=Iy=0.5;Iz=1;unit='MR²';cap='Every diameter of a ring gives ½MR²: half of I<sub>z</sub> = MR².';}
+  else{
+    const r=pe==='square'?1:asp;
+    Ix=(s*s+r*r*c*c)/12; Iy=(c*c+r*r*s*s)/12; Iz=(1+r*r)/12; unit='Ma²';
+    cap=pe==='square'?'For a square, the two bars stay equal at every angle: every in-plane axis through the centre gives Ma²/12, a diagonal included.'
+      :'Turn the pair: the bars trade length, but the total stays I<sub>z</sub> = M(a² + b²)/12. Long side along x′ gives the smallest I<sub>x′</sub> = Mb²/12.';
+  }
+  const sc=100/Iz;
+  $('pebars').innerHTML=`
+    <div class="muted" style="margin-bottom:4px">I<sub>x′</sub> + I<sub>y′</sub> (stacked) against I<sub>z</sub> (outline)</div>
+    <div class="stackbar"><span style="width:${Ix*sc}%;background:var(--c2)"></span><span style="width:${Iy*sc}%;background:var(--c1)"></span></div>
+    <div class="stackbar" style="background:none;border:2px solid var(--axis);margin-top:4px"></div>
+    <dl class="kv" style="margin-top:10px"><dt style="color:var(--c2)">I<sub>x′</sub></dt><dd>${f3(Ix)} ${unit}</dd><dt style="color:var(--c1)">I<sub>y′</sub></dt><dd>${f3(Iy)} ${unit}</dd><dt style="color:var(--axis)">I<sub>z</sub></dt><dd>${f3(Iz)} ${unit}</dd></dl>`;
+  const rr=(px*px+py*py), u2=(A/2)*(A/2), uu=(pe==='rect'||pe==='square')?'(a/2)²':'R²';
+  $('pecap').innerHTML=cap+` <span class="muted">Your dm: (distance to x′)² + (distance to y′)² = ${f3(tY*tY/u2)} + ${f3(tX*tX/u2)} = ${f3(rr/u2)} = (distance to z)², in units of ${uu}.</span>`;
+}
+
+/* =================== 4 · CHAINS =================== */
+let ch='ring'; const shown=new Set();
+$('chchips').innerHTML=Object.entries(CHAINS).map(([k,c])=>`<button class="chip" data-k="${k}">${c.name}</button>`).join('');
+$('chchips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c){ch=c.dataset.k;shown.clear();renderCH();}});
+function cardSVG(shape,ax){
+  const cx=48,cy=36,R=24; let g='';
+  if(shape==='ring') g+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="var(--ink)" stroke-opacity=".6" stroke-width="3"/>`;
+  else if(shape==='disc') g+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="var(--ink)" fill-opacity=".12" stroke="var(--ink)" stroke-opacity=".55"/>`;
+  else if(shape==='ssph') g+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="var(--ink)" fill-opacity=".28" stroke="var(--ink)" stroke-opacity=".55"/>`;
+  else if(shape==='hsph') g+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="var(--ink)" fill-opacity=".06" stroke="var(--ink)" stroke-opacity=".6" stroke-width="3"/><ellipse cx="${cx}" cy="${cy}" rx="${R}" ry="7" fill="none" stroke="var(--ink)" stroke-opacity=".3"/>`;
+  else g+=`<rect x="${cx-30}" y="${cy-3}" width="60" height="6" rx="2" fill="var(--ink)" fill-opacity=".5"/>`;
+  const dash=`stroke="var(--axis)" stroke-width="1.6" stroke-dasharray="5 3"`;
+  if(ax==='perp') g+=axisDot(cx,cy,5);
+  else if(ax==='diam') g+= shape==='ssph'||shape==='hsph'?`<line x1="${cx}" x2="${cx}" y1="2" y2="70" ${dash}/>`:`<line x1="10" x2="86" y1="${cy}" y2="${cy}" ${dash}/>`;
+  else if(ax==='tanIn') g+=`<line x1="${cx+R}" x2="${cx+R}" y1="2" y2="70" ${dash}/>`;
+  else if(ax==='tanPerp') g+=axisDot(shape==='rod'?cx+30:cx+R,cy,5);
+  return `<svg viewBox="0 0 96 72" aria-hidden="true">${g}</svg>`;
+}
+function renderCH(){
+  const C=CHAINS[ch];
+  document.querySelectorAll('#chchips .chip').forEach(x=>x.setAttribute('aria-pressed',x.dataset.k===ch));
+  $('chain').innerHTML=C.rows.map((row,ri)=>`<div class="crow">${row.map((n,ni)=>{
+    if(n.op) return `<div class="op"><span>${n.op}</span><span class="arr">→</span><span style="font-size:10.5px;font-family:var(--f-body)">${n.why}</span></div>`;
+    const id=ri+'-'+ni, on=n.start||n.ghost||shown.has(id);
+    return `<button class="cc${n.start?' start':''}${n.ghost?' ghost':''}" data-id="${id}" data-shown="${on}" ${n.start||n.ghost?'tabindex="-1"':''} aria-label="${n.nm}${on?': '+n.v+' '+C.unit:': tap to reveal'}">${cardSVG(C.shape,n.ax)}<span class="nm">${n.nm}</span><span class="val">${on?n.v+' '+C.unit:'?'}</span></button>`;
+  }).join('')}</div>`).join('');
+  $('chcap').innerHTML=`<b>Remember:</b> ${C.rows[0][0].v} ${C.unit}${C.rows[0][0].nm?' ('+C.rows[0][0].nm+')':''}. ${C.cap}`;
+}
+$('chain').addEventListener('click',e=>{const b=e.target.closest('.cc');if(!b||b.classList.contains('start')||b.classList.contains('ghost'))return;shown.add(b.dataset.id);renderCH();});
+$('chall').onclick=()=>{CHAINS[ch].rows.forEach((row,ri)=>row.forEach((n,ni)=>{if(!n.op)shown.add(ri+'-'+ni);}));renderCH();};
+$('chhide').onclick=()=>{shown.clear();renderCH();};
+
+/* =================== 5 · QUIZ =================== */
+const FIG={hole:`<svg viewBox="0 0 160 110" style="width:150px;height:auto;display:block;margin:6px 0" aria-hidden="true">
+  <circle cx="70" cy="55" r="48" fill="var(--ink)" fill-opacity=".12" stroke="var(--ink)" stroke-opacity=".55"/>
+  <circle cx="94" cy="55" r="24" fill="var(--surface)" stroke="var(--ink)" stroke-opacity=".55" stroke-dasharray="3 2"/>
+  ${axisDot(70,55,5)}<text x="62" y="76" font-size="11" fill="var(--ink)">O</text><text x="124" y="20" font-size="11" fill="var(--muted)">R</text></svg>`};
+function renderQuiz(){
+  $('quiz').innerHTML=QUIZ.map((q,i)=>`<div class="panel"><p class="qn">Q${i+1}</p><p>${q.q}</p>${q.fig?FIG[q.fig]:''}
+    <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');
+}
+$('quiz').addEventListener('click',e=>{
+  const b=e.target.closest('.opt'); if(!b||b.disabled) return;
+  const box=b.parentElement, q=QUIZ[+box.dataset.i], j=+b.dataset.j;
+  box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+  const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+});
+$('qreset').onclick=renderQuiz;
+
+renderSnaps(); render1(); renderPA(); renderPE(); renderCH(); renderQuiz();
+</script>
+</body>
+</html>

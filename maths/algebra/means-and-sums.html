@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Means and Sums</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: AM–GM–HM semicircle (draggable split point) → sums as pictures (odd numbers, Σk, Σk², Σk³) → telescoping on a number line → recurrences. Predict-then-check cards under each picture. */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --am:#2c56cc; --gm:#1f8f87; --hm:#c7741a; --alt:#7a52c7;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --am:#7d9dff; --gm:#3cb8ad; --hm:#f0a04b; --alt:#a585f0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --am:#7d9dff; --gm:#3cb8ad; --hm:#f0a04b; --alt:#a585f0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:74ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.bn{font:500 11px var(--f-mono);color:var(--alt);border:1px solid var(--alt);border-radius:4px;padding:0 5px;white-space:nowrap;vertical-align:middle}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.svgbox{overflow-x:auto}
+.svgbox svg{width:100%;height:auto;display:block}
+svg text{font-family:"IBM Plex Mono",monospace;font-size:11px;fill:var(--muted);paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+svg text.ink{fill:var(--ink)}
+.ctl{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:10px;align-items:center}
+.rng{display:flex;align-items:center;gap:8px;font:500 13px var(--f-mono)}
+.rng input{width:150px;accent-color:var(--accent)}
+.rng output{min-width:3.2em;display:inline-block;font-variant-numeric:tabular-nums}
+.tog{display:flex;align-items:center;gap:6px;font-size:13.5px;cursor:pointer}
+.tog input{accent-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 11px;cursor:pointer}
+.cap{margin-top:12px;font-size:14.5px;display:flex;flex-direction:column;gap:4px}
+.cap .f{font-family:var(--f-mono);font-size:13.5px;font-variant-numeric:tabular-nums}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;margin-top:10px}
+.kv div{background:var(--bg);border-radius:8px;padding:6px 10px;font:500 13px var(--f-mono);font-variant-numeric:tabular-nums}
+.kv span{display:block;font:500 11px var(--f-body);letter-spacing:.04em;text-transform:uppercase}
+.pqs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pq{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.pq .tagp{font:600 11px var(--f-mono);color:var(--accent);letter-spacing:.05em;text-transform:uppercase}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{font:500 13.5px var(--f-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok);font-weight:600} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{border-left:3px solid var(--ok);padding:2px 0 2px 10px;font-size:13.5px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.why .res{font-weight:600}
+.chain{font:500 13.5px var(--f-mono);line-height:1.9;overflow-wrap:anywhere;margin-top:8px}
+.chain s{color:var(--muted);text-decoration-color:var(--flag);text-decoration-thickness:2px}
+.chain b{color:var(--ok)}
+#handle{cursor:ew-resize;touch-action:none}
+.cell.hl{stroke:var(--ink);stroke-width:2}
+footer{font-size:12px;color:var(--muted);max-width:92ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Mathematics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Means and sums you can see</h1>
+    <p class="lede">Three averages drawn inside one semicircle, sums of powers arranged as blocks, and telescoping sums laid out on a number line. Each picture shows <i>why</i> its formula is true. The formula is a caption to read once the picture makes sense.</p>
+  </header>
+
+  <!-- ============ 1. Means ============ -->
+  <section>
+    <h2>1 · AM ≥ GM ≥ HM on one semicircle</h2>
+    <p class="lede">Lay a and b end to end and draw the semicircle on the whole length. Drag the split point P. The <span style="color:var(--am);font-weight:600">radius</span> is the AM. The <span style="color:var(--gm);font-weight:600">half-chord</span> standing at P is the GM. Drop a perpendicular from P onto the radius to cut off the <span style="color:var(--hm);font-weight:600">HM</span>.</p>
+    <div class="panel" style="margin-top:12px">
+      <div class="svgbox"><svg id="mSvg" viewBox="0 0 640 380" role="img" aria-label="Semicircle construction of arithmetic, geometric and harmonic means"></svg></div>
+      <div class="ctl"><label class="rng">a <input type="range" id="mA" min="0.5" max="39.5" step="0.5" value="28"><output id="mAo"></output></label><span class="muted" id="mTot"></span></div>
+      <div class="kv" id="mKV"></div>
+      <div class="cap" id="mCap"></div>
+    </div>
+    <div class="pqs" id="mPQ"></div>
+  </section>
+
+  <!-- ============ 2. Sums ============ -->
+  <section>
+    <h2>2 · Sums of powers as blocks</h2>
+    <p class="lede">Each sum is a shape. The formula is what you get by counting the shape a second way.</p>
+    <div class="panel" style="margin-top:12px">
+      <div class="chips" id="sChips" role="group" aria-label="Choose a sum"></div>
+      <div class="svgbox" style="margin-top:10px"><svg id="sSvg" viewBox="0 0 640 300" role="img" aria-label="Block picture of a sum"></svg></div>
+      <div class="ctl"><label class="rng">n <input type="range" id="sN" min="1" max="8" step="1" value="4"><output id="sNo"></output></label><label class="tog" id="sTogL"><input type="checkbox" id="sTog"> <span id="sTogT"></span></label></div>
+      <div class="cap" id="sCap"></div>
+    </div>
+    <div class="pqs" id="sPQ"></div>
+  </section>
+
+  <!-- ============ 3. Telescoping ============ -->
+  <section>
+    <h2>3 · Telescoping: the middle cancels</h2>
+    <p class="lede">Some terms are the gap between two neighbouring ticks on a number line. Put n such gaps end to end and only the two outer ticks matter. Every tick in the middle is the end of one gap and the start of the next, so it cancels.</p>
+    <div class="panel" style="margin-top:12px">
+      <div class="chips" id="tChips" role="group" aria-label="Choose a series"></div>
+      <div class="svgbox" style="margin-top:10px"><svg id="tSvg" viewBox="0 0 640 150" role="img" aria-label="Telescoping sum as gaps on a number line"></svg></div>
+      <div class="ctl"><label class="rng">n <input type="range" id="tN" min="1" max="12" step="1" value="4"><output id="tNo"></output></label></div>
+      <div class="chain" id="tChain"></div>
+      <div class="cap" id="tCap"></div>
+    </div>
+    <div class="pqs" id="tPQ"></div>
+  </section>
+
+  <!-- ============ 4. Recurrence ============ -->
+  <section>
+    <h2>4 · Recurrences a<sub>n</sub> = p·a<sub>n−1</sub> + q <span class="bn">beyond NCERT</span></h2>
+    <p class="lede">There is one value L that the rule leaves unchanged: L = pL + q, so L = q/(1 − p). Measure every term from L. Each step multiplies that distance by p, so the distances form a GP. That is the whole method.</p>
+    <div class="panel" style="margin-top:12px">
+      <div class="svgbox"><svg id="rSvg" viewBox="0 0 640 260" role="img" aria-label="Terms of a recurrence and their distance from the fixed point"></svg></div>
+      <div class="ctl">
+        <label class="rng">p <input type="range" id="rP" min="-1.5" max="2.5" step="0.1" value="0.5"><output id="rPo"></output></label>
+        <label class="rng">q <input type="range" id="rQ" min="-5" max="5" step="1" value="3"><output id="rQo"></output></label>
+        <label class="rng">a₁ <input type="range" id="rA" min="-5" max="5" step="1" value="-4"><output id="rAo"></output></label>
+      </div>
+      <div class="cap" id="rCap"></div>
+    </div>
+    <div class="pqs" id="rPQ"></div>
+  </section>
+
+  <footer>
+    Results checked against NCERT Mathematics Class 11, Chapter 8 "Sequences and Series" (AM, GM, the AM ≥ GM inequality, Σk, Σk², Σk³) and S. L. Loney / Hall &amp; Knight, <i>Higher Algebra</i> (harmonic mean, method of differences, recurrences). The pictures are classical proofs without words, as collected in R. B. Nelsen, <i>Proofs Without Words</i> (MAA, 1993): the semicircle construction of the three means (Pappus), odd numbers as square gnomons, M.-K. Siu's three rotated triangles for Σk², and the gnomon square for Σk³. Worked examples are adapted from a study compendium (<i>Sequences &amp; Series: JEE Compendium</i>) and re-derived. Every number shown is computed by the page's script. Each picture shows particular values of n or two numbers. The captions state the general results, which hold for every n (proof by induction) and, for AM ≥ GM ≥ HM, for any number of positive values.
+  </footer>
+</div>
+
+<script>
+/* ================= helpers ================= */
+const $=id=>document.getElementById(id);
+const fmt=(v,dp=2)=>{if(!isFinite(v))return '—';let s=String(+v.toFixed(dp));if(s==='-0')s='0';return s.replace('-','−');};
+function ticks(min,max,cnt){const span=(max-min)||1;let st=Math.pow(10,Math.floor(Math.log10(span/cnt)));const m=span/cnt/st;st*=m>5?10:m>2?5:m>1?2:1;const out=[];for(let v=Math.ceil(min/st-1e-9)*st;v<=max+1e-9;v+=st)out.push(+v.toFixed(10));return out;}
+function bindRange(id,fn,show){const el=$(id),o=$(id+'o');const up=()=>{o.textContent=show?show(+el.value):fmt(+el.value);fn();};el.addEventListener('input',up);o.textContent=show?show(+el.value):fmt(+el.value);return up;}
+function vw(id){const w=$(id).parentNode.clientWidth;return Math.round(Math.max(340,Math.min(640,w||640)));}
+const SUBD='₀₁₂₃₄₅₆₇₈₉';const sb=n=>String(n).split('').map(c=>SUBD[+c]??c).join('');
+function mountPQ(host,item){
+  const el=document.createElement('div');el.className='pq';
+  el.innerHTML=`<span class="tagp">Predict, then check</span><p>${item.q}</p>
+    <div class="opts">${item.opts.map((o,i)=>`<button class="opt" data-i="${i}">${o}</button>`).join('')}</div>
+    <div class="why" hidden><span class="res"></span><span>${item.why}</span>${item.act?`<button class="btn" data-act>${item.act.label}</button>`:''}</div>`;
+  el.querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>{
+    const pick=+b.dataset.i;
+    el.querySelectorAll('.opt').forEach(x=>{x.disabled=true;const j=+x.dataset.i;if(j===item.ans)x.classList.add('right');else if(j===pick)x.classList.add('wrong');});
+    const res=el.querySelector('.res');res.textContent=pick===item.ans?'Right.':'Not this one. The answer is marked.';res.style.color=pick===item.ans?'var(--ok)':'var(--flag)';
+    el.querySelector('.why').hidden=false;}));
+  if(item.act)el.querySelector('[data-act]').addEventListener('click',item.act.fn);
+  host.appendChild(el);
+}
+
+/* ================= 1. Means on a semicircle ================= */
+const M={a:28,b:12};
+function renderM(){
+  const W=vw('mSvg'),L=24,R=24,R0=(W-L-R)/2,TOP=36,base=TOP+R0,H=base+44;
+  $('mSvg').setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const {a,b}=M,tot=a+b,k=2*R0/tot,cx=L+R0;
+  const A=(a+b)/2,G=Math.sqrt(a*b),Hm=2*a*b/(a+b);
+  const Px=L+a*k,Qy=base-G*k;
+  // foot of perpendicular from P onto OQ
+  const ux=(Px-cx)/(A*k),uy=(Qy-base)/(A*k),dot=(Px-cx)*ux,Hx=cx+dot*ux,Hy=base+dot*uy;
+  let g=`<path d="M${L},${base} A${R0},${R0} 0 0 1 ${W-R},${base}" fill="none" stroke="var(--muted)" stroke-width="1.4"/>`;
+  g+=`<line x1="${L}" x2="${W-R}" y1="${base}" y2="${base}" stroke="var(--ink)" stroke-width="1.4"/>`;
+  g+=`<line x1="${cx}" x2="${cx}" y1="${base}" y2="${TOP}" stroke="var(--am)" stroke-dasharray="4 4" stroke-opacity=".6"/>`;
+  g+=`<line x1="${cx}" y1="${base}" x2="${Px}" y2="${Qy}" stroke="var(--am)" stroke-width="3"/>`;
+  g+=`<line x1="${Px}" y1="${base}" x2="${Px}" y2="${Qy}" stroke="var(--gm)" stroke-width="3"/>`;
+  if(Math.abs(a-b)>1e-9){
+    g+=`<line x1="${Px}" y1="${base}" x2="${Hx}" y2="${Hy}" stroke="var(--muted)" stroke-dasharray="3 3"/>`;
+    g+=`<line x1="${Px}" y1="${Qy}" x2="${Hx}" y2="${Hy}" stroke="var(--hm)" stroke-width="5" stroke-linecap="round"/>`;
+    // right-angle mark at H
+    const s=8,vx=(Px-Hx),vy=(base-Hy),vl=Math.hypot(vx,vy)||1,wx=-ux,wy=-uy; // towards O along radius
+    const p1=[Hx+vx/vl*s,Hy+vy/vl*s],p2=[p1[0]+wx*s,p1[1]+wy*s],p3=[Hx+wx*s,Hy+wy*s];
+    g+=`<polyline points="${p1} ${p2} ${p3}" fill="none" stroke="var(--muted)"/>`;
+    g+=`<line x1="${cx}" x2="${Px}" y1="${base+1}" y2="${base+1}" stroke="var(--alt)" stroke-width="3"/>`;
+  } else g+=`<line x1="${Px}" y1="${Qy}" x2="${Px}" y2="${base}" stroke="var(--hm)" stroke-width="5" stroke-dasharray="2 6" stroke-linecap="round"/>`;
+  // labels
+  g+=`<text x="${L}" y="${base+16}" text-anchor="middle" class="ink">A</text><text x="${W-R}" y="${base+16}" text-anchor="middle" class="ink">B</text>`;
+  g+=`<text x="${cx}" y="${base+16}" text-anchor="middle" class="ink">O</text>`;
+  g+=`<text x="${(L+Px)/2}" y="${base+34}" text-anchor="middle" class="ink">a = ${fmt(a,1)}</text><text x="${(Px+W-R)/2}" y="${base+34}" text-anchor="middle" class="ink">b = ${fmt(b,1)}</text>`;
+  g+=`<text x="${Px+(Px<cx?-8:8)}" y="${Qy-6}" text-anchor="${Px<cx?'end':'start'}" class="ink">Q</text>`;
+  if(Math.abs(a-b)>1e-9)g+=`<text x="${Hx+(Px<cx?10:-10)}" y="${Hy+4}" text-anchor="${Px<cx?'start':'end'}" class="ink">H</text>`;
+  g+=`<text x="${cx+6}" y="${TOP+14}" style="fill:var(--am)">radius = AM</text>`;
+  g+=`<g id="handle"><circle cx="${Px}" cy="${base}" r="20" fill="transparent"/><circle cx="${Px}" cy="${base}" r="8" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><text x="${Px}" y="${base-12}" text-anchor="middle" class="ink" font-weight="600">P</text></g>`;
+  $('mSvg').innerHTML=g;
+  $('mA').max=tot-0.5;$('mA').value=a;$('mAo').textContent=fmt(a,1);$('mTot').textContent=`b = ${fmt(b,1)} (a + b = ${fmt(tot,1)})`;
+  $('mKV').innerHTML=`<div style="color:var(--am)"><span>AM (a+b)/2</span>${fmt(A,3)}</div><div style="color:var(--gm)"><span>GM √(ab)</span>${fmt(G,3)}</div><div style="color:var(--hm)"><span>HM 2ab/(a+b)</span>${fmt(Hm,3)}</div><div><span>check G² = A·H</span>${fmt(G*G,3)} = ${fmt(A*Hm,3)}</div>`;
+  const eq=Math.abs(a-b)<1e-9;
+  $('mCap').innerHTML=eq?`<div><b>a = b: all three means are equal (${fmt(A,3)}).</b> The half-chord is now the vertical radius and H has reached Q. Equality holds only here.</div>`
+   :`<div><b>Why AM ≥ GM:</b> a half-chord can never be longer than the radius. The two are equal only when P sits at the centre O.</div>
+     <div><b>Why GM ≥ HM:</b> in the right triangle OPQ, QH is the projection of the side QP onto the hypotenuse QO, and a projection is never longer than the side. Similar triangles give QH/QP = QP/QO, so <span class="f">HM = GM²/AM</span>. So G² = AH, and A, G, H are themselves in GP.</div>
+     <div><b>Getting a and b back:</b> the <span style="color:var(--alt);font-weight:600">purple</span> segment OP = |a − b|/2. Pythagoras in OPQ gives A² = OP² + G², so <span class="f">a, b = A ± √(A² − G²)</span>, the roots of t² − 2At + G² = 0.</div>`;
+}
+/* the handle is re-created on each render; keep the captured pointer working by listening on the svg too */
+(function(){let drag=false;const svg=$('mSvg');
+  svg.addEventListener('pointerdown',e=>{if(e.target.closest('#handle')){drag=true;svg.setPointerCapture(e.pointerId);e.preventDefault();}});
+  svg.addEventListener('pointermove',e=>{if(!drag)return;const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const p=pt.matrixTransform(svg.getScreenCTM().inverse());
+    const W=+svg.getAttribute('viewBox').split(' ')[2],L=24,R=24,tot=M.a+M.b;let a=Math.round((p.x-L)/(W-L-R)*tot*2)/2;a=Math.min(tot-0.5,Math.max(0.5,a));if(a!==M.a){M.a=a;M.b=tot-a;renderM();}});
+  const end=()=>{drag=false;};svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end);})();
+$('mA').addEventListener('input',()=>{const tot=M.a+M.b;M.a=+$('mA').value;M.b=tot-M.a;renderM();});
+function setM(a,b){M.a=a;M.b=b;renderM();}
+(function(){const host=$('mPQ');
+  {const A=20,G=16,s=Math.sqrt(A*A-G*G),x=A+s,y=A-s,H=G*G/A;
+   mountPQ(host,{q:'Two numbers have AM 20 and GM 16. What are they?',opts:['24 and 16',`${fmt(x)} and ${fmt(y)}`,'30 and 10','36 and 4'],ans:1,
+    why:`OP = √(A² − G²) = √(400 − 256) = ${fmt(s)}, so the numbers are 20 ± ${fmt(s)}. Their HM needs no more work: H = G²/A = 256/20 = ${fmt(H)}. And ${A} &gt; ${G} &gt; ${fmt(H)}, as the picture requires.`,act:{label:'Draw it',fn:()=>setM(x,y)}});}
+  {const u=40,v=60,H=2*u*v/(u+v);
+   mountPQ(host,{q:'A car drives A→B at 40 km/h and back along the same road at 60 km/h. Average speed?',opts:['50 km/h',`${fmt(H)} km/h`,`${fmt(Math.sqrt(u*v),1)} km/h`,'52 km/h'],ans:1,
+    why:`Equal distances, so the times are distance/speed and the average speed is the HM: 2·40·60/100 = ${fmt(H)}. Check with 120 km each way: 3 h + 2 h = 5 h for 240 km. The AM (50) always overstates, because AM ≥ HM.`,act:{label:'Draw it',fn:()=>setM(40,60)}});}
+  mountPQ(host,{q:'a, b, c are positive and a + b + c = 1. Smallest possible value of 1/a + 1/b + 1/c?',opts:['3','6','9','no minimum'],ans:2,
+   why:'AM ≥ HM for three numbers: (a + b + c)/3 ≥ 3/(1/a + 1/b + 1/c). So (a + b + c)(1/a + 1/b + 1/c) ≥ 9, and with a + b + c = 1 the sum of reciprocals is ≥ 9. Equality needs a = b = c = 1/3, which is allowed, so the minimum is 9. Both conditions matter: the numbers must be positive, and the equality case must be reachable.'});
+  mountPQ(host,{q:'For x &gt; 0, the least value of x + 1/x is…',opts:['0','1','2','none'],ans:2,
+   why:'Take a = x, b = 1/x. Then GM = √1 = 1 and AM = (x + 1/x)/2 ≥ 1, so x + 1/x ≥ 2, with equality at x = 1. For negative x this fails (x = −1 gives −2), because AM–GM needs positive numbers.'});
+})();
+
+/* ================= 2. Sums as blocks ================= */
+const SUMS=[
+ {id:'odd',lab:'1 + 3 + 5 + …',max:10,def:5},
+ {id:'k',lab:'Σk',max:10,def:5,tog:'add the flipped copy'},
+ {id:'k2',lab:'Σk²',max:6,def:4},
+ {id:'k3',lab:'Σk³',max:6,def:4}
+];
+let sum='k';try{const s=localStorage.getItem('mns-sum');if(SUMS.some(x=>x.id===s))sum=s;}catch(e){}
+$('sChips').innerHTML=SUMS.map(s=>`<button class="chip" data-s="${s.id}">${s.lab}</button>`).join('');
+$('sChips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;sum=b.dataset.s;try{localStorage.setItem('mns-sum',sum);}catch(err){}const S=SUMS.find(x=>x.id===sum);$('sN').max=S.max;$('sN').value=S.def;$('sNo').textContent=S.def;renderS();});
+const PAL=['var(--am)','var(--gm)','var(--hm)','var(--alt)'];
+function renderS(){
+  document.querySelectorAll('#sChips .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.s===sum));
+  const S=SUMS.find(x=>x.id===sum),n=+$('sN').value,svg=$('sSvg');
+  $('sTogL').hidden=!S.tog;$('sTogT').textContent=S.tog||'';
+  svg.style.minWidth=sum==='k2'?'560px':'';
+  let W=sum==='k2'?640:vw('sSvg'),g='',H=300,cap='';
+  if(sum==='odd'){
+    const u=Math.min((W-40)/n,260/n,40);H=n*u+30;const x0=(W-n*u)/2,y0=10;
+    for(let i=0;i<n;i++)for(let j=0;j<n;j++){const k=Math.max(i,j);g+=`<rect x="${x0+j*u}" y="${y0+(n-1-i)*u}" width="${u}" height="${u}" fill="${PAL[k%2]}" fill-opacity="${k%2?.55:.8}" stroke="var(--surface)" stroke-width="1.5"/>`;}
+    for(let k=0;k<n;k++)if(u>=22)g+=`<text x="${x0+k*u+u/2}" y="${y0+(n-1-k)*u+u/2+4}" text-anchor="middle" style="fill:var(--surface)" font-weight="600">${2*k+1}</text>`;
+    let s=0;for(let k=1;k<=n;k++)s+=2*k-1;
+    cap=`<div>Each L-shaped layer (a <i>gnomon</i>) adds one more row and one more column to the square: 2k − 1 cells. So 1 + 3 + … + (2n − 1) is an n × n square.</div><div class="f">1 + 3 + … + ${2*n-1} = ${s} = ${n}²</div>`;
+  } else if(sum==='k'){
+    const pair=$('sTog').checked,u=Math.min((W-40)/(n+1),260/n,36);H=n*u+30;const x0=(W-(n+1)*u)/2,y0=10;
+    for(let i=1;i<=n;i++){for(let j=0;j<=n;j++){const mine=j<i;if(!mine&&!pair)continue;
+      const cxp=x0+j*u+u/2,cyp=y0+(i-1)*u+u/2;g+=`<circle cx="${cxp}" cy="${cyp}" r="${u*0.36}" fill="${mine?'var(--am)':'var(--gm)'}" fill-opacity="${mine?1:.5}" ${mine?'':'stroke="var(--gm)"'}/>`;}}
+    if(pair)g+=`<rect x="${x0}" y="${y0}" width="${(n+1)*u}" height="${n*u}" fill="none" stroke="var(--muted)" stroke-dasharray="4 4"/><text x="${x0+(n+1)*u/2}" y="${y0+n*u+16}" text-anchor="middle" class="ink">${n} rows × ${n+1} columns</text>`;
+    const s=n*(n+1)/2;
+    cap=`<div>Row k has k dots, so the triangle holds 1 + 2 + … + n. ${pair?'The flipped copy fills each row up to n + 1 dots, making an n × (n + 1) rectangle out of two triangles.':'Turn on the flipped copy.'}</div><div class="f">Σk = n(n + 1)/2 = ${n}·${n+1}/2 = ${s}</div>`;
+  } else if(sum==='k2'){
+    const gap=34,u=Math.min(26,(W-20-3*gap)/(4*n)),tw=n*u;H=n*u*0.9+46;
+    const val=[(i,j)=>i,(i,j)=>n-i+j,(i,j)=>n-j+1,(i,j)=>2*n+1];
+    const x0=(W-(4*tw+3*gap))/2;
+    for(let t=0;t<4;t++){const ox=x0+t*(tw+gap);
+      for(let i=1;i<=n;i++)for(let j=1;j<=i;j++){const cx=ox+tw/2+(j-1-(i-1)/2)*u,cy=16+(i-1)*u*0.9+u/2,v=val[t](i,j);
+        g+=`<circle class="cell" data-p="${i}-${j}" cx="${cx}" cy="${cy}" r="${u*0.44}" fill="${t===3?'var(--ok)':PAL[t]}" fill-opacity="${t===3?.25:.12+.5*v/(n+1)}" stroke="none"/><text x="${cx}" y="${cy+4}" text-anchor="middle" class="ink" font-size="${u<20?9:11}" style="pointer-events:none">${v}</text>`;}
+      if(t<3)g+=`<text x="${ox+tw+gap/2}" y="${16+n*u*0.45+4}" text-anchor="middle" class="ink" font-size="18">${t<2?'+':'='}</text>`;
+      g+=`<text x="${ox+tw/2}" y="${H-6}" text-anchor="middle">${['row i holds i','turned 120°','turned 240°','every spot'][t]}</text>`;}
+    let s=0;for(let k=1;k<=n;k++)s+=k*k;
+    cap=`<div>The first triangle has row k full of k's, so it adds up to 1² + 2² + … + n². The other two are the same triangle turned round. Add the three spot by spot and every spot gives <b>2n + 1</b> (tap a spot to follow it). There are n(n + 1)/2 spots, so</div><div class="f">3·Σk² = (2n + 1)·n(n + 1)/2 &nbsp;⇒&nbsp; Σk² = n(n + 1)(2n + 1)/6 = ${n}·${n+1}·${2*n+1}/6 = ${s}</div>`;
+  } else {
+    const Tn=n*(n+1)/2,u=Math.min((W-40)/Tn,300/Tn);H=Tn*u+20;const x0=(W-Tn*u)/2,y0=10;
+    const X=v=>x0+v*u,Y=v=>y0+(Tn-v)*u; // y up
+    for(let k=1;k<=n;k++){const t0=k*(k-1)/2,t1=k*(k+1)/2,col=PAL[(k-1)%4];
+      // horizontal arm: x in [0,t1], y in [t0,t1]; vertical arm: x in [t0,t1], y in [0,t0]
+      for(let x=0;x<t1-1e-9;x+=k){const w=Math.min(k,t1-x),half=w<k;g+=`<rect x="${X(x)}" y="${Y(t1)}" width="${w*u}" height="${k*u}" fill="${col}" fill-opacity="${half?.35:.6}" stroke="var(--surface)" stroke-width="1.5" ${half?'stroke-dasharray="3 2"':''}/>`;}
+      for(let y=0;y<t0-1e-9;y+=k){const h=Math.min(k,t0-y),half=h<k;g+=`<rect x="${X(t0)}" y="${Y(y+h)}" width="${k*u}" height="${h*u}" fill="${col}" fill-opacity="${half?.35:.6}" stroke="var(--surface)" stroke-width="1.5" ${half?'stroke-dasharray="3 2"':''}/>`;}
+      if(k*u>=26)g+=`<text x="${X(t1-k/2)}" y="${Y(t1-k/2)+4}" text-anchor="middle" class="ink" font-weight="600">${k}³</text>`;}
+    let s=0;for(let k=1;k<=n;k++)s+=k**3;
+    cap=`<div>A square of side 1 + 2 + … + n. Layer k is k units thick and is made of exactly <b>k blocks of size k × k</b>, which is k³. For even k, two half-blocks (dashed) meet at the corner and make one block between them. Stack the layers and the square holds 1³ + 2³ + … + n³.</div><div class="f">Σk³ = (Σk)² = (${n}·${n+1}/2)² = ${Tn}² = ${s}</div>`;
+  }
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.innerHTML=g;$('sCap').innerHTML=cap;
+}
+$('sSvg').addEventListener('click',e=>{const c=e.target.closest('.cell');if(!c)return;const p=c.dataset.p;document.querySelectorAll('#sSvg .cell').forEach(x=>x.classList.toggle('hl',x.dataset.p===p));});
+bindRange('sN',renderS,v=>v);$('sTog').addEventListener('change',renderS);
+(function(){const S=SUMS.find(x=>x.id===sum);$('sN').max=S.max;$('sN').value=S.def;$('sNo').textContent=S.def;})();
+(function(){const host=$('sPQ');
+  {let s=0;for(let k=1;k<=10;k++)s+=k**3;
+   mountPQ(host,{q:'1³ + 2³ + … + 10³ = ?',opts:['1000','2500',String(s),'5050'],ans:2,why:`(1 + 2 + … + 10)² = 55² = ${s}. Notice that a sum of cubes always comes out as a perfect square.`});}
+  {let s=0;for(let k=1;k<=10;k++)s+=k*(k+1);
+   mountPQ(host,{q:'1·2 + 2·3 + 3·4 + … + 10·11 = ?',opts:['385',String(s),'495','330'],ans:1,
+    why:`Expand k(k + 1) = k² + k and add the two building blocks: 385 + 55 = ${s} = 10·11·12/3. Quick check: the summand has degree 2, so the sum must have degree 3 and no constant term. <span class="bn">beyond NCERT</span> Shortcut: k(k + 1) = [k(k+1)(k+2) − (k−1)k(k+1)]/3 telescopes to n(n + 1)(n + 2)/3.`});}
+  {const g=4.9,n=10;let s=0;for(let k=1;k<=n;k++)s+=g*(2*k-1);
+   mountPQ(host,{q:'A falling body covers 4.9 m, 14.7 m, 24.5 m, … in successive seconds. Total in 10 s?',opts:['245 m',`${fmt(s)} m`,'539 m','980 m'],ans:1,
+    why:`The distances are 4.9 × (1, 3, 5, …): odd numbers. Ten of them make a 10 × 10 square, so the total is 4.9 × 100 = ${fmt(s)} m. This is s = ½gt² with g = 9.8 m/s².`,act:{label:'Show the odd-number square',fn:()=>{sum='odd';$('sN').max=10;$('sN').value=10;$('sNo').textContent=10;renderS();}}});}
+})();
+
+/* ================= 3. Telescoping ================= */
+const TEL=[
+ {id:'a',lab:'1/(k(k+1))',d:1,v:k=>1/k,tl:k=>k===1?'1':`1/${k}`,lo:0,hi:1,term:k=>`1/(${k}·${k+1})`,t:k=>1/(k*(k+1)),
+  say:'Gap between the ticks 1/(k+1) and 1/k = 1/k − 1/(k+1) = 1/(k(k+1)). Each term <i>is</i> a gap.'},
+ {id:'b',lab:'1/(1·4) + 1/(4·7) + …',d:3,v:k=>1/(3*k-2),tl:k=>k===1?'1':`1/${3*k-2}`,lo:0,hi:1,term:k=>`1/(${3*k-2}·${3*k+1})`,t:k=>1/((3*k-2)*(3*k+1)),
+  say:'Gap between 1/(3k+1) and 1/(3k−2) = 3/((3k−2)(3k+1)). Each term is only <b>⅓ of a gap</b>, so the sum is ⅓ of the covered length. The factor 1/d is the step people forget.'},
+ {id:'c',lab:'1/(√1 + √4) + 1/(√4 + √7) + …',d:3,v:k=>Math.sqrt(3*k-2),tl:k=>`√${3*k-2}`,lo:0,hi:Math.sqrt(37)+0.2,term:k=>`1/(√${3*k-2} + √${3*k+1})`,t:k=>1/(Math.sqrt(3*k-2)+Math.sqrt(3*k+1)),
+  say:'Multiply top and bottom by √(3k+1) − √(3k−2): the bottom becomes (3k+1) − (3k−2) = 3. So each term is ⅓ of the gap between √(3k−2) and √(3k+1). It works because the numbers under the roots are in AP.'}
+];
+let tel='a';
+$('tChips').innerHTML=TEL.map(t=>`<button class="chip" data-t="${t.id}">${t.lab}</button>`).join('');
+$('tChips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;tel=b.dataset.t;renderT();});
+function renderT(){
+  document.querySelectorAll('#tChips .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.t===tel));
+  const T=TEL.find(x=>x.id===tel),n=+$('tN').value,W=vw('tSvg'),H=150,L=20,R=20,ay=84;
+  $('tSvg').setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const X=v=>L+(v-T.lo)/(T.hi-T.lo)*(W-L-R);
+  let g=`<line x1="${L}" x2="${W-R}" y1="${ay}" y2="${ay}" stroke="var(--muted)"/>`;
+  g+=`<text x="${X(T.lo)}" y="${ay+30}" text-anchor="middle">0</text>`;
+  const vs=[];for(let k=1;k<=n+1;k++)vs.push(T.v(k));
+  for(let k=1;k<=n;k++){const x0=X(vs[k-1]),x1=X(vs[k]),xa=Math.min(x0,x1),w=Math.abs(x1-x0);
+    g+=`<rect x="${xa}" y="${ay-22}" width="${w}" height="20" fill="${k%2?'var(--am)':'var(--gm)'}" fill-opacity=".7" stroke="var(--surface)" stroke-width="1"/>`;
+    if(w>58)g+=`<text x="${xa+w/2}" y="${ay-27}" text-anchor="middle" class="ink" font-size="10">term ${k}${T.d>1?' ×3':''}</text>`;}
+  vs.forEach((v,i)=>{const x=X(v),end=i===0||i===n;g+=`<line x1="${x}" x2="${x}" y1="${ay-26}" y2="${ay+6}" stroke="${end?'var(--ink)':'var(--muted)'}" stroke-width="${end?2:1}"/>`;});
+  // label only outer ticks (+ a few inner if room)
+  const outer=[0,n];outer.forEach(i=>{g+=`<text x="${X(vs[i])}" y="${ay+20}" text-anchor="middle" class="ink" font-weight="600">${T.tl(i+1)}</text>`;});
+  const xa=Math.min(X(vs[0]),X(vs[n])),xb=Math.max(X(vs[0]),X(vs[n]));
+  g+=`<path d="M${xa},${ay+34} v6 H${xb} v-6" fill="none" stroke="var(--ok)" stroke-width="1.5"/><text x="${(xa+xb)/2}" y="${ay+56}" text-anchor="middle" style="fill:var(--ok)" font-weight="600">covered: ${fmt(Math.abs(vs[0]-vs[n]),4)}</text>`;
+  $('tSvg').innerHTML=g;
+  // chain
+  const pieces=[];for(let k=1;k<=n;k++){const A=T.tl(k),B=T.tl(k+1);const first=k===1,last=k===n;
+    const hi=T.id==='c'?[B,A]:[A,B]; // (bigger − smaller)
+    const p1=(T.id==='c'?last:first)?`<b>${hi[0]}</b>`:`<s>${hi[0]}</s>`,p2=(T.id==='c'?first:last)?`<b>${hi[1]}</b>`:`<s>${hi[1]}</s>`;
+    pieces.push(`(${p1} − ${p2})`);}
+  let shown=pieces;if(n>6)shown=[...pieces.slice(0,3),'…',...pieces.slice(-2)];
+  const total=Math.abs(vs[0]-vs[n])/T.d;let direct=0;for(let k=1;k<=n;k++)direct+=T.t(k);
+  $('tChain').innerHTML=`${T.d>1?'⅓·[ ':''}${shown.join(' + ')}${T.d>1?' ]':''}`;
+  const endsExpr=T.id==='c'?`√${3*n+1} − 1`:`1 − ${T.tl(n+1)}`;
+  $('tCap').innerHTML=`<div>${T.say}</div><div class="f">sum of ${n} terms = ${T.d>1?'⅓·':''}(${endsExpr}) = <b>${fmt(total,5)}</b> <span class="muted">(adding the terms directly: ${fmt(direct,5)})</span></div>${T.id!=='c'?`<div class="muted">As n → ∞ the last tick slides to 0, so the sum to infinity is ${T.d>1?'⅓':'1'}.</div>`:'<div class="muted">The last tick keeps moving right as n grows, so this sum has no finite limit.</div>'}`;
+}
+bindRange('tN',renderT,v=>v);
+(function(){const host=$('tPQ');
+  mountPQ(host,{q:'1/(1·4) + 1/(4·7) + 1/(7·10) + … to infinity = ?',opts:['1','1/3','1/4','no finite sum'],ans:1,
+   why:'The covered length runs from 1 down to 0, but each term is only ⅓ of its gap. So the sum is ⅓·(1 − 1/(3n+1)) → ⅓. Test on one term: n = 1 must give 1/4, and ⅓·(1 − ¼) = ¼ ✓.',act:{label:'Show it',fn:()=>{tel='b';$('tN').value=12;$('tNo').textContent=12;renderT();}}});
+  {let s=0;for(let k=1;k<=5000;k++)s+=1/(k*(k+1)*(k+2));
+   mountPQ(host,{q:'<span class="bn">beyond NCERT</span> 1/(1·2·3) + 1/(2·3·4) + … to infinity = ?',opts:['1/2','1/3','1/4','1/6'],ans:2,
+    why:`Split one step up: 1/(k(k+1)(k+2)) = ½·[1/(k(k+1)) − 1/((k+1)(k+2))]. The bracket telescopes to 1/(1·2) − 1/((n+1)(n+2)), which tends to ½. Half of that is ¼. (5000 terms added directly: ${fmt(s,6)}.) The rule: drop one factor and divide by (number of factors − 1)·d.`});}
+  {const n=8;mountPQ(host,{q:'1/(√1 + √4) + 1/(√4 + √7) + … to 8 terms = ?',opts:['1','4/3','5/3','4'],ans:1,
+    why:`⅓·(√25 − √1) = ⅓·(5 − 1) = 4/3 ≈ ${fmt((Math.sqrt(3*n+1)-1)/3,4)}. All the inner roots cancel.`,act:{label:'Show it',fn:()=>{tel='c';$('tN').value=8;$('tNo').textContent=8;renderT();}}});}
+})();
+
+/* ================= 4. Recurrence ================= */
+function renderR(){
+  const p=Math.round(+$('rP').value*10)/10,q=+$('rQ').value,a1=+$('rA').value,N=8;$('rPo').textContent=fmt(p,1);
+  const W=vw('rSvg'),H=260,L=50,R=16,T=14,B=28;$('rSvg').setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const a=[a1];for(let i=1;i<N;i++)a.push(p*a[i-1]+q);
+  const fixed=p!==1,Lp=fixed?q/(1-p):NaN;
+  const vals=[...a];if(fixed)vals.push(Lp);let lo=Math.min(...vals),hi=Math.max(...vals);if(hi-lo<1){lo-=1;hi+=1;}const pad=(hi-lo)*0.08;lo-=pad;hi+=pad;
+  const X=i=>L+i*(W-L-R)/(N-1),Y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
+  let g='';for(const t of ticks(lo,hi,5))g+=`<line x1="${L}" x2="${W-R}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(t)+4}" text-anchor="end">${fmt(t)}</text>`;
+  if(fixed)g+=`<line x1="${L}" x2="${W-R}" y1="${Y(Lp)}" y2="${Y(Lp)}" stroke="var(--ok)" stroke-width="1.6" stroke-dasharray="6 4"/><text x="${W-R}" y="${Y(Lp)-6}" text-anchor="end" style="fill:var(--ok)" font-weight="600">L = ${fmt(Lp,3)}</text>`;
+  a.forEach((v,i)=>{if(fixed)g+=`<line x1="${X(i)}" x2="${X(i)}" y1="${Y(Lp)}" y2="${Y(v)}" stroke="var(--hm)" stroke-width="3" stroke-opacity=".7"/>`;
+    g+=`<circle cx="${X(i)}" cy="${Y(v)}" r="4.5" fill="var(--am)"/><text x="${X(i)}" y="${H-8}" text-anchor="middle">a${sb(i+1)}</text>`;});
+  $('rSvg').innerHTML=g;
+  let cap=`<div class="f">terms: ${a.map(v=>fmt(v,3)).join(', ')}, …</div>`;
+  if(!fixed)cap+=`<div>p = 1: there is no fixed point. Each step adds q, so this is just an AP with d = ${q}.</div>`;
+  else{cap+=`<div class="f">L = q/(1 − p) = ${q}/(1 − ${fmt(p,1)}) = ${fmt(Lp,4)} &nbsp; a<sub>n</sub> − L = (a₁ − L)·p<sup>n−1</sup> = (${fmt(a1-Lp,4)})·(${fmt(p,1)})<sup>n−1</sup></div>`;
+    cap+=`<div>The <span style="color:var(--hm);font-weight:600">orange</span> distances form a GP with ratio p. ${Math.abs(p)<1?(p<0?'They shrink and flip sides each step, so the terms close in on L from alternate sides.':p===0?'p = 0: every term after the first equals q.':'They shrink, so the terms close in on L.'):(Math.abs(p)===1?'p = −1: the distance keeps its size and flips side, so the terms oscillate.':'|p| &gt; 1: the distances grow, so the terms run away from L.')} ${Math.abs(a1-Lp)<1e-9?'Here a₁ = L, so the sequence never moves.':''}</div>`;}
+  $('rCap').innerHTML=cap;
+}
+bindRange('rQ',renderR);bindRange('rA',renderR);bindRange('rP',renderR,v=>fmt(Math.round(v*10)/10,1));
+(function(){let x=1;const seq=[1];for(let i=2;i<=10;i++){x=2*x+1;seq.push(x);}const sum=seq.reduce((s,v)=>s+v,0);
+  mountPQ($('rPQ'),{q:'a₁ = 1 and a<sub>n</sub> = 2a<sub>n−1</sub> + 1. What is a₁₀?',opts:['512','1024',String(seq[9]),'19'],ans:2,
+   why:`L = 1/(1 − 2) = −1, so a<sub>n</sub> + 1 is a GP: 2, 4, 8, …, which gives a<sub>n</sub> = 2ⁿ − 1 and a₁₀ = ${seq[9]}. The sum of the first 10 terms is a GP minus a constant series: (2¹¹ − 2) − 10 = ${sum}.`,
+   act:{label:'Draw it',fn:()=>{$('rP').value=2;$('rQ').value=1;$('rA').value=1;['rQ','rA'].forEach(id=>$(id+'o').textContent=$(id).value);renderR();}}});})();
+
+/* ---------- init ---------- */
+renderM();renderS();renderT();renderR();
+let rzT;addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{renderM();renderS();renderT();renderR();},150);});
+</script>
+</body>
+</html>

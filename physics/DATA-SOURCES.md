@@ -1,0 +1,16 @@
+# Data sources and verification log — Physics
+
+Physics modules use standard results rather than measured data. Each result was re-derived from first principles (I = Σ m r⊥², Newton's laws for translation and rotation) and checked against the textbooks below (17 Oct 2026).
+
+## Module 01 — Moment of Inertia (`mechanics/moment-of-inertia.html`)
+## Module 02 — Rolling Motion (`mechanics/rolling-motion.html`)
+
+| Content | Source |
+|---|---|
+| Standard moments of inertia, parallel- and perpendicular-axis theorems | NCERT Physics Class XI Part I, "System of Particles and Rotational Motion"; H. C. Verma, *Concepts of Physics* Vol. 1, Ch. 10; Halliday, Resnick & Walker, *Fundamentals of Physics*, Ch. 10 |
+| Rolling kinematics, rolling down an incline (a = g sin θ / (1 + k²/R²)), friction needed to roll, slipping → rolling, push height h = k²/R | NCERT (as above); H. C. Verma Vol. 1, Ch. 10; Halliday, Resnick & Walker, Ch. 11 |
+| Worked-example selection | *Moment of Inertia & Rolling Motion* compendium (study PDF, not kept in the repo). All examples were re-derived and no errors of substance were found |
+
+Conventions: interactive sections use g = 9.8 m s⁻². Quiz items use g = 10 m s⁻² where the original problem did, so one slipping preset gives ≈ 2.55 s where the compendium (g = 10) gives 2.5 s.
+
+To check: chapter numbers are cited from memory of the editions. NCERT's chapter number changed in the 2023 rationalised edition.

@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Identities as Pictures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: single column. 1) stacked-triangle compound angle (drag) + readout  2) phasor a sin x + b cos x beside its graph  3) two waves adding (sum-to-product)  4) chain of unit arrows (AP sums). Each with predict items */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --p1:#16865f; --p2:#c7741a; --sin:#d1491f; --cos:#2563c9; --tan:#16865f; --cot:#8a6d00; --sec:#7a52c7; --csc:#b0377a; --arc:#c7741a;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --p1:#4fd1a5; --p2:#f0a04b; --sin:#ff8a5c; --cos:#7aa7ff; --tan:#4fd1a5; --cot:#d9c25a; --sec:#b493ff; --csc:#ef7ab8; --arc:#f0a04b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --p1:#4fd1a5; --p2:#f0a04b; --sin:#ff8a5c; --cos:#7aa7ff; --tan:#4fd1a5; --cot:#d9c25a; --sec:#b493ff; --csc:#ef7ab8; --arc:#f0a04b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:74ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.bn{font:500 11px var(--f-mono);color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;white-space:nowrap;font-weight:500}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip .sw{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.split{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px}
+@media (max-width:900px){.split{grid-template-columns:minmax(0,1fr)}}
+.fig{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,6fr);align-items:start}
+@media (max-width:640px){.fig{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+svg.draw{width:100%;height:auto;display:block;user-select:none;-webkit-user-select:none}
+svg.drag2d{touch-action:none;cursor:grab}
+svg.dragx{touch-action:pan-y;cursor:ew-resize}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:10px}
+.row label{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center;flex:1 1 220px}
+input[type=range]{accent-color:var(--accent);flex:1;min-width:120px}
+.big{font:500 22px var(--f-mono);font-variant-numeric:tabular-nums}
+table.vals{border-collapse:collapse;width:100%;margin-top:8px;font-size:14px}
+table.vals td{padding:4px 6px;border-bottom:1px solid var(--line)}
+table.vals td.v{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.vals tr.off td{color:var(--muted)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.quads{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:10px;font-size:12.5px}
+.quads div{border:1px solid var(--line);border-radius:6px;padding:4px 8px;background:var(--bg)}
+.quads div.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.quads b{font-family:var(--f-mono);font-weight:500;color:var(--muted);margin-right:6px}
+ul.caps{margin:12px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;max-width:80ch}
+.eq{font-family:var(--f-mono);font-size:13.5px;background:var(--bg);border-radius:4px;padding:0 5px;white-space:normal;overflow-wrap:break-word;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.k-sin{color:var(--sin)} .k-cos{color:var(--cos)} .k-tan{color:var(--tan)} .k-cot{color:var(--cot)} .k-sec{color:var(--sec)} .k-csc{color:var(--csc)}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.qq{font:500 16px var(--f-mono);margin-top:6px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0;display:flex;flex-direction:column;gap:8px;font-size:14px}
+svg text{font-family:var(--f-body);fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+svg .ax{stroke:var(--muted);stroke-width:1}
+svg .gl{stroke:var(--line);stroke-width:1}
+svg .circ{fill:none;stroke:var(--ink);stroke-width:1.5}
+svg .lbl{fill:var(--muted);font:500 12px var(--f-mono)}
+svg .tick{fill:var(--muted);font:500 12px var(--f-mono)}
+footer{font-size:12px;color:var(--muted);max-width:92ch}
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Mathematics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Identities as Pictures</h1>
+    <p class="lede">Four pictures carry most of the identities in this chapter: two right triangles stacked on each other (compound angles), two arrows added tip to tail (a sin x + b cos x), two waves added (sum-to-product), and a chain of equal arrows (sums of angles in AP). Drag, slide, and read the formula off what you see.</p>
+  </header>
+
+  <!-- ============ 1. compound angle ============ -->
+  <section>
+    <h2>1 · sin(A + B): stack one triangle on another</h2>
+    <p class="lede">Turn by A, then by B. The radius OP (length 1) ends at angle A + B, so its height is sin(A + B) and its shadow is cos(A + B). The right triangle OQP (legs cos B and sin B) is tilted by A, and each leg splits into a vertical and a horizontal piece.</p>
+    <div class="split" style="margin-top:10px">
+      <div class="panel">
+        <div class="chips" id="cview" role="group" aria-label="What to show">
+          <button class="chip" data-v="sin">sin(A + B): heights</button>
+          <button class="chip" data-v="cos">cos(A + B): widths</button>
+        </div>
+        <div class="svgbox"><svg id="comp" class="draw drag2d" viewBox="-250 -292 540 322" role="img" aria-label="Two stacked right triangles showing the compound angle formula" style="margin-top:8px"></svg></div>
+        <div class="row">
+          <label>A <input type="range" id="ra" min="5" max="85" step="1"><span class="eq" id="oa"></span></label>
+          <label>B <input type="range" id="rb" min="5" max="85" step="1"><span class="eq" id="ob"></span></label>
+        </div>
+        <div class="row"><button class="btn" id="dbl">Set B = A (double angle)</button><span class="muted">Drag near Q to change A, near P to change B.</span></div>
+      </div>
+      <div class="panel">
+        <h3>What the picture says</h3>
+        <div id="cread" style="font-size:14.5px"></div>
+        <p class="muted" style="margin-top:10px">Why the angle at P is A: PQ is perpendicular to OQ and PS is perpendicular to the x-axis, so the angle between PQ and PS equals the angle between OQ and the x-axis.</p>
+        <p class="muted" style="margin-top:6px"><span class="hw">picture covers acute A, B only</span> The formulas hold for all real A, B; NCERT proves the general case with the distance formula on the unit circle. Putting −B for B gives sin(A − B) and cos(A − B).</p>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:12px;max-width:720px">
+      <div class="qhead"><h3>Predict, then check</h3><button class="btn" id="q1next">Next question →</button></div>
+      <div class="qq" id="q1q"></div>
+      <div class="opts" id="q1opts"></div>
+      <div id="q1why"></div>
+    </div>
+  </section>
+
+  <!-- ============ 2. phasor ============ -->
+  <section>
+    <h2>2 · a sin x + b cos x is one arrow <span class="bn">beyond NCERT</span></h2>
+    <p class="lede">Draw an arrow of length a at angle x. Its height is a sin x. Add an arrow of length b at angle x + 90°: its height is b sin(x + 90°) = b cos x. The two arrows are perpendicular, so tip to tail they make one arrow of length R = √(a² + b²), turned ahead by a fixed angle φ. Its height is R sin(x + φ), and a height can never exceed the arrow's length.</p>
+    <div class="panel" style="margin-top:10px">
+      <div class="fig" style="grid-template-columns:minmax(0,34fr) minmax(0,52fr)">
+        <svg id="ph" class="draw drag2d" viewBox="-170 -170 340 340" role="img" aria-label="Two perpendicular arrows adding to one arrow"></svg>
+        <svg id="phg" class="draw dragx" viewBox="0 -170 520 340" role="img" aria-label="Graphs of a sin x, b cos x and their sum"></svg>
+      </div>
+      <div class="row">
+        <label>a <input type="range" id="pa" min="-5" max="5" step="0.5"><span class="eq" id="pao"></span></label>
+        <label>b <input type="range" id="pb" min="-5" max="5" step="0.5"><span class="eq" id="pbo"></span></label>
+        <button class="btn" id="play">▶ Turn</button>
+      </div>
+      <div class="row">
+        <button class="chip" id="cshow" aria-pressed="false">add the line y = c</button>
+        <label>c <input type="range" id="pc" min="-8" max="8" step="0.5"><span class="eq" id="pco"></span></label>
+      </div>
+      <div id="phread" style="margin-top:10px;font-size:14.5px"></div>
+    </div>
+    <div class="panel" style="margin-top:12px;max-width:720px">
+      <div class="qhead"><h3>Predict, then check</h3><button class="btn" id="q2next">Next question →</button></div>
+      <div class="qq" id="q2q"></div>
+      <div class="opts" id="q2opts"></div>
+      <div id="q2why"></div>
+    </div>
+  </section>
+
+  <!-- ============ 3. waves ============ -->
+  <section>
+    <h2>3 · Sum to product: two waves make a wave inside an envelope</h2>
+    <p class="lede">Add sin Cx and sin Dx. Where the two waves are in step they reinforce; where they are out of step they cancel. The result is a fast wave at the <i>average</i> rate (C + D)/2, squeezed by a slow envelope at <i>half the difference</i> (C − D)/2. That is the sum-to-product formula, and it is why it turns "sum = 0" into "one factor = 0".</p>
+    <div class="panel" style="margin-top:10px">
+      <div class="chips" id="wkind" role="group" aria-label="Which sum">
+        <button class="chip" data-k="sin">sin Cx + sin Dx</button>
+        <button class="chip" data-k="cos">cos Cx + cos Dx</button>
+      </div>
+      <div class="svgbox"><svg id="wave" class="draw" viewBox="0 -140 640 280" role="img" aria-label="Two waves and their sum with its envelope" style="margin:8px auto 0;min-width:520px;max-width:860px"></svg></div>
+      <div class="row">
+        <label>C <input type="range" id="wc" min="1" max="12" step="1"><span class="eq" id="wco"></span></label>
+        <label>D <input type="range" id="wd" min="1" max="12" step="1"><span class="eq" id="wdo"></span></label>
+      </div>
+      <div id="wread" style="margin-top:10px;font-size:14.5px"></div>
+    </div>
+    <div class="panel" style="margin-top:12px;max-width:720px">
+      <div class="qhead"><h3>Predict, then check</h3><button class="btn" id="q3next">Next question →</button></div>
+      <div class="qq" id="q3q"></div>
+      <div class="opts" id="q3opts"></div>
+      <div id="q3why"></div>
+    </div>
+  </section>
+
+  <!-- ============ 4. chain ============ -->
+  <section>
+    <h2>4 · Angles in AP: a chain of equal arrows <span class="bn">beyond NCERT</span></h2>
+    <p class="lede">Lay unit arrows at angles a, a + d, a + 2d, … tip to tail. The total sideways reach is Σ cos(a + kd) and the total height is Σ sin(a + kd). Each arrow turns by the same d, so the chain bends round a circle, like the sides of a regular polygon. When n arrows make a whole number of turns (nd a multiple of 360°), the chain closes and both sums are exactly 0.</p>
+    <div class="split" style="margin-top:10px">
+      <div class="panel">
+        <svg id="chain" class="draw" viewBox="-180 -180 360 360" role="img" aria-label="Chain of unit arrows with equally spaced directions" style="max-width:460px;margin:0 auto"></svg>
+        <div class="row">
+          <label>n <input type="range" id="cn" min="1" max="15" step="1"><span class="eq" id="cno"></span></label>
+          <label>d <input type="range" id="cd" min="1" max="180" step="1"><span class="eq" id="cdo"></span></label>
+          <label>a <input type="range" id="ca" min="0" max="359" step="1"><span class="eq" id="cao"></span></label>
+        </div>
+      </div>
+      <div class="panel">
+        <div id="chread" style="font-size:14.5px"></div>
+        <div class="qhead" style="margin-top:14px"><h3>Predict, then check</h3><button class="btn" id="q4next">Next →</button></div>
+        <div class="qq" id="q4q"></div>
+        <div class="opts" id="q4opts"></div>
+        <div id="q4why"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Compound-angle, double-angle and sum-to-product formulas: NCERT Mathematics Class 11, Chapter 3. The stacked-triangle figure is the standard geometric proof for acute angles (as in S. L. Loney, <i>Plane Trigonometry</i>); the general case is in NCERT. The results a sin x + b cos x = √(a² + b²) sin(x + φ) and the sum Σ cos(a + kd) = [sin(nd/2) / sin(d/2)] cos(a + (n − 1)d/2) are beyond the NCERT text but standard for JEE; both are checked numerically in this page's script (the readouts show the direct sum next to the formula). Worked examples adapted from the <i>Trigonometry JEE Compendium</i> (study notes; Examples 4.15, 4.20, 4.21, 4.25, 5.10, 5.14, 5.15, 5.20, 6.3), each re-derived before use.
+  </footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const D=Math.PI/180, TAU=2*Math.PI;
+const fmt=(v,n=3)=>(v<-5e-10?'−':'')+Math.abs(v).toFixed(n);
+function svgPt(svg,e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
+function draggable(svg,onPt,onStart){
+  let on=false;
+  svg.addEventListener('pointerdown',e=>{on=true;try{svg.setPointerCapture(e.pointerId);}catch(_){} if(onStart)onStart(); onPt(svgPt(svg,e));});
+  svg.addEventListener('pointermove',e=>{if(on)onPt(svgPt(svg,e));});
+  const end=()=>{on=false;};
+  svg.addEventListener('pointerup',end); svg.addEventListener('pointercancel',end);
+}
+const P2=v=>v.toFixed(2);
+function quiz(items,ids,onAnswer){
+  let i=0;
+  function show(){
+    const q=items[i];
+    $(ids.q).innerHTML=q.q; $(ids.why).innerHTML='';
+    $(ids.opts).innerHTML=q.o.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('');
+    $(ids.opts).querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+      const k=+b.dataset.k;
+      $(ids.opts).querySelectorAll('.opt').forEach(x=>{const j=+x.dataset.k; x.classList.toggle('right',j===q.a); x.classList.toggle('wrong',j===k&&k!==q.a);});
+      $(ids.why).innerHTML=`<div class="why"><b>${k===q.a?'Right.':'Not quite.'}</b> ${q.why}</div>`;
+      if(onAnswer) onAnswer(q);
+    });
+  }
+  $(ids.next).onclick=()=>{i=(i+1)%items.length; show();};
+  show();
+}
+function arc(r,a0,a1){ // math angles (rad), anticlockwise from a0 to a1, in SVG coords (y down)
+  const large=(a1-a0)>Math.PI?1:0;
+  return `M${P2(r*Math.cos(a0))} ${P2(-r*Math.sin(a0))} A${r} ${r} 0 ${large} 0 ${P2(r*Math.cos(a1))} ${P2(-r*Math.sin(a1))}`;
+}
+
+/* ================= 1. compound angle ================= */
+let cA=30, cB=25, cv='sin';
+try{const s=localStorage.getItem('trig-id-view'); if(s==='sin'||s==='cos') cv=s;}catch(e){}
+const CU=260;
+function renderComp(){
+  const A=cA*D, B=cB*D, cB_=Math.cos(B), sB=Math.sin(B);
+  const Q=[cB_*Math.cos(A), cB_*Math.sin(A)], P=[Math.cos(A+B), Math.sin(A+B)], R=[Q[0],0], S=[P[0],Q[1]];
+  const X=v=>P2(v*CU), Y=v=>P2(-v*CU);
+  const ln=(p,q,st)=>`<line x1="${X(p[0])}" y1="${Y(p[1])}" x2="${X(q[0])}" y2="${Y(q[1])}" ${st}/>`;
+  let g='';
+  g+=`<line class="ax" x1="-245" x2="285" y1="0" y2="0"/><line class="gl" x1="0" x2="0" y1="-288" y2="26"/>`;
+  g+=`<path d="${arc(CU,0,Math.PI*0.86)}" fill="none" stroke="var(--line)" stroke-width="1"/>`;
+  // triangle OQP
+  g+=`<polygon points="0,0 ${X(Q[0])},${Y(Q[1])} ${X(P[0])},${Y(P[1])}" fill="var(--accent)" opacity=".07"/>`;
+  g+=ln([0,0],Q,'stroke="var(--muted)" stroke-width="1.6"')+ln(Q,P,'stroke="var(--muted)" stroke-width="1.6"');
+  g+=ln([0,0],P,'stroke="var(--ink)" stroke-width="2.4"');
+  // construction lines
+  g+=ln(Q,R,'stroke="var(--line)" stroke-width="1"')+ln(Q,S,'stroke="var(--line)" stroke-width="1"')+ln(S,[P[0],0],'stroke="var(--line)" stroke-width="1"');
+  // right-angle mark at Q (between QO and QP)
+  const u1=[-Math.cos(A),-Math.sin(A)], u2=[-Math.sin(A),Math.cos(A)], m=12/CU;
+  g+=`<polyline points="${X(Q[0]+u1[0]*m)},${Y(Q[1]+u1[1]*m)} ${X(Q[0]+u1[0]*m+u2[0]*m)},${Y(Q[1]+u1[1]*m+u2[1]*m)} ${X(Q[0]+u2[0]*m)},${Y(Q[1]+u2[1]*m)}" fill="none" stroke="var(--muted)"/>`;
+  const thick='stroke-width="5" stroke-linecap="round"';
+  if(cv==='sin'){
+    g+=ln(R,Q,`stroke="var(--p1)" ${thick}`)+ln(S,P,`stroke="var(--p2)" ${thick}`);
+    if(Math.abs(P[0]-Q[0])>0.01) g+=ln([P[0],0],S,'stroke="var(--p1)" stroke-width="3" stroke-dasharray="5 4" opacity=".8"');
+    g+=`<text x="${P2(Q[0]*CU+7)}" y="${P2(-Q[1]*CU/2+4)}" font-size="13" fill="var(--p1)" font-weight="600">sin A cos B</text>`;
+    g+=`<text x="${P2(P[0]*CU-7)}" y="${P2(-(P[1]+Q[1])/2*CU+4)}" font-size="13" fill="var(--p2)" font-weight="600" text-anchor="end">cos A sin B</text>`;
+  } else {
+    g+=ln([0,0],R,`stroke="var(--p1)" ${thick}`)+ln(S,Q,`stroke="var(--p2)" ${thick}`);
+    g+=ln([P[0],0],R,'stroke="var(--p2)" stroke-width="3" stroke-dasharray="5 4" opacity=".8"');
+    g+=`<line x1="0" y1="10" x2="${X(P[0])}" y2="10" stroke="var(--accent)" stroke-width="3"/>`;
+    g+=`<text x="${P2(Q[0]*CU/2)}" y="-8" font-size="13" fill="var(--p1)" font-weight="600" text-anchor="middle">cos A cos B</text>`;
+    g+=`<text x="${P2((S[0]+Q[0])/2*CU)}" y="${P2(-Q[1]*CU-8)}" font-size="13" fill="var(--p2)" font-weight="600" text-anchor="middle">sin A sin B</text>`;
+    g+=`<text x="${P2(P[0]*CU/2)}" y="26" font-size="12" fill="var(--accent)" font-weight="600" text-anchor="middle">cos(A + B)</text>`;
+  }
+  // angle arcs
+  g+=`<path d="${arc(48,0,A)}" fill="none" stroke="var(--muted)"/><text x="${P2(60*Math.cos(A/2))}" y="${P2(-60*Math.sin(A/2)+4)}" font-size="13" fill="var(--muted)" text-anchor="middle">A</text>`;
+  g+=`<path d="${arc(78,A,A+B)}" fill="none" stroke="var(--muted)"/><text x="${P2(90*Math.cos(A+B/2))}" y="${P2(-90*Math.sin(A+B/2)+4)}" font-size="13" fill="var(--muted)" text-anchor="middle">B</text>`;
+  { const r=28, cx=P[0]*CU, cy=-P[1]*CU, a0=-Math.PI/2, a1=A-Math.PI/2;
+    g+=`<path d="M${P2(cx+r*Math.cos(a0))} ${P2(cy-r*Math.sin(a0))} A${r} ${r} 0 0 0 ${P2(cx+r*Math.cos(a1))} ${P2(cy-r*Math.sin(a1))}" fill="none" stroke="var(--muted)"/>`;
+    const am=(a0+a1)/2; g+=`<text x="${P2(cx+40*Math.cos(am))}" y="${P2(cy-40*Math.sin(am)+4)}" font-size="13" fill="var(--muted)" text-anchor="middle">A</text>`; }
+  // side labels
+  g+=`<text x="${P2(P[0]*CU/2-10*Math.sin(A+B))}" y="${P2(-P[1]*CU/2-10*Math.cos(A+B))}" font-size="13" text-anchor="middle" font-weight="600">1</text>`;
+  g+=`<text x="${P2(Q[0]*CU*0.55+12*Math.sin(A))}" y="${P2(-Q[1]*CU*0.55+12*Math.cos(A)+4)}" font-size="12" fill="var(--muted)" text-anchor="start">cos B</text>`;
+  g+=`<text x="${P2((Q[0]+P[0])/2*CU+10*Math.cos(A))}" y="${P2(-(Q[1]+P[1])/2*CU-10*Math.sin(A))}" font-size="12" fill="var(--muted)">sin B</text>`;
+  // points
+  const pt=(p,t,dx,dy)=>`<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="${t==='P'||t==='Q'?7:3}" fill="${t==='P'?'var(--accent)':t==='Q'?'var(--ink)':'var(--muted)'}" stroke="var(--surface)" stroke-width="1.5"/><text x="${P2(p[0]*CU+dx)}" y="${P2(-p[1]*CU+dy)}" font-size="12" font-weight="600" fill="var(--muted)">${t}</text>`;
+  g+=pt([0,0],'O',-14,16)+pt(R,'R',4,16)+pt(S,'S',P[0]<Q[0]?-14:6,-6)+pt(Q,'Q',10,4)+pt(P,'P',8,-8);
+  $('comp').innerHTML=g;
+  document.querySelectorAll('#cview .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===cv));
+  $('ra').value=Math.round(cA); $('rb').value=Math.round(cB); $('oa').textContent=fmtDeg(cA); $('ob').textContent=fmtDeg(cB);
+  const sa=Math.sin(A),ca=Math.cos(A),sb=Math.sin(B),cb=Math.cos(B), dbl=Math.abs(cA-cB)<1e-9;
+  let h='';
+  if(cv==='sin') h=`<p>Height of P = <span style="color:var(--p1)">QR</span> + <span style="color:var(--p2)">PS</span></p>
+    <p class="eq" style="display:inline-block;margin-top:6px">sin(A + B) = sin A cos B + cos A sin B</p>
+    <p style="margin-top:6px;font-family:var(--f-mono);font-size:13.5px">${fmt(Math.sin(A+B))} = ${fmt(sa*cb)} + ${fmt(ca*sb)}</p>`;
+  else h=`<p>Shadow of P = <span style="color:var(--p1)">OR</span> − <span style="color:var(--p2)">SQ</span> (the second piece points backwards)</p>
+    <p class="eq" style="display:inline-block;margin-top:6px">cos(A + B) = cos A cos B − sin A sin B</p>
+    <p style="margin-top:6px;font-family:var(--f-mono);font-size:13.5px">${fmt(Math.cos(A+B))} = ${fmt(ca*cb)} − ${fmt(sa*sb)}</p>
+    ${cA+cB>90?'<p class="muted" style="margin-top:4px">A + B is past 90°, so SQ is longer than OR and P has crossed to the left: cos(A + B) &lt; 0.</p>':''}`;
+  if(dbl) h+=`<p style="margin-top:10px"><b>B = A:</b> the two triangles share the angle, and the formulas become</p>
+    <p style="margin-top:4px"><span class="eq">sin 2A = 2 sin A cos A</span> <span class="eq">cos 2A = cos²A − sin²A</span></p>
+    <p class="muted" style="margin-top:4px">With sin²A + cos²A = 1 the second has two more forms, <span class="eq">1 − 2 sin²A</span> and <span class="eq">2 cos²A − 1</span>. Read backwards they give the half-angle forms <span class="eq">sin²A = (1 − cos 2A)/2</span>, <span class="eq">cos²A = (1 + cos 2A)/2</span>.</p>`;
+  $('cread').innerHTML=h;
+}
+function fmtDeg(v){return (Math.abs(v-Math.round(v))<1e-9?Math.round(v):v.toFixed(2))+'°';}
+function setAB(a,b){cA=Math.max(5,Math.min(85,a)); cB=Math.max(5,Math.min(85,b)); if(cA+cB>150) cB=150-cA; renderComp();}
+$('ra').addEventListener('input',e=>setAB(+e.target.value,cB));
+$('rb').addEventListener('input',e=>setAB(cA,+e.target.value));
+$('dbl').addEventListener('click',()=>{const a=Math.min(cA,75); setAB(a,a);});
+$('cview').addEventListener('click',e=>{const b=e.target.closest('.chip'); if(!b)return; cv=b.dataset.v; try{localStorage.setItem('trig-id-view',cv);}catch(err){} renderComp();});
+draggable($('comp'),p=>{
+  const x=p.x/CU, y=-p.y/CU, ang=Math.atan2(y,x)/D;
+  const A=cA*D, B=cB*D, Q=[Math.cos(B)*Math.cos(A),Math.cos(B)*Math.sin(A)], P=[Math.cos(A+B),Math.sin(A+B)];
+  const dQ=Math.hypot(x-Q[0],y-Q[1]), dP=Math.hypot(x-P[0],y-P[1]);
+  if(dQ<dP) setAB(Math.round(ang),cB); else setAB(cA,Math.round(ang-cA));
+});
+renderComp();
+quiz([
+ {q:'tan A = 1/7 and sin B = 1/√10, with A, B acute. A + 2B = ?',o:['30°','45°','60°','90°'],a:1,
+  why:'cos B = 3/√10, so tan B = 1/3 and tan 2B = (2/3)/(1 − 1/9) = 3/4. Then tan(A + 2B) = (1/7 + 3/4)/(1 − 3/28) = 1. That alone only says A + 2B = 45° + n·180°. The bound fixes n: tan A &lt; 1 and tan 2B &lt; 1 put both A and 2B below 45°, so A + 2B is between 0° and 90°, and must be 45°. The figure now uses A and 2B as its two angles: OP sits at 45°.',
+  set:()=>setAB(Math.atan(1/7)/D, 2*Math.atan(1/3)/D)},
+ {q:'Points at angles A and B on the unit circle. (cos A − cos B)² + (sin A − sin B)² = ?',o:['4 sin²((A − B)/2)','2 sin((A − B)/2)','4 cos²((A − B)/2)','2 + 2 cos(A − B)'],a:0,
+  why:'It is the squared distance between the two points. Expanding gives 2 − 2(cos A cos B + sin A sin B) = 2 − 2 cos(A − B) = 4 sin²((A − B)/2). Geometrically: the chord subtends A − B at the centre, and half the chord is sin((A − B)/2) in a triangle with hypotenuse 1.'}
+],{q:'q1q',opts:'q1opts',why:'q1why',next:'q1next'},q=>{if(q.set)q.set();});
+
+/* ================= 2. phasor ================= */
+const PU=20;
+let pa=3, pb=4, px=0.6, pc=6, cOn=false, playing=false, lastT=0;
+let paL=null, pbL=null, pcL=null; // exact labels for presets (e.g. √3)
+const numL=v=>{if(Number.isInteger(v))return (v<0?'−':'')+Math.abs(v); return fmt(v,2);};
+const GX2=t=>24+t/TAU*480, GY2=v=>-v*PU;
+function arrow(x1,y1,x2,y2,c,w,id){return `<line x1="${P2(x1)}" y1="${P2(y1)}" x2="${P2(x2)}" y2="${P2(y2)}" stroke="${c}" stroke-width="${w}" marker-end="url(#${id})"/>`;}
+function mk(id,c){return `<marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${c}"/></marker>`;}
+function pathF(f,X,Y,a,b,N,lim){let d='',pen=false;for(let i=0;i<=N;i++){const t=a+(b-a)*i/N,v=f(t); if(!isFinite(v)||Math.abs(v)>lim){pen=false;continue;} d+=(pen?'L':'M')+P2(X(t))+' '+P2(Y(v)); pen=true;} return d;}
+function renderPh(){
+  const R=Math.hypot(pa,pb), phi=Math.atan2(pb,pa);
+  const A=[pa*Math.cos(px)*PU, -pa*Math.sin(px)*PU], B=[A[0]-pb*Math.sin(px)*PU, A[1]-pb*Math.cos(px)*PU];
+  let g=`<defs>${mk('ahS','var(--sin)')}${mk('ahC','var(--cos)')}${mk('ahR','var(--accent)')}</defs>`;
+  g+=`<line class="ax" x1="-165" x2="165" y1="0" y2="0"/><line class="ax" x1="0" x2="0" y1="-165" y2="165"/>`;
+  if(R>0) g+=`<circle r="${P2(R*PU)}" fill="none" stroke="var(--accent)" stroke-dasharray="4 4" opacity=".55"/>`;
+  if(cOn) g+=`<line x1="-165" x2="170" y1="${P2(-pc*PU)}" y2="${P2(-pc*PU)}" stroke="var(--flag)" stroke-width="1.3" opacity=".8"/>`;
+  if(Math.abs(pa)>0.01) g+=arrow(0,0,A[0],A[1],'var(--sin)',3.5,'ahS');
+  if(Math.abs(pb)>0.01) g+=arrow(A[0],A[1],B[0],B[1],'var(--cos)',3.5,'ahC');
+  if(R>0.01) g+=arrow(0,0,B[0],B[1],'var(--accent)',2.5,'ahR');
+  g+=`<line x1="${P2(B[0])}" y1="${P2(B[1])}" x2="170" y2="${P2(B[1])}" stroke="var(--accent)" stroke-dasharray="3 4" opacity=".7"/>`;
+  if(Math.abs(pa)>0.01) g+=`<text x="${P2(A[0]/2+12*Math.sin(px))}" y="${P2(A[1]/2+12*Math.cos(px)+4)}" font-size="13" font-weight="600" fill="var(--sin)" text-anchor="middle">a</text>`;
+  if(Math.abs(pb)>0.01) g+=`<text x="${P2((A[0]+B[0])/2+12*Math.cos(px))}" y="${P2((A[1]+B[1])/2-12*Math.sin(px)+4)}" font-size="13" font-weight="600" fill="var(--cos)" text-anchor="middle">b</text>`;
+  if(R>0.01) g+=`<text x="${P2(B[0]+(B[0]>=0?8:-8))}" y="${P2(B[1]-8)}" font-size="13" font-weight="600" fill="var(--accent)" text-anchor="${B[0]>=0?'start':'end'}">R</text>`;
+  g+=`<text x="-165" y="160" font-size="11" fill="var(--muted)">dashed circle: radius R</text>`;
+  $('ph').innerHTML=g;
+  // graph
+  let h=`<defs><clipPath id="phclip"><rect x="0" y="-168" width="520" height="336"/></clipPath></defs>`;
+  const L=['0','π/2','π','3π/2','2π'];
+  for(let k=0;k<=4;k++){const x=GX2(k*Math.PI/2); h+=`<line class="gl" x1="${P2(x)}" x2="${P2(x)}" y1="-165" y2="165"/><text class="tick" x="${P2(x)}" y="162" text-anchor="middle">${L[k]}</text>`;}
+  h+=`<line class="ax" x1="0" x2="520" y1="0" y2="0"/><line class="ax" x1="24" x2="24" y1="-165" y2="165"/>`;
+  h+=`<line x1="24" x2="520" y1="${P2(-R*PU)}" y2="${P2(-R*PU)}" stroke="var(--accent)" stroke-dasharray="4 4" opacity=".55"/><line x1="24" x2="520" y1="${P2(R*PU)}" y2="${P2(R*PU)}" stroke="var(--accent)" stroke-dasharray="4 4" opacity=".55"/>`;
+  h+=`<text x="516" y="${P2(-R*PU-5)}" font-size="12" fill="var(--accent)" text-anchor="end">+R</text><text x="516" y="${P2(R*PU+14)}" font-size="12" fill="var(--accent)" text-anchor="end">−R</text>`;
+  h+=`<g clip-path="url(#phclip)">`;
+  h+=`<path d="${pathF(t=>pa*Math.sin(t),GX2,GY2,0,TAU,300,99)}" fill="none" stroke="var(--sin)" stroke-width="1.6" opacity=".55"/>`;
+  h+=`<path d="${pathF(t=>pb*Math.cos(t),GX2,GY2,0,TAU,300,99)}" fill="none" stroke="var(--cos)" stroke-width="1.6" opacity=".55"/>`;
+  h+=`<path d="${pathF(t=>pa*Math.sin(t)+pb*Math.cos(t),GX2,GY2,0,TAU,300,99)}" fill="none" stroke="var(--accent)" stroke-width="3"/>`;
+  let roots=[];
+  if(cOn){
+    h+=`<line x1="0" x2="520" y1="${P2(-pc*PU)}" y2="${P2(-pc*PU)}" stroke="var(--flag)" stroke-width="1.3"/>`;
+    roots=solveC(R,phi,pc);
+    for(const r of roots) h+=`<circle cx="${P2(GX2(r))}" cy="${P2(-pc*PU)}" r="5" fill="var(--flag)" stroke="var(--surface)" stroke-width="1.5"/>`;
+  }
+  h+=`</g>`;
+  const xm=((px%TAU)+TAU)%TAU, yv=pa*Math.sin(xm)+pb*Math.cos(xm);
+  h+=`<line x1="${P2(GX2(xm))}" x2="${P2(GX2(xm))}" y1="-165" y2="165" stroke="var(--accent)" opacity=".4"/>`;
+  h+=`<line x1="0" x2="${P2(GX2(xm))}" y1="${P2(-yv*PU)}" y2="${P2(-yv*PU)}" stroke="var(--accent)" stroke-dasharray="3 4" opacity=".7"/>`;
+  h+=`<circle cx="${P2(GX2(xm))}" cy="${P2(-pa*Math.sin(xm)*PU)}" r="4" fill="var(--sin)"/><circle cx="${P2(GX2(xm))}" cy="${P2(-pb*Math.cos(xm)*PU)}" r="4" fill="var(--cos)"/><circle cx="${P2(GX2(xm))}" cy="${P2(-yv*PU)}" r="6" fill="var(--accent)" stroke="var(--surface)" stroke-width="1.5"/>`;
+  h+=`<text x="34" y="-150" font-size="12" font-weight="600" fill="var(--sin)">a sin x</text><text x="96" y="-150" font-size="12" font-weight="600" fill="var(--cos)">b cos x</text><text x="160" y="-150" font-size="12" font-weight="600" fill="var(--accent)">sum</text>`;
+  $('phg').innerHTML=h;
+  // readout
+  $('pa').value=pa; $('pb').value=pb; $('pc').value=pc;
+  const aS=paL||numL(pa), bS=pbL||numL(pb), cS=pcL||numL(pc);
+  $('pao').textContent=aS; $('pbo').textContent=bS; $('pco').textContent=cS;
+  $('cshow').setAttribute('aria-pressed',cOn);
+  const bsgn=pb<0?'−':'+', bAbs=pbL?pbL.replace('−',''):numL(Math.abs(pb));
+  let r=`<p><span class="eq">${aS} sin x ${bsgn} ${bAbs} cos x = R sin(x + φ)</span>, with R = √(a² + b²) = √${numL(+(pa*pa+pb*pb).toFixed(2))} = <b>${fmt(R,3)}</b> and φ = ${fmt(phi/D,1)}° (cos φ = a/R, sin φ = b/R).</p>
+    <p style="margin-top:6px">Range: <b>[−${fmt(R,3)}, ${fmt(R,3)}]</b>. The top is reached when the arrow R points straight up, at x = 90° − φ = ${fmt((((90-phi/D)%360)+360)%360,1)}°.</p>
+    <p class="muted" style="margin-top:6px">Now: x = ${fmt(xm/D,1)}°, a sin x = ${fmt(pa*Math.sin(xm))}, b cos x = ${fmt(pb*Math.cos(xm))}, sum = ${fmt(yv)} = R sin(x + φ) = ${fmt(R*Math.sin(xm+phi))}.</p>`;
+  if(cOn) r+=`<p style="margin-top:6px">Line y = ${cS}: ${Math.abs(pc)>R+1e-9?`<b>no solution</b>, the line is outside the band ±R (c² = ${numL(+(pc*pc).toFixed(2))} &gt; a² + b² = ${numL(+(pa*pa+pb*pb).toFixed(2))}).`:`<b>${roots.length}</b> solution${roots.length===1?'':'s'} in [0, 2π). Solvable exactly when c² ≤ a² + b².`}</p>`;
+  $('phread').innerHTML=r;
+}
+function solveC(R,phi,c){
+  if(R<1e-9||Math.abs(c)>R+1e-9) return [];
+  const s=Math.asin(Math.max(-1,Math.min(1,c/R))), out=[];
+  for(const v of [s-phi, Math.PI-s-phi]){const r=((v%TAU)+TAU)%TAU; if(!out.some(o=>Math.abs(o-r)<1e-6||Math.abs(Math.abs(o-r)-TAU)<1e-6)) out.push(r);}
+  return out.sort((x,y)=>x-y);
+}
+function stopPlay(){playing=false; $('play').textContent='▶ Turn';}
+$('play').addEventListener('click',()=>{playing=!playing; $('play').textContent=playing?'❚❚ Stop':'▶ Turn'; if(playing){lastT=performance.now(); requestAnimationFrame(step);}});
+function step(now){ if(!playing) return; const dt=Math.min(0.05,(now-lastT)/1000); lastT=now; px=(px+dt*0.8)%TAU; renderPh(); requestAnimationFrame(step); }
+draggable($('ph'),p=>{const phi=Math.atan2(pb,pa); px=((Math.atan2(-p.y,p.x)-phi)%TAU+TAU)%TAU; renderPh();},stopPlay);
+draggable($('phg'),p=>{px=Math.max(0,Math.min(TAU,(p.x-24)/480*TAU)); renderPh();},stopPlay);
+$('pa').addEventListener('input',e=>{pa=+e.target.value; paL=null; renderPh();});
+$('pb').addEventListener('input',e=>{pb=+e.target.value; pbL=null; renderPh();});
+$('pc').addEventListener('input',e=>{pc=+e.target.value; pcL=null; cOn=true; renderPh();});
+$('cshow').addEventListener('click',()=>{cOn=!cOn; renderPh();});
+renderPh();
+const S3=Math.sqrt(3), S2=Math.sqrt(2);
+quiz([
+ {q:'Range of 3 sin x + 4 cos x?',o:['[−7, 7]','[−5, 5]','[−4, 4]','[−1, 1]'],a:1,
+  why:'The arrows 3 and 4 are perpendicular, so the resultant has length √(9 + 16) = 5 (a 3-4-5 triangle). Its height runs over [−5, 5]. Adding the maxima (3 + 4 = 7) is wrong because sin x and cos x never peak at the same x.',
+  set:()=>{pa=3;pb=4;paL=pbL=null;cOn=false;}},
+ {q:'Does 3 sin x + 4 cos x = 6 have a solution?',o:['yes, two per period','yes, one per period','no'],a:2,
+  why:'The line y = 6 lies above the band [−5, 5], so it never meets the wave. In symbols: c² = 36 &gt; a² + b² = 25.',
+  set:()=>{pa=3;pb=4;paL=pbL=null;pc=6;pcL=null;cOn=true;}},
+ {q:'How many solutions does √3 sin x − cos x = √2 have in [0, 2π)?',o:['0','1','2','4'],a:2,
+  why:'R = √(3 + 1) = 2 and √2 &lt; 2, so the line cuts the wave twice per period. Dividing by 2: sin(x − π/6) = sin(π/4), so x = nπ + (−1)ⁿπ/4 + π/6, which gives 5π/12 and 11π/12 in [0, 2π).',
+  set:()=>{pa=S3;pb=-1;paL='√3';pbL='−1';pc=S2;pcL='√2';cOn=true;}},
+ {q:'Largest value of sin x + cos x + sin x cos x?',o:['2','√2','1/2 + √2','3/2'],a:2,
+  why:'Put t = sin x + cos x. The picture with a = b = 1 shows t runs over [−√2, √2]. Since t² = 1 + 2 sin x cos x, the expression is t + (t² − 1)/2 = ((t + 1)² − 2)/2, increasing for t &gt; −1, so the top is at t = √2: (√2 + 1)²/2 − 1 = 1/2 + √2 ≈ 1.914. Forgetting the limit on t would give no maximum at all.',
+  set:()=>{pa=1;pb=1;paL=pbL=null;cOn=false;}}
+],{q:'q2q',opts:'q2opts',why:'q2why',next:'q2next'},q=>{if(q.set){q.set(); renderPh();}});
+
+/* ================= 3. waves ================= */
+let wk='sin', wC=5, wD=3;
+const WX=t=>20+t/TAU*600, WY=v=>-v*55;
+function kx(num){ // num/2 · x as a string, num integer
+  if(num===0) return '0';
+  const s=num<0?'−':'', n=Math.abs(num);
+  if(n%2===0) return s+(n/2===1?'':n/2)+'x';
+  return s+n+'x/2';
+}
+function zerosIn(start,step,lo,hi){const out=[]; if(step<=0) return out; let k=Math.ceil((lo-start)/step-1e-9); for(;;k++){const x=start+k*step; if(x>hi+1e-9)break; out.push(x);} return out;}
+function renderWave(){
+  const f1=wk==='sin'?Math.sin:Math.cos, sum=t=>f1(wC*t)+f1(wD*t), env=t=>2*Math.cos((wC-wD)*t/2);
+  let g=`<defs><clipPath id="wclip"><rect x="0" y="-138" width="640" height="276"/></clipPath></defs>`;
+  for(let k=0;k<=4;k++){const x=WX(k*Math.PI/2); g+=`<line class="gl" x1="${P2(x)}" x2="${P2(x)}" y1="-130" y2="130"/><text class="tick" x="${P2(x)}" y="134" text-anchor="middle">${['0','π/2','π','3π/2','2π'][k]}</text>`;}
+  for(const v of [-2,-1,1,2]) g+=`<line class="gl" x1="20" x2="620" y1="${WY(v)}" y2="${WY(v)}"/><text class="tick" x="14" y="${WY(v)+4}" text-anchor="end">${v<0?'−':''}${Math.abs(v)}</text>`;
+  g+=`<line class="ax" x1="20" x2="620" y1="0" y2="0"/>`;
+  g+=`<g clip-path="url(#wclip)">`;
+  g+=`<path d="${pathF(t=>f1(wC*t),WX,WY,0,TAU,900,9)}" fill="none" stroke="var(--sin)" stroke-width="1.3" opacity=".45"/>`;
+  g+=`<path d="${pathF(t=>f1(wD*t),WX,WY,0,TAU,900,9)}" fill="none" stroke="var(--cos)" stroke-width="1.3" opacity=".45"/>`;
+  g+=`<path d="${pathF(env,WX,WY,0,TAU,600,9)}" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  g+=`<path d="${pathF(t=>-env(t),WX,WY,0,TAU,600,9)}" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  g+=`<path d="${pathF(sum,WX,WY,0,TAU,1200,9)}" fill="none" stroke="var(--accent)" stroke-width="2.6"/>`;
+  // zeros of each factor in [0, 2π]
+  const S=wC+wD, Df=Math.abs(wC-wD);
+  const zc = wk==='sin' ? zerosIn(0,TAU/S,0,TAU) : zerosIn(Math.PI/S,TAU/S,0,TAU);
+  const ze = Df? zerosIn(Math.PI/Df,TAU/Df,0,TAU) : [];
+  for(const z of ze) g+=`<circle cx="${P2(WX(z))}" cy="0" r="6.5" fill="var(--surface)" stroke="var(--muted)" stroke-width="2"/>`;
+  for(const z of zc) g+=`<circle cx="${P2(WX(z))}" cy="0" r="3.6" fill="var(--accent)"/>`;
+  g+=`</g>`;
+  g+=`<text x="26" y="-124" font-size="12" font-weight="600" fill="var(--sin)">${wk} ${wC===1?'':wC}x</text><text x="96" y="-124" font-size="12" font-weight="600" fill="var(--cos)">${wk} ${wD===1?'':wD}x</text><text x="166" y="-124" font-size="12" font-weight="600" fill="var(--accent)">sum</text><text x="214" y="-124" font-size="12" fill="var(--muted)">- - envelope ±2 cos(${kx(wC-wD)})</text>`;
+  $('wave').innerHTML=g;
+  document.querySelectorAll('#wkind .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===wk));
+  $('wc').value=wC; $('wd').value=wD; $('wco').textContent=wC; $('wdo').textContent=wD;
+  const all=[...zc]; for(const z of ze) if(!all.some(x=>Math.abs(x-z)<1e-9)) all.push(z);
+  const shared=ze.filter(z=>zc.some(x=>Math.abs(x-z)<1e-9)).length;
+  $('wread').innerHTML=`<p><span class="eq">${wk} ${wC}x + ${wk} ${wD}x = 2 ${wk}(${kx(S)}) · cos(${kx(wC-wD)})</span></p>
+    <p style="margin-top:6px">General form: <span class="eq">${wk==='sin'?'sin C + sin D = 2 sin((C + D)/2) cos((C − D)/2)':'cos C + cos D = 2 cos((C + D)/2) cos((C − D)/2)'}</span></p>
+    <p class="muted" style="margin-top:6px">The sum is zero exactly where one factor is zero: <span style="color:var(--accent)">●</span> from the fast factor (${zc.length} in [0, 2π]), <span>○</span> from the envelope (${ze.length}${wC===wD?', none: with C = D the envelope is the constant 2':''})${shared?`, ${shared} shared`:''}. Total distinct zeros: <b>${all.length}</b>.</p>`;
+}
+$('wkind').addEventListener('click',e=>{const b=e.target.closest('.chip'); if(b){wk=b.dataset.k; renderWave();}});
+$('wc').addEventListener('input',e=>{wC=+e.target.value; renderWave();});
+$('wd').addEventListener('input',e=>{wD=+e.target.value; renderWave();});
+renderWave();
+quiz([
+ {q:'To factor sin A + sin 3A + sin 5A + sin 7A, pair which terms?',o:['(sin A + sin 3A) and (sin 5A + sin 7A)','(sin A + sin 7A) and (sin 3A + sin 5A)','(sin A + sin 5A) and (sin 3A + sin 7A)'],a:1,
+  why:'Pair so the half-sums match. (A + 7A)/2 = (3A + 5A)/2 = 4A, so both pairs give 2 sin 4A · cos(something): 2 sin 4A (cos 3A + cos A) = 4 sin 4A cos 2A cos A. The first pairing gives half-sums 2A and 6A, which share nothing.'},
+ {q:'sin 5x + sin x = 0 at how many points of [0, 2π]?',o:['5','7','9','11'],a:3,
+  why:'sin 5x + sin x = 2 sin 3x cos 2x. sin 3x = 0 gives 7 zeros in [0, 2π] (multiples of π/3, both ends included); cos 2x = 0 gives 4 more (odd multiples of π/4). A multiple of π/3 is never an odd multiple of π/4, so nothing is counted twice: 7 + 4 = 11. The graph now shows C = 5, D = 1.',fix:true}
+],{q:'q3q',opts:'q3opts',why:'q3why',next:'q3next'},q=>{if(q.fix){wk='sin';wC=5;wD=1;renderWave();}});
+
+/* ================= 4. chain ================= */
+let cn=3, cd=120, ca=20, cdL=null;
+function renderChain(){
+  const pts=[[0,0]]; let sx=0, sy=0;
+  for(let k=0;k<cn;k++){const t=(ca+k*cd)*D; sx+=Math.cos(t); sy+=Math.sin(t); pts.push([sx,sy]);}
+  let x0=Math.min(...pts.map(p=>p[0])), x1=Math.max(...pts.map(p=>p[0])), y0=Math.min(...pts.map(p=>p[1])), y1=Math.max(...pts.map(p=>p[1]));
+  const sc=Math.min(130, 290/Math.max(x1-x0,y1-y0,1e-9)), cx=(x0+x1)/2, cy=(y0+y1)/2;
+  const X=v=>P2((v-cx)*sc), Y=v=>P2(-(v-cy)*sc);
+  let g=`<defs>${mk('ahK','var(--muted)')}${mk('ahT','var(--accent)')}</defs>`;
+  g+=`<line class="gl" x1="-178" x2="178" y1="${Y(0)}" y2="${Y(0)}"/><line class="gl" y1="-178" y2="178" x1="${X(0)}" x2="${X(0)}"/>`;
+  const dr=cd*D;
+  if(Math.sin(dr/2)>0.05){const r=1/(2*Math.sin(dr/2)), a=ca*D, ctr=[Math.cos(a)/2-r*Math.cos(dr/2)*Math.sin(a), Math.sin(a)/2+r*Math.cos(dr/2)*Math.cos(a)];
+    g+=`<circle cx="${X(ctr[0])}" cy="${Y(ctr[1])}" r="${P2(r*sc)}" fill="none" stroke="var(--line)" stroke-dasharray="3 4"/>`;}
+  // components of the resultant
+  if(Math.hypot(sx,sy)>1e-6){
+    g+=`<line x1="${X(0)}" y1="${Y(0)}" x2="${X(sx)}" y2="${Y(0)}" stroke="var(--cos)" stroke-width="3" opacity=".8"/>`;
+    g+=`<line x1="${X(sx)}" y1="${Y(0)}" x2="${X(sx)}" y2="${Y(sy)}" stroke="var(--sin)" stroke-width="3" opacity=".8"/>`;
+  }
+  for(let k=0;k<cn;k++) g+=`<line x1="${X(pts[k][0])}" y1="${Y(pts[k][1])}" x2="${X(pts[k+1][0])}" y2="${Y(pts[k+1][1])}" stroke="var(--muted)" stroke-width="2" marker-end="url(#ahK)"/>`;
+  if(Math.hypot(sx,sy)>1e-6) g+=`<line x1="${X(0)}" y1="${Y(0)}" x2="${X(sx)}" y2="${Y(sy)}" stroke="var(--accent)" stroke-width="3" marker-end="url(#ahT)"/>`;
+  g+=`<circle cx="${X(0)}" cy="${Y(0)}" r="4" fill="var(--ink)"/><text x="${P2((0-cx)*sc-8)}" y="${P2(-(0-cy)*sc+16)}" font-size="12" fill="var(--muted)" text-anchor="end">start</text>`;
+  $('chain').innerHTML=g;
+  $('cn').value=cn; $('cd').value=Math.round(cd); $('ca').value=ca; $('cno').textContent=cn; $('cdo').textContent=cdL||fmtDeg(cd); $('cao').textContent=ca+'°';
+  const s=Math.sin(cn*dr/2)/Math.sin(dr/2), mid=(ca+(cn-1)*cd/2)*D, closes=Math.abs(((cn*cd)%360+360)%360)<1e-6||Math.abs(((cn*cd)%360)-360)<1e-6;
+  $('chread').innerHTML=`<p><span class="k-cos">Σ cos(a + kd)</span> = ${fmt(sx)} &nbsp; <span class="k-sin">Σ sin(a + kd)</span> = ${fmt(sy)} <span class="muted">(k = 0 … ${cn-1}, added directly)</span></p>
+    <p style="margin-top:8px">The chain is part of a regular polygon, so the end-to-end arrow has length <span class="eq">sin(nd/2) / sin(d/2)</span> = ${fmt(Math.abs(s))} and points at the <i>average</i> angle <span class="eq">a + (n − 1)d/2</span> = ${fmt((ca+(cn-1)*cd/2)%360,1)}°. Its components:</p>
+    <p style="margin-top:6px"><span class="eq">Σ cos = [sin(nd/2)/sin(d/2)] · cos(a + (n − 1)d/2)</span> = ${fmt(s*Math.cos(mid))}</p>
+    <p style="margin-top:4px"><span class="eq">Σ sin = [sin(nd/2)/sin(d/2)] · sin(a + (n − 1)d/2)</span> = ${fmt(s*Math.sin(mid))}</p>
+    ${closes?'<p style="margin-top:8px"><b>nd is a whole number of turns: the chain closes, both sums are 0.</b></p>':''}`;
+}
+$('cn').addEventListener('input',e=>{cn=+e.target.value; renderChain();});
+$('cd').addEventListener('input',e=>{cd=+e.target.value; cdL=null; renderChain();});
+$('ca').addEventListener('input',e=>{ca=+e.target.value; renderChain();});
+renderChain();
+quiz([
+ {q:'cos 20° + cos 100° + cos 140° = ?',o:['0','1/2','−1/2','1'],a:0,
+  why:'cos 100° = cos 260° (same x-coordinate, mirror in the x-axis). So the angles are really 20°, 140°, 260°: three arrows 120° apart, which close into a triangle. Total sideways reach 0.',
+  set:()=>{cn=3;cd=120;cdL=null;ca=20;}},
+ {q:'cos(2π/7) + cos(4π/7) + cos(6π/7) = ?',o:['0','−1/2','1/2','−1'],a:1,
+  why:'Seven arrows at 0, 2π/7, …, 12π/7 close into a heptagon, so their cosines add to 0. The angles 8π/7, 10π/7, 12π/7 mirror 6π/7, 4π/7, 2π/7, so 1 + 2(the sum) = 0 and the sum is −1/2.',
+  set:()=>{cn=7;cd=360/7;cdL='360°/7';ca=0;}},
+ {q:'Σ sin(2rπ/15) for r = 1 … 15 = ?',o:['0','1','15/2','depends on rounding'],a:0,
+  why:'Fifteen arrows 24° apart make exactly one turn, so the chain closes: the sum of the sines (and of the cosines) is 0. In the formula, sin(nd/2) = sin(180°) = 0.',
+  set:()=>{cn=15;cd=24;cdL=null;ca=24;}}
+],{q:'q4q',opts:'q4opts',why:'q4why',next:'q4next'},q=>{if(q.set){q.set(); renderChain();}});
+</script>
+</body>
+</html>

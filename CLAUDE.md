@@ -37,6 +37,15 @@ Create a subject or branch folder only when its first module is written. File na
 6. **No extrapolation.** Don't claim more than the data or derivation shows. Mark near-ties as near-ties.
 7. **Explain exceptions.** When a trend or approximation breaks, give the concrete reason.
 
+## Design rule: graphics first, never a formula sheet
+
+Handbook scans and coaching sites (Byju's and similar) summarise books into formula lists. This site must not. Its advantage over a book is graphics, so use it.
+
+- **Every idea is built as a picture the student can manipulate**: drag a point, move a slider, step through, predict-then-reveal. The formula appears as a caption on what is visible, after the picture has made it obvious, not as the content itself.
+- **Visually clean and minimal.** Inline SVG, flat colours, plenty of space. No flashy animation, decorative effects, stock images or heavy libraries. Motion only when the motion itself is the idea (a wheel rolling, a point moving round the circle).
+- **Light on resources.** A page should load instantly on a phone on mobile data.
+- **Source material (PDFs, notes) is raw material, not a script.** Pick the ideas that benefit from being seen, rebuild them visually, and leave out tables that would only be transcription. Worked examples become interactive "predict, then check" items.
+
 ## Visual rules
 
 - Support light and dark mode with CSS colour tokens on `:root`, and keep pages usable at phone width (~400 px). Wide tables and SVGs scroll inside their own container.

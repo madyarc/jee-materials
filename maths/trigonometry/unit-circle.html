@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Unit Circle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: single column. 1) draggable unit circle beside the unwrapped graphs + readout  2) allied angles as reflections, with predict items  3) standard values from three triangles */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --sin:#d1491f; --cos:#2563c9; --tan:#16865f; --cot:#8a6d00; --sec:#7a52c7; --csc:#b0377a; --arc:#c7741a;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --sin:#ff8a5c; --cos:#7aa7ff; --tan:#4fd1a5; --cot:#d9c25a; --sec:#b493ff; --csc:#ef7ab8; --arc:#f0a04b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --sin:#ff8a5c; --cos:#7aa7ff; --tan:#4fd1a5; --cot:#d9c25a; --sec:#b493ff; --csc:#ef7ab8; --arc:#f0a04b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:74ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.bn{font:500 11px var(--f-mono);color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;white-space:nowrap;font-weight:500}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip .sw{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.split{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px}
+@media (max-width:900px){.split{grid-template-columns:minmax(0,1fr)}}
+.fig{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,6fr);align-items:start}
+@media (max-width:640px){.fig{grid-template-columns:minmax(0,1fr)}}
+svg.draw{width:100%;height:auto;display:block;user-select:none;-webkit-user-select:none}
+svg.drag2d{touch-action:none;cursor:grab}
+svg.dragx{touch-action:pan-y;cursor:ew-resize}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:10px}
+.row label{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center;flex:1 1 220px}
+input[type=range]{accent-color:var(--accent);flex:1;min-width:120px}
+.big{font:500 22px var(--f-mono);font-variant-numeric:tabular-nums}
+table.vals{border-collapse:collapse;width:100%;margin-top:8px;font-size:14px}
+table.vals td{padding:4px 6px;border-bottom:1px solid var(--line)}
+table.vals td.v{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.vals tr.off td{color:var(--muted)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.quads{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:10px;font-size:12.5px}
+.quads div{border:1px solid var(--line);border-radius:6px;padding:4px 8px;background:var(--bg)}
+.quads div.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.quads b{font-family:var(--f-mono);font-weight:500;color:var(--muted);margin-right:6px}
+ul.caps{margin:12px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;max-width:80ch}
+.eq{font-family:var(--f-mono);font-size:13.5px;background:var(--bg);border-radius:4px;padding:0 5px;white-space:normal;overflow-wrap:break-word;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.k-sin{color:var(--sin)} .k-cos{color:var(--cos)} .k-tan{color:var(--tan)} .k-cot{color:var(--cot)} .k-sec{color:var(--sec)} .k-csc{color:var(--csc)}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.qq{font:500 16px var(--f-mono);margin-top:6px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0;display:flex;flex-direction:column;gap:8px;font-size:14px}
+svg text{font-family:var(--f-body);fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+svg .ax{stroke:var(--muted);stroke-width:1}
+svg .gl{stroke:var(--line);stroke-width:1}
+svg .circ{fill:none;stroke:var(--ink);stroke-width:1.5}
+svg .lbl{fill:var(--muted);font:500 12px var(--f-mono)}
+svg .tick{fill:var(--muted);font:500 12px var(--f-mono)}
+footer{font-size:12px;color:var(--muted);max-width:92ch}
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Mathematics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>The Unit Circle</h1>
+    <p class="lede">The six trig functions are six lengths you can draw on one circle of radius 1. Drag the point round the circle (or along the graph) and watch the lengths change and unroll into the familiar waves. The identities, the signs and the allied-angle rules are all things you can read off this picture.</p>
+  </header>
+
+  <!-- ============ 1. circle + graphs ============ -->
+  <section>
+    <h2>1 · Six lengths on one circle</h2>
+    <div class="split" style="margin-top:10px">
+      <div class="panel">
+        <div class="fig">
+          <svg id="circ" class="draw drag2d" viewBox="-200 -200 400 400" role="img" aria-label="Unit circle with draggable point P"></svg>
+          <svg id="graph" class="draw dragx" viewBox="0 -200 600 400" role="img" aria-label="Graphs of the selected functions from 0 to 2π"></svg>
+        </div>
+        <div class="row">
+          <div class="chips" id="fnchips" role="group" aria-label="Functions to draw"></div>
+        </div>
+        <div class="row">
+          <label>θ <input type="range" id="thr" min="0" max="359" step="1" value="30" aria-label="Angle theta in degrees"></label>
+          <button class="chip" id="snap" aria-pressed="true">snap to 15°</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="big" id="thout"></div>
+        <p class="muted" id="quadout" style="margin-top:2px"></p>
+        <table class="vals" id="vals"></table>
+        <div class="quads" id="quads" aria-label="Signs by quadrant"></div>
+        <p class="muted" style="margin-top:8px">Signs are read straight off P: x = cos θ, y = sin θ, and every other function is a ratio of these two, so it takes its sign from them.</p>
+      </div>
+    </div>
+    <ul class="caps">
+      <li><b>P = (cos θ, sin θ).</b> The <span class="k-sin">vertical</span> leg is sin θ and the <span class="k-cos">horizontal</span> leg is cos θ. The hypotenuse is the radius, 1, so Pythagoras gives <span class="eq">sin²θ + cos²θ = 1</span>.</li>
+      <li><b>Radians are arc length.</b> The <span style="color:var(--arc)">orange arc</span> from (1, 0) to P has length θ, because the radius is 1 (in general <span class="eq">ℓ = rθ</span>, valid only in radians). Half a turn is an arc of length π, so <span class="eq">π rad = 180°</span>.</li>
+      <li><b>tan and sec</b> (switch them on): extend OP until it meets the tangent line x = 1 at T. The triangle with sides 1, tan θ, OT is a scaled copy of the one with sides cos θ, sin θ, 1, so the height of T is <span class="eq">sin θ / cos θ = tan θ</span> and <span class="eq">OT = 1 / cos θ = sec θ</span>. Pythagoras in that big triangle: <span class="eq">1 + tan²θ = sec²θ</span>. When P is on the left half, the line meets x = 1 <i>behind</i> O, which is exactly when sec θ is negative.</li>
+      <li><b>cot and cosec</b> do the same on the tangent line y = 1: <span class="eq">1 + cot²θ = cosec²θ</span>. Near θ = 90° the line OP is almost parallel to x = 1, so tan and sec shoot off to infinity: that is the vertical asymptote in the graph.</li>
+      <li><b>The graph is the circle unrolled.</b> The bold part of each curve is what P has traced from θ = 0 so far. The dashed line carries P's height (sin θ) and T's height (tan θ) across to the graph. sin and cos repeat every 2π (one lap); tan repeats every π, because P and the opposite point give the same line OT.</li>
+    </ul>
+  </section>
+
+  <!-- ============ 2. allied angles ============ -->
+  <section>
+    <h2>2 · Allied angles are reflections and turns</h2>
+    <p class="lede">Every allied angle (−θ, π − θ, π/2 + θ, …) puts a second point Q on the circle. Q is P reflected in a line or turned about O, so its legs are P's legs, sometimes swapped, sometimes with a sign flipped. Pick a transformation and drag P.</p>
+    <div class="split" style="margin-top:10px">
+      <div class="panel">
+        <div class="chips" id="alchips" role="group" aria-label="Allied angle"></div>
+        <svg id="allied" class="draw drag2d" viewBox="-185 -185 370 370" role="img" aria-label="Point P and its allied point Q" style="max-width:460px;margin:10px auto 0"></svg>
+        <p id="alcap" style="margin-top:8px;font-size:14.5px"></p>
+      </div>
+      <div class="panel">
+        <div class="qhead"><h3>Predict, then check</h3><button class="btn" id="aqnext">Next question →</button></div>
+        <div class="qq" id="aqq"></div>
+        <div class="opts" id="aqopts"></div>
+        <div id="aqwhy"></div>
+        <p class="muted" style="margin-top:12px">The rule behind every answer: an <b>odd</b> multiple of π/2 (90°, 270°) swaps x and y, so the name changes (sin ↔ cos, tan ↔ cot, sec ↔ cosec). An <b>even</b> multiple (180°, 360°) keeps the names. The sign is whatever Q's coordinate actually is, which you can see by taking θ small and positive.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3. standard values ============ -->
+  <section>
+    <h2>3 · Standard values come from three triangles</h2>
+    <p class="lede">Nothing to memorise: each value below is a side of a triangle with hypotenuse 1 (so the side <i>is</i> the sine or cosine).</p>
+    <div class="cards" style="margin-top:10px">
+      <div class="card">
+        <h3>30° and 60°: half an equilateral triangle</h3>
+        <svg class="draw" id="tri30" viewBox="0 0 260 215" role="img" aria-label="30-60-90 triangle reflected to an equilateral triangle"></svg>
+        <p>Reflect the 30° triangle (dashed). The angle at O doubles to 60° and all three sides are 1, so the triangle is equilateral and the vertical side is half of 1: <span class="eq">sin 30° = 1/2</span>. Pythagoras then gives the other leg: <span class="eq">cos 30° = √3/2</span>. Seen from the top corner (60°), the two legs swap: <span class="eq">sin 60° = √3/2</span>, <span class="eq">cos 60° = 1/2</span>.</p>
+      </div>
+      <div class="card">
+        <h3>45°: half a square</h3>
+        <svg class="draw" id="tri45" viewBox="0 0 260 215" role="img" aria-label="45-45-90 triangle"></svg>
+        <p>Both acute angles are 45°, so the legs are equal. With hypotenuse 1, <span class="eq">2·leg² = 1</span>, so <span class="eq">sin 45° = cos 45° = 1/√2</span> and <span class="eq">tan 45° = 1</span>.</p>
+      </div>
+      <div class="card">
+        <h3>18° and 36°: the golden triangle <span class="bn">beyond NCERT</span></h3>
+        <svg class="draw" id="tri36" viewBox="0 0 260 215" role="img" aria-label="Isosceles triangle with apex 36 degrees and a base-angle bisector"></svg>
+        <p>Apex 36°, legs 1, base x. Bisect a 72° base angle: both new triangles are isosceles, so BD = AD = x and DC = 1 − x. Triangle BCD is a smaller copy of ABC, so <span class="eq">(1 − x)/x = x/1</span>, i.e. <span class="eq">x² + x − 1 = 0</span>, <span class="eq">x = (√5 − 1)/2</span>. Half the base over the leg: <span class="eq">sin 18° = (√5 − 1)/4</span>. In triangle ABD (sides x, x, 1): <span class="eq">cos 36° = (1/2)/x = (√5 + 1)/4</span>.</p>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:12px;max-width:640px">
+      <div class="qhead"><h3>Predict, then check</h3><button class="btn" id="sqnext">Next question →</button></div>
+      <div class="qq" id="sqq"></div>
+      <div class="opts" id="sqopts"></div>
+      <div id="sqwhy"></div>
+    </div>
+  </section>
+
+  <footer>
+    Definitions, signs, allied-angle results and standard values follow NCERT Mathematics Class 11, Chapter 3 (Trigonometric Functions). The 18°/36° values are derived on the page from the golden triangle and agree with the standard results (sin 18° = (√5 − 1)/4, cos 36° = (√5 + 1)/4). Question ideas adapted from the <i>Trigonometry JEE Compendium</i> (study notes, Chapters 1–2); every result was re-derived and checked against NCERT before use. Decimal values on the page are computed live and rounded to 3 places.
+  </footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const D=Math.PI/180, TAU=2*Math.PI;
+const fmt=(v,n=3)=>(v<-5e-10?'−':'')+Math.abs(v).toFixed(n);
+function svgPt(svg,e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
+function draggable(svg,onPt){
+  let on=false;
+  svg.addEventListener('pointerdown',e=>{on=true;try{svg.setPointerCapture(e.pointerId);}catch(_){} onPt(svgPt(svg,e));});
+  svg.addEventListener('pointermove',e=>{if(on)onPt(svgPt(svg,e));});
+  const end=()=>{on=false;};
+  svg.addEventListener('pointerup',end); svg.addEventListener('pointercancel',end);
+}
+function degStr(d){return d+'°';}
+function radStr(d){ // d integer degrees -> multiple of π if nice
+  if(d===0) return '0';
+  for(const q of [1,2,3,4,6,12]){const n=d*q/180; if(Math.abs(n-Math.round(n))<1e-9){const k=Math.round(n);return (k===1?'':k)+'π'+(q===1?'':'/'+q);}}
+  return (d*D).toFixed(3);
+}
+
+/* ---------- function definitions (exact forms for 0°, 30°, 45°, 60°, 90° reference angles) ---------- */
+const FN=[
+ {id:'sin',lab:'sin', f:t=>Math.sin(t), ex:{0:'0',30:'1/2',45:'1/√2',60:'√3/2',90:'1'}},
+ {id:'cos',lab:'cos', f:t=>Math.cos(t), ex:{0:'1',30:'√3/2',45:'1/√2',60:'1/2',90:'0'}},
+ {id:'tan',lab:'tan', f:t=>Math.abs(Math.cos(t))<1e-9?NaN:Math.tan(t), ex:{0:'0',30:'1/√3',45:'1',60:'√3'}},
+ {id:'cot',lab:'cot', f:t=>Math.abs(Math.sin(t))<1e-9?NaN:Math.cos(t)/Math.sin(t), ex:{30:'√3',45:'1',60:'1/√3',90:'0'}},
+ {id:'sec',lab:'sec', f:t=>Math.abs(Math.cos(t))<1e-9?NaN:1/Math.cos(t), ex:{0:'1',30:'2/√3',45:'√2',60:'2'}},
+ {id:'csc',lab:'cosec', f:t=>Math.abs(Math.sin(t))<1e-9?NaN:1/Math.sin(t), ex:{30:'2',45:'√2',60:'2/√3',90:'1'}}
+];
+const col=id=>`var(--${id})`;
+let th=30, snap=true, on=new Set(['sin','cos']);
+try{const s=JSON.parse(localStorage.getItem('trig-uc-fns')||'null'); if(Array.isArray(s)&&s.length) on=new Set(s.filter(x=>FN.some(f=>f.id===x)));}catch(e){}
+
+function refAngle(d){const a=d%180; return a<=90?a:180-a;}
+function valueStr(F,d){
+  const v=F.f(d*D);
+  if(!isFinite(v)) return 'undefined';
+  if(d%15===0 && (d%30===0||d%45===0)){
+    const e=F.ex[refAngle(d)];
+    if(e!==undefined) return (e==='0'?'':(v<0?'−':'+'))+e;
+  }
+  return (v>=0?'+':'')+fmt(v);
+}
+
+/* ---------- section 1: circle ---------- */
+const U=100, CL=1.9;
+// label for a segment from O to (ex,ey): 72% along it, pushed 15px to one side of the line
+function offLabel(ex,ey,side){const L=Math.hypot(ex,ey)||1, nx=-ey/L*side, ny=ex/L*side; return [(ex*0.72+nx*15).toFixed(1),(ey*0.72+ny*15+4).toFixed(1)];}
+function renderCircle(){
+  const t=th*D, c=Math.cos(t), s=Math.sin(t), px=c*U, py=-s*U;
+  let g='';
+  // grid + axes
+  for(const v of [-1,1]){g+=`<line class="gl" x1="${v*U}" x2="${v*U}" y1="-195" y2="195"/><line class="gl" y1="${v*U}" y2="${v*U}" x1="-195" x2="195"/>`;}
+  g+=`<line class="ax" x1="-195" x2="195" y1="0" y2="0"/><line class="ax" x1="0" x2="0" y1="-195" y2="195"/>`;
+  g+=`<circle class="circ" r="${U}"/>`;
+  g+=`<text class="tick" x="${U+4}" y="14">1</text><text class="tick" x="-14" y="${-U-4}">1</text>`;
+  // arc = θ radians of circumference
+  if(th>0) g+=`<path d="M${U} 0 A${U} ${U} 0 ${th>180?1:0} 0 ${px.toFixed(2)} ${py.toFixed(2)}" fill="none" stroke="var(--arc)" stroke-width="5" opacity=".5" stroke-linecap="round"/>`;
+  // small angle mark
+  if(th>0){const r=26, ex=r*c, ey=-r*s; g+=`<path d="M${r} 0 A${r} ${r} 0 ${th>180?1:0} 0 ${ex.toFixed(2)} ${ey.toFixed(2)}" fill="none" stroke="var(--muted)" stroke-width="1.2"/>`;
+    const h=t/2; g+=`<text x="${(40*Math.cos(h)).toFixed(1)}" y="${(-40*Math.sin(h)+4).toFixed(1)}" font-size="13" text-anchor="middle" fill="var(--muted)">θ</text>`;}
+  // tan / sec on tangent line x = 1
+  if(on.has('tan')||on.has('sec')){
+    g+=`<line x1="${U}" x2="${U}" y1="-195" y2="195" stroke="var(--tan)" stroke-dasharray="2 4" opacity=".6"/>`;
+    if(Math.abs(c)>1e-9){
+      const tv=s/c, lam=Math.min(1,CL/Math.abs(tv)), ex=lam*U, ey=-lam*tv*U;
+      if(on.has('sec')){ g+=`<line x1="0" y1="0" x2="${ex.toFixed(2)}" y2="${ey.toFixed(2)}" stroke="var(--sec)" stroke-width="8" opacity=".35" stroke-linecap="round"/>`;
+        const lp=offLabel(ex,ey,1); g+=`<text x="${lp[0]}" y="${lp[1]}" font-size="13" text-anchor="middle" fill="var(--sec)" font-weight="600">sec θ</text>`; }
+      g+=`<line x1="0" y1="0" x2="${ex.toFixed(2)}" y2="${ey.toFixed(2)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="${c<0?'4 3':'none'}"/>`;
+      if(on.has('tan')){ const ty=-Math.max(-CL,Math.min(CL,tv))*U;
+        g+=`<line x1="${U}" y1="0" x2="${U}" y2="${ty.toFixed(2)}" stroke="var(--tan)" stroke-width="4" stroke-linecap="round"/>`;
+        g+=`<text x="${U+8}" y="${(ty/2+4).toFixed(1)}" font-size="13" fill="var(--tan)" font-weight="600">tan θ${Math.abs(tv)>CL?' (off scale)':''}</text>`;}
+      if(lam===1) g+=`<circle cx="${U}" cy="${ey.toFixed(2)}" r="4" fill="var(--tan)"/><text x="${U-8}" y="${(ey+(tv>=0?-8:16)).toFixed(1)}" font-size="12" text-anchor="end" fill="var(--muted)">T</text>`;
+    }
+  }
+  // cot / cosec on tangent line y = 1
+  if(on.has('cot')||on.has('csc')){
+    g+=`<line y1="${-U}" y2="${-U}" x1="-195" x2="195" stroke="var(--cot)" stroke-dasharray="2 4" opacity=".6"/>`;
+    if(Math.abs(s)>1e-9){
+      const cv=c/s, lam=Math.min(1,CL/Math.abs(cv)), ex=lam*cv*U, ey=-lam*U;
+      if(on.has('csc')){ g+=`<line x1="0" y1="0" x2="${ex.toFixed(2)}" y2="${ey.toFixed(2)}" stroke="var(--csc)" stroke-width="8" opacity=".35" stroke-linecap="round"/>`;
+        const lp=offLabel(ex,ey,-1); g+=`<text x="${lp[0]}" y="${lp[1]}" font-size="13" text-anchor="middle" fill="var(--csc)" font-weight="600">cosec θ</text>`; }
+      g+=`<line x1="0" y1="0" x2="${ex.toFixed(2)}" y2="${ey.toFixed(2)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="${s<0?'4 3':'none'}"/>`;
+      if(on.has('cot')){ const cx=Math.max(-CL,Math.min(CL,cv))*U;
+        g+=`<line x1="0" y1="${-U}" x2="${cx.toFixed(2)}" y2="${-U}" stroke="var(--cot)" stroke-width="4" stroke-linecap="round"/>`;
+        g+=`<text x="${(cx/2).toFixed(1)}" y="${-U-8}" font-size="13" text-anchor="middle" fill="var(--cot)" font-weight="600">cot θ${Math.abs(cv)>CL?' (off scale)':''}</text>`;}
+    }
+  }
+  // radius, cos, sin
+  g+=`<line x1="0" y1="0" x2="${px.toFixed(2)}" y2="${py.toFixed(2)}" stroke="var(--ink)" stroke-width="1.6"/>`;
+  if(on.has('cos')){g+=`<line x1="0" y1="0" x2="${px.toFixed(2)}" y2="0" stroke="var(--cos)" stroke-width="4" stroke-linecap="round"/>`;
+    g+=`<text x="${(px/2).toFixed(1)}" y="${s>=0?18:-8}" font-size="13" text-anchor="middle" fill="var(--cos)" font-weight="600">cos θ</text>`;}
+  if(on.has('sin')){g+=`<line x1="${px.toFixed(2)}" y1="0" x2="${px.toFixed(2)}" y2="${py.toFixed(2)}" stroke="var(--sin)" stroke-width="4" stroke-linecap="round"/>`;
+    g+=`<text x="${(px+(c>=0?7:-7)).toFixed(1)}" y="${(py/2+4).toFixed(1)}" font-size="13" text-anchor="${c>=0?'start':'end'}" fill="var(--sin)" font-weight="600">sin θ</text>`;}
+  // connectors to the graph
+  if(on.has('sin')) g+=`<line x1="${px.toFixed(2)}" y1="${py.toFixed(2)}" x2="200" y2="${py.toFixed(2)}" stroke="var(--sin)" stroke-dasharray="3 4" opacity=".7"/>`;
+  if(on.has('tan')&&Math.abs(c)>1e-9&&Math.abs(s/c)<=CL){const ty=-s/c*U; g+=`<line x1="${U}" y1="${ty.toFixed(2)}" x2="200" y2="${ty.toFixed(2)}" stroke="var(--tan)" stroke-dasharray="3 4" opacity=".7"/>`;}
+  // point P
+  g+=`<circle cx="${px.toFixed(2)}" cy="${py.toFixed(2)}" r="9" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`;
+  g+=`<text x="${(px+(c>=0?12:-12)).toFixed(1)}" y="${(py+(s>=0?-10:20)).toFixed(1)}" font-size="13" font-weight="600" text-anchor="${c>=0?'start':'end'}">P</text>`;
+  g+=`<text x="-192" y="192" font-size="11" fill="var(--muted)">O at centre · radius 1</text>`;
+  $('circ').innerHTML=g;
+}
+/* ---------- section 1: graph ---------- */
+const GX=t=>30+t/TAU*550, GY=v=>-v*U;
+function fnPath(f,a,b,N){
+  let d='',pen=false,prev=null;
+  for(let i=0;i<=N;i++){const t=a+(b-a)*i/N, v=f(t);
+    if(!isFinite(v)||Math.abs(v)>6){pen=false;prev=null;continue;}
+    if(pen&&prev!==null&&Math.abs(v-prev)>3) pen=false;
+    d+=(pen?'L':'M')+GX(t).toFixed(1)+' '+GY(v).toFixed(1); pen=true; prev=v;}
+  return d;
+}
+function renderGraph(){
+  const t=th*D; let g=`<defs><clipPath id="gclip"><rect x="0" y="-196" width="600" height="392"/></clipPath></defs>`;
+  for(const v of [-1,1]) g+=`<line class="gl" x1="0" x2="600" y1="${GY(v)}" y2="${GY(v)}"/>`;
+  const L=['0','π/2','π','3π/2','2π'];
+  for(let k=0;k<=4;k++){const x=GX(k*Math.PI/2); g+=`<line class="gl" x1="${x}" x2="${x}" y1="-195" y2="195"/><text class="tick" x="${x}" y="190" text-anchor="middle">${L[k]}</text>`;}
+  g+=`<line class="ax" x1="0" x2="600" y1="0" y2="0"/><line class="ax" x1="30" x2="30" y1="-195" y2="195"/>`;
+  g+=`<text class="tick" x="24" y="${GY(1)+4}" text-anchor="end">1</text><text class="tick" x="24" y="${GY(-1)+4}" text-anchor="end">−1</text>`;
+  g+=`<g clip-path="url(#gclip)">`;
+  for(const F of FN){ if(!on.has(F.id)) continue;
+    g+=`<path d="${fnPath(F.f,0,TAU,720)}" fill="none" stroke="${col(F.id)}" stroke-width="1.5" opacity=".28"/>`;
+    if(t>0) g+=`<path d="${fnPath(F.f,0,t,Math.max(2,Math.round(th*2)))}" fill="none" stroke="${col(F.id)}" stroke-width="3"/>`;
+  }
+  g+=`</g>`;
+  g+=`<line x1="${GX(t)}" x2="${GX(t)}" y1="-195" y2="195" stroke="var(--accent)" stroke-width="1" opacity=".5"/>`;
+  if(on.has('sin')){const y=GY(Math.sin(t)); g+=`<line x1="0" y1="${y}" x2="${GX(t)}" y2="${y}" stroke="var(--sin)" stroke-dasharray="3 4" opacity=".7"/>`;}
+  if(on.has('tan')){const v=FN[2].f(t); if(isFinite(v)&&Math.abs(v)<=CL){const y=GY(v); g+=`<line x1="0" y1="${y}" x2="${GX(t)}" y2="${y}" stroke="var(--tan)" stroke-dasharray="3 4" opacity=".7"/>`;}}
+  for(const F of FN){ if(!on.has(F.id)) continue; const v=F.f(t);
+    if(isFinite(v)&&Math.abs(v)<=1.95) g+=`<circle cx="${GX(t)}" cy="${GY(v)}" r="5" fill="${col(F.id)}" stroke="var(--surface)" stroke-width="1.5"/>`;}
+  // legend
+  let lx=40; for(const F of FN){ if(!on.has(F.id)) continue; g+=`<text x="${lx}" y="-180" font-size="13" font-weight="600" fill="${col(F.id)}">${F.lab} θ</text>`; lx+=F.lab.length*8+34; }
+  $('graph').innerHTML=g;
+}
+/* ---------- readout ---------- */
+function renderOut(){
+  $('thout').innerHTML=`θ = ${degStr(th)} = ${radStr(th)} rad`;
+  const q = th%90===0 ? 0 : Math.floor(th/90)+1;
+  $('quadout').textContent = q? `Quadrant ${['I','II','III','IV'][q-1]}` : 'On an axis: one coordinate of P is 0, so some functions are 0 and their reciprocals are undefined.';
+  $('vals').innerHTML=FN.map(F=>`<tr class="${on.has(F.id)?'':'off'}"><td><span class="dot" style="background:${col(F.id)}"></span>${F.lab} θ</td><td class="v">${valueStr(F,th)}</td></tr>`).join('');
+  const Q=[['II','sin, cosec'],['I','all six'],['III','tan, cot'],['IV','cos, sec']];
+  const idx={1:1,2:0,3:2,4:3};
+  $('quads').innerHTML=Q.map((x,i)=>`<div class="${q&&idx[q]===i?'on':''}"><b>${x[0]}</b>${x[1]} +</div>`).join('');
+}
+function render1(){renderCircle();renderGraph();renderOut();$('thr').value=th;}
+function setTh(d){d=((Math.round(d)%360)+360)%360; if(snap)d=(Math.round(d/15)*15)%360; th=d; render1();}
+draggable($('circ'),p=>{setTh(Math.atan2(-p.y,p.x)/D);});
+draggable($('graph'),p=>{const t=(p.x-30)/550*360; setTh(Math.max(0,Math.min(359,t)));});
+$('thr').addEventListener('input',e=>{th=+e.target.value; if(snap)th=(Math.round(th/15)*15)%360; render1();});
+$('snap').addEventListener('click',()=>{snap=!snap;$('snap').setAttribute('aria-pressed',snap);setTh(th);});
+$('fnchips').innerHTML=FN.map(F=>`<button class="chip" data-f="${F.id}"><span class="sw" style="background:${col(F.id)}"></span>${F.lab}</button>`).join('');
+function syncChips(){document.querySelectorAll('#fnchips .chip').forEach(b=>b.setAttribute('aria-pressed',on.has(b.dataset.f)));}
+$('fnchips').addEventListener('click',e=>{const b=e.target.closest('.chip'); if(!b)return; const f=b.dataset.f;
+  if(on.has(f)) on.delete(f); else on.add(f);
+  try{localStorage.setItem('trig-uc-fns',JSON.stringify([...on]));}catch(err){}
+  syncChips(); render1();});
+syncChips(); render1();
+
+/* ---------- section 2: allied angles ---------- */
+// Q = (qx, qy) written in terms of P = (cos θ, sin θ). kind: m = mirror line through O (direction vector), r = rotation (degrees)
+const AL=[
+ {id:'neg', lab:'−θ',       f:d=>-d,     qx:['+','cos'], qy:['−','sin'], m:[1,0],  how:'Reflect P in the x-axis'},
+ {id:'h-',  lab:'π/2 − θ',  f:d=>90-d,   qx:['+','sin'], qy:['+','cos'], m:[1,1],  how:'Reflect P in the line y = x'},
+ {id:'h+',  lab:'π/2 + θ',  f:d=>90+d,   qx:['−','sin'], qy:['+','cos'], r:90,     how:'Turn P a quarter-turn anticlockwise'},
+ {id:'p-',  lab:'π − θ',    f:d=>180-d,  qx:['−','cos'], qy:['+','sin'], m:[0,1],  how:'Reflect P in the y-axis'},
+ {id:'p+',  lab:'π + θ',    f:d=>180+d,  qx:['−','cos'], qy:['−','sin'], r:180,    how:'Turn P a half-turn (through O)'},
+ {id:'t-',  lab:'3π/2 − θ', f:d=>270-d,  qx:['−','sin'], qy:['−','cos'], m:[1,-1], how:'Reflect P in the line y = −x'},
+ {id:'t+',  lab:'3π/2 + θ', f:d=>270+d,  qx:['+','sin'], qy:['−','cos'], r:270,    how:'Turn P three quarter-turns anticlockwise (one quarter-turn clockwise)'},
+ {id:'f-',  lab:'2π − θ',   f:d=>360-d,  qx:['+','cos'], qy:['−','sin'], m:[1,0],  how:'A full turn changes nothing, so this is the same point as −θ: reflect in the x-axis'}
+];
+let al='p-', ath=35;
+const AU=130;
+$('alchips').innerHTML=AL.map(a=>`<button class="chip" data-a="${a.id}">${a.lab}</button>`).join('');
+$('alchips').addEventListener('click',e=>{const b=e.target.closest('.chip'); if(b){al=b.dataset.a; renderAllied();}});
+const sgn=s=>s==='−'?'−':'';
+function renderAllied(){
+  document.querySelectorAll('#alchips .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.a===al));
+  const A=AL.find(a=>a.id===al), t=ath*D, ph=A.f(ath)*D;
+  const P=[Math.cos(t)*AU,-Math.sin(t)*AU], Q=[Math.cos(ph)*AU,-Math.sin(ph)*AU];
+  let g=`<line class="ax" x1="-180" x2="180" y1="0" y2="0"/><line class="ax" x1="0" x2="0" y1="-180" y2="180"/><circle class="circ" r="${AU}"/>`;
+  // mirror line or rotation arc
+  if(A.m){const [mx,my]=A.m, n=Math.hypot(mx,my), L=175; g+=`<line x1="${-mx/n*L}" y1="${my/n*L}" x2="${mx/n*L}" y2="${-my/n*L}" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="6 5"/>`;
+    g+=`<text x="${(mx/n*L*0.92+6).toFixed(1)}" y="${(-my/n*L*0.92-6).toFixed(1)}" font-size="12" fill="var(--accent)">mirror</text>`;}
+  else{const r=46, a0=t, a1=t+A.r*D, large=A.r>180?1:0;
+    g+=`<path d="M${(r*Math.cos(a0)).toFixed(2)} ${(-r*Math.sin(a0)).toFixed(2)} A${r} ${r} 0 ${large} 0 ${(r*Math.cos(a1)).toFixed(2)} ${(-r*Math.sin(a1)).toFixed(2)}" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+    const am=(a0+a1)/2; g+=`<text x="${(64*Math.cos(am)).toFixed(1)}" y="${(-64*Math.sin(am)+4).toFixed(1)}" font-size="12" text-anchor="middle" fill="var(--accent)">+${A.r}°</text>`;}
+  // triangles
+  const tri=(pt,fill)=>`<polygon points="0,0 ${pt[0].toFixed(2)},0 ${pt[0].toFixed(2)},${pt[1].toFixed(2)}" fill="${fill}" opacity=".10"/>`;
+  g+=tri(P,'var(--ink)')+tri(Q,'var(--accent)');
+  const seg=(x1,y1,x2,y2,c,w=4)=>`<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
+  // P legs
+  g+=`<line x1="0" y1="0" x2="${P[0].toFixed(2)}" y2="${P[1].toFixed(2)}" stroke="var(--ink)" stroke-width="1.4"/>`;
+  g+=seg(0,0,P[0],0,'var(--cos)')+seg(P[0],0,P[0],P[1],'var(--sin)');
+  // Q legs, coloured by which of P's legs they copy
+  g+=`<line x1="0" y1="0" x2="${Q[0].toFixed(2)}" y2="${Q[1].toFixed(2)}" stroke="var(--accent)" stroke-width="1.4"/>`;
+  g+=seg(0,2,Q[0],2,col(A.qx[1]),4)+seg(Q[0],0,Q[0],Q[1],col(A.qy[1]),4);
+  // points + labels
+  const lab=(pt,txt,c)=>{const dx=pt[0]>=0?10:-10, dy=pt[1]<=0?-10:18; return `<circle cx="${pt[0].toFixed(2)}" cy="${pt[1].toFixed(2)}" r="8" fill="${c}" stroke="var(--surface)" stroke-width="2"/><text x="${(pt[0]+dx).toFixed(1)}" y="${(pt[1]+dy).toFixed(1)}" font-size="13" font-weight="600" text-anchor="${pt[0]>=0?'start':'end'}">${txt}</text>`;};
+  g+=lab(Q,'Q','var(--accent)')+lab(P,'P','var(--ink)');
+  g+=`<text x="-178" y="-166" font-size="12" fill="var(--muted)">θ = ${ath}°</text>`;
+  $('allied').innerHTML=g;
+  const name={sin:'sin θ',cos:'cos θ'};
+  const sinQ=sgn(A.qy[0])+name[A.qy[1]], cosQ=sgn(A.qx[0])+name[A.qx[1]];
+  const neg=(A.qx[0]==='−')!==(A.qy[0]==='−');
+  const tanQ=(neg?'−':'')+(A.qy[1]==='sin'?'tan θ':'cot θ');
+  $('alcap').innerHTML=`${A.how}. Q = (<span class="k-${A.qx[1]}">${cosQ}</span>, <span class="k-${A.qy[1]}">${sinQ}</span>), so<br>
+    <span class="eq">sin(${A.lab}) = ${sinQ}</span> <span class="eq">cos(${A.lab}) = ${cosQ}</span> <span class="eq">tan(${A.lab}) = ${tanQ}</span>
+    <br><span class="muted">${A.qx[1]==='sin'?'Q\'s legs are P\'s legs <b>swapped</b> (colours cross over): the name changes.':'Q\'s legs are P\'s legs in the same places: the name stays.'}</span>`;
+}
+draggable($('allied'),p=>{let d=Math.round(Math.atan2(-p.y,p.x)/D); ath=((d%360)+360)%360; renderAllied();});
+
+/* ---------- predict items ---------- */
+function quiz(items,ids,onAnswer){
+  let i=0;
+  function show(){
+    const q=items[i];
+    $(ids.q).textContent=q.q;
+    $(ids.why).innerHTML='';
+    $(ids.opts).innerHTML=q.o.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('');
+    $(ids.opts).querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+      const k=+b.dataset.k;
+      $(ids.opts).querySelectorAll('.opt').forEach(x=>{const j=+x.dataset.k; x.classList.toggle('right',j===q.a); x.classList.toggle('wrong',j===k&&k!==q.a);});
+      $(ids.why).innerHTML=`<div class="why"><b>${k===q.a?'Right.':'Not quite.'}</b> ${q.why}</div>`;
+      if(onAnswer) onAnswer(q);
+    });
+  }
+  $(ids.next).onclick=()=>{i=(i+1)%items.length; show();};
+  show();
+}
+const SC=['sin θ','−sin θ','cos θ','−cos θ'], TC=['tan θ','−tan θ','cot θ','−cot θ'];
+const AQ=[
+ {q:'cos(270° + θ) = ?',o:SC,a:0,t:'t+',why:'270° is an odd multiple of 90°, so x and y swap: cos becomes sin. Take θ small: 270° + θ is just past the bottom of the circle, in quadrant IV, where Q\'s x-coordinate (cos) is positive. So +sin θ. The figure now shows it.'},
+ {q:'sin(180° + θ) = ?',o:SC,a:1,t:'p+',why:'180° is an even multiple of 90°: no swap. A half-turn sends P to the opposite point, so both coordinates change sign: sin(180° + θ) = −sin θ.'},
+ {q:'tan(90° + θ) = ?',o:TC,a:3,t:'h+',why:'A quarter-turn gives Q = (−sin θ, cos θ). tan = y/x = cos θ / (−sin θ) = −cot θ. Check: Q is in quadrant II, where tan is negative.'},
+ {q:'cos(180° − θ) = ?',o:SC,a:3,t:'p-',why:'Mirror in the y-axis: x flips sign, y is unchanged. So cos(180° − θ) = −cos θ, while sin(180° − θ) = +sin θ.'},
+ {q:'sin(270° − θ) = ?',o:SC,a:3,t:'t-',why:'Mirror in y = −x: Q = (−sin θ, −cos θ). Odd multiple of 90°, so the name changes; Q is in quadrant III, so the sign is negative: −cos θ.'},
+ {q:'tan(360° − θ) = ?',o:TC,a:1,t:'f-',why:'A full turn changes nothing, so this is the reflection of P in the x-axis: Q = (cos θ, −sin θ), tan = −tan θ.'}
+];
+quiz(AQ,{q:'aqq',opts:'aqopts',why:'aqwhy',next:'aqnext'},q=>{al=q.t; if(ath%90===0||ath>80) ath=25; renderAllied();});
+renderAllied();
+
+const SQ=[
+ {q:'sin 120° = ?',o:['1/2','√3/2','−1/2','−√3/2'],a:1,d:120,why:'120° = 180° − 60°: mirror in the y-axis keeps the height. sin 120° = sin 60° = √3/2. The circle above has jumped to 120° so you can see it.'},
+ {q:'cos 225° = ?',o:['1/√2','−1/√2','−√3/2','−1/2'],a:1,d:225,why:'225° = 180° + 45°: the half-turn of the 45° point, so both coordinates are negative. cos 225° = −cos 45° = −1/√2.'},
+ {q:'tan 300° = ?',o:['√3','−√3','1/√3','−1/√3'],a:1,d:300,why:'300° = 360° − 60°: the 60° point reflected in the x-axis. tan = y/x = (−√3/2)/(1/2) = −√3.'},
+ {q:'cos 36° − sin 18° = ?',o:['1/4','1/2','√5/4','1'],a:1,d:36,why:'From the golden triangle: (√5 + 1)/4 − (√5 − 1)/4 = 2/4 = 1/2. (Their product is (5 − 1)/16 = 1/4.)'}
+];
+quiz(SQ,{q:'sqq',opts:'sqopts',why:'sqwhy',next:'sqnext'},q=>{const keep=snap; snap=false; setTh(q.d); snap=keep;});
+
+/* ---------- section 3: triangle figures ---------- */
+function polyStr(pts){return pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');}
+function txt(x,y,s,o={}){return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="${o.fs||13}" text-anchor="${o.a||'middle'}" fill="${o.c||'var(--ink)'}" font-weight="${o.w||500}">${s}</text>`;}
+(function(){
+  // 30-60-90 with mirror image
+  const S=160, O=[30,108], P=[O[0]+S*Math.cos(30*D),O[1]-S*Math.sin(30*D)], F=[P[0],O[1]], P2=[P[0],O[1]+S*Math.sin(30*D)];
+  let g=`<polygon points="${polyStr([O,P,F])}" fill="var(--accent)" opacity=".10"/>`;
+  g+=`<polygon points="${polyStr([O,P2,F])}" fill="none" stroke="var(--muted)" stroke-dasharray="4 4"/>`;
+  g+=`<line x1="${O[0]}" y1="${O[1]}" x2="${P[0]}" y2="${P[1]}" stroke="var(--ink)" stroke-width="2"/>`;
+  g+=`<line x1="${O[0]}" y1="${O[1]}" x2="${F[0]}" y2="${F[1]}" stroke="var(--cos)" stroke-width="3"/>`;
+  g+=`<line x1="${F[0]}" y1="${F[1]}" x2="${P[0]}" y2="${P[1]}" stroke="var(--sin)" stroke-width="3"/>`;
+  g+=`<path d="M${F[0]-10} ${F[1]} v-10 h10" fill="none" stroke="var(--muted)"/>`;
+  g+=txt((O[0]+P[0])/2-6,(O[1]+P[1])/2-8,'1')+txt(P[0]+8,(P[1]+F[1])/2+4,'1/2',{a:'start',c:'var(--sin)',w:600})+txt((O[0]+F[0])/2+10,F[1]-6,'√3/2',{c:'var(--cos)',w:600});
+  g+=txt(O[0]+38,O[1]-5,'30°',{fs:12,c:'var(--muted)'})+txt(P[0]-12,P[1]+30,'60°',{fs:12,c:'var(--muted)'});
+  g+=txt((O[0]+P2[0])/2-6,(O[1]+P2[1])/2+16,'1',{c:'var(--muted)'})+txt(P2[0]+8,(F[1]+P2[1])/2+4,'1/2',{a:'start',c:'var(--muted)'});
+  g+=txt(O[0]-4,O[1]+4,'O',{a:'end',fs:12,c:'var(--muted)'});
+  $('tri30').innerHTML=g;
+  // 45-45-90
+  const S2=200, A=[30,170], B=[A[0]+S2*Math.cos(45*D),A[1]-S2*Math.sin(45*D)], C=[B[0],A[1]];
+  g=`<polygon points="${polyStr([A,B,C])}" fill="var(--accent)" opacity=".10"/>`;
+  g+=`<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" stroke="var(--ink)" stroke-width="2"/>`;
+  g+=`<line x1="${A[0]}" y1="${A[1]}" x2="${C[0]}" y2="${C[1]}" stroke="var(--cos)" stroke-width="3"/><line x1="${C[0]}" y1="${C[1]}" x2="${B[0]}" y2="${B[1]}" stroke="var(--sin)" stroke-width="3"/>`;
+  g+=`<path d="M${C[0]-10} ${C[1]} v-10 h10" fill="none" stroke="var(--muted)"/>`;
+  g+=txt((A[0]+B[0])/2-10,(A[1]+B[1])/2-6,'1')+txt((A[0]+C[0])/2,C[1]+18,'1/√2',{c:'var(--cos)',w:600})+txt(C[0]+8,(B[1]+C[1])/2+4,'1/√2',{a:'start',c:'var(--sin)',w:600});
+  g+=txt(A[0]+42,A[1]-6,'45°',{fs:12,c:'var(--muted)'})+txt(B[0]-14,B[1]+40,'45°',{fs:12,c:'var(--muted)'});
+  $('tri45').innerHTML=g;
+  // golden triangle: apex 36°, legs 1, bisector from B
+  const L=180, x=(Math.sqrt(5)-1)/2, Ap=[130,12], Bp=[Ap[0]-L*Math.sin(18*D),Ap[1]+L*Math.cos(18*D)], Cp=[Ap[0]+L*Math.sin(18*D),Bp[1]];
+  const Dp=[Ap[0]+x*(Cp[0]-Ap[0]),Ap[1]+x*(Cp[1]-Ap[1])];
+  g=`<polygon points="${polyStr([Bp,Cp,Dp])}" fill="var(--accent)" opacity=".14"/>`;
+  g+=`<polygon points="${polyStr([Ap,Bp,Cp])}" fill="none" stroke="var(--ink)" stroke-width="2"/>`;
+  g+=`<line x1="${Bp[0]}" y1="${Bp[1]}" x2="${Dp[0].toFixed(1)}" y2="${Dp[1].toFixed(1)}" stroke="var(--accent)" stroke-width="2"/>`;
+  g+=txt(Ap[0]-12,Ap[1]+4,'A',{a:'end',fs:12,c:'var(--muted)'})+txt(Bp[0]-6,Bp[1]+4,'B',{a:'end',fs:12,c:'var(--muted)'})+txt(Cp[0]+6,Cp[1]+4,'C',{a:'start',fs:12,c:'var(--muted)'})+txt(Dp[0]+8,Dp[1]+4,'D',{a:'start',fs:12,c:'var(--muted)'});
+  g+=txt(Ap[0],Ap[1]+36,'36°',{fs:12,c:'var(--muted)'})+txt(Bp[0]+34,Bp[1]-5,'36°',{fs:11,c:'var(--muted)'})+txt(Bp[0]+22,Bp[1]-30,'36°',{fs:11,c:'var(--muted)'})+txt(Cp[0]-20,Cp[1]-8,'72°',{fs:11,c:'var(--muted)'});
+  g+=txt((Ap[0]+Bp[0])/2-8,(Ap[1]+Bp[1])/2,'1',{a:'end'})+txt((Bp[0]+Cp[0])/2,Bp[1]+18,'x',{w:600,c:'var(--accent)'});
+  g+=txt((Ap[0]+Dp[0])/2+8,(Ap[1]+Dp[1])/2,'x',{a:'start',w:600,c:'var(--accent)'})+txt((Dp[0]+Cp[0])/2+8,(Dp[1]+Cp[1])/2+4,'1 − x',{a:'start'})+txt((Bp[0]+Dp[0])/2-2,(Bp[1]+Dp[1])/2-6,'x',{w:600,c:'var(--accent)'});
+  $('tri36').innerHTML=g;
+})();
+</script>
+</body>
+</html>
