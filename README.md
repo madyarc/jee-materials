@@ -11,6 +11,7 @@ Interactive pages for building intuition across the JEE syllabus (CBSE + JEE). P
 | 01 | [Atom-Size Periodic Table](chemistry/inorganic/periodic-table.html) | Inorganic | Atoms drawn to scale; overlays for IE, ΔegH, EN, Z_eff; exception spotlight; compare two elements; trend strips |
 | 02 | [Electronic Effects Ladder](chemistry/organic/effects-ladder.html) | Organic | I / R / hyperconjugation / steric effects with Hammett σ, pKa and stability data; rank-it quizzes |
 | 03 | [Mechanism Player](chemistry/organic/mechanism-player.html) | Organic | Step-by-step curved-arrow mechanisms, energy profiles, SN1/SN2/E1/E2 decision table |
+| ↗ | [Thermodynamics sign conventions](physics/thermodynamics/laws-and-pv.html#signs) | Shared with physics | Why chemistry uses ΔU = q + w and physics ΔQ = ΔU + ΔW, on one picture |
 
 ### Physics — [`physics/`](physics/index.html)
 
@@ -18,6 +19,8 @@ Interactive pages for building intuition across the JEE syllabus (CBSE + JEE). P
 |---|---|---|---|
 | 01 | [Moment of Inertia](physics/mechanics/moment-of-inertia.html) | Mechanics | Mass distribution vs distance from the axis; drag the axis for I = I_cm + Md²; perpendicular-axis theorem; one value → whole family |
 | 02 | [Rolling Motion](physics/mechanics/rolling-motion.html) | Mechanics | Velocity arrows on a rolling/slipping wheel; incline race by β = k²/R²; friction needed to roll; slipping → rolling |
+| 03 | [Thermodynamics: the PV Diagram](physics/thermodynamics/laws-and-pv.html) | Thermodynamics | Zeroth law; work as area; Q = ΔU + W bars; cycles; path dependence; Cp vs Cv; physics vs chemistry sign conventions |
+| 04 | [Heat Engines and the Second Law](physics/thermodynamics/heat-engines.html) | Thermodynamics | Energy-flow bands; Kelvin–Planck and Clausius as impossible machines; Carnot cycle; refrigerators and heat pumps |
 
 ### Mathematics — [`maths/`](maths/index.html)
 

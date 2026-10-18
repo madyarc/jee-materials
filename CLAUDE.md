@@ -25,6 +25,10 @@ Branches follow the syllabus split:
 - `physics/` → e.g. `mechanics/`, `thermodynamics/`, `electromagnetism/`, `optics/`, `waves/`, `modern/`
 - `maths/` → e.g. `algebra/`, `calculus/`, `coordinate-geometry/`, `trigonometry/`, `vectors-3d/`, `probability-statistics/`
 
+**Shared topics are cross-linked, never duplicated.** When physics and chemistry (or maths) cover the same idea, it gets one home page, in the subject whose syllabus treats it most fully. The other subject's index lists it as a "shared with <subject>" row linking there, and its own modules link to it for the foundation instead of re-teaching it. Where the subjects use different conventions (e.g. the sign of work in the first law), the shared page shows both on the same picture and explains why each field chose its own. Current shared foundations:
+
+- Thermodynamics (laws, PV diagrams, engines, sign conventions) → `physics/thermodynamics/`. Chemistry-only topics (enthalpy, Hess's law, entropy and Gibbs energy of reactions, spontaneity) go in `chemistry/physical/` and link back to it.
+
 Create a subject or branch folder only when its first module is written. File names are lowercase-kebab-case.
 
 ## Content rules (non-negotiable)

@@ -28,4 +28,5 @@ Module numbers are per subject and are referenced across pages ("Module 2's σ m
 - More mechanisms (aldol, Cannizzaro, esterification, SN at acyl carbon, halogenation of benzene, Friedel–Crafts).
 - Inorganic: ionic radii and isoelectronic series, lattice/hydration enthalpy trends, oxidation-state stability (inert pair effect).
 - Acidity/basicity explorer combining Modules 1 and 2 (e.g. HX acidity, oxoacids).
-- Physical: equilibrium, kinetics, thermodynamics, electrochemistry.
+- Physical: equilibrium, kinetics, electrochemistry.
+- Thermodynamics: the laws, PV work and the sign conventions live in `physics/thermodynamics/` (shared, see the root `CLAUDE.md`), and the chemistry index links there. Chemistry-only pages to add in `physical/`: enthalpy and Hess's law, bond enthalpies, entropy and Gibbs energy, spontaneity. These use the IUPAC convention (ΔU = q + w) and link back to the shared page's sign-convention section (`#signs`).

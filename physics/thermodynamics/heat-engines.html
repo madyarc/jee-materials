@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Heat Engines</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) engine energy flow, band widths ∝ Q_H, W, Q_C; η vs Carnot  (2) forbidden devices + equivalence step-through
+   (3) Carnot cycle on PV with cylinder and reservoir contacts  (4) refrigerator / heat pump = engine reversed
+   (5) reversible vs irreversible: staircase expansion  (6) predict-then-check
+   Quantity colours shared with laws-and-pv.html: --heat (Q), --work (W), --du (ΔU), --hot, --cold. */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --heat:#c2306a; --work:#1f8f87; --du:#8a6d1f; --hot:#d0452c; --cold:#1f7fc4;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --heat:#f06d9f; --work:#3cb8ad; --du:#d4b44a; --hot:#ff7b62; --cold:#5cb3f0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --heat:#f06d9f; --work:#3cb8ad; --du:#d4b44a; --hot:#ff7b62; --cold:#5cb3f0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:7.5em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:5.5em;text-align:right}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+.verdict.bad{color:var(--flag)}
+svg text{font-family:var(--f-body)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+.tbl{overflow-x:auto}
+.tbl table{border-collapse:collapse;font-size:13px;min-width:340px;width:100%}
+.tbl th,.tbl td{padding:4px 8px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.tbl th{font-family:var(--f-body);font-weight:600;color:var(--muted)}
+.tbl th:first-child,.tbl td:first-child{text-align:left;font-family:var(--f-body)}
+.tbl tr.on td{background:var(--bg);font-weight:600}
+.tbl tr.sum td{font-weight:600;border-bottom:none}
+.q{color:var(--heat);font-weight:600} .w{color:var(--work);font-weight:600} .u{color:var(--du);font-weight:600}
+.hot{color:var(--hot);font-weight:600} .cold{color:var(--cold);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Heat Engines and the Second Law</h1>
+    <p class="lede">An engine takes <span class="q">heat</span> from something <span class="hot">hot</span>, turns part of it into <span class="w">work</span>, and must dump the rest into something <span class="cold">cold</span>. On this page each flow of energy is a band whose width is the amount of energy, so the first law is just “widths add up”. The second law is about which pictures can never happen.</p>
+  </header>
+
+  <!-- 1 · engine -->
+  <section class="stack">
+    <div>
+      <h2>1 · Where the heat goes</h2>
+      <p class="lede">Per cycle, the engine takes Q<sub>H</sub> from the hot reservoir (scaled to 100 units), delivers W, and rejects Q<sub>C</sub> to the cold one. Push the efficiency up and see how far you can go.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="eng" viewBox="0 0 560 400" role="img" aria-label="Energy flow through a heat engine" style="min-width:360px"></svg></div>
+        <div class="slider"><label for="eth">hot T<sub>H</sub></label><input type="range" id="eth" min="300" max="1000" step="10" value="600"><output id="etho"></output></div>
+        <div class="slider"><label for="etc">cold T<sub>C</sub></label><input type="range" id="etc" min="250" max="600" step="5" value="300"><output id="etco"></output></div>
+        <div class="slider"><label for="eeta">efficiency η</label><input type="range" id="eeta" min="0" max="100" step="1" value="30"><output id="eetao"></output></div>
+        <svg id="emeter" viewBox="0 0 520 64" role="img" aria-label="Efficiency against the Carnot limit" style="width:100%;height:auto;display:block"></svg>
+      </div>
+      <div class="panel stack">
+        <p class="verdict" id="everdict"></p>
+        <dl class="kv" id="ekv"></dl>
+        <p class="cap key">First law: Q<sub>H</sub> = W + Q<sub>C</sub>. The band that comes in is exactly as wide as the two that leave. Efficiency η = W/Q<sub>H</sub> = 1 − Q<sub>C</sub>/Q<sub>H</sub> is the fraction of the incoming band that turns right.</p>
+        <p class="cap">Second law: the Q<sub>C</sub> band can never shrink to zero. No engine between T<sub>H</sub> and T<sub>C</sub> beats a reversible (Carnot) engine, η<sub>Carnot</sub> = 1 − T<sub>C</sub>/T<sub>H</sub>, temperatures in kelvin. Real engines lose more to friction and to heat leaking across finite temperature differences, so they sit well below the limit.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · forbidden -->
+  <section class="stack">
+    <div>
+      <h2>2 · Two pictures that never happen</h2>
+      <p class="lede">Both of these obey the first law: energy is conserved in each. Nature still never does them. Each is one way of stating the second law.</p>
+    </div>
+    <div class="two">
+      <div class="panel stack">
+        <h3>Kelvin–Planck: no perfect engine</h3>
+        <svg id="fkp" viewBox="0 0 320 330" role="img" aria-label="A forbidden engine that turns all heat into work" style="width:100%;max-width:340px;height:auto;display:block;margin:0 auto"></svg>
+        <p class="cap">No process is possible whose sole result is the absorption of heat from a reservoir and the complete conversion of the heat into work. Some heat must always go to a colder body.</p>
+      </div>
+      <div class="panel stack">
+        <h3>Clausius: no perfect refrigerator</h3>
+        <svg id="fcl" viewBox="0 0 320 330" role="img" aria-label="A forbidden device that moves heat from cold to hot with no work" style="width:100%;max-width:340px;height:auto;display:block;margin:0 auto"></svg>
+        <p class="cap">No process is possible whose sole result is the transfer of heat from a colder object to a hotter object. Heat runs uphill only if something pays in work.</p>
+      </div>
+    </div>
+    <div class="panel stack">
+      <h3>The two statements are the same law</h3>
+      <p class="muted">Suppose one forbidden device existed. Wire it to an ordinary machine and you get the other forbidden device. Step through it.</p>
+      <div class="row"><div class="chips" id="qcase" role="group" aria-label="Which device to assume"><button class="chip" data-k="kp">If a perfect engine existed…</button><button class="chip" data-k="cl">If a perfect refrigerator existed…</button></div></div>
+      <div class="row"><div class="chips" id="qstep" role="group" aria-label="Step"><button class="chip" data-k="1">1</button><button class="chip" data-k="2">2</button><button class="chip" data-k="3">3</button></div></div>
+      <div class="svgbox"><svg id="equiv" viewBox="0 0 600 380" role="img" aria-label="Combining a forbidden device with an ordinary one" style="min-width:440px;max-width:720px;margin:0 auto"></svg></div>
+      <p class="cap key" id="qcap"></p>
+    </div>
+  </section>
+
+  <!-- 3 · Carnot -->
+  <section class="stack">
+    <div>
+      <h2>3 · The Carnot cycle</h2>
+      <p class="lede">The best possible engine: every step reversible. Two isotherms (in contact with a reservoir, taking or giving heat at a single temperature) joined by two adiabats (insulated, changing the temperature between the two reservoirs). Step through the four strokes.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row"><div class="chips" id="cstep" role="group" aria-label="Stroke"></div><button class="btn primary" id="cplay">Play</button></div>
+        <div class="svgbox"><svg id="cpv" viewBox="0 0 520 380" role="img" aria-label="Carnot cycle on the PV diagram" style="min-width:360px"></svg></div>
+        <div class="legend"><span><i style="background:var(--hot)"></i>isotherm at T<sub>H</sub></span><span><i style="background:var(--cold)"></i>isotherm at T<sub>C</sub></span><span><i style="background:var(--ink)"></i>adiabats</span><span><i style="background:var(--accent)"></i>current stroke</span><span><i style="background:var(--work);height:10px;width:10px;opacity:.5"></i>net work</span></div>
+        <div class="slider"><label for="cth">hot T<sub>H</sub></label><input type="range" id="cth" min="400" max="700" step="10" value="600"><output id="ctho"></output></div>
+        <div class="slider"><label for="ctc">cold T<sub>C</sub></label><input type="range" id="ctc" min="250" max="390" step="5" value="300"><output id="ctco"></output></div>
+        <div class="slider"><label for="cr">expansion V₂/V₁</label><input type="range" id="cr" min="1.5" max="2.5" step="0.05" value="2"><output id="cro"></output></div>
+      </div>
+      <div class="panel stack">
+        <svg id="ccyl" viewBox="0 0 280 300" role="img" aria-label="Cylinder and the reservoir it sits on" style="width:100%;max-width:280px;height:auto;display:block;margin:0 auto"></svg>
+        <p class="big" id="cname"></p>
+        <p class="cap" id="cdesc"></p>
+      </div>
+    </div>
+    <div class="two">
+      <div class="panel"><div class="tbl" id="ctab"></div></div>
+      <div class="panel stack">
+        <p class="cap key" id="ccap"></p>
+        <p class="cap">Why η &lt; 1 always: you would need T<sub>C</sub> = 0 K, and absolute zero cannot be reached. Why the cold reservoir is necessary: the adiabats alone cannot bring the gas back. To return to state 1 you must compress it, and compressing it at a lower temperature (lower pressure) is what makes the return trip cheaper than the outward one. The heat dumped at T<sub>C</sub> is the price of that cheaper return.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · refrigerator -->
+  <section class="stack">
+    <div>
+      <h2>4 · Run it backwards: refrigerator and heat pump</h2>
+      <p class="lede">Reverse every arrow. Now work goes <i>in</i>, heat is pulled out of the cold side and a bigger amount is dumped on the hot side. A refrigerator and a heat pump are the same machine; they differ only in which flow you are paying for.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="fmode" role="group" aria-label="Use"><button class="chip" data-k="fr">Refrigerator (want Q<sub>C</sub>)</button><button class="chip" data-k="hp">Heat pump (want Q<sub>H</sub>)</button></div>
+        <div class="svgbox"><svg id="frs" viewBox="0 0 560 400" role="img" aria-label="Energy flow through a refrigerator" style="min-width:360px"></svg></div>
+        <div class="slider"><label for="fth" id="fthl">outside T<sub>H</sub></label><input type="range" id="fth" min="290" max="330" step="1" value="303"><output id="ftho"></output></div>
+        <div class="slider"><label for="ftc" id="ftcl">inside T<sub>C</sub></label><input type="range" id="ftc" min="240" max="289" step="1" value="263"><output id="ftco"></output></div>
+        <div class="slider"><label for="fq">COP as % of Carnot</label><input type="range" id="fq" min="10" max="130" step="1" value="50"><output id="fqo"></output></div>
+      </div>
+      <div class="panel stack">
+        <p class="verdict" id="fverdict"></p>
+        <dl class="kv" id="fkv"></dl>
+        <p class="cap key">Coefficient of performance = what you want ÷ what you pay. Refrigerator: β = Q<sub>C</sub>/W (NCERT writes α). Heat pump: Q<sub>H</sub>/W = β + 1. Unlike efficiency, these are usually bigger than 1: the work only <i>moves</i> heat, it doesn’t have to supply it.</p>
+        <p class="cap">Carnot limits: β<sub>max</sub> = T<sub>C</sub>/(T<sub>H</sub> − T<sub>C</sub>), heat pump max T<sub>H</sub>/(T<sub>H</sub> − T<sub>C</sub>). The closer the two temperatures, the cheaper it is to pump heat. Pushing the COP past the limit (above 100%) would let you build the forbidden Clausius device.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · reversible -->
+  <section class="stack">
+    <div>
+      <h2>5 · Reversible vs irreversible</h2>
+      <p class="lede">A gas on a reservoir expands from 1 L to 4 L. Let it go in a few sudden steps (drop the outside pressure, let the piston jump, wait) or in many small ones. The shaded area is the work the gas actually does against the outside pressure.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="rmode" role="group" aria-label="Direction"><button class="chip" data-k="exp">Expansion</button><button class="chip" data-k="cmp">Compression</button></div>
+        <div class="svgbox"><svg id="rsv" viewBox="0 0 520 380" role="img" aria-label="Stepwise process compared with the reversible isotherm" style="min-width:360px"></svg></div>
+        <div class="slider"><label for="rn">number of steps</label><input type="range" id="rn" min="1" max="40" step="1" value="3"><output id="rno"></output></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="rkv"></dl>
+        <svg id="rbar" viewBox="0 0 300 70" role="img" aria-label="Work compared with the reversible value" style="width:100%;max-width:340px;height:auto;display:block"></svg>
+        <p class="cap key" id="rcap"></p>
+        <p class="cap">A <b>reversible</b> process can be run backwards so that both the system and its surroundings return to where they started, with no change anywhere else. It needs the process to be quasi-static (infinitely slow, always in equilibrium) and free of friction, viscosity and other dissipation. Real processes are irreversible; reversible ones are the limiting ideal, and that is why the Carnot engine, built only from reversible steps, sets the upper limit. <span class="hw">simplified model</span> Each step: outside pressure drops (or rises) suddenly, the piston settles against it, and the gas returns to the reservoir temperature before the next step.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · quiz -->
+  <section class="stack">
+    <div>
+      <h2>6 · Predict, then check</h2>
+      <p class="lede">CBSE- and JEE-style questions. Choose first; the reasoning appears after.</p>
+    </div>
+    <div class="qgrid" id="quiz"></div>
+    <div><button class="btn" id="qreset">Reset answers</button></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> reservoirs large enough that their temperatures never change; Carnot cycle with 0.1 mol of ideal monatomic gas (γ = 5/3, a kinetic-theory ideal value) starting at V₁ = 0.4 L (the Carnot efficiency does not depend on the working gas); quasi-static, frictionless strokes. Band widths are to scale within each diagram; cylinders are schematic. Section 5 uses the same isotherm (PV = 400 J) with equal volume steps. Temperatures in the efficiency formulas are absolute (kelvin). R = 8.314 J mol⁻¹ K⁻¹.</p>
+    <p><b>Sources:</b> NCERT Physics Part II, Class XI (rationalised 2023 edition, reprint 2026–27), Ch. 11 “Thermodynamics”: second law (Kelvin–Planck and Clausius statements, quoted on this page), reversible and irreversible processes, Carnot engine and η = 1 − T₂/T₁ (NCERT writes T₁ for the source and T₂ for the sink), coefficient of performance α of a refrigerator. H. C. Verma, <i>Concepts of Physics</i> Vol. 2, Ch. 26 “Laws of Thermodynamics” (heat engines, refrigerators, Carnot engine). Halliday, Resnick &amp; Walker, <i>Fundamentals of Physics</i>, Ch. 20 “Entropy and the Second Law of Thermodynamics” (engines, refrigerators, equivalence of the two statements). R from CODATA 2018 (NIST).</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+const R=8.314;          // J mol^-1 K^-1
+const NMOL=0.1, GAM=5/3, CV=1.5*R; // Carnot working gas: ideal monatomic (kinetic-theory values)
+const V1C=0.4;          // L, Carnot state 1
+const RISO=400;         // J, isotherm PV for section 5
+/* equivalence demos (joules per cycle) */
+const EQ={
+ kp:{dev:{qh:300,w:300,qc:0}, norm:{qh:900,w:300,qc:600},
+   s:['Assume a perfect engine (left) exists: it takes 300 J from the hot reservoir and turns all of it into 300 J of work. Kelvin–Planck says this is impossible; suppose it isn’t.',
+      'Use its 300 J of work to drive an ordinary refrigerator (right). The refrigerator pulls 600 J from the cold reservoir and dumps 600 + 300 = 900 J into the hot one.',
+      'Draw a box round both. Nothing goes in or out as work. The cold reservoir loses 600 J; the hot one gains 900 − 300 = 600 J. The combination moves 600 J from cold to hot by itself: a Clausius-forbidden device. So breaking Kelvin–Planck would break Clausius.']},
+ cl:{dev:{qh:600,w:0,qc:600}, norm:{qh:1000,w:400,qc:600},
+   s:['Assume a perfect refrigerator (left) exists: it moves 600 J from the cold reservoir to the hot one with no work. Clausius says this is impossible; suppose it isn’t.',
+      'Run an ordinary engine (right) alongside: it takes 1000 J from the hot reservoir, delivers 400 J of work, and rejects 600 J to the cold reservoir.',
+      'Draw a box round both. The cold reservoir gives 600 J and gets 600 J back: no net change. The hot reservoir gives 1000 J and gets 600 J: a net 400 J, all of it turned into 400 J of work. That is a perfect engine, forbidden by Kelvin–Planck. So breaking Clausius would break Kelvin–Planck.']}
+};
+const STROKE=[
+ {n:'1 → 2 · Isothermal expansion at T_H', base:'hot',
+  d:'The cylinder sits on the hot reservoir. The gas expands slowly; its temperature stays at T<sub>H</sub>, so its U does not change, and every joule of work it does is drawn in as heat Q<sub>H</sub> from the reservoir.'},
+ {n:'2 → 3 · Adiabatic expansion', base:'ins',
+  d:'Moved onto an insulating stand. The gas keeps expanding, but no heat comes in, so it pays for this work out of its own U. Its temperature falls from T<sub>H</sub> to T<sub>C</sub>.'},
+ {n:'3 → 4 · Isothermal compression at T_C', base:'cold',
+  d:'On the cold reservoir. The gas is pushed back in. Temperature stays at T<sub>C</sub>, so the work done on it leaves as heat Q<sub>C</sub> into the cold reservoir. This costs less work than stroke 1 delivered, because the gas is colder and its pressure is lower.'},
+ {n:'4 → 1 · Adiabatic compression', base:'ins',
+  d:'Insulated again. Compressing it raises U and the temperature climbs back from T<sub>C</sub> to T<sub>H</sub>, exactly undoing stroke 2. The gas is back at state 1.'}
+];
+const QUIZ=[
+ {q:'An engine takes 1000 J from the hot reservoir per cycle and rejects 600 J to the cold one. Its efficiency?',
+  o:['60%','40%','1.67','Can’t tell without the temperatures'],a:1,
+  why:'W = Q<sub>H</sub> − Q<sub>C</sub> = 400 J, η = W/Q<sub>H</sub> = 40%. The first law alone gives this; temperatures only tell you the maximum possible.'},
+ {q:'A Carnot engine works between 127 °C and 27 °C. Its efficiency?',
+  o:['about 79%','25%','75%','100 K / 127 K'],a:1,
+  why:'Convert to kelvin first: T<sub>H</sub> = 400 K, T<sub>C</sub> = 300 K. η = 1 − 300/400 = 25%. Using Celsius (1 − 27/127 ≈ 79%) is the classic trap.'},
+ {q:'An inventor claims an engine with 50% efficiency running between 400 K and 300 K. Your verdict?',
+  o:['Possible, if well built','Impossible: it beats the Carnot limit','Possible only with a monatomic gas'],a:1,
+  why:'The Carnot limit is 1 − 300/400 = 25%. No engine between these reservoirs can do better, whatever the gas or design.'},
+ {q:'A Carnot refrigerator keeps its inside at 0 °C in a room at 27 °C. Its coefficient of performance β = Q<sub>C</sub>/W?',
+  o:['about 10.1','about 11.1','about 0.09','about 1.1'],a:0,
+  why:'β = T<sub>C</sub>/(T<sub>H</sub> − T<sub>C</sub>) = 273/27 ≈ 10.1. (11.1 = 300/27 is the heat-pump figure Q<sub>H</sub>/W.)'},
+ {q:'A reversible engine has η = 25%. Run backwards as a refrigerator between the same reservoirs, its β = Q<sub>C</sub>/W is:',
+  o:['0.25','3','4','0.75'],a:1,
+  why:'Same three flows, arrows reversed. Q<sub>H</sub> = 4 units, W = 1, Q<sub>C</sub> = 3. As a refrigerator β = Q<sub>C</sub>/W = 3 (= 1/η − 1); as a heat pump Q<sub>H</sub>/W = 4 = 1/η.'},
+ {q:'On a hot day you leave the refrigerator door open in a closed, insulated kitchen. The kitchen:',
+  o:['cools down','warms up','stays the same'],a:1,
+  why:'The fridge pulls Q<sub>C</sub> from the kitchen and dumps Q<sub>H</sub> = Q<sub>C</sub> + W back into the same kitchen. Net: the kitchen gains W, the electrical work, every cycle.'},
+ {q:'To raise a Carnot engine’s efficiency, which helps more: raising T<sub>H</sub> by 10 K or lowering T<sub>C</sub> by 10 K?',
+  o:['Raising T<sub>H</sub>','Lowering T<sub>C</sub>','Exactly the same'],a:1,
+  why:'η = 1 − T<sub>C</sub>/T<sub>H</sub>. A 10 K change in T<sub>C</sub> changes η by 10/T<sub>H</sub>; a 10 K change in T<sub>H</sub> changes it by only about 10·T<sub>C</sub>/T<sub>H</sub>², which is smaller because T<sub>C</sub> &lt; T<sub>H</sub>. (In practice T<sub>C</sub> is fixed by the surroundings.)'}
+];
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+const f0=v=>Math.round(v).toString().replace('-','−');
+const sg0=v=>(Math.round(v)>0?'+':'')+f0(v);
+const pct=v=>(100*v).toFixed(1)+'%';
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+function mk(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function setA(e,attrs){for(const k in attrs)e.setAttribute(k,attrs[k]);}
+function press(el,k){el.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===String(k)));}
+function arrow(x1,y1,x2,y2,col,w,head){
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy); if(L<1.5) return '';
+  const h=Math.min(head||9,L*0.6), ux=dx/L, uy=dy/L, bx=x2-ux*h, by=y2-uy*h, px=-uy*h*0.5, py=ux*h*0.5;
+  return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="${w||2}"/><polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px).toFixed(1)},${(by+py).toFixed(1)} ${(bx-px).toFixed(1)},${(by-py).toFixed(1)}" fill="${col}"/>`;
+}
+function fat(x1,y1,x2,y2,col,w){
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy); if(L<2||w<0.5) return '';
+  const ux=dx/L, uy=dy/L, px=-uy, py=ux, hw=Math.max(w/2,1), hh=Math.min(L*0.5,hw+9), hx=x2-ux*hh, hy=y2-uy*hh, hb=hw+6;
+  const p=[[x1+px*hw,y1+py*hw],[hx+px*hw,hy+py*hw],[hx+px*hb,hy+py*hb],[x2,y2],[hx-px*hb,hy-py*hb],[hx-px*hw,hy-py*hw],[x1-px*hw,y1-py*hw]];
+  return `<polygon points="${p.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ')}" fill="${col}" opacity=".9"/>`;
+}
+function jet(t){t=Math.max(0,Math.min(1,t));const c=x=>Math.round(255*Math.max(0,Math.min(1,1.5-Math.abs(4*t-x))));return `rgb(${c(3)},${c(2)},${c(1)})`;}
+/* T_H, Q_C … in SVG text → real subscripts */
+const subs=g=>g.replace(/([TQ])_([HC])/g,'$1<tspan font-size="75%" dy="3">$2</tspan><tspan dy="-3">\u200b</tspan>');
+const HATCH=id=>`<defs><pattern id="${id}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="var(--muted)" stroke-width="2"/></pattern></defs>`;
+/* chevron showing flow direction on a band */
+function chev(x,y,dx,dy,s){const px=-dy,py=dx;return `<polyline points="${(x-dx*s+px*s).toFixed(1)},${(y-dy*s+py*s).toFixed(1)} ${x.toFixed(1)},${y.toFixed(1)} ${(x-dx*s-px*s).toFixed(1)},${(y-dy*s-py*s).toFixed(1)}" fill="none" stroke="var(--surface)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;}
+/* reservoir block */
+function reservoir(x,y,w,h,kind,label){
+  const col=kind==='hot'?'var(--hot)':'var(--cold)';
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${col}" fill-opacity=".16" stroke="${col}" stroke-width="1.5"/><text x="${x+w/2}" y="${y+h/2+5}" font-size="13" font-weight="600" fill="${col}" text-anchor="middle">${label}</text>`;
+}
+/* Energy bands (Sankey). Shape: a wide band (Q_H) between yTop and yTurn, splitting at yTurn into
+   Q_C (continues to yBot) and W (turns sideways to x = cx ± reach). dir 'down' = engine, 'up' = refrigerator. */
+function bands(o){
+  const {cx,yTop,yBot,yTurn,wH,wC,wW,reach}=o, side=o.side||1, up=o.dir==='up';
+  const x0=cx-wH/2, ri=10, ro=ri+wW, xi=x0+wH, xs=x0+wC, cxA=xi+ri, xEnd=cx+reach;
+  let s='';
+  if(wH>0.5) s+=`<rect x="${x0.toFixed(1)}" y="${yTop}" width="${wH.toFixed(1)}" height="${yTurn-yTop+0.5}" fill="var(--heat)" opacity=".88"/>`;
+  if(wC>0.5) s+=`<rect x="${x0.toFixed(1)}" y="${yTurn}" width="${wC.toFixed(1)}" height="${yBot-yTurn}" fill="var(--heat)" opacity=".88"/>`;
+  if(wW>0.5) s+=`<path d="M${xs.toFixed(1)} ${yTurn}A${ro.toFixed(1)} ${ro.toFixed(1)} 0 0 0 ${cxA.toFixed(1)} ${(yTurn+ro).toFixed(1)}L${xEnd} ${(yTurn+ro).toFixed(1)}L${xEnd} ${yTurn+ri}L${cxA.toFixed(1)} ${yTurn+ri}A${ri} ${ri} 0 0 1 ${xi.toFixed(1)} ${yTurn}Z" fill="var(--work)" opacity=".9"/>`;
+  const d=up?-1:1;
+  if(wH>6){const s2=Math.min(7,wH/4);for(const f of [0.35,0.7]) s+=chev(cx,yTop+(yTurn-yTop)*f+d*s2/2,0,d,s2);}
+  if(wC>6){const s2=Math.min(7,wC/4);for(const f of [0.4,0.75]) s+=chev(x0+wC/2,yTurn+(yBot-yTurn)*f+d*s2/2,0,d,s2);}
+  if(wW>6){const s2=Math.min(7,wW/4), y=yTurn+ri+wW/2;for(const f of [0.45,0.8]) s+=chev(cxA+(xEnd-cxA)*f,y,up?-1:1,0,s2);}
+  return side>0?s:`<g transform="translate(${2*cx},0) scale(-1,1)">${s}</g>`;
+}
+
+/* =================== 1 · ENGINE =================== */
+const EN={th:600,tc:300,eta:0.30};
+['eth','etc','eeta'].forEach(id=>$(id).addEventListener('input',e=>{
+  if(id==='eth'){EN.th=+e.target.value; if(EN.tc>EN.th-20){EN.tc=EN.th-20;$('etc').value=EN.tc;}}
+  if(id==='etc'){EN.tc=+e.target.value; if(EN.tc>EN.th-20){EN.th=Math.min(1000,EN.tc+20);$('eth').value=EN.th;}}
+  if(id==='eeta') EN.eta=+e.target.value/100;
+  drawEng();}));
+function drawEng(){
+  const {th,tc,eta}=EN, etaC=1-tc/th, qh=100, w=qh*eta, qc=qh-w, k=1.2;
+  $('etho').textContent=th+' K'; $('etco').textContent=tc+' K'; $('eetao').textContent=Math.round(eta*100)+'%';
+  const cx=200, yTurn=170, bad=eta>etaC+1e-9;
+  let g=reservoir(40,8,400,52,'hot',`hot reservoir · T_H = ${th} K`)+reservoir(40,340,400,52,'cold',`cold reservoir · T_C = ${tc} K`);
+  g+=`<rect x="${cx-90}" y="${yTurn-22}" width="180" height="${Math.max(60,22+10+w*k+12)}" rx="10" fill="var(--surface)" stroke="${bad?'var(--flag)':'var(--ink)'}" stroke-width="${bad?2.5:1.5}" ${bad?'stroke-dasharray="6 4"':''}/>`;
+  g+=`<text x="${cx-96}" y="${yTurn+4}" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="end">engine</text>`;
+  g+=bands({cx,yTop:60,yBot:340,yTurn,wH:qh*k,wC:qc*k,wW:w*k,reach:330,dir:'down'});
+  const x0=cx-qh*k/2;
+  g+=`<text x="${x0-8}" y="110" font-size="13" font-weight="700" fill="var(--heat)" text-anchor="end">Q_H = 100</text>`;
+  if(qc>0.5) g+=`<text x="${x0-8}" y="285" font-size="13" font-weight="700" fill="var(--heat)" text-anchor="end">Q_C = ${f0(qc)}</text>`;
+  else g+=`<text x="${x0-8}" y="285" font-size="13" font-weight="700" fill="var(--flag)" text-anchor="end">Q_C = 0 ?!</text>`;
+  if(w>0.5) g+=`<text x="530" y="${yTurn+10+w*k+18}" font-size="13" font-weight="700" fill="var(--work)" text-anchor="end">W = ${f0(w)}</text>`;
+  if(bad) g+=`<text x="530" y="${yTurn-34}" font-size="14" font-weight="700" fill="var(--flag)" text-anchor="end">forbidden</text>`;
+  $('eng').innerHTML=subs(g);
+  /* meter */
+  const X=p=>20+p*480;
+  let m=HATCH('emh')+`<rect x="20" y="18" width="480" height="18" rx="3" fill="var(--bg)" stroke="var(--line)"/>`;
+  m+=`<rect x="20" y="18" width="${(X(etaC)-20).toFixed(1)}" height="18" fill="var(--ok)" opacity=".25"/><rect x="${X(etaC).toFixed(1)}" y="18" width="${(500-X(etaC)).toFixed(1)}" height="18" fill="url(#emh)" opacity=".5"/>`;
+  m+=`<line x1="${X(etaC)}" x2="${X(etaC)}" y1="10" y2="44" stroke="var(--ink)" stroke-width="2"/><text x="${X(etaC)}" y="8" font-size="11" fill="var(--ink)" text-anchor="${etaC>0.8?'end':'middle'}">Carnot ${pct(etaC)}</text>`;
+  m+=`<polygon points="${X(eta)},38 ${X(eta)-6},50 ${X(eta)+6},50" fill="${bad?'var(--flag)':'var(--work)'}"/><text x="${X(eta)}" y="62" font-size="11" fill="${bad?'var(--flag)':'var(--work)'}" text-anchor="middle">your engine</text>`;
+  m+=`<text x="20" y="62" font-size="10" fill="var(--muted)">0</text><text x="500" y="62" font-size="10" fill="var(--muted)" text-anchor="end">100%</text>`;
+  $('emeter').innerHTML=m;
+  const v=$('everdict'); v.classList.toggle('bad',bad);
+  v.innerHTML=eta>=0.995?'<b>A perfect engine: forbidden.</b> All of Q<sub>H</sub> turned into work, nothing rejected. This is exactly what the Kelvin–Planck statement rules out.'
+    :bad?`<b>Forbidden by the second law.</b> Between ${th} K and ${tc} K no engine can beat ${pct(etaC)}. If one did, you could drive a Carnot refrigerator with it and pump heat from cold to hot for free (section 2).`
+    :Math.abs(eta-etaC)<0.006?'<b>At the Carnot limit.</b> Only a perfectly reversible engine gets here, which is an ideal, not a machine you can build.'
+    :`<b>Allowed.</b> ${pct(eta)} is below the Carnot limit of ${pct(etaC)}. A real engine sits here: friction and heat flowing across finite temperature differences waste some of what a reversible engine could deliver.`;
+  $('ekv').innerHTML=`<dt>Q<sub>H</sub> in</dt><dd>100</dd><dt>W out</dt><dd>${w.toFixed(1)}</dd><dt>Q<sub>C</sub> out</dt><dd>${qc.toFixed(1)}</dd><dt>η = W/Q<sub>H</sub></dt><dd>${pct(eta)}</dd><dt>η<sub>Carnot</sub> = 1 − T<sub>C</sub>/T<sub>H</sub></dt><dd>${pct(etaC)}</dd><dt>T<sub>C</sub>/T<sub>H</sub></dt><dd>${(tc/th).toFixed(3)}</dd>`;
+}
+
+/* =================== 2 · FORBIDDEN =================== */
+function forbidden(svg,kind){
+  const cx=150, k=1.1;
+  let g=reservoir(20,8,230,46,'hot','hot reservoir')+reservoir(20,276,230,46,'cold','cold reservoir');
+  g+=`<rect x="${cx-74}" y="128" width="148" height="70" rx="10" fill="var(--surface)" stroke="var(--flag)" stroke-width="2.5" stroke-dasharray="6 4"/>`;
+  if(kind==='kp'){
+    g+=bands({cx,yTop:54,yBot:276,yTurn:150,wH:100*k,wC:0,wW:100*k,reach:160,dir:'down'});
+    g+=`<text x="${cx-60}" y="100" font-size="12.5" font-weight="700" fill="var(--heat)" text-anchor="end">Q</text><text x="312" y="292" font-size="12.5" font-weight="700" fill="var(--work)" text-anchor="end">W = Q</text>`;
+    g+=`<text x="28" y="232" font-size="12" fill="var(--flag)">nothing</text><text x="28" y="247" font-size="12" fill="var(--flag)">rejected</text>`;
+  } else {
+    g+=bands({cx,yTop:54,yBot:276,yTurn:150,wH:70*k,wC:70*k,wW:0,reach:0,dir:'up'});
+    g+=`<text x="${cx-46}" y="100" font-size="12.5" font-weight="700" fill="var(--heat)" text-anchor="end">Q</text><text x="${cx-46}" y="240" font-size="12.5" font-weight="700" fill="var(--heat)" text-anchor="end">Q</text>`;
+    g+=`<text x="${cx+44}" y="220" font-size="12" fill="var(--flag)">no work in</text>`;
+  }
+  g+=`<g stroke="var(--flag)" stroke-width="5" stroke-linecap="round" opacity=".9"><line x1="262" y1="70" x2="302" y2="110"/><line x1="302" y1="70" x2="262" y2="110"/></g>`;
+  svg.innerHTML=g;
+}
+const EQS={c:load('thermo-eng-eq')||'kp',step:1};
+if(!EQ[EQS.c]) EQS.c='kp';
+$('qcase').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;EQS.c=c.dataset.k;EQS.step=1;store('thermo-eng-eq',EQS.c);drawEq();});
+$('qstep').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;EQS.step=+c.dataset.k;drawEq();});
+function drawEq(){
+  press($('qcase'),EQS.c); press($('qstep'),EQS.step);
+  const E=EQ[EQS.c], k=0.11, st=EQS.step, yT=56, yB=324, yTurn=150;
+  let g=reservoir(20,8,560,48,'hot','hot reservoir')+reservoir(20,324,560,48,'cold','cold reservoir');
+  const box=(cx,lab,bad)=>`<rect x="${cx-70}" y="${yTurn-24}" width="140" height="${Math.max(70,34+10+48)}" rx="10" fill="var(--surface)" stroke="${bad?'var(--flag)':'var(--ink)'}" stroke-width="${bad?2.5:1.5}" ${bad?'stroke-dasharray="6 4"':''}/><text x="${cx}" y="${yTurn+100}" font-size="12" font-weight="600" fill="${bad?'var(--flag)':'var(--ink)'}" text-anchor="middle">${lab}</text>`;
+  const lab=(x,y,t,col,anc)=>`<text x="${x}" y="${y}" font-size="12.5" font-weight="700" fill="${col}" text-anchor="${anc||'end'}">${t}</text>`;
+  if(EQS.c==='kp'){
+    const L=180, Rx=420, d=E.dev, n=E.norm;
+    g+=box(L,'perfect engine (assumed)',true);
+    g+=bands({cx:L,yTop:yT,yBot:yB,yTurn,wH:d.qh*k,wC:0,wW:d.w*k,reach:120,dir:'down'});
+    g+=lab(L-d.qh*k/2-6,105,'300','var(--heat)');
+    if(st>=2){
+      g+=box(Rx,'ordinary refrigerator',false);
+      g+=bands({cx:Rx,yTop:yT,yBot:yB,yTurn,wH:n.qh*k,wC:n.qc*k,wW:n.w*k,reach:120,dir:'up',side:-1});
+      g+=lab(Rx+n.qh*k/2+6,105,'900','var(--heat)','start')+lab(Rx+n.qh*k/2+6,270,'600','var(--heat)','start')+lab(300,yTurn+10+n.w*k+16,'W = 300','var(--work)','middle');
+    } else g+=lab(310,yTurn+10+d.w*k+16,'W = 300','var(--work)','middle');
+  } else {
+    const L=160, Rx=380, d=E.dev, n=E.norm;
+    g+=box(L,'perfect refrigerator (assumed)',true);
+    g+=bands({cx:L,yTop:yT,yBot:yB,yTurn,wH:d.qh*k,wC:d.qc*k,wW:0,reach:0,dir:'up'});
+    g+=lab(L-d.qh*k/2-6,105,'600','var(--heat)')+lab(L-d.qh*k/2-6,270,'600','var(--heat)');
+    if(st>=2){
+      g+=box(Rx,'ordinary engine',false);
+      g+=bands({cx:Rx,yTop:yT,yBot:yB,yTurn,wH:n.qh*k,wC:n.qc*k,wW:n.w*k,reach:190,dir:'down'});
+      g+=lab(Rx-n.qh*k/2-6,105,'1000','var(--heat)')+lab(Rx-n.qh*k/2-6,270,'600','var(--heat)')+lab(575,yTurn+10+n.w*k+16,'W = 400','var(--work)');
+    }
+  }
+  if(st>=3) g+=`<rect x="64" y="${yT+14}" width="${EQS.c==='kp'?472:470}" height="${yB-yT-28}" rx="14" fill="none" stroke="var(--flag)" stroke-width="2" stroke-dasharray="8 5"/><text x="${EQS.c==='kp'?530:526}" y="${yT+32}" font-size="12.5" font-weight="700" fill="var(--flag)" text-anchor="end">${EQS.c==='kp'?'net: 600 J cold → hot, no work':'net: 400 J heat → 400 J work'}</text>`;
+  $('equiv').innerHTML=g;
+  $('qcap').innerHTML=E.s[st-1];
+}
+
+/* =================== 3 · CARNOT =================== */
+const CN={th:600,tc:300,r:2,t:0,play:false,last:0,stroke:-1};
+$('cstep').innerHTML=STROKE.map((s,i)=>`<button class="chip" data-k="${i}">${i+1} → ${(i+1)%4+1}</button>`).join('');
+$('cstep').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;CN.play=false;$('cplay').textContent=RM?'Next →':'Play';CN.t=+c.dataset.k+0.5;drawCarnotDyn();});
+['cth','ctc','cr'].forEach(id=>$(id).addEventListener('input',e=>{CN[id==='cth'?'th':id==='ctc'?'tc':'r']=+e.target.value;drawCarnot();}));
+if(RM) $('cplay').textContent='Next →';
+$('cplay').addEventListener('click',()=>{
+  if(RM){CN.t=(Math.floor(CN.t)+1)%4+0.5;drawCarnotDyn();return;}
+  CN.play=!CN.play; $('cplay').textContent=CN.play?'Pause':'Play';
+  if(CN.play){CN.last=0;requestAnimationFrame(cloop);}
+});
+function cloop(ts){
+  if(!CN.play) return;
+  const dt=CN.last?Math.min(0.05,(ts-CN.last)/1000):0; CN.last=ts;
+  CN.t=(CN.t+dt/1.6)%4; drawCarnotDyn(); requestAnimationFrame(cloop);
+}
+function cStates(){
+  const {th,tc,r}=CN, e=Math.pow(th/tc,1/(GAM-1));
+  const V=[V1C, V1C*r, V1C*r*e, V1C*e], T=[th,th,tc,tc];
+  return V.map((v,i)=>({V:v,T:T[i],P:NMOL*R*T[i]/v}));
+}
+function strokePt(S,i,u){ /* point at fraction u along stroke i */
+  const a=S[i], b=S[(i+1)%4], V=a.V*Math.pow(b.V/a.V,u);
+  const P=(i%2===0)?NMOL*R*a.T/V:a.P*Math.pow(a.V/V,GAM);
+  return {V,P,T:P*V/(NMOL*R)};
+}
+/* plot */
+const CW={V0:0,V1:5.5,P0:0,P1:1500};
+const csx=V=>56+(V-CW.V0)/(CW.V1-CW.V0)*448, csy=P=>338-(P-CW.P0)/(CW.P1-CW.P0)*324;
+{
+  let g=`<g id="cstat"></g>`;
+  for(let V=1;V<=5;V++) g+=`<line x1="${csx(V)}" x2="${csx(V)}" y1="${csy(0)}" y2="${csy(CW.P1)}" stroke="var(--line)"/><text x="${csx(V)}" y="354" font-size="11" fill="var(--muted)" text-anchor="middle">${V}</text>`;
+  for(let P=300;P<=CW.P1;P+=300) g+=`<line x1="56" x2="504" y1="${csy(P)}" y2="${csy(P)}" stroke="var(--line)"/><text x="50" y="${csy(P)+4}" font-size="11" fill="var(--muted)" text-anchor="end">${P}</text>`;
+  g+=`<line x1="56" x2="504" y1="${csy(0)}" y2="${csy(0)}" stroke="var(--ink)" stroke-width="1.3"/><line x1="56" x2="56" y1="${csy(0)}" y2="14" stroke="var(--ink)" stroke-width="1.3"/>`;
+  g+=`<text x="280" y="374" font-size="12" fill="var(--muted)" text-anchor="middle">volume V (L)</text><text x="14" y="176" font-size="12" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 14 176)">pressure P (kPa)</text>`;
+  g+=`<g id="cdyn"></g><circle id="cdot" r="7" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`;
+  $('cpv').innerHTML=g;
+  /* cylinder skeleton */
+  let c=HATCH('cch')+`<g id="cbase"></g><rect id="cgas" x="82" width="116" fill="rgb(0,0,0)" fill-opacity=".45"/>`;
+  c+=`<rect x="76" y="20" width="6" height="226" fill="var(--ink)"/><rect x="198" y="20" width="6" height="226" fill="var(--ink)"/>`;
+  c+=`<rect id="cpis" x="82" width="116" height="12" fill="var(--muted)"/><rect id="crod" x="136" width="8" height="30" fill="var(--muted)"/><text id="cTt" x="140" font-size="12" text-anchor="middle" fill="var(--ink)"></text><g id="carr"></g>`;
+  $('ccyl').innerHTML=c;
+}
+function drawCarnot(){
+  $('ctho').textContent=CN.th+' K'; $('ctco').textContent=CN.tc+' K'; $('cro').textContent=CN.r.toFixed(2);
+  const S=cStates(); let g='';
+  const curve=(fn,a,b,col,w,dash,op)=>{let d='';for(let i=0;i<=60;i++){const V=a+(b-a)*i/60;d+=(i?'L':'M')+csx(V).toFixed(1)+' '+csy(fn(V)).toFixed(1);}return `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" ${dash?`stroke-dasharray="${dash}"`:''} opacity="${op}"/>`;};
+  /* full isotherms faint */
+  const iso=T=>V=>NMOL*R*T/V;
+  g+=curve(iso(CN.th),Math.max(0.25,NMOL*R*CN.th/CW.P1),CW.V1,'var(--hot)',1.2,'5 4',.55)+curve(iso(CN.tc),Math.max(0.2,NMOL*R*CN.tc/CW.P1),CW.V1,'var(--cold)',1.2,'5 4',.55);
+  /* cycle area */
+  let d='';
+  for(let i=0;i<4;i++) for(let j=0;j<=40;j++){const p=strokePt(S,i,j/40);d+=(i||j?'L':'M')+csx(p.V).toFixed(1)+' '+csy(p.P).toFixed(1);}
+  g+=`<path d="${d}Z" fill="var(--work)" fill-opacity=".25" stroke="none"/>`;
+  $('cstat').innerHTML=g;
+  CN.S=S;
+  /* table */
+  const qh=NMOL*R*CN.th*Math.log(CN.r), qc=NMOL*R*CN.tc*Math.log(CN.r), wa=NMOL*CV*(CN.th-CN.tc);
+  CN.rows=[[qh,qh,0],[0,wa,-wa],[-qc,-qc,0],[0,-wa,wa]];
+  CN.stroke=-1; drawCarnotDyn();
+  const etaQ=1-qc/qh, etaT=1-CN.tc/CN.th;
+  $('ccap').innerHTML=`Net work = enclosed area = Q<sub>H</sub> − Q<sub>C</sub> = ${f0(qh-qc)} J. The two adiabatic works cancel exactly. Efficiency 1 − Q<sub>C</sub>/Q<sub>H</sub> = ${pct(etaQ)}, which equals 1 − T<sub>C</sub>/T<sub>H</sub> = ${pct(etaT)}: along the two isotherms Q<sub>C</sub>/Q<sub>H</sub> = T<sub>C</sub>/T<sub>H</sub>, because both involve the same volume ratio. Change V₂/V₁ and the area changes, but η does not.`;
+}
+function drawCarnotDyn(){
+  const S=CN.S, i=Math.min(3,Math.floor(CN.t)), u=CN.t-i, p=strokePt(S,i,u);
+  setA($('cdot'),{cx:csx(p.V).toFixed(1),cy:csy(p.P).toFixed(1)});
+  /* cylinder: gas column height ∝ V */
+  const yb=246, k=40, h=p.V*k, yt=yb-h;
+  setA($('cgas'),{y:yt.toFixed(1),height:h.toFixed(1),fill:jet((p.T-200)/600*0.85+0.08)});
+  setA($('cpis'),{y:(yt-12).toFixed(1)}); setA($('crod'),{y:(yt-42).toFixed(1)});
+  setA($('cTt'),{y:(Math.min(yb-8,(yt+yb)/2+4)).toFixed(1)}); $('cTt').textContent=f0(p.T)+' K';
+  if(i!==CN.stroke){
+    CN.stroke=i; const st=STROKE[i];
+    press($('cstep'),i);
+    let b=`<rect x="70" y="246" width="140" height="6" fill="var(--ink)"/>`;
+    if(st.base==='hot') b+=reservoir(30,256,220,36,'hot','hot reservoir T_H');
+    else if(st.base==='cold') b+=reservoir(30,256,220,36,'cold','cold reservoir T_C');
+    else b+=`<rect x="50" y="256" width="180" height="36" rx="4" fill="url(#cch)" stroke="var(--muted)"/><text x="140" y="279" font-size="12" text-anchor="middle" fill="var(--ink)" style="paint-order:stroke" stroke="var(--surface)" stroke-width="4">insulating stand</text>`;
+    $('cbase').innerHTML=subs(b);
+    let a='';
+    if(st.base==='hot') a=fat(240,230,206,230,'var(--heat)',12)+`<text x="244" y="216" font-size="12" font-weight="600" fill="var(--heat)" text-anchor="end">Q_H in</text>`;
+    if(st.base==='cold') a=fat(206,230,262,230,'var(--heat)',8)+`<text x="270" y="216" font-size="12" font-weight="600" fill="var(--heat)" text-anchor="end">Q_C out</text>`;
+    a+=`<text x="12" y="40" font-size="12" font-weight="600" fill="var(--work)">${i<2?'W out ↑':'W in ↓'}</text>`;
+    $('carr').innerHTML=subs(a);
+    $('cname').innerHTML=st.n.replace('T_H','T<sub>H</sub>').replace('T_C','T<sub>C</sub>');
+    $('cdesc').innerHTML=st.d;
+    const lab=['1 → 2','2 → 3','3 → 4','4 → 1'];
+    $('ctab').innerHTML=`<table><tr><th>stroke</th><th class="q">Q in</th><th class="w">W by gas</th><th class="u">ΔU</th></tr>`+
+      CN.rows.map((r,j)=>`<tr class="${j===i?'on':''}"><td>${lab[j]} ${j%2?'adiabatic':'isothermal'}</td><td>${sg0(r[0])}</td><td>${sg0(r[1])}</td><td>${sg0(r[2])}</td></tr>`).join('')+
+      `<tr class="sum"><td>cycle</td><td>${sg0(CN.rows.reduce((s,r)=>s+r[0],0))}</td><td>${sg0(CN.rows.reduce((s,r)=>s+r[1],0))}</td><td>0</td></tr></table><p class="muted" style="margin-top:4px">joules; 0.1 mol monatomic ideal gas</p>`;
+    /* highlight current stroke on the PV plot */
+    let d='';for(let j=0;j<=40;j++){const q=strokePt(S,i,j/40);d+=(j?'L':'M')+csx(q.V).toFixed(1)+' '+csy(q.P).toFixed(1);}
+    let all='';for(let s=0;s<4;s++){let dd='';for(let j=0;j<=40;j++){const q=strokePt(S,s,j/40);dd+=(j?'L':'M')+csx(q.V).toFixed(1)+' '+csy(q.P).toFixed(1);}
+      all+=`<path d="${dd}" fill="none" stroke="${s===0?'var(--hot)':s===2?'var(--cold)':'var(--ink)'}" stroke-width="2.2" opacity=".75"/>`;
+      const m=strokePt(S,s,0.5), m2=strokePt(S,s,0.56); all+=arrow(csx(m.V),csy(m.P),csx(m2.V),csy(m2.P),'var(--ink)',2,10);}
+    all+=`<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="4.5" stroke-linecap="round"/>`;
+    S.forEach((s,j)=>{all+=`<circle cx="${csx(s.V)}" cy="${csy(s.P)}" r="3.5" fill="var(--ink)"/><text x="${csx(s.V)+(j===0?-8:7)}" y="${csy(s.P)+(j<2?-7:14)}" font-size="13" font-weight="700" fill="var(--ink)" text-anchor="${j===0?'end':'start'}">${j+1}</text>`;});
+    $('cdyn').innerHTML=all;
+  }
+}
+
+/* =================== 4 · REFRIGERATOR =================== */
+const FR={mode:load('thermo-eng-fmode')||'fr',th:303,tc:263,q:0.5};
+if(FR.mode!=='fr'&&FR.mode!=='hp') FR.mode='fr';
+$('fmode').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;FR.mode=c.dataset.k;store('thermo-eng-fmode',FR.mode);drawFr();});
+['fth','ftc','fq'].forEach(id=>$(id).addEventListener('input',e=>{const v=+e.target.value;if(id==='fth')FR.th=v;if(id==='ftc')FR.tc=v;if(id==='fq')FR.q=v/100;drawFr();}));
+function drawFr(){
+  press($('fmode'),FR.mode);
+  const hp=FR.mode==='hp', {th,tc,q}=FR, bC=tc/(th-tc), b=bC*q, qh=100, w=qh/(b+1), qc=qh-w, k=1.2, cx=200, yTurn=170, bad=q>1.0001;
+  $('fthl').innerHTML=hp?'room T<sub>H</sub>':'kitchen T<sub>H</sub>'; $('ftcl').innerHTML=hp?'outdoors T<sub>C</sub>':'inside fridge T<sub>C</sub>';
+  $('ftho').textContent=th+' K'; $('ftco').textContent=tc+' K'; $('fqo').textContent=Math.round(q*100)+'%';
+  let g=reservoir(40,8,400,52,'hot',(hp?'warm room':'kitchen')+` · ${th} K`)+reservoir(40,340,400,52,'cold',(hp?'cold outdoors':'inside the fridge')+` · ${tc} K`);
+  g+=`<rect x="${cx-90}" y="${yTurn-22}" width="180" height="${Math.max(60,22+10+w*k+12)}" rx="10" fill="var(--surface)" stroke="${bad?'var(--flag)':'var(--ink)'}" stroke-width="${bad?2.5:1.5}" ${bad?'stroke-dasharray="6 4"':''}/>`;
+  g+=`<text x="${cx-96}" y="${yTurn+4}" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="end">${hp?'heat pump':'refrigerator'}</text>`;
+  g+=bands({cx,yTop:60,yBot:340,yTurn,wH:qh*k,wC:qc*k,wW:w*k,reach:330,dir:'up'});
+  const x0=cx-qh*k/2;
+  /* outline the flow you want */
+  if(hp) g+=`<rect x="${x0-3}" y="60" width="${qh*k+6}" height="${yTurn-60}" fill="none" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 3"/>`;
+  else g+=`<rect x="${x0-3}" y="${yTurn}" width="${qc*k+6}" height="${340-yTurn}" fill="none" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 3"/>`;
+  g+=`<text x="${x0-8}" y="110" font-size="13" font-weight="700" fill="var(--heat)" text-anchor="end">Q_H = 100</text><text x="${x0-8}" y="285" font-size="13" font-weight="700" fill="var(--heat)" text-anchor="end">Q_C = ${qc.toFixed(1)}</text>`;
+  g+=`<text x="530" y="${yTurn+10+w*k+18}" font-size="13" font-weight="700" fill="var(--work)" text-anchor="end">W in = ${w.toFixed(1)}</text>`;
+  g+=`<text x="${x0+qh*k+8}" y="${hp?110:285}" font-size="12" font-weight="600" fill="var(--ink)">← wanted</text>`;
+  $('frs').innerHTML=subs(g);
+  const v=$('fverdict'); v.classList.toggle('bad',bad);
+  const cop=hp?b+1:b, copC=hp?bC+1:bC;
+  v.innerHTML=bad?`<b>Forbidden.</b> Better than a reversible machine. Combined with a Carnot engine it would move heat from cold to hot with no net work, breaking the Clausius statement.`
+    :`<b>${hp?'Heat pump':'Refrigerator'}:</b> every unit of work delivers ${cop.toFixed(2)} units of ${hp?'heat into the room':'heat pulled out of the fridge'}. The Carnot limit here is ${copC.toFixed(2)}.`;
+  $('fkv').innerHTML=`<dt>W in</dt><dd>${w.toFixed(1)}</dd><dt>Q<sub>C</sub> from cold</dt><dd>${qc.toFixed(1)}</dd><dt>Q<sub>H</sub> to hot</dt><dd>100 = Q<sub>C</sub> + W</dd><dt>β = Q<sub>C</sub>/W</dt><dd>${b.toFixed(2)} (max ${bC.toFixed(2)})</dd><dt>heat pump Q<sub>H</sub>/W</dt><dd>${(b+1).toFixed(2)} (max ${(bC+1).toFixed(2)})</dd>`;
+}
+
+/* =================== 5 · REVERSIBLE vs IRREVERSIBLE =================== */
+const RV={mode:'exp',n:3};
+$('rmode').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;RV.mode=c.dataset.k;drawRv();});
+$('rn').addEventListener('input',e=>{RV.n=+e.target.value;drawRv();});
+const RWin={V1:5,P1:500};
+const rsx=V=>56+V/RWin.V1*448, rsy=P=>338-P/RWin.P1*324;
+{
+  let g='';
+  for(let V=1;V<=5;V++) g+=`<line x1="${rsx(V)}" x2="${rsx(V)}" y1="${rsy(0)}" y2="${rsy(RWin.P1)}" stroke="var(--line)"/><text x="${rsx(V)}" y="354" font-size="11" fill="var(--muted)" text-anchor="middle">${V}</text>`;
+  for(let P=100;P<=RWin.P1;P+=100) g+=`<line x1="56" x2="504" y1="${rsy(P)}" y2="${rsy(P)}" stroke="var(--line)"/><text x="50" y="${rsy(P)+4}" font-size="11" fill="var(--muted)" text-anchor="end">${P}</text>`;
+  g+=`<line x1="56" x2="504" y1="${rsy(0)}" y2="${rsy(0)}" stroke="var(--ink)" stroke-width="1.3"/><line x1="56" x2="56" y1="${rsy(0)}" y2="14" stroke="var(--ink)" stroke-width="1.3"/>`;
+  g+=`<text x="280" y="374" font-size="12" fill="var(--muted)" text-anchor="middle">volume V (L)</text><text x="14" y="176" font-size="12" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 14 176)">pressure (kPa)</text>`;
+  let d='';for(let i=0;i<=60;i++){const V=1+3*i/60;d+=(i?'L':'M')+rsx(V).toFixed(1)+' '+rsy(RISO/V).toFixed(1);}
+  g+=`<g id="rdyn"></g><path d="${d}" fill="none" stroke="var(--ink)" stroke-width="2.4"/><text x="${rsx(2.6)}" y="${rsy(RISO/2.6)-10}" font-size="11.5" fill="var(--ink)">reversible isotherm (PV = 400 J)</text>`;
+  $('rsv').innerHTML=g;
+}
+function drawRv(){
+  press($('rmode'),RV.mode); $('rno').textContent=RV.n;
+  const n=RV.n, exp=RV.mode==='exp', dV=3/n; let W=0, d='', area='';
+  const Wrev=RISO*Math.log(4);
+  if(exp){
+    let P=RISO/1; d=`M${rsx(1)} ${rsy(P)}`;
+    for(let k=1;k<=n;k++){const Va=1+(k-1)*dV, Vb=1+k*dV, Pk=RISO/Vb; W+=Pk*dV;
+      d+=`L${rsx(Va).toFixed(1)} ${rsy(Pk).toFixed(1)}L${rsx(Vb).toFixed(1)} ${rsy(Pk).toFixed(1)}`;
+      area+=`<rect x="${rsx(Va).toFixed(1)}" y="${rsy(Pk).toFixed(1)}" width="${(rsx(Vb)-rsx(Va)).toFixed(1)}" height="${(rsy(0)-rsy(Pk)).toFixed(1)}" fill="var(--work)" opacity=".35"/>`;}
+  } else {
+    let P=RISO/4; d=`M${rsx(4)} ${rsy(P)}`;
+    for(let k=1;k<=n;k++){const Va=4-(k-1)*dV, Vb=4-k*dV, Pk=RISO/Vb; W+=Pk*dV;
+      d+=`L${rsx(Va).toFixed(1)} ${rsy(Pk).toFixed(1)}L${rsx(Vb).toFixed(1)} ${rsy(Pk).toFixed(1)}`;
+      area+=`<rect x="${rsx(Vb).toFixed(1)}" y="${rsy(Pk).toFixed(1)}" width="${(rsx(Va)-rsx(Vb)).toFixed(1)}" height="${(rsy(0)-rsy(Pk)).toFixed(1)}" fill="var(--work)" opacity=".35"/>`;}
+  }
+  $('rdyn').innerHTML=area+`<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/>`;
+  $('rkv').innerHTML=exp?`<dt>work done by gas, ${n} step${n>1?'s':''}</dt><dd>${f0(W)} J</dd><dt>reversible (∞ steps)</dt><dd>nRT ln 4 = ${f0(Wrev)} J</dd><dt>ratio</dt><dd>${pct(W/Wrev)}</dd>`
+    :`<dt>work done on gas, ${n} step${n>1?'s':''}</dt><dd>${f0(W)} J</dd><dt>reversible (∞ steps)</dt><dd>nRT ln 4 = ${f0(Wrev)} J</dd><dt>ratio</dt><dd>${pct(W/Wrev)}</dd>`;
+  const sc=260/(RISO*3/1*1.0); // full scale = 1200 J (one-step compression)
+  $('rbar').innerHTML=`<rect x="20" y="10" width="${(W*sc).toFixed(1)}" height="18" fill="var(--work)" opacity=".85"/><text x="${(24+W*sc).toFixed(1)}" y="24" font-size="11" fill="var(--muted)">${n} step${n>1?'s':''}</text>`+
+    `<rect x="20" y="38" width="${(Wrev*sc).toFixed(1)}" height="18" fill="var(--ink)" opacity=".7"/><text x="${(24+Wrev*sc).toFixed(1)}" y="52" font-size="11" fill="var(--muted)">reversible</text>`;
+  $('rcap').innerHTML=exp?'Expanding in sudden steps, the gas pushes against an outside pressure lower than its own, so it delivers less work than it could. More, smaller steps fill in the area under the curve. The reversible, quasi-static path gets the most work out.'
+    :'Compressing in sudden steps, you must push with the final, higher pressure for the whole of each step, so you pay more work than needed. More, smaller steps bring the cost down towards the reversible value, the least work in.';
+}
+
+/* =================== 6 · QUIZ =================== */
+function quiz(el,Q){
+  const render=()=>{el.innerHTML=Q.map((q,i)=>`<div class="panel"><p class="qn">Q${i+1}</p><p>${q.q}</p>
+    <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');};
+  el.addEventListener('click',e=>{
+    const b=e.target.closest('.opt'); if(!b||b.disabled) return;
+    const box=b.parentElement, q=Q[+box.dataset.i], j=+b.dataset.j;
+    box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+    const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+  });
+  render(); return render;
+}
+$('qreset').onclick=quiz($('quiz'),QUIZ);
+
+drawEng(); forbidden($('fkp'),'kp'); forbidden($('fcl'),'cl'); drawEq(); drawCarnot(); drawFr(); drawRv();
+</script>
+</body>
+</html>

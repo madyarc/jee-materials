@@ -11,11 +11,12 @@ The project-wide rules in the root [`CLAUDE.md`](../CLAUDE.md) apply, including 
 ## Layout
 
 - `mechanics/` — `moment-of-inertia.html` (Module 01), `rolling-motion.html` (Module 02)
-- Later branches: `thermodynamics/`, `electromagnetism/`, `optics/`, `waves/`, `modern/`
+- `thermodynamics/` — `laws-and-pv.html` (Module 03), `heat-engines.html` (Module 04). Shared foundation for chemistry too: keep the `#signs` section self-contained, as the chemistry index links straight to it.
+- Later branches: `electromagnetism/`, `optics/`, `waves/`, `modern/`
 
 Module numbers are per subject, so don't renumber existing modules.
 
 ## Visual rules
 
-- Velocity vectors, force vectors and axes keep one colour each across all physics pages.
+- Velocity vectors, force vectors and axes keep one colour each across all physics pages. Thermodynamics tokens: `--heat` (Q), `--work` (W), `--du` (ΔU), `--hot`, `--cold`; reuse them on future thermal pages.
 - Axes of rotation are dashed lines; an axis perpendicular to the page is a dot in a circle.
