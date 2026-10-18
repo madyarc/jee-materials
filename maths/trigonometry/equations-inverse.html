@@ -57,6 +57,10 @@ svg.draw{width:100%;height:auto;display:block;user-select:none;-webkit-user-sele
 svg.drag2d{touch-action:none;cursor:grab}
 svg.dragx{touch-action:pan-y;cursor:ew-resize}
 .row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:10px}
+.stepper{gap:8px}
+.btn:disabled{opacity:.4;cursor:default}
+#bso{display:inline-block;min-width:16ch;text-align:center}
+#eko{display:inline-block;min-width:7ch;text-align:center}
 .row label{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center;flex:1 1 220px}
 input[type=range]{accent-color:var(--accent);flex:1;min-width:120px}
 .big{font:500 22px var(--f-mono);font-variant-numeric:tabular-nums}
@@ -129,7 +133,7 @@ footer{font-size:12px;color:var(--muted);max-width:92ch}
   <!-- ============ 2. restricted branch ============ -->
   <section>
     <h2>2 · Inverse functions: keep one piece, then reflect</h2>
-    <p class="lede">sin x takes every value in [−1, 1] infinitely often, so "the angle whose sine is 1/2" is ambiguous until we keep a single piece of the wave. Slide the window (always one half-period wide) and see which pieces work. Reflecting the kept piece in the line y = x gives the inverse graph.</p>
+    <p class="lede">sin x takes every value in [−1, 1] infinitely often, so "the angle whose sine is 1/2" is ambiguous until we keep a single piece of the wave. Step the window left or right (it is always one half-period wide) and see which pieces work. Reflecting the kept piece in the line y = x gives the inverse graph.</p>
     <div class="split" style="margin-top:10px">
       <div class="panel">
         <div class="row" style="margin-top:0">
@@ -138,7 +142,7 @@ footer{font-size:12px;color:var(--muted);max-width:92ch}
           <button class="btn" id="bprin">Principal branch</button>
         </div>
         <svg id="br" class="draw" viewBox="-260 -215 520 430" role="img" aria-label="Graph with a sliding window and its reflection" style="margin-top:8px"></svg>
-        <div class="row"><label>window start <input type="range" id="bs" min="-24" max="12" step="1"><span class="eq" id="bso"></span></label></div>
+        <div class="row stepper" id="bstep"><span class="muted">window</span><button class="btn" id="bprev" aria-label="Move the window left by π/12">◀</button><span class="eq" id="bso" aria-live="polite"></span><button class="btn" id="bnext" aria-label="Move the window right by π/12">▶</button><span class="muted">one step = π/12 · arrow keys work too</span></div>
       </div>
       <div class="panel">
         <h3>Is this piece a good inverse?</h3>
@@ -350,6 +354,7 @@ quiz(Q1,{q:'q1q',opts:'q1opts',why:'q1why',next:'q1next',onShow:()=>{$('qplot').
 const BU=50, BX=v=>P2(v*BU), BY=v=>P2(-v*BU);
 const BF={sin:{f:Math.sin,p:-6,inv:'sin⁻¹'}, cos:{f:Math.cos,p:0,inv:'cos⁻¹'}, tan:{f:tanS,p:-6,inv:'tan⁻¹'}};
 let bf='sin', bj=-6, brefl=true;
+const BMIN=-24, BMAX=12; /* window start = bj·π/12 */
 function branchCheck(fn,j){
   const s=j*PI/12, f=BF[fn].f, N=600; let inc=0,dec=0,mn=Infinity,mx=-Infinity,prev=null,jumpy=false;
   for(let i=1;i<N;i++){const t=s+PI*i/N, v=f(t); if(!isFinite(v)){jumpy=true;prev=null;continue;}
@@ -383,7 +388,8 @@ function renderBr(){
   $('br').innerHTML=g;
   $('bfn').innerHTML=Object.keys(BF).map(k=>`<button class="chip" data-f="${k}" aria-pressed="${k===bf}">${k}</button>`).join('');
   $('brefl').setAttribute('aria-pressed',brefl);
-  $('bs').value=bj; $('bso').textContent=`[${piStr(s)}, ${piStr(e)}]`;
+  $('bso').textContent=`[${piStr(s)}, ${piStr(e)}]`;
+  $('bprev').disabled=bj<=BMIN; $('bnext').disabled=bj>=BMAX;
   const mark=b=>b?'<b style="color:var(--ok)">✓</b>':'<b style="color:var(--flag)">✗</b>';
   const rangeTxt=bf==='tan'?'all real numbers':'all of [−1, 1]';
   $('bcheck').innerHTML=`<p>${mark(c.one)} <b>One-to-one</b>: every horizontal line meets the kept piece at most once. ${c.one?'':'Here some value is hit twice, so the reflected curve fails the vertical-line test (dashed): it is not a function.'}</p>
@@ -394,7 +400,10 @@ function renderBr(){
 $('bfn').addEventListener('click',e=>{const b=e.target.closest('.chip'); if(!b)return; bf=b.dataset.f; renderBr();});
 $('brefl').addEventListener('click',()=>{brefl=!brefl; renderBr();});
 $('bprin').addEventListener('click',()=>{bj=BF[bf].p; renderBr();});
-$('bs').addEventListener('input',e=>{bj=+e.target.value; renderBr();});
+function stepBr(d){ const n=Math.max(BMIN,Math.min(BMAX,bj+d)); if(n!==bj){bj=n; renderBr();} }
+$('bprev').addEventListener('click',()=>stepBr(-1));
+$('bnext').addEventListener('click',()=>stepBr(1));
+$('bstep').addEventListener('keydown',e=>{ if(e.key==='ArrowLeft'){stepBr(-1);e.preventDefault();} else if(e.key==='ArrowRight'){stepBr(1);e.preventDefault();} });
 renderBr();
 quiz([
  {q:'sin x = 1/2 at x = π/6 and at x = 5π/6. Why is sin⁻¹(1/2) = π/6?',o:['π/6 is smaller','only π/6 lies in the principal range [−π/2, π/2]','5π/6 is not a solution','by convention, no reason'],a:1,
