@@ -34,7 +34,7 @@ Create a subject or branch folder only when its first module is written. File na
 ## Content rules (non-negotiable)
 
 1. **No unverified data.** Every number must be checked against a published source (NIST, CRC Handbook, Wikipedia data pages that cite them, peer-reviewed papers, standard textbooks, NCERT) **before** it goes into a page. Never enter values from memory.
-2. **Cite sources** on the page (footer) and in the subject's `DATA-SOURCES.md`.
+2. **Cite sources** on the page (footer) and in the subject's `DATA-SOURCES.md`. The page footer is for **school students**, who never see the GitHub repo: a short "Based on:" line naming the textbooks they know (NCERT by chapter *name*, H. C. Verma, etc.) plus a "Models used:" line for simplifications. Never put repo files (`DATA-SOURCES.md`), source PDFs/compendiums, example numbers, corrections to source material, or verification notes ("re-derived", "computed by the script") on a page; those go in `DATA-SOURCES.md` only.
 3. If sources disagree, use the more authoritative one, and say so on the page if the difference matters.
 4. If a value can't be verified, **leave it out** rather than guess.
 5. **Label heuristics.** Any rule of thumb, simplified model or hand-waving argument is tagged on the page as such (e.g. "rule of thumb, not a law", "simplified model", "schematic, not to scale").
