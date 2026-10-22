@@ -4,18 +4,18 @@ Chapter list from the current NCERT Class 11 books (rationalised edition, reprin
 
 ## Physics
 
-Done: Ch 6 (moment of inertia, rolling only), Ch 10 Thermal properties of matter, Ch 11 Thermodynamics, Ch 12 Kinetic theory.
+Done: Ch 2–7 (all of mechanics), Ch 10–12 (thermal physics), Ch 13–14 (oscillations and waves), every ★★★ topic below. Remaining: Ch 8, Ch 9, Ch 1.
 
 | NCERT chapter | What's left | Visual value | Why |
 |---|---|---|---|
-| 2 Motion in a straight line | x–t, v–t, a–t graphs and how they turn into each other; area = displacement; free fall | ★★★ | Students mis-read graphs constantly; drag a velocity and watch all three graphs |
-| 3 Motion in a plane | Vectors (add, resolve), projectile motion, relative velocity (river–boat, rain–man), uniform circular motion | ★★★ | Pure geometry; projectile and relative-velocity pictures settle most doubts |
-| 4 Laws of motion | Free-body diagrams, static vs kinetic friction, pulleys and connected bodies, banking of roads, circular motion | ★★★ | FBDs are the core JEE skill and are visual by nature |
-| 5 Work, energy and power | Work as area under F–x, potential-energy curves (equilibrium, turning points), springs, power, collisions (elastic/inelastic, CM frame) | ★★★ | PE-curve "ball on a hill" and collision animations are very clarifying |
-| 6 System of particles (rest) | Centre of mass, motion of CM, torque and cross product, angular momentum and its conservation, equilibrium of rigid bodies | ★★★ | Torque/lever and spinning-skater pictures; finishes the chapter |
-| 7 Gravitation | Kepler's laws (equal areas), g with height and depth, gravitational PE, escape speed, orbits and satellite energy | ★★★ | Orbits drawn to scale; the "equal areas" sweep is the classic visual |
-| 13 Oscillations | SHM as the shadow of circular motion, x/v/a phase relations, energy exchange, spring and pendulum | ★★★ | The circle-shadow picture is the whole intuition for SHM |
-| 14 Waves | Transverse vs longitudinal, travelling wave y(x, t), wave speed, superposition, reflection, standing waves on strings and in pipes, beats | ★★★ | Moving waves are impossible in a book and easy on screen |
+| ✅ 2 Motion in a straight line | x–t, v–t, a–t graphs and how they turn into each other; area = displacement; free fall | ★★★ | Students mis-read graphs constantly; drag a velocity and watch all three graphs |
+| ✅ 3 Motion in a plane | Vectors (add, resolve), projectile motion, relative velocity (river–boat, rain–man), uniform circular motion | ★★★ | Pure geometry; projectile and relative-velocity pictures settle most doubts |
+| ✅ 4 Laws of motion | Free-body diagrams, static vs kinetic friction, pulleys and connected bodies, banking of roads, circular motion | ★★★ | FBDs are the core JEE skill and are visual by nature |
+| ✅ 5 Work, energy and power | Work as area under F–x, potential-energy curves (equilibrium, turning points), springs, power, collisions (elastic/inelastic, CM frame) | ★★★ | PE-curve "ball on a hill" and collision animations are very clarifying |
+| ✅ 6 System of particles (rest) | Centre of mass, motion of CM, torque and cross product, angular momentum and its conservation, equilibrium of rigid bodies | ★★★ | Torque/lever and spinning-skater pictures; finishes the chapter |
+| ✅ 7 Gravitation | Kepler's laws (equal areas), g with height and depth, gravitational PE, escape speed, orbits and satellite energy | ★★★ | Orbits drawn to scale; the "equal areas" sweep is the classic visual |
+| ✅ 13 Oscillations | SHM as the shadow of circular motion, x/v/a phase relations, energy exchange, spring and pendulum | ★★★ | The circle-shadow picture is the whole intuition for SHM |
+| ✅ 14 Waves | Transverse vs longitudinal, travelling wave y(x, t), wave speed, superposition, reflection, standing waves on strings and in pipes, beats | ★★★ | Moving waves are impossible in a book and easy on screen |
 | 9 Mechanical properties of fluids | Pressure and Pascal's law, buoyancy, streamline flow, continuity, Bernoulli, viscosity and terminal velocity, surface tension and capillarity | ★★☆ | Bernoulli and capillary rise visualise well; some parts are definitions |
 | 8 Mechanical properties of solids | Stress–strain curve, Hooke's law, Young's/bulk/shear moduli, elastic energy | ★★☆ | Stress–strain curve and the three kinds of deformation; short chapter |
 | 1 Units and measurements | Dimensional analysis, significant figures, errors | ★☆☆ | Mostly rules; a small dimension-checker could help |

@@ -102,3 +102,26 @@ Schematic, labelled on the page: gas-sample pressures, lake layer temperatures, 
 Errors / outdated values in NCERT, not carried over: the triple-point pressure (as above); gold in Table 10.5 (boiling point 2660 °C, L<sub>v</sub> 15.8×10⁵ — modern values 2970 °C, ≈ 17.4×10⁵ J kg⁻¹; gold left off); lead's melting and boiling points differ slightly from modern values (not shown). NCERT explains skating by pressure melting alone; the page labels that a simplified picture.
 
 The phase diagrams are schematic with correct key points; the flask-activity pressures (1.3 and 0.4 atm) and the steam-burn model (skin at 37 °C) are illustrative and labelled.
+
+## Mechanics and waves batch (Oct 2026): 14 pages
+
+Every formula was checked against the NCERT Class 11 rationalised text (2026–27 reprint) and H. C. Verma, *Concepts of Physics* Vol. 1. Every worked number and quiz answer is computed in the page script. Each page was then reviewed by an independent reviewer, who recomputed every quiz answer and checked the physics, arrows and captions.
+
+| Page | Data and sources beyond NCERT/HCV |
+|---|---|
+| `mechanics/motion-in-a-line.html` | NCERT Ex 2.1, 2.3, 2.5–2.7; Exercises 2.5, 2.6, 2.10, 2.14. Braking deceleration 6.1 m s⁻² is a least-squares fit of d = u²/2b to NCERT Ex 2.6 data (labelled as a fit) |
+| `mechanics/vectors-relative-motion.html`, `projectile-circular.html` | NCERT Ex 3.1, 3.3–3.9; Exercises 3.13–3.14. Incline projectile T = 2u sin β/(g cos α), R_max = u²/[g(1 + sin α)] at β = 45° − α/2; minimum-drift heading sin α = v/u (HCV, re-derived) |
+| `mechanics/laws-of-motion.html`, `friction-circular-dynamics.html` | NCERT Ex 4.6–4.12; Exercises 4.13, 4.16, 4.18, 4.19, 4.21. Banked-road v_min (HCV). µ_k = 0.8 µ_s on the incline is illustrative (labelled) |
+| `mechanics/work-energy.html`, `collisions.html` | NCERT Ex 5.1–5.12; Exercises 5.4, 5.8, 5.10, 5.14, 5.16, 5.17; 1 hp = 746 W (NCERT). Restitution formulas, ΔK = ½µ(1 − e²)u_rel², e²ⁿh bounces (HRW, HCV). Vertical circle: T = m(u²/L − 2g + 3g cos θ), slack at cos θ_s = (2gL − u²)/(3gL), critical √(5gL) (string) and 2√(gL) (rod) |
+| `mechanics/centre-of-mass.html`, `torque-angular-momentum.html` | NCERT Ex 6.1, 6.3, 6.4, 6.8, 6.9, 6.11, 6.12; Exercises 6.2, 6.3, 6.7, 6.12–6.16. Centroids from Wikipedia "List of centroids"; hemispherical shell R/2 and disc-with-hole −a²d/(R² − a²) derived. Swivel-chair numbers illustrative (labelled) |
+| `mechanics/gravitation.html`, `orbits-satellites.html` | NASA Planetary Fact Sheet (a, T, e for 8 planets); NASA Earth (GM 0.39860×10⁶ km³ s⁻², R 6371 km, equatorial 6378.137 km, sidereal day 23.9345 h, g 9.780/9.832), Moon (GM 0.00490×10⁶, R 1737.4 km, a 384 400 km, 27.3217 d, mass ratio 0.0123) and Mars (GM 0.042828×10⁶, R 3389.5 km) fact sheets; G = 6.67430×10⁻¹¹ (CODATA 2018). All values re-checked against the fact sheets by the reviewer |
+| `waves/oscillations.html` | NCERT Ex 13.4–13.7; Moon g = 1.62 m s⁻² (NASA, not NCERT's 1.7). Large-angle period via the AGM closed form. Damped/forced oscillations (JEE Advanced): OpenStax *University Physics* Vol. 1 §15.5–15.6; phase lag and peak ω₀√(1 − 2ζ²) from Wikipedia "Harmonic oscillator" |
+| `waves/travelling-waves.html`, `standing-waves-beats.html` | Air: M = 28.9647 g mol⁻¹, γ = 1.400, measured 331.29 m s⁻¹ at 0 °C (Wong, *J. Acoust. Soc. Am.* 79, 1359 (1986)); computed Newton 280.0, Laplace 331.3, 343.2 m s⁻¹ at 20 °C. End correction ≈ 0.6r (rule of thumb, labelled). Doppler ν′ = ν(v ± v_o)/(v ∓ v_s) (JEE Advanced; HCV "Sound Waves", Wikipedia "Doppler effect") |
+
+Errors in NCERT (2026–27 reprint) found during this batch, none repeated on the pages:
+- Ex 5.8 prints k = 5.25 × 10³ N m⁻¹, but its answers (x_m = 2.00 m; 1.35 m in Ex 5.9) need 6.25 × 10³ (with 5.25 × 10³ they would be 2.18 m and 1.43 m). The page uses 6.25 × 10³.
+- Ex 3.3 prints R = √(v_b² + v_b² + 2v_bv_c cos 120°); it should be v_b² + v_c² (the numerical answer is right). Summary point 14 of Ch 3 has the average acceleration as (v − v′)/Δt.
+- Ch 13 Points to Ponder 6: a sum of two SHMs is periodic when the frequency ratio is rational, not only when one is an integer multiple of the other. Exercise 13.15 uses g_Moon = 1.7 m s⁻² (NASA: 1.62).
+- Ch 14 Eqs 14.35–14.36 write the reflected wave as travelling in +x; the Summary's ∓a sin(kx + ωt) is right.
+- Rationalisation left orphans: Ch 2's contents list "Relative velocity" with no section, and Ch 13 still promises damped and forced oscillations "later in the chapter".
+- Minor typos and wrong cross-references in Chs 2, 4, 6, 7, 13 and 14 (figure/equation/exercise numbers).

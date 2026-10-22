@@ -19,15 +19,29 @@ Interactive pages for building intuition across the JEE syllabus (CBSE + JEE). P
 
 | # | Module | Branch | What it does |
 |---|---|---|---|
-| 01 | [Moment of Inertia](physics/mechanics/moment-of-inertia.html) | Mechanics | Mass distribution vs distance from the axis; drag the axis for I = I_cm + Md²; perpendicular-axis theorem; one value → whole family |
-| 02 | [Rolling Motion](physics/mechanics/rolling-motion.html) | Mechanics | Velocity arrows on a rolling/slipping wheel; incline race by β = k²/R²; friction needed to roll; slipping → rolling |
-| 03 | [Thermodynamics: the PV Diagram](physics/thermodynamics/laws-and-pv.html) | Thermodynamics | Zeroth law; work as area; Q = ΔU + W bars; cycles; path dependence; Cp vs Cv; physics vs chemistry sign conventions |
-| 04 | [Heat Engines and the Second Law](physics/thermodynamics/heat-engines.html) | Thermodynamics | Energy-flow bands; Kelvin–Planck and Clausius as impossible machines; Carnot cycle; refrigerators and heat pumps |
-| 05 | [Kinetic Theory](physics/thermodynamics/kinetic-theory.html) | Thermodynamics | Molecule box → pressure and gas laws; KE ∝ T; Maxwell curve with v_mp, v_avg, v_rms; Graham; mean free path; real gases |
-| 06 | [Degrees of Freedom and Equipartition](physics/thermodynamics/degrees-of-freedom.html) | Thermodynamics | Molecule viewer toggling each DOF; ½kT buckets → Cv, Cp, γ; mixtures; solids 3R; frozen modes |
-| 07 | [Heat Transfer](physics/thermodynamics/heat-transfer.html) | Thermodynamics | Conduction (series/parallel, thermal resistance, ice growth); convection; black-body radiation; Newton's law of cooling |
-| 08 | [Temperature and Thermal Expansion](physics/thermodynamics/temperature-expansion.html) | Thermodynamics | Linked °C/°F/K/own scales; gas thermometer → absolute zero; 2α and 3α from pictures; water at 4 °C; thermal stress; bimetal, liquid, pendulum |
-| 09 | [Heat, Calorimetry and Change of State](physics/thermodynamics/calorimetry-phase.html) | Thermodynamics | Specific heat; heat lost = heat gained by dragging; heating curve to scale; ice + water; phase diagrams; boiling point vs pressure; regelation |
+| 01 | [Motion in a Straight Line](physics/mechanics/motion-in-a-line.html) | Mechanics | Car on a track ↔ live x–t, v–t, a–t; slope and area; equations of motion from the v–t trapezium; free fall; stopping distance; relative velocity |
+| 02 | [Vectors and Relative Motion](physics/mechanics/vectors-relative-motion.html) | Mechanics | Drag-to-add vectors; components; velocity as tangent; rain–umbrella and river–boat in two frames |
+| 03 | [Projectiles and Circular Motion](physics/mechanics/projectile-circular.html) | Mechanics | Launcher with components; range vs angle; up a slope; two projectiles; Δv construction for v²/r |
+| 04 | [Newton's Laws](physics/mechanics/laws-of-motion.html) | Mechanics | Inertia; F = dp/dt and impulse; third-law pairs; recoil; force triangles; free-body-diagram builder |
+| 05 | [Friction and Circular Motion](physics/mechanics/friction-circular-dynamics.html) | Mechanics | Static friction up to µsN; angle of repose; centripetal force as a role; level and banked roads |
+| 06 | [Work and Energy](physics/mechanics/work-energy.html) | Mechanics | Work by angle; area under F–x; conservative forces; potential-energy landscape; springs; power |
+| 07 | [Collisions](physics/mechanics/collisions.html) | Mechanics | Two-cart lab with e; momentum and KE bars; CM frame; 2D equal-mass collision |
+| 08 | [Centre of Mass](physics/mechanics/centre-of-mass.html) | Mechanics | Draggable masses; CM of shapes; exploding shell; boat; centre of gravity |
+| 09 | [Torque and Angular Momentum](physics/mechanics/torque-angular-momentum.html) | Mechanics | Cross product; lever arm; L conservation; equilibrium; translation ↔ rotation pairs |
+| 10 | [Moment of Inertia](physics/mechanics/moment-of-inertia.html) | Mechanics | Mass vs distance from the axis; slide vs pull; parallel- and perpendicular-axis theorems |
+| 11 | [Rolling Motion](physics/mechanics/rolling-motion.html) | Mechanics | Velocity arrows on a rolling/slipping wheel; incline race by β = k²/R²; friction needed to roll |
+| 12 | [Gravitation](physics/mechanics/gravitation.html) | Mechanics | Kepler's laws on real planet data; inverse square; shell theorem; g(h), g(d); −GMm/r vs mgh |
+| 13 | [Orbits, Escape and Satellites](physics/mechanics/orbits-satellites.html) | Mechanics | Newton's cannon; escape speed; orbital speed and period; geostationary orbits; satellite energy |
+| 14 | [Temperature and Thermal Expansion](physics/thermodynamics/temperature-expansion.html) | Thermal | Linked °C/°F/K scales; absolute zero; 2α and 3α; water at 4 °C; thermal stress |
+| 15 | [Heat, Calorimetry and Change of State](physics/thermodynamics/calorimetry-phase.html) | Thermal | Heat lost = heat gained; heating curve to scale; phase diagrams; boiling vs pressure; regelation |
+| 16 | [Heat Transfer](physics/thermodynamics/heat-transfer.html) | Thermal | Conduction in series/parallel; convection; black-body radiation; Newton's law of cooling |
+| 17 | [Thermodynamics: the PV Diagram](physics/thermodynamics/laws-and-pv.html) | Thermal | Work as area; Q = ΔU + W; cycles; path dependence; physics vs chemistry sign conventions |
+| 18 | [Heat Engines and the Second Law](physics/thermodynamics/heat-engines.html) | Thermal | Energy-flow bands; impossible machines; Carnot cycle; refrigerators |
+| 19 | [Kinetic Theory](physics/thermodynamics/kinetic-theory.html) | Thermal | Molecule box → pressure; KE ∝ T; v_mp, v_avg, v_rms on the Maxwell curve; mean free path |
+| 20 | [Degrees of Freedom and Equipartition](physics/thermodynamics/degrees-of-freedom.html) | Thermal | Toggle each motion of a molecule; ½kT buckets → Cv, Cp, γ; solids; frozen modes |
+| 21 | [Oscillations and SHM](physics/waves/oscillations.html) | Waves | SHM as the shadow of circular motion; phases; energy; spring and pendulum; damping and resonance |
+| 22 | [Travelling Waves](physics/waves/travelling-waves.html) | Waves | One particle vs the wave; y(x, t); string and sound speeds |
+| 23 | [Superposition, Standing Waves and Beats](physics/waves/standing-waves-beats.html) | Waves | Superposition; reflection; harmonics of strings and pipes; beats; Doppler effect |
 
 ### Mathematics — [`maths/`](maths/index.html)
 
@@ -48,7 +62,7 @@ chemistry/
   CLAUDE.md                chemistry-specific rules
   DATA-SOURCES.md          sources and verification log
   inorganic/  organic/  physical/
-physics/                   same structure: mechanics/ …
+physics/                   mechanics/  thermodynamics/  waves/  (+ SYLLABUS.md checklist)
 maths/                     same structure: trigonometry/  algebra/ …
 ```
 

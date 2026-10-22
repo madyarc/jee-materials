@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Newton's Laws</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&family=Noto+Sans+Symbols+2&text=%E2%86%90%E2%86%91%E2%86%92%E2%86%93%E2%86%94%E2%86%97%E2%87%8C%E2%87%92%E2%87%94%E2%88%82%E2%88%88%E2%88%92%E2%88%93%E2%88%9A%E2%88%9D%E2%88%9E%E2%88%AB%E2%89%88%E2%89%A0%E2%89%A1%E2%89%A4%E2%89%A5%E2%89%AA%E2%89%AB%E2%8A%95%E2%8A%97%E2%8A%99%E2%8A%A5%E2%96%B2%E2%96%B6%E2%97%80%E2%97%8B%E2%97%8F%E2%9C%93%E2%9C%97%E2%9D%9A%E2%9F%82%E2%9F%A8%E2%9F%A9&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) Galileo's double incline  (2) momentum, impulse, catching a ball  (3) third-law pairs on a book/table/Earth
+   (4) momentum conservation: recoil and break-up  (5) equilibrium: closed force triangle  (6) free-body diagram builder */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --acc:#b0377a; --disp:#1f8f87; --ke:#0f8a4f; --pe:#8a6d1f;
+  --b1:#7a52c7; --b2:#1f8f87; --b3:#b0377a; --b4:#8a6d1f;
+  --f-display:"Bricolage Grotesque","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","Noto Sans Math","Noto Sans Symbols 2",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a;
+  --b1:#a585f0; --b2:#3cb8ad; --b3:#e86fae; --b4:#d4b44a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a;
+  --b1:#a585f0; --b2:#3cb8ad; --b3:#e86fae; --b4:#d4b44a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:8.5em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:9.5ch;text-align:right;white-space:nowrap}
+@media (max-width:480px){.slider label{min-width:0;flex:1 1 100%}.slider input{min-width:0}}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+a{color:var(--accent)}
+.body-hit{cursor:pointer}
+.fbtn{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 9px;cursor:pointer;text-align:left}
+.fbtn[aria-pressed="true"]{border-color:var(--force);box-shadow:inset 3px 0 0 var(--force)}
+.predict{display:flex;flex-direction:column;gap:6px}
+.predict .opts{flex-direction:row;flex-wrap:wrap;margin-top:0}
+.predict .opt{padding:5px 10px;font-size:13.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Newton's Laws</h1>
+    <p class="lede">A force is not what keeps things moving. A force is what <b>changes</b> motion. Galileo saw this by imagining friction away. Newton then made it exact: force is the rate of change of momentum, and forces always come in pairs between two bodies. This page builds each law as a picture, then puts them to work in free-body diagrams.</p>
+  </header>
+
+  <!-- 1 · inertia -->
+  <section class="stack" id="inertia">
+    <div>
+      <h2>1 · Aristotle's mistake and Galileo's double incline</h2>
+      <p class="lede">Aristotle taught that a moving body needs a force to keep it moving, and everyday life seems to agree: a toy car stops when you let go of the string. Galileo's test: let a ball roll down one ramp and up another. Make the second ramp shallower and shallower. How far does it go when the ramp is flat?</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="gal" viewBox="0 0 640 250" role="img" aria-label="Ball on a double inclined plane" style="min-width:520px"></svg></div>
+        <div class="slider"><label for="gphi">second ramp angle</label><input type="range" id="gphi" min="0" max="60" step="1" value="30"><output id="gphio"></output></div>
+        <div class="row"><span class="muted">friction:</span><div class="chips" id="gmu" role="group" aria-label="Amount of friction"></div></div>
+        <div class="row"><button class="btn primary" id="gplay">Release the ball</button><button class="btn" id="greset">Reset</button></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="gkv"></dl>
+        <p class="cap key" id="gcap"></p>
+        <p class="cap">Galileo's first observations: going <b>down</b> a slope the ball speeds up, going <b>up</b> it slows down, so on a level surface it should do neither. Without friction the ball always climbs back to its starting height, however shallow the ramp; a shallower ramp only means a longer path. At 0° there is no height to regain, so it never stops. That is the <b>law of inertia</b>: with no net force, a body keeps its velocity. Rest and steady straight-line motion are the same state, both with zero acceleration. Friction, not a missing push, is what stops real bodies.</p>
+        <p class="muted">Simplified model: the ball is treated as a point; losses are a small sliding-friction coefficient µ standing in for rolling friction and air drag. Start height 1 m, first ramp 40°, g = 9.8 m s⁻².</p>
+      </div>
+    </div>
+    <div class="cap key">Newton's first law: <i>every body stays at rest or in uniform motion in a straight line unless an external force compels it to change that state.</i> In short: zero net external force ⇔ zero acceleration.</div>
+    <div class="qgrid" id="q1"></div>
+  </section>
+
+  <!-- 2 · second law -->
+  <section class="stack" id="second">
+    <div>
+      <h2>2 · Momentum, impulse and the second law</h2>
+      <p class="lede">Stopping a fast cricket ball hurts; stopping it slowly does not. Both remove the same momentum p = mv. What changes is how quickly. Force is the <b>rate</b> of change of momentum.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <h3>Catching a ball: stiff hands or soft hands</h3>
+        <div class="svgbox"><svg id="catch" viewBox="0 0 360 120" role="img" aria-label="Ball caught by a hand that moves back" style="min-width:300px"></svg></div>
+        <div class="svgbox"><svg id="ft" viewBox="0 0 360 230" role="img" aria-label="Force against time during the catch" style="min-width:320px"></svg></div>
+        <div class="legend"><span><i style="background:var(--muted)"></i>stiff hands (0.005 s)</span><span><i style="background:var(--force)"></i>your catch</span><span><i style="background:var(--force);opacity:.4;height:10px"></i>impulse = area</span></div>
+        <div class="slider"><label for="cv">ball speed</label><input type="range" id="cv" min="5" max="30" step="1" value="20"><output id="cvo"></output></div>
+        <div class="slider"><label for="ct">stopping time Δt</label><input type="range" id="ct" min="0.005" max="0.08" step="0.001" value="0.04"><output id="cto"></output></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="ckv"></dl>
+        <p class="cap key">The two shaded areas are equal: <b>impulse</b> = area under the F–t graph = F<sub>avg</sub>Δt = Δp. The ball must lose the same momentum either way, so drawing the hands back (a longer Δt) spreads the same area out low and wide. Lower force, less pain.</p>
+        <p class="cap">Newton's second law: F = dp/dt. For a fixed mass, dp/dt = m dv/dt, so F = ma. The newton is defined by it: 1 N gives 1 kg an acceleration of 1 m s⁻². It is a vector law, one equation for each component.</p>
+        <p class="muted">Model: 0.15 kg ball; the force pulse is drawn as a smooth hump (half a sine wave, a simplified shape); "give" assumes steady slowing.</p>
+      </div>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <h3>Same force, same time, different masses</h3>
+        <div class="svgbox"><svg id="carts" viewBox="0 0 360 180" role="img" aria-label="Two carts pushed by the same force" style="min-width:300px"></svg></div>
+        <div class="slider"><label for="kt">push for</label><input type="range" id="kt" min="0" max="3" step="0.1" value="2"><output id="kto"></output></div>
+        <div class="slider"><label for="km">mass of cart B</label><input type="range" id="km" min="1" max="8" step="0.5" value="4"><output id="kmo"></output></div>
+      </div>
+      <div class="panel stack">
+        <p class="cap key">Both carts feel 2 N for the same time. The light one ends up faster, the heavy one slower, yet the momentum bars always match: F Δt = Δp, whatever the mass.</p>
+        <p class="cap">That is why momentum, not velocity, is the natural quantity in the second law. A heavier body at the same speed needs more force to stop in the same time; so does a faster body of the same mass.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q2"></div>
+  </section>
+
+  <!-- 3 · third law -->
+  <section class="stack" id="third">
+    <div>
+      <h2>3 · Third law: every force has a partner on the <i>other</i> body</h2>
+      <p class="lede">A book rests on a table on the Earth (pulled apart so you can see each body). Pick a body to see the forces <b>on it</b>. Then tap one of its forces: its third-law partner lights up, and it is always on a different body.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="tbody" role="group" aria-label="Choose a body"></div>
+        <div class="svgbox"><svg id="tl" viewBox="0 54 520 304" role="img" aria-label="Book, table and Earth with forces" style="min-width:460px"></svg></div>
+        <p class="muted">Schematic, not to scale. Arrow lengths: book's weight = 1 unit, table's weight = 3 units; the Earth's own weight is not drawn.</p>
+      </div>
+      <div class="panel stack">
+        <h3 id="tlist-h">Forces on the book</h3>
+        <div class="stack" id="tlist" style="gap:6px"></div>
+        <p class="verdict" id="tnote"></p>
+        <p class="cap key">F<sub>on A by B</sub> = −F<sub>on B by A</sub>. Same size, opposite direction, same instant (neither one "causes" the other), and on <b>different</b> bodies. So the two forces of a pair can never cancel each other.</p>
+        <p class="cap">The book's weight and the table's push are equal only because the book is at rest (first law); they are <b>not</b> a pair. In an accelerating lift they differ (section 6). Choose "book + table" and the pair between them becomes internal: it cancels inside the system.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q3"></div>
+  </section>
+
+  <!-- 4 · conservation -->
+  <section class="stack" id="momentum">
+    <div>
+      <h2>4 · Conservation of momentum: recoil and break-up</h2>
+      <p class="lede">A gun fires a shell; a nucleus splits; two skaters push apart. During the push, the forces on the two pieces are a third-law pair: equal, opposite and acting for the same time. So their momentum changes are equal and opposite, and the total stays what it was: zero.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="mpre" role="group" aria-label="Presets"></div>
+        <div class="svgbox"><svg id="mom" viewBox="0 30 560 200" role="img" aria-label="Two pieces flying apart" style="min-width:400px"></svg></div>
+        <div class="slider"><label for="mt">time after the push</label><input type="range" id="mt" min="0" max="1" step="0.01" value="0.6"><output id="mto"></output></div>
+        <div class="slider"><label for="m1">mass A (left)</label><input type="range" id="m1" min="0.5" max="10" step="0.5" value="3"><output id="m1o"></output></div>
+        <div class="slider"><label for="m2">mass B (right)</label><input type="range" id="m2" min="0.5" max="10" step="0.5" value="1"><output id="m2o"></output></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="mkv"></dl>
+        <p class="cap key">p<sub>A</sub> + p<sub>B</sub> = 0 before, so p<sub>A</sub> + p<sub>B</sub> = 0 after: m<sub>A</sub>v<sub>A</sub> = −m<sub>B</sub>v<sub>B</sub>. The heavier piece moves slower, in exact inverse ratio of the masses. The cross (centre of mass) never moves.</p>
+        <p class="cap">The law holds for any isolated system (no net external force), in every collision, elastic or not. Collisions get their own page: <a href="collisions.html">Collisions</a>.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q4"></div>
+  </section>
+
+  <!-- 5 · equilibrium -->
+  <section class="stack" id="equilibrium">
+    <div>
+      <h2>5 · Equilibrium: forces that close into a triangle</h2>
+      <p class="lede">A particle is in equilibrium when the net force on it is zero. Draw its forces head to tail: if they end where they started, the net force is zero. Three forces make a closed triangle, more forces a closed polygon.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="emode" role="group" aria-label="Mode"></div>
+        <div class="svgbox"><svg id="eq" viewBox="0 0 560 300" role="img" aria-label="Forces at a point and their head-to-tail polygon" style="min-width:400px;touch-action:none"></svg></div>
+        <div id="erope" class="stack">
+          <div class="slider"><label for="ef">sideways pull F</label><input type="range" id="ef" min="0" max="120" step="1" value="50"><output id="efo"></output></div>
+        </div>
+        <div id="efree" class="row" hidden><button class="btn" id="ebal">Balance it: set F₃ = −(F₁ + F₂)</button><span class="muted">Drag the arrow tips.</span></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="everd"></p>
+        <dl class="kv" id="ekv"></dl>
+        <p class="cap key" id="ecap"></p>
+        <p class="cap">In components: ΣF<sub>x</sub> = 0 and ΣF<sub>y</sub> = 0 (and ΣF<sub>z</sub> = 0). For an extended body, zero net force is not enough: the turning effects must also cancel (see <a href="torque-angular-momentum.html">Torque and Angular Momentum</a>).</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q5"></div>
+  </section>
+
+  <!-- 6 · FBD builder -->
+  <section class="stack" id="fbd">
+    <div>
+      <h2>6 · Free-body diagram builder</h2>
+      <p class="lede">The method for every mechanics problem: pick <b>one body</b> (or a group of bodies) as your system, then draw only the forces <b>on it</b> by everything else. Choose a set-up, tap a body, predict, then see the diagram to scale with the acceleration and tensions worked out.</p>
+    </div>
+    <div class="panel stack">
+      <div class="chips" id="fsys" role="group" aria-label="Choose a set-up"></div>
+    </div>
+    <div class="two">
+      <div class="panel stack">
+        <div class="chips" id="fpre" role="group" aria-label="Presets"></div>
+        <div class="svgbox"><svg id="fscene" viewBox="0 0 360 240" role="img" aria-label="The set-up" style="min-width:300px;max-width:440px;margin:0 auto"></svg></div>
+        <div class="chips" id="fbodies" role="group" aria-label="Choose the body"></div>
+        <div id="fsliders" class="stack"></div>
+      </div>
+      <div class="panel stack">
+        <div class="predict" id="fpred"></div>
+        <div class="svgbox"><svg id="ffbd" viewBox="0 0 320 310" role="img" aria-label="Free-body diagram" style="min-width:280px;max-width:400px;margin:0 auto"></svg></div>
+        <div class="legend"><span><i style="background:var(--force)"></i>force on the chosen body</span><span><i style="background:var(--acc)"></i>its acceleration</span></div>
+        <dl class="kv" id="fkv"></dl>
+        <p class="cap key" id="fcap"></p>
+      </div>
+    </div>
+    <p class="cap">Rules used: light inextensible strings (same tension all along, same acceleration at both ends), light frictionless pulleys, rigid blocks treated as particles. A light spring would pull with F = −kx (x = stretch); a string is a very stiff spring, so its stretch is ignored. Air drag, buoyancy and viscosity are contact forces too, left out here.</p>
+    <div class="qgrid" id="q6"></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> point particles and rigid blocks; light inextensible strings and frictionless light pulleys; no air resistance; in section 1, losses modelled as a constant friction coefficient; friction in the pulley set-up uses one coefficient for both static and sliding friction (a simplification). g = 9.8 m s⁻² unless a question states 10. Pictures are schematic; arrows are to scale within each diagram.</p>
+    <p><b>Based on:</b> NCERT Physics Class 11, "Laws of Motion"; H. C. Verma, <i>Concepts of Physics</i> Vol. 1, "Newton's Laws of Motion" and "Friction".</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+const G=9.8; // m s^-2
+/* 1 · Galileo: start height (m), first ramp angle (deg), friction steps */
+const GAL={h0:1, alpha:40, mus:[0,0.02,0.05,0.1]};
+/* 2 · catch: ball mass (kg), "stiff hands" stopping time (s); carts: force (N), mass of cart A (kg) */
+const CATCH={m:0.15, tStiff:0.005};
+const CARTS={F:2, mA:1};
+/* 4 · momentum presets. vB = speed of B (m/s) after the push */
+const MPRE=[
+ {id:'carts', l:'Two carts on a spring', mA:3, mB:1, vB:2},
+ {id:'equal', l:'Equal halves', mA:2, mB:2, vB:2},
+ {id:'gun', l:'Gun 100 kg and shell 0.020 kg', mA:100, mB:0.02, vB:80, fixed:true}
+];
+/* 5 · rope example: hanging mass (kg) */
+const ROPE={m:6};
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const f1=v=>(Math.abs(v)<0.05?0:v).toFixed(1), f2=v=>(Math.abs(v)<0.005?0:v).toFixed(2);
+function fmt(v,d){if(!isFinite(v))return '∞';const a=Math.abs(v);if(d==null)d=a>=100?0:a>=10?1:2;return (a<Math.pow(10,-d)/2?0:v).toFixed(d);}
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);if(attrs)for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function setA(e,attrs){for(const k in attrs)e.setAttribute(k,attrs[k]);}
+function arrowStr(x1,y1,x2,y2,col,w,head){
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy); if(L<1.5) return '';
+  const h=Math.min(head||9,L*0.6), ux=dx/L, uy=dy/L, bx=x2-ux*h, by=y2-uy*h, px=-uy*h*0.5, py=ux*h*0.5;
+  return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="${w||2}" stroke-linecap="round"/><polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px).toFixed(1)},${(by+py).toFixed(1)} ${(bx-px).toFixed(1)},${(by-py).toFixed(1)}" fill="${col}"/>`;
+}
+/* reusable arrows: update attributes instead of rebuilding */
+function arrowPool(g){
+  const it=[];
+  return list=>{
+    list.forEach((a,i)=>{
+      let o=it[i];
+      if(!o){const gg=el('g',{},g);o={g:gg,l:el('line',{'stroke-linecap':'round'},gg),p:el('polygon',{},gg),t:el('text',{'font-size':12},gg)};it.push(o);}
+      o.g.style.display='';
+      const dx=a.x2-a.x1, dy=a.y2-a.y1, L=Math.hypot(dx,dy), w=a.w||2.4;
+      if(L<1.5){o.l.style.display='none';o.p.style.display='none';}
+      else{
+        const h=Math.min(a.head||10,L*0.6), ux=dx/L, uy=dy/L, bx=a.x2-ux*h, by=a.y2-uy*h, px=-uy*h*0.5, py=ux*h*0.5;
+        o.l.style.display='';o.p.style.display='';
+        setA(o.l,{x1:a.x1,y1:a.y1,x2:bx,y2:by,stroke:a.col,'stroke-width':w,'stroke-dasharray':a.dash||'none',opacity:a.op==null?1:a.op});
+        setA(o.p,{points:`${a.x2},${a.y2} ${bx+px},${by+py} ${bx-px},${by-py}`,fill:a.col,opacity:a.op==null?1:a.op});
+      }
+      if(a.label){
+        let lx=a.lx, ly=a.ly, an=a.anchor;
+        if(lx==null){const ux=L>0?dx/L:0, uy=L>0?dy/L:-1; lx=a.x2+ux*12; ly=a.y2+uy*12+4; an=an||(ux>0.35?'start':ux<-0.35?'end':'middle');}
+        o.t.style.display='';o.t.textContent=a.label;
+        setA(o.t,{x:lx,y:ly,fill:a.tcol||a.col,'text-anchor':an||'middle','font-weight':a.bold?600:500,'font-size':a.fs||12,opacity:a.op==null?1:a.op});
+      } else o.t.style.display='none';
+    });
+    for(let i=list.length;i<it.length;i++) it[i].g.style.display='none';
+  };
+}
+function press(sel,k){document.querySelectorAll(sel+' .chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.k===String(k))));}
+function chips(id,list,onPick){
+  $(id).innerHTML=list.map(x=>`<button class="chip" data-k="${x.id}">${x.l}</button>`).join('');
+  $(id).onclick=e=>{const c=e.target.closest('.chip');if(c)onPick(c.dataset.k);};
+}
+function onScreen(elm,cb){if(!('IntersectionObserver' in window))return;new IntersectionObserver(es=>es.forEach(en=>cb(en.isIntersecting)),{threshold:0}).observe(elm);}
+
+/* quiz renderer: items {q, o[], a, why} */
+function quiz(id,items){
+  const render=()=>{$(id).innerHTML=items.map((q,i)=>`<div class="panel"><p class="qn">Check ${i+1}</p><p>${q.q}</p>
+    <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');};
+  render();
+  $(id).addEventListener('click',e=>{
+    const b=e.target.closest('.opt'); if(!b||b.disabled) return;
+    const box=b.parentElement, q=items[+box.dataset.i], j=+b.dataset.j;
+    box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+    const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+  });
+}
+
+/* =================== 1 · GALILEO =================== */
+const GS={phi:30,mu:0,t:0,play:false,last:0,done:false,vis:true};
+{const s=load('lom-gmu'); if(s!==null&&GAL.mus.includes(+s)) GS.mu=+s;}
+const gsv=$('gal'), GX0=215, GY0=222, GSC=150; // bottom of the V, px per metre
+const gA=GAL.alpha*Math.PI/180, gAx=GX0-GAL.h0*GSC/Math.tan(gA), gAy=GY0-GAL.h0*GSC;
+gsv.innerHTML=`<line x1="0" x2="640" y1="${GY0}" y2="${GY0}" stroke="var(--muted)" stroke-width="1.5"/>
+ <polygon points="${gAx-14},${gAy-12} ${gAx-14},${GY0} ${GX0},${GY0}" fill="var(--ink)" fill-opacity=".07" stroke="var(--ink)" stroke-opacity=".45"/>
+ <line x1="0" x2="640" y1="${gAy}" y2="${gAy}" stroke="var(--disp)" stroke-dasharray="5 5" opacity=".8"/>
+ <text x="636" y="${gAy-6}" font-size="11.5" fill="var(--disp)" text-anchor="end">starting height</text>`;
+const gRamp=el('polygon',{fill:'var(--ink)','fill-opacity':.07,stroke:'var(--ink)','stroke-opacity':.45},gsv);
+const gMark=el('line',{stroke:'var(--disp)','stroke-width':2},gsv);
+const gMarkT=el('text',{'font-size':11.5,fill:'var(--disp)'},gsv);
+const gTrail=el('path',{fill:'none',stroke:'var(--vel)','stroke-width':1.5,'stroke-dasharray':'2 5',opacity:.7},gsv);
+const gBall=el('circle',{r:9,fill:'var(--vel)'},gsv);
+const gVel=arrowPool(el('g',{},gsv));
+const gOff=el('text',{x:630,y:GY0-20,'font-size':12,fill:'var(--ink)','text-anchor':'end','font-weight':600},gsv);
+function galModel(){
+  const a=gA, p=GS.phi*Math.PI/180, mu=GS.mu, h0=GAL.h0;
+  const L1=h0/Math.sin(a), a1=G*(Math.sin(a)-mu*Math.cos(a)), t1=Math.sqrt(2*L1/a1), vb=a1*t1;
+  const a2=G*(Math.sin(p)+mu*Math.cos(p)), d2=a2>1e-12?vb*vb/(2*a2):Infinity, t2=a2>1e-12?vb/a2:Infinity;
+  const h1=isFinite(d2)?d2*Math.sin(p):0;
+  return {a,p,mu,L1,a1,t1,vb,a2,d2,t2,h1};
+}
+function galPos(M,t){ /* returns {x,y,v,seg} in px */
+  if(t<=M.t1){const s=0.5*M.a1*t*t, f=s/M.L1, x=gAx+(GX0-gAx)*f, y=gAy+(GY0-gAy)*f;
+    return {x:x+Math.sin(M.a)*9, y:y-Math.cos(M.a)*9, v:M.a1*t, dir:[Math.cos(M.a),Math.sin(M.a)]};}
+  const tt=Math.min(t-M.t1,M.t2), s=M.vb*tt-0.5*M.a2*tt*tt, x=GX0+s*GSC*Math.cos(M.p), y=GY0-s*GSC*Math.sin(M.p);
+  return {x:x-Math.sin(M.p)*9, y:y-Math.cos(M.p)*9, v:M.vb-M.a2*tt, dir:[Math.cos(M.p),-Math.sin(M.p)]};
+}
+function drawGal(){
+  const M=galModel();
+  $('gphio').textContent=GS.phi+'°'; press('#gmu',GS.mu);
+  /* second ramp: from the bottom to the right edge (or the top of the picture) */
+  let xe=630, ye=GY0-(xe-GX0)*Math.tan(M.p);
+  if(ye<14){ye=14;xe=GX0+(GY0-14)/Math.tan(M.p);}
+  gRamp.setAttribute('points',`${GX0},${GY0} ${xe},${ye} ${xe},${GY0}`);
+  /* stopping point */
+  const sx=GX0+(isFinite(M.d2)?M.d2:1e9)*GSC*Math.cos(M.p), sy=GY0-(isFinite(M.d2)?M.d2:0)*GSC*Math.sin(M.p);
+  if(isFinite(M.d2)&&sx<=636){setA(gMark,{x1:sx,x2:sx,y1:sy-16,y2:sy+(M.p>0?0:0),opacity:1});setA(gMarkT,{x:Math.min(sx,560),y:sy-22,'text-anchor':'middle'});gMarkT.textContent=M.p>0?'stops at '+fmt(M.h1)+' m high':'stops here';}
+  else{setA(gMark,{opacity:0});gMarkT.textContent='';}
+  /* ball */
+  const P=galPos(M,GS.t);
+  setA(gBall,{cx:P.x,cy:P.y});
+  const off=P.x>650;
+  gBall.style.display=off?'none':'';
+  gVel(off||P.v<0.05?[]:[{x1:P.x,y1:P.y,x2:P.x+P.dir[0]*P.v*12,y2:P.y+P.dir[1]*P.v*12,col:'var(--vel)',w:2.2}]);
+  gOff.textContent=off?(isFinite(M.d2)?`off the picture; stops after ${fmt(M.d2)} m`:'off the picture… and it never stops →'):'';
+  /* readouts */
+  const travelled=isFinite(M.d2)?fmt(M.d2)+' m':'forever (∞)';
+  $('gkv').innerHTML=`<dt>start height</dt><dd>${fmt(GAL.h0)} m</dd><dt>height reached</dt><dd>${M.p>0?fmt(M.h1)+' m':'— (flat)'}</dd><dt>distance on ramp 2</dt><dd>${travelled}</dd><dt>speed at the bottom</dt><dd>${fmt(M.vb)} m/s</dd>`;
+  let c;
+  if(GS.mu===0) c=M.p>0?`No friction: it climbs back to exactly the starting height, travelling ${fmt(M.d2)} m along ramp 2. Lower the angle: same height, longer path.`:'No friction and a flat second ramp: nothing ever slows it. It keeps moving at the same speed forever.';
+  else c=M.p>0?`With friction it reaches only ${fmt(M.h1)} m of the 1 m. Friction turned some of its energy into heat, so it stops below the dashed starting-height line. With no friction it would reach that line exactly.`:`On the flat it stops after ${fmt(M.d2)} m. The stopping is done by friction; make µ smaller and it goes further. Aristotle saw this and blamed a missing force.`;
+  $('gcap').innerHTML=c;
+}
+chips('gmu',GAL.mus.map(m=>({id:m,l:m===0?'none (ideal)':'µ = '+m})),k=>{GS.mu=+k;store('lom-gmu',k);galReset();});
+$('gphi').addEventListener('input',e=>{GS.phi=+e.target.value;galReset();});
+function galReset(){GS.play=false;GS.t=0;GS.done=false;$('gplay').textContent='Release the ball';drawGal();}
+function galLoop(ts){
+  if(!GS.play) return;
+  if(!GS.vis){GS.last=0;requestAnimationFrame(galLoop);return;}
+  const dt=GS.last?Math.min(0.05,(ts-GS.last)/1000):0; GS.last=ts; GS.t+=dt;
+  const M=galModel(), P=galPos(M,GS.t);
+  if(GS.t>=M.t1+M.t2||P.x>650){GS.play=false;GS.done=true;$('gplay').textContent='Release again';}
+  drawGal(); if(GS.play) requestAnimationFrame(galLoop);
+}
+$('gplay').addEventListener('click',()=>{
+  const M=galModel();
+  if(RM){GS.t=isFinite(M.t2)?M.t1+M.t2:M.t1+4/Math.max(M.vb,0.1);drawGal();return;}
+  if(GS.done||GS.play){GS.t=0;GS.done=false;}
+  GS.play=true;GS.last=0;$('gplay').textContent='Running…';requestAnimationFrame(galLoop);
+});
+$('greset').addEventListener('click',galReset);
+onScreen(gsv,v=>{GS.vis=v;});
+quiz('q1',[
+ {q:'A book lies at rest on a table. Which statement is the correct reasoning?',
+  o:['The weight and the normal force cancel, therefore the book is at rest','The book is at rest, therefore the net force on it is zero, so the normal force must equal the weight','The normal force is the reaction to the weight, so they are always equal'],a:1,
+  why:'The first law runs from the observed motion to the forces. We see it at rest, so the net force is zero, so R = W. The normal force self-adjusts; it is not the third-law partner of the weight (section 3).'},
+ {q:'An astronaut drifts out of a small spaceship that is accelerating at 100 m s⁻² in deep space, far from any star. The instant after leaving, his acceleration is:',
+  o:['100 m s⁻², the same as the ship','0','slightly less than 100 m s⁻²'],a:1,
+  why:'Once outside, nothing pushes him (the ship\'s gravity is negligible). Zero net force means zero acceleration: he carries on at the velocity he had. Force acts here and now; it is not remembered.'},
+ {q:'A bus starts suddenly and standing passengers fall backward. Why?',
+  o:['The bus pushes them backward','Friction drags their feet forward with the bus, while the upper body tends to stay where it was','Air inside the bus pushes them back'],a:1,
+  why:'No backward force acts. The upper body simply keeps its state of rest (inertia) while the feet are accelerated. Relative to the bus, it looks like a fall backward. When the bus brakes, the same idea throws them forward.'}
+]);
+
+/* =================== 2 · CATCH & CARTS =================== */
+const CS={v:20,t:0.04};
+const csv=$('catch'), fsv=$('ft');
+/* catch picture */
+csv.innerHTML=`<line x1="10" x2="350" y1="100" y2="100" stroke="var(--line)"/>`;
+const cBall=el('circle',{r:11,fill:'var(--b3)','fill-opacity':.85},csv);
+const cHand0=el('rect',{x:216,y:38,width:16,height:46,rx:7,fill:'none',stroke:'var(--muted)','stroke-dasharray':'3 3'},csv);
+const cHand=el('rect',{y:38,width:16,height:46,rx:7,fill:'var(--ink)','fill-opacity':.25,stroke:'var(--ink)','stroke-opacity':.6},csv);
+const cBr=el('path',{fill:'none',stroke:'var(--disp)','stroke-width':1.6},csv);
+const cBrT=el('text',{y:114,'font-size':11.5,fill:'var(--disp)','text-anchor':'middle'},csv);
+const cArr=arrowPool(el('g',{},csv));
+el('text',{x:216,y:30,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},csv).textContent='hands start here';
+/* F–t graph */
+const FL=58,FR=346,FT=14,FB=190, FTMAX=0.09;
+const fX=t=>FL+t/FTMAX*(FR-FL);
+let fg=`<line x1="${FL}" x2="${FR}" y1="${FB}" y2="${FB}" stroke="var(--muted)"/><line x1="${FL}" x2="${FL}" y1="${FT}" y2="${FB}" stroke="var(--muted)"/>`;
+for(let i=0;i<=9;i+=1){const t=i*0.01;fg+=`<line x1="${fX(t)}" x2="${fX(t)}" y1="${FB}" y2="${FB+4}" stroke="var(--muted)"/>`+(i%2===0?`<text x="${fX(t)}" y="${FB+16}" font-size="10.5" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono,monospace">${t.toFixed(2)}</text>`:'');}
+fg+=`<text x="${(FL+FR)/2}" y="${FB+32}" font-size="12" fill="var(--ink)" text-anchor="middle">time from first contact (s)</text><text transform="translate(12 ${(FT+FB)/2}) rotate(-90)" font-size="12" fill="var(--ink)" text-anchor="middle">force on ball (N)</text>`;
+fsv.innerHTML=fg;
+const fTicks=[0.25,0.5,0.75,1].map(fr=>{const y=FB-fr*(FB-FT)/1.08;el('line',{x1:FL,x2:FR,y1:y,y2:y,stroke:'var(--line)'},fsv);return {fr,t:el('text',{x:FL-5,y:y+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'},fsv)};});
+const fRef=el('path',{fill:'var(--muted)','fill-opacity':.25,stroke:'var(--muted)','stroke-width':1.6},fsv);
+const fCur=el('path',{fill:'var(--force)','fill-opacity':.35,stroke:'var(--force)','stroke-width':2.2},fsv);
+const fAvg=el('rect',{fill:'none',stroke:'var(--force)','stroke-dasharray':'4 3','stroke-width':1.2},fsv);
+const fAvgT=el('text',{'font-size':11,fill:'var(--force)'},fsv);
+const fRefT=el('text',{'font-size':11,fill:'var(--muted)'},fsv);
+function pulse(dt,pk,Y){let d=`M${fX(0)} ${FB}`;for(let i=0;i<=40;i++){const t=dt*i/40;d+=`L${fX(t).toFixed(1)} ${Y(pk*Math.sin(Math.PI*i/40)).toFixed(1)}`;}return d+'Z';}
+function drawCatch(){
+  const dp=CATCH.m*CS.v, pkRef=Math.PI*dp/(2*CATCH.tStiff), pk=Math.PI*dp/(2*CS.t), avg=dp/CS.t, fmax=pkRef*1.08;
+  const Y=F=>FB-F/fmax*(FB-FT);
+  $('cvo').textContent=CS.v+' m/s'; $('cto').textContent=CS.t.toFixed(3)+' s';
+  fTicks.forEach(k=>{k.t.textContent=Math.round(k.fr*pkRef);});
+  fRef.setAttribute('d',pulse(CATCH.tStiff,pkRef,Y));
+  fCur.setAttribute('d',pulse(CS.t,pk,Y));
+  setA(fAvg,{x:fX(0),y:Y(avg),width:fX(CS.t)-fX(0),height:FB-Y(avg)});
+  setA(fAvgT,{x:fX(CS.t)+5,y:Math.max(Y(avg)-4,FT+40)}); fAvgT.textContent='average '+Math.round(avg)+' N';
+  setA(fRefT,{x:fX(CATCH.tStiff)+6,y:FT+12}); fRefT.textContent='stiff: peak '+Math.round(pkRef)+' N';
+  /* picture: hand moves back by the give distance (px per m = 100) */
+  const give=CS.v*CS.t/2, gpx=Math.min(give*100,118);
+  setA(cHand,{x:216+gpx}); setA(cBall,{cx:216+gpx-11,cy:62});
+  setA(cBr,{d:`M216 92 V98 H${216+gpx} V92`}); setA(cBrT,{x:216+gpx/2}); cBrT.textContent='give: '+(give*100).toFixed(0)+' cm'+(give*100>118?' (not to scale)':'');
+  cArr([{x1:40,y1:62,x2:40+CS.v*3.6,y2:62,col:'var(--vel)',w:2.4,label:'v = '+CS.v+' m/s',lx:40,ly:46,anchor:'start'}]);
+  $('ckv').innerHTML=`<dt>momentum to remove, Δp</dt><dd>${fmt(dp)} N s</dd><dt>your stopping time</dt><dd>${CS.t.toFixed(3)} s</dd><dt>average force</dt><dd>${Math.round(avg)} N</dd><dt>stiff-hand average</dt><dd>${Math.round(dp/CATCH.tStiff)} N</dd><dt>hands move back</dt><dd>${(give*100).toFixed(0)} cm</dd>`;
+}
+$('cv').addEventListener('input',e=>{CS.v=+e.target.value;drawCatch();});
+$('ct').addEventListener('input',e=>{CS.t=+e.target.value;drawCatch();});
+/* carts */
+const KS={t:2,mB:4};
+const ksv=$('carts');
+ksv.innerHTML=`<line x1="10" x2="350" y1="56" y2="56" stroke="var(--muted)"/><line x1="10" x2="350" y1="126" y2="126" stroke="var(--muted)"/>
+ <text x="12" y="16" font-size="12" font-weight="600" fill="var(--ink)">A</text><text id="kLB" x="12" y="104" font-size="12" font-weight="600" fill="var(--ink)">B</text>`;
+const kBoxA=el('rect',{x:24,y:30,width:34,height:22,rx:3,fill:'var(--b2)','fill-opacity':.5,stroke:'var(--b2)'},ksv);
+const kBoxB=el('rect',{x:24,height:0,rx:3,fill:'var(--b2)','fill-opacity':.5,stroke:'var(--b2)'},ksv);
+const kTA=el('text',{x:41,y:45,'font-size':10.5,fill:'var(--ink)','text-anchor':'middle'},ksv);
+const kTB=el('text',{x:41,'font-size':10.5,fill:'var(--ink)','text-anchor':'middle'},ksv);
+const kAr=arrowPool(el('g',{},ksv));
+const kBars=[0,1,2,3].map(()=>({r:el('rect',{height:9,rx:2},ksv),t:el('text',{'font-size':10.5,'font-family':'IBM Plex Mono,monospace',fill:'var(--ink)'},ksv)}));
+el('text',{x:350,y:174,'font-size':10.5,fill:'var(--muted)','text-anchor':'end'},ksv).textContent='bars: blue = speed, grey = momentum';
+function drawCarts(){
+  $('kto').textContent=KS.t.toFixed(1)+' s'; $('kmo').textContent=KS.mB.toFixed(1)+' kg';
+  const vA=CARTS.F*KS.t/CARTS.mA, vB=CARTS.F*KS.t/KS.mB, p=CARTS.F*KS.t;
+  const hB=Math.min(22+KS.mB*3,44); setA(kBoxB,{y:126-4-hB,height:hB,width:34+KS.mB*2}); setA($('kLB'),{y:126-8-hB}); setA(kTB,{y:126-4-hB/2+4,x:24+(34+KS.mB*2)/2}); kTB.textContent=KS.mB+' kg'; kTA.textContent=CARTS.mA+' kg';
+  kAr([{x1:2,y1:41,x2:22,y2:41,col:'var(--force)',w:2.6,head:8},{x1:2,y1:126-4-hB/2,x2:22,y2:126-4-hB/2,col:'var(--force)',w:2.6,head:8}]);
+  const Vs=150/(CARTS.F*3/CARTS.mA), Ps=150/(CARTS.F*3);
+  const rows=[[vA*Vs,71,'var(--vel)',fmt(vA)+' m/s'],[p*Ps,85,'var(--muted)',fmt(p)+' kg m/s'],[vB*Vs,141,'var(--vel)',fmt(vB)+' m/s'],[p*Ps,155,'var(--muted)',fmt(p)+' kg m/s']];
+  rows.forEach((r,i)=>{setA(kBars[i].r,{x:100,y:r[1]-9,width:Math.max(r[0],0.5),fill:r[2]});setA(kBars[i].t,{x:104+r[0],y:r[1]});kBars[i].t.textContent=r[3];});
+}
+$('kt').addEventListener('input',e=>{KS.t=+e.target.value;drawCarts();});
+$('km').addEventListener('input',e=>{KS.mB=+e.target.value;drawCarts();});
+{const m=0.15,v=12,J=2*m*v; const m6=3,dv=3.5-2.0,t6=25,F6=m6*dv/t6;
+quiz('q2',[
+ {q:`A batsman hits a ${m} kg ball straight back to the bowler without changing its speed of ${v} m s⁻¹. Impulse on the ball?`,
+  o:[fmt(m*v)+' N s','0 (same speed)',fmt(J)+' N s',fmt(2*J)+' N s'],a:2,
+  why:`Momentum is a vector. It goes from +${fmt(m*v)} to −${fmt(m*v)} kg m s⁻¹, a change of ${fmt(J)} N s toward the bowler. Same speed does not mean no change.`},
+ {q:'A stone is dropped from the window of a train accelerating at 1 m s⁻². Just after release (ignore air), the horizontal force on the stone is:',
+  o:['m × 1 m s⁻², forward','zero','backward'],a:1,
+  why:'The second law is local: force now is set by what touches the stone now. Nothing touches it, so the only force is gravity, straight down. It keeps the train\'s velocity at release but not its acceleration.'},
+ {q:'A force acts at right angles to a body\'s velocity at every instant. It changes:',
+  o:['only the speed','only the direction','neither'],a:1,
+  why:'A force changes only the velocity component along itself. Perpendicular to v, it bends the path without speeding it up, as tension does for a stone on a string.'},
+ {q:`A constant force takes a ${m6} kg body from 2.0 to 3.5 m s⁻¹ in ${t6} s, same direction. The force is:`,
+  o:[fmt(F6)+' N, along the motion',fmt(F6*2)+' N, along the motion',fmt(m6*3.5/t6)+' N, along the motion'],a:0,
+  why:`F = Δp/Δt = ${m6} × (3.5 − 2.0)/${t6} = ${fmt(F6)} N, along the motion (speed increased).`}
+]);}
+
+/* =================== 3 · THIRD LAW =================== */
+/* forces: id, on, by, name, dir (+1 down, -1 up), mag (units), x, y (anchor in scene) */
+const TF=[
+ {id:'Wb', on:'book',  by:'Earth', n:'gravity on book by Earth', dir:1, mag:1, x:295, y:120, pair:'Eb'},
+ {id:'Nb', on:'book',  by:'table', n:'push on book by table',    dir:-1,mag:1, x:335, y:92, pair:'Tb'},
+ {id:'Tb', on:'table', by:'book',  n:'push on table by book',    dir:1, mag:1, x:340, y:158, pair:'Nb'},
+ {id:'Wt', on:'table', by:'Earth', n:'gravity on table by Earth',dir:1, mag:3, x:200, y:166, pair:'Et'},
+ {id:'NL', on:'table', by:'floor', n:'push on left leg by floor', dir:-1,mag:2, x:132, y:250, pair:'LL'},
+ {id:'NR', on:'table', by:'floor', n:'push on right leg by floor',dir:-1,mag:2, x:408, y:250, pair:'LR'},
+ {id:'Eb', on:'Earth', by:'book',  n:'gravity on Earth by book',  dir:-1,mag:1, x:300, y:346, pair:'Wb'},
+ {id:'Et', on:'Earth', by:'table', n:'gravity on Earth by table', dir:-1,mag:3, x:200, y:346, pair:'Wt'},
+ {id:'LL', on:'Earth', by:'table', n:'push on floor by left leg', dir:1, mag:2, x:132, y:266, pair:'NL'},
+ {id:'LR', on:'Earth', by:'table', n:'push on floor by right leg',dir:1, mag:2, x:408, y:266, pair:'NR'}
+];
+const TBODIES=[{id:'book',l:'Book'},{id:'table',l:'Table'},{id:'Earth',l:'Earth'},{id:'sys',l:'Book + table'}];
+const TS={body:'book',f:'Wb'};
+const tsv=$('tl'), TU=28; // px per unit
+tsv.innerHTML=`<rect class="body-hit" data-b="Earth" x="0" y="262" width="520" height="96" fill="var(--b2)" fill-opacity=".14"/>
+ <text x="10" y="350" font-size="12" fill="var(--b2)" font-weight="600">Earth (and floor)</text>
+ <g class="body-hit" data-b="table"><rect x="110" y="160" width="320" height="12" rx="2" fill="var(--b4)" fill-opacity=".35" stroke="var(--b4)"/>
+ <rect x="124" y="172" width="16" height="78" fill="var(--b4)" fill-opacity=".35" stroke="var(--b4)"/><rect x="400" y="172" width="16" height="78" fill="var(--b4)" fill-opacity=".35" stroke="var(--b4)"/>
+ <text x="270" y="200" font-size="12" fill="var(--b4)" font-weight="600" text-anchor="middle">table</text></g>
+ <rect class="body-hit" data-b="book" x="270" y="92" width="90" height="28" rx="2" fill="var(--b1)" fill-opacity=".35" stroke="var(--b1)"/>
+ <text x="262" y="111" font-size="12" fill="var(--b1)" font-weight="600" text-anchor="end">book</text>`;
+const tSel=el('rect',{fill:'none',stroke:'var(--accent)','stroke-width':2,'stroke-dasharray':'5 4',rx:6},tsv);
+const tArr=arrowPool(el('g',{},tsv));
+const TBOX={book:[226,86,140,40],table:[104,154,332,102],Earth:[2,258,516,98],sys:[100,58,340,198]};
+function tForcesOn(b){return b==='sys'?TF.filter(f=>f.on==='book'||f.on==='table'):TF.filter(f=>f.on===b);}
+function tArrowFor(f,style){
+  const L=f.mag*TU, y2=f.y+f.dir*L;
+  const lab=style==='pair'?'partner':'';
+  return {x1:f.x,y1:f.y,x2:f.x,y2:y2,col:style==='int'?'var(--muted)':'var(--force)',w:style==='sel'||style==='pair'?3.4:2.4,op:style==='dim'?0.4:1,dash:style==='pair'?'6 3':(style==='int'?'3 3':null),label:lab,lx:f.x+8,ly:(f.y+y2)/2+4,anchor:'start',bold:true};
+}
+function drawThird(){
+  press('#tbody',TS.body);
+  const list=tForcesOn(TS.body), isSys=TS.body==='sys';
+  const internal=f=>isSys&&(f.id==='Nb'||f.id==='Tb');
+  if(!list.find(f=>f.id===TS.f)) TS.f=list[0].id;
+  const sel=TF.find(f=>f.id===TS.f), pair=TF.find(f=>f.id===sel.pair);
+  const arrows=list.map(f=>tArrowFor(f,internal(f)?'int':f.id===TS.f?'sel':'dim'));
+  if(!internal(sel)) arrows.push(tArrowFor(pair,'pair'));
+  tArr(arrows);
+  const bx=TBOX[TS.body]; setA(tSel,{x:bx[0],y:bx[1],width:bx[2],height:bx[3]});
+  $('tlist-h').textContent='Forces on '+(isSys?'the book + table system':TS.body==='Earth'?'the Earth':'the '+TS.body);
+  $('tlist').innerHTML=list.map(f=>`<button class="fbtn" data-f="${f.id}" aria-pressed="${f.id===TS.f}">${f.n}: ${f.mag} unit${f.mag>1?'s':''} ${f.dir>0?'↓':'↑'}${internal(f)?' <span class="muted">(internal)</span>':''}</button>`).join('');
+  const net=list.filter(f=>!internal(f)).reduce((s,f)=>s+f.dir*f.mag,0);
+  let t;
+  if(internal(sel)) t=`<b>${sel.n}</b> and its partner <b>${pair.n}</b> both act inside the system. Together they add to zero, so they drop out of the system's free-body diagram.`;
+  else t=`Partner of <b>${sel.n}</b>: <b>${pair.n}</b>, ${pair.mag} unit${pair.mag>1?'s':''} ${pair.dir>0?'down':'up'}. It acts on the <b>${pair.on==='Earth'?'Earth':pair.on}</b>, not on the ${sel.on==='Earth'?'Earth':sel.on}.`;
+  t+=` <span class="muted">Net external force on ${isSys?'the system':TS.body==='Earth'?'the Earth':'the '+TS.body}: ${net===0?'0, so it stays at rest':net}.</span>`;
+  $('tnote').innerHTML=t;
+}
+chips('tbody',TBODIES,k=>{TS.body=k;TS.f=tForcesOn(k)[0].id;drawThird();});
+tsv.addEventListener('click',e=>{const h=e.target.closest('.body-hit');if(h){TS.body=h.dataset.b;TS.f=tForcesOn(TS.body)[0].id;drawThird();}});
+$('tlist').addEventListener('click',e=>{const b=e.target.closest('.fbtn');if(b){TS.f=b.dataset.f;drawThird();}});
+{const mb=2,mc=25,gq=10,a=0.1,R=(mb+mc)*(gq-a);
+quiz('q3',[
+ {q:'A horse pulls a cart. By the third law the cart pulls back on the horse just as hard. How can they ever start moving?',
+  o:['They can\'t; the forces cancel','The two forces act on different bodies; the horse moves because the ground pushes it forward harder than the cart pulls it back','The horse pulls slightly harder than the cart pulls back'],a:1,
+  why:'The pair (horse on cart, cart on horse) acts on two different bodies, so it never cancels. For the horse alone, the forward force is friction from the ground, which it gets by pushing the ground backward with its hooves. In empty space there is no ground, and a horse could not pull a cart at all.'},
+ {q:`A ${mb} kg block on a soft floor has a ${mc} kg cylinder placed on it; together they sink with acceleration ${a} m s⁻² (take g = ${gq} m s⁻²). The force of the block on the floor is:`,
+  o:[`${(mb+mc)*gq} N`,`${fmt(R,1)} N`,`${mb*gq} N`],a:1,
+  why:`System = block + cylinder. Down: ${(mb+mc)*gq} N − R′ = ${mb+mc} × ${a}, so R′ = ${fmt(R,1)} N. The floor pushes up with ${fmt(R,1)} N; by the third law the block pushes the floor down with the same ${fmt(R,1)} N. The weight and R′ differ because the system accelerates.`},
+ {q:'A car speeds up on a level road. Which external force pushes the car forward?',
+  o:['The engine\'s force','Friction from the road on the tyres','The car\'s momentum'],a:1,
+  why:'Engine forces are internal: they turn the wheels. The tyres push the road backward, and the road\'s friction on the tyres (the third-law partner) is the external force that accelerates the car. On ice the wheels just spin.'}
+]);}
+
+/* =================== 4 · MOMENTUM =================== */
+const MS={pre:'carts',mA:3,mB:1,vB:2,t:0.6};
+const msv=$('mom'), MCX=280, MY=120;
+msv.innerHTML=`<line x1="10" x2="550" y1="${MY+24}" y2="${MY+24}" stroke="var(--line)"/><text x="10" y="50" font-size="11.5" fill="var(--muted)">dotted line: where the centre of mass started</text>`;
+const mCM0=el('line',{y1:60,y2:MY+30,stroke:'var(--muted)','stroke-dasharray':'2 4'},msv);
+const mA=el('rect',{rx:3,fill:'var(--b1)','fill-opacity':.5,stroke:'var(--b1)'},msv), mB=el('rect',{rx:3,fill:'var(--b3)','fill-opacity':.5,stroke:'var(--b3)'},msv);
+const mTA=el('text',{'font-size':11,fill:'var(--ink)','text-anchor':'middle'},msv), mTB=el('text',{'font-size':11,fill:'var(--ink)','text-anchor':'middle'},msv);
+const mCM=el('path',{stroke:'var(--ink)','stroke-width':2,fill:'none'},msv);
+const mArr=arrowPool(el('g',{},msv));
+el('text',{x:MCX,y:224,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},msv).textContent='momentum: equal and opposite bars';
+function drawMom(){
+  const P=MPRE.find(p=>p.id===MS.pre); press('#mpre',MS.pre);
+  const vA=-MS.mB*MS.vB/MS.mA, pB=MS.mB*MS.vB;
+  $('mto').textContent=MS.t.toFixed(2)+' s'; $('m1o').textContent=fmt(MS.mA)+' kg'; $('m2o').textContent=fmt(MS.mB,MS.mB<1?3:1)+' kg';
+  /* display: the faster piece covers at most 220 px at t = 1 */
+  const vmax=Math.max(Math.abs(vA),MS.vB), sc=220/vmax;
+  const wA=Math.max(14,Math.min(70,18+Math.sqrt(MS.mA)*14)), wB=Math.max(12,Math.min(70,18+Math.sqrt(MS.mB)*14));
+  const hA=Math.min(44,16+Math.sqrt(MS.mA)*6), hB=Math.min(44,16+Math.sqrt(MS.mB)*6);
+  /* pieces start touching at MCX; CM position computed from real masses */
+  const xA0=MCX-wA/2, xB0=MCX+wB/2; // centres when together (contact at MCX)
+  const xA=xA0+vA*MS.t*sc, xB=xB0+MS.vB*MS.t*sc;
+  setA(mA,{x:xA-wA/2,y:MY+24-hA,width:wA,height:hA}); setA(mB,{x:xB-wB/2,y:MY+24-hB,width:wB,height:hB});
+  setA(mTA,{x:xA,y:MY+24-hA-6}); mTA.textContent='A'; setA(mTB,{x:xB,y:MY+24-hB-6}); mTB.textContent='B';
+  const xc=(MS.mA*xA+MS.mB*xB)/(MS.mA+MS.mB), xc0=(MS.mA*xA0+MS.mB*xB0)/(MS.mA+MS.mB);
+  setA(mCM0,{x1:xc0,x2:xc0});
+  setA(mCM,{d:`M${xc-6} ${MY+34}L${xc+6} ${MY+46}M${xc-6} ${MY+46}L${xc+6} ${MY+34}`});
+  const ps=90/pB, arrows=[];
+  const LA=vA*sc*0.45, LB=MS.vB*sc*0.45;
+  arrows.push({x1:xA-wA/2-2,y1:MY,x2:xA-wA/2-2+Math.min(-3,LA),y2:MY,col:'var(--vel)',w:2.4,label:'v = '+fmt(Math.abs(vA),Math.abs(vA)<0.1?3:2)+' m/s',lx:xA-wA/2-6+Math.min(-3,LA),ly:MY-8,anchor:'middle'});
+  arrows.push({x1:xB+wB/2+2,y1:MY,x2:xB+wB/2+2+LB,y2:MY,col:'var(--vel)',w:2.4,label:'v = '+fmt(MS.vB)+' m/s',lx:xB+wB/2+LB/2,ly:MY-8,anchor:'middle'});
+  /* momentum bars below */
+  arrows.push({x1:MCX,y1:MY+62,x2:MCX-pB*ps,y2:MY+62,col:'var(--b1)',w:8,head:12,label:'A: −'+fmt(pB)+' kg m/s',lx:MCX-pB*ps,ly:MY+84,anchor:'start'});
+  arrows.push({x1:MCX,y1:MY+62,x2:MCX+pB*ps,y2:MY+62,col:'var(--b3)',w:8,head:12,label:'B: +'+fmt(pB)+' kg m/s',lx:MCX+pB*ps,ly:MY+84,anchor:'end'});
+  mArr(arrows);
+  $('mkv').innerHTML=`<dt>mass A, B</dt><dd>${fmt(MS.mA)} kg, ${fmt(MS.mB,MS.mB<1?3:2)} kg</dd><dt>velocity of B</dt><dd>+${fmt(MS.vB)} m/s</dd><dt>velocity of A</dt><dd>${fmt(vA,Math.abs(vA)<0.1?3:2)} m/s</dd><dt>total momentum</dt><dd>${fmt(MS.mA*vA)} + ${fmt(pB)} = 0</dd><dt>centre of mass moved</dt><dd>${Math.abs(xc-xc0)<0.5?'0 (stays put)':fmt(xc-xc0)}</dd>`;
+  ['m1','m2'].forEach(id=>{$(id).disabled=!!P.fixed;});
+}
+chips('mpre',MPRE,k=>{const p=MPRE.find(x=>x.id===k);Object.assign(MS,{pre:k,mA:p.mA,mB:p.mB,vB:p.vB});if(!p.fixed){$('m1').value=p.mA;$('m2').value=p.mB;}drawMom();});
+$('mt').addEventListener('input',e=>{MS.t=+e.target.value;drawMom();});
+function mSlide(){const P=MPRE.find(p=>p.id===MS.pre);if(P.fixed){MS.pre='carts';}MS.mA=+$('m1').value;MS.mB=+$('m2').value;MS.vB=2;drawMom();}
+$('m1').addEventListener('input',mSlide); $('m2').addEventListener('input',mSlide);
+{const ms=0.02,mg=100,v=80,rec=ms*v/mg; const mb=0.05,vb=6,Jb=2*mb*vb;
+quiz('q4',[
+ {q:`A shell of mass ${ms} kg leaves a ${mg} kg gun at ${v} m s⁻¹. The gun recoils at:`,
+  o:[fmt(rec,3)+' m s⁻¹',fmt(rec*10,2)+' m s⁻¹',fmt(v,0)+' m s⁻¹'],a:0,
+  why:`Total momentum stays 0: ${mg} × V = ${ms} × ${v}, so V = ${fmt(rec,3)} m s⁻¹, backward. Equal momenta, so the 5000× heavier gun moves 5000× slower.`},
+ {q:`Two billiard balls (${mb} kg each) approach at ${vb} m s⁻¹ each, collide head on and rebound at the same speeds. Impulse on each ball?`,
+  o:[fmt(mb*vb)+' N s',fmt(Jb)+' N s','0, since the momenta cancel'],a:1,
+  why:`Each ball's momentum reverses: Δp = 2 × ${mb} × ${vb} = ${fmt(Jb)} N s. The two impulses are equal and opposite (third law), so the total momentum, zero, is unchanged.`},
+ {q:'A ball hits a smooth wall at 30° to the normal and bounces off at the same speed and angle. The force on the wall points:',
+  o:['along the ball\'s incoming direction','straight into the wall, along the normal','along the wall'],a:1,
+  why:'Only the component of momentum perpendicular to the wall reverses; the component along it is unchanged. So the impulse on the ball is along the normal, outward, and by the third law the force on the wall is along the normal, into it.'}
+]);}
+
+/* =================== 5 · EQUILIBRIUM =================== */
+const ES={mode:'rope',F:50,f:[[70,-40],[-60,-50],[-10,90]],drag:-1};
+const esv=$('eq'), EP=[150,150], ET=[440,160], EK=1.4; // particle point, triangle origin, px per newton (rope mode)
+esv.innerHTML=`<line x1="322" x2="322" y1="10" y2="290" stroke="var(--line)"/><text x="332" y="22" font-size="11.5" fill="var(--muted)">head to tail</text>`;
+const eRope=el('g',{},esv);
+eRope.innerHTML=`<line x1="20" x2="220" y1="18" y2="18" stroke="var(--ink)" stroke-width="3"/>`;
+const eR1=el('line',{stroke:'var(--ink)','stroke-width':2},eRope), eR2=el('line',{stroke:'var(--ink)','stroke-width':2},eRope);
+const eMass=el('rect',{width:40,height:34,rx:3,fill:'var(--b4)','fill-opacity':.4,stroke:'var(--b4)'},eRope);
+const eMT=el('text',{'font-size':11,fill:'var(--ink)','text-anchor':'middle'},eRope);
+const eP=el('circle',{r:4,fill:'var(--ink)'},esv);
+const eAng=el('text',{'font-size':12,fill:'var(--muted)','text-anchor':'end'},esv);
+const eVert=el('line',{x1:100,x2:100,y1:18,y2:90,stroke:'var(--muted)','stroke-dasharray':'3 4'},esv);
+const eArr=arrowPool(el('g',{},esv));
+const eHandles=[0,1,2].map(i=>el('circle',{r:13,fill:'var(--force)','fill-opacity':.15,stroke:'var(--force)','stroke-dasharray':'2 2',style:'cursor:grab'},esv));
+function drawEq(){
+  press('#emode',ES.mode);
+  const rope=ES.mode==='rope';
+  $('erope').hidden=!rope; $('efree').hidden=rope; eRope.style.display=rope?'':'none';
+  eHandles.forEach(h=>h.style.display=rope?'none':''); eVert.style.display=rope?'':'none'; eAng.style.display=rope?'':'none';
+  let forces, names;
+  if(rope){
+    const W=ROPE.m*G, F=ES.F, th=Math.atan2(F,W), T1=Math.hypot(F,W);
+    $('efo').textContent=F+' N';
+    /* rope geometry: upper rope length 110 px from ceiling to P */
+    const top=[100,18], P=[100+130*Math.sin(th),18+130*Math.cos(th)];
+    setA(eR1,{x1:top[0],y1:top[1],x2:P[0],y2:P[1]}); setA(eR2,{x1:P[0],y1:P[1],x2:P[0],y2:P[1]+70});
+    setA(eMass,{x:P[0]-20,y:P[1]+70}); setA(eMT,{x:P[0],y:P[1]+92}); eMT.textContent=ROPE.m+' kg';
+    setA(eP,{cx:P[0],cy:P[1]}); setA(eAng,{x:94,y:70}); eAng.textContent='θ = '+(th*180/Math.PI).toFixed(1)+'°';
+    const k=0.9;
+    forces=[[F*k,0],[0,W*k],[-F*k,-W*k]]; names=['F','W','T₁'];
+    const at=P;
+    const arr=[
+      {x1:at[0],y1:at[1],x2:at[0]+forces[0][0],y2:at[1],col:'var(--force)',label:'F',lx:at[0]+forces[0][0]/2+6,ly:at[1]-8,anchor:'middle'},
+      {x1:at[0]+6,y1:at[1],x2:at[0]+6,y2:at[1]+forces[1][1],col:'var(--force)',label:'T₂ = W',lx:at[0]+12,ly:at[1]+forces[1][1]*0.6,anchor:'start'},
+      {x1:at[0],y1:at[1],x2:at[0]+forces[2][0],y2:at[1]+forces[2][1],col:'var(--force)',label:'T₁',lx:at[0]+forces[2][0]*0.55-10,ly:at[1]+forces[2][1]*0.55,anchor:'end'}];
+    /* triangle: W down, then F right, then T1 back to start (scale to fit) */
+    const kt=1.6, s=Math.min(1,190/Math.max(T1*kt,1));
+    let p0=[ET[0]-F*kt*s/2,ET[1]-W*kt*s/2];
+    let p=[...p0];
+    const lab=['T₂ = W','F','T₁'];
+    [[0,W*kt*s],[F*kt*s,0],[-F*kt*s,-W*kt*s]].forEach((v,i)=>{
+      const q=[p[0]+v[0],p[1]+v[1]];
+      const mx=(p[0]+q[0])/2, my=(p[1]+q[1])/2;
+      arr.push({x1:p[0],y1:p[1],x2:q[0],y2:q[1],col:'var(--force)',w:2.6,label:lab[i],lx:i===0?mx-8:i===1?mx:mx+10,ly:i===0?my:i===1?my+16:my-4,anchor:i===0?'end':i===1?'middle':'start'});
+      p=q;});
+    eArr(arr);
+    $('everd').textContent='Closed triangle: in equilibrium';
+    $('ekv').innerHTML=`<dt>weight W = mg</dt><dd>${fmt(W,1)} N</dd><dt>sideways pull F</dt><dd>${F} N</dd><dt>angle of upper rope</dt><dd>${(th*180/Math.PI).toFixed(1)}°</dd><dt>tension T₁</dt><dd>${fmt(T1,1)} N</dd>`;
+    $('ecap').innerHTML=`At the knot P three forces act: T₂ (= W, from the lower rope), F and T₁. Vertical: T₁ cos θ = W. Horizontal: T₁ sin θ = F. So tan θ = F/W = ${fmt(F/W)}. The rope's length and where along it you pull do not matter. T₁ is always more than W once you pull sideways: it is the hypotenuse.`;
+  } else {
+    const at=EP, sum=ES.f.reduce((s,v)=>[s[0]+v[0],s[1]+v[1]],[0,0]);
+    const arr=ES.f.map((v,i)=>({x1:at[0],y1:at[1],x2:at[0]+v[0],y2:at[1]+v[1],col:'var(--force)',label:'F'+'₁₂₃'[i]}));
+    ES.f.forEach((v,i)=>setA(eHandles[i],{cx:at[0]+v[0],cy:at[1]+v[1]}));
+    setA(eP,{cx:at[0],cy:at[1]});
+    /* head-to-tail polygon starting near the right panel, scaled */
+    let ext=[0,0],mn=[0,0],mx=[0,0],p=[0,0];
+    ES.f.forEach(v=>{p=[p[0]+v[0],p[1]+v[1]];mn=[Math.min(mn[0],p[0]),Math.min(mn[1],p[1])];mx=[Math.max(mx[0],p[0]),Math.max(mx[1],p[1])];});
+    const s=Math.min(1,200/Math.max(mx[0]-mn[0],1),230/Math.max(mx[1]-mn[1],1));
+    const o=[440-((mx[0]+mn[0])/2)*s,160-((mx[1]+mn[1])/2)*s];
+    p=[...o];
+    ES.f.forEach((v,i)=>{const q=[p[0]+v[0]*s,p[1]+v[1]*s];arr.push({x1:p[0],y1:p[1],x2:q[0],y2:q[1],col:'var(--force)',w:2.6,label:'F'+'₁₂₃'[i],lx:(p[0]+q[0])/2+8,ly:(p[1]+q[1])/2-6,anchor:'start'});p=q;});
+    const gap=Math.hypot(sum[0],sum[1]);
+    if(gap>3) arr.push({x1:o[0],y1:o[1],x2:p[0],y2:p[1],col:'var(--acc)',w:2,dash:'5 4',label:'net force',lx:(o[0]+p[0])/2,ly:(o[1]+p[1])/2+16,anchor:'middle'});
+    eArr(arr);
+    const ok=gap<=3;
+    $('everd').textContent=ok?'Closed: net force zero, equilibrium':'Gap: there is a net force';
+    $('ekv').innerHTML=`<dt>ΣF<sub>x</sub></dt><dd>${fmt(sum[0]/10,1)} N</dd><dt>ΣF<sub>y</sub></dt><dd>${fmt(-sum[1]/10,1)} N</dd><dt>|net force|</dt><dd>${fmt(gap/10,1)} N</dd>`;
+    $('ecap').innerHTML=ok?'The three arrows, placed head to tail, return to the start. Any two of them add (parallelogram law) to a force equal and opposite to the third.':'The dashed arrow closes the polygon: it is the net force. The particle would accelerate along it. Drag a tip until the gap vanishes, or press Balance.';
+  }
+}
+chips('emode',[{id:'rope',l:'Rope pulled sideways'},{id:'free',l:'Three forces of your own'}],k=>{ES.mode=k;drawEq();});
+$('ef').addEventListener('input',e=>{ES.F=+e.target.value;drawEq();});
+$('ebal').addEventListener('click',()=>{ES.f[2]=[-(ES.f[0][0]+ES.f[1][0]),-(ES.f[0][1]+ES.f[1][1])];drawEq();});
+function svgPt(svg,e){const r=svg.getBoundingClientRect(), vb=svg.viewBox.baseVal;return [(e.clientX-r.left)/r.width*vb.width,(e.clientY-r.top)/r.height*vb.height];}
+eHandles.forEach((h,i)=>{
+  h.addEventListener('pointerdown',e=>{ES.drag=i;try{h.setPointerCapture(e.pointerId);}catch(_){}e.preventDefault();});
+  h.addEventListener('pointermove',e=>{if(ES.drag!==i)return;const p=svgPt(esv,e);let x=Math.max(10,Math.min(310,p[0]))-EP[0],y=Math.max(10,Math.min(290,p[1]))-EP[1];ES.f[i]=[Math.round(x),Math.round(y)];drawEq();});
+  const up=()=>{ES.drag=-1;}; h.addEventListener('pointerup',up); h.addEventListener('pointercancel',up);
+});
+{const W=60,F=50,th=Math.atan(F/W)*180/Math.PI,T=Math.hypot(F,W);
+quiz('q5',[
+ {q:`A 6 kg mass hangs from a rope. A ${F} N horizontal force pulls the rope's midpoint aside (take g = 10 m s⁻²). The upper rope's angle with the vertical?`,
+  o:[`${th.toFixed(0)}°`,`${(90-th).toFixed(0)}°`,'depends on the rope length'],a:0,
+  why:`tan θ = F/W = ${F}/${W}, θ ≈ ${th.toFixed(1)}°, with T₁ = √(${F}² + ${W}²) ≈ ${T.toFixed(1)} N. Rope length never enters.`},
+ {q:'Forces of 3 N east and 4 N north act on a particle. What single third force keeps it in equilibrium?',
+  o:['7 N, south-west','5 N, opposite to the resultant of the two','1 N, west'],a:1,
+  why:'The two forces add to √(3² + 4²) = 5 N. The third must close the triangle: 5 N pointing exactly back along that resultant (a 3-4-5 triangle).'}
+]);}
+
+/* =================== 6 · FBD BUILDER =================== */
+const deg=Math.PI/180;
+const SYS=[
+ {id:'pull', l:'Block on a table, pulled', bodies:[{id:'b',l:'Block'}],
+  params:[{k:'m',l:'mass m',min:1,max:10,step:0.5,v:4,u:'kg'},{k:'F',l:'pull F',min:0,max:60,step:1,v:20,u:'N'},{k:'th',l:'angle above horizontal',min:0,max:80,step:1,v:30,u:'°'}],
+  solve(p){const s=Math.sin(p.th*deg),c=Math.cos(p.th*deg);let N=p.m*G-p.F*s,lift=N<0;if(lift)N=0;return {a:p.F*c/p.m,N,lift,s,c};},
+  forces(b,p,r){return [{n:'mg',v:p.m*G,d:[0,1]},{n:'N',v:r.N,d:[0,-1]},{n:'F',v:p.F,d:[r.c,-r.s]}];},
+  acc(b,p,r){return [r.a,[1,0]];},
+  pred:{q:'Compared with mg, the normal force N is:',o:['bigger','equal','smaller'],ans:(p,r)=>p.th===0||p.F===0?1:2},
+  kv(p,r){return [['acceleration',fmt(r.a)+' m/s²'],['normal force N',fmt(r.N,1)+' N'],['weight mg',fmt(p.m*G,1)+' N']];},
+  cap(b,p,r){return r.lift?'F sin θ is now more than mg: the block lifts off the table, and this model stops here.':`Smooth table. Vertical: N + F sin θ = mg, so N = ${fmt(r.N,1)} N, less than mg because the pull lifts a little. Horizontal: F cos θ = ma, a = ${fmt(r.a)} m/s².`;}},
+ {id:'incl', l:'Block pushed up a smooth incline', bodies:[{id:'b',l:'Block'}],
+  params:[{k:'m',l:'mass m',min:1,max:10,step:0.5,v:2,u:'kg'},{k:'F',l:'push F (along slope)',min:0,max:60,step:1,v:15,u:'N'},{k:'th',l:'slope angle θ',min:5,max:60,step:1,v:30,u:'°'}],
+  solve(p){const s=Math.sin(p.th*deg),c=Math.cos(p.th*deg);return {a:p.F/p.m-G*s,N:p.m*G*c,s,c};},
+  forces(b,p,r){return [{n:'mg',v:p.m*G,d:[0,1]},{n:'N',v:r.N,d:[-r.s,-r.c]},{n:'F',v:p.F,d:[r.c,-r.s]}];},
+  acc(b,p,r){return [r.a,[r.c,-r.s]];},
+  pred:{q:'Which way does the block accelerate?',o:['up the slope','down the slope','neither: a = 0'],ans:(p,r)=>Math.abs(r.a)<0.005?2:r.a>0?0:1},
+  kv(p,r){return [['acceleration (up the slope +)',fmt(r.a)+' m/s²'],['normal force N',fmt(r.N,1)+' N'],['mg sin θ',fmt(p.m*G*r.s,1)+' N']];},
+  cap(b,p,r){return `Tilt the axes along the slope. Across it: N = mg cos θ = ${fmt(r.N,1)} N. Along it: F − mg sin θ = ma, so a = ${fmt(r.a)} m/s² (${r.a>=0?'up':'down'} the slope). F = mg sin θ = ${fmt(p.m*G*r.s,1)} N would just hold it.`;}},
+ {id:'cont', l:'Two blocks in contact', bodies:[{id:'1',l:'Block 1 (pushed)'},{id:'2',l:'Block 2'},{id:'s',l:'Both together'}],
+  params:[{k:'m1',l:'mass m₁',min:1,max:10,step:0.5,v:3,u:'kg'},{k:'m2',l:'mass m₂',min:1,max:10,step:0.5,v:2,u:'kg'},{k:'F',l:'push F',min:1,max:60,step:1,v:20,u:'N'}],
+  solve(p){const a=p.F/(p.m1+p.m2);return {a,P:p.m2*a};},
+  forces(b,p,r){if(b==='1')return [{n:'m₁g',v:p.m1*G,d:[0,1]},{n:'N₁',v:p.m1*G,d:[0,-1]},{n:'F',v:p.F,d:[1,0]},{n:'P (by 2)',v:r.P,d:[-1,0]}];
+    if(b==='2')return [{n:'m₂g',v:p.m2*G,d:[0,1]},{n:'N₂',v:p.m2*G,d:[0,-1]},{n:'P (by 1)',v:r.P,d:[1,0]}];
+    return [{n:'(m₁+m₂)g',v:(p.m1+p.m2)*G,d:[0,1]},{n:'N₁+N₂',v:(p.m1+p.m2)*G,d:[0,-1]},{n:'F',v:p.F,d:[1,0]}];},
+  acc(b,p,r){return [r.a,[1,0]];},
+  pred:{q:'The push P of block 1 on block 2 is:',o:['equal to F','less than F','more than F'],ans:()=>1},
+  kv(p,r){return [['acceleration (both)',fmt(r.a)+' m/s²'],['contact force P',fmt(r.P,1)+' N'],['applied F',p.F+' N']];},
+  cap(b,p,r){return b==='s'?`As one system the contact forces are internal and cancel: F = (m₁ + m₂)a, a = ${fmt(r.a)} m/s².`:b==='2'?`Only P pushes block 2 forward: P = m₂a = ${fmt(p.m2)} × ${fmt(r.a)} = ${fmt(r.P,1)} N. P only has to accelerate block 2, so it is less than F.`:`Block 1: F − P = m₁a → ${p.F} − ${fmt(r.P,1)} = ${fmt(p.m1)} × ${fmt(r.a)}. P on 1 and P on 2 are a third-law pair.`;}},
+ {id:'str', l:'Two blocks joined by a string', bodies:[{id:'A',l:'Rear block A'},{id:'B',l:'Front block B (pulled)'},{id:'s',l:'Both together'}],
+  params:[{k:'mA',l:'rear mass m_A',min:1,max:20,step:1,v:10,u:'kg'},{k:'mB',l:'front mass m_B',min:1,max:20,step:1,v:20,u:'kg'},{k:'F',l:'pull F',min:1,max:100,step:1,v:60,u:'N'}],
+  solve(p){const a=p.F/(p.mA+p.mB);return {a,T:p.mA*a};},
+  forces(b,p,r){if(b==='A')return [{n:'m_Ag',v:p.mA*G,d:[0,1]},{n:'N_A',v:p.mA*G,d:[0,-1]},{n:'T',v:r.T,d:[1,0]}];
+    if(b==='B')return [{n:'m_Bg',v:p.mB*G,d:[0,1]},{n:'N_B',v:p.mB*G,d:[0,-1]},{n:'F',v:p.F,d:[1,0]},{n:'T',v:r.T,d:[-1,0]}];
+    return [{n:'(m_A+m_B)g',v:(p.mA+p.mB)*G,d:[0,1]},{n:'N',v:(p.mA+p.mB)*G,d:[0,-1]},{n:'F',v:p.F,d:[1,0]}];},
+  acc(b,p,r){return [r.a,[1,0]];},
+  pred:{q:'The tension T in the string is:',o:['equal to F','less than F','more than F'],ans:()=>1},
+  kv(p,r){return [['acceleration (both)',fmt(r.a)+' m/s²'],['tension T',fmt(r.T,1)+' N'],['applied F',p.F+' N']];},
+  cap(b,p,r){return b==='A'?`The string is the only horizontal force on A: T = m_A a = ${fmt(r.T,1)} N. Swap which block you pull and T becomes m_B a: the string pulls whatever is behind it.`:b==='B'?`B: F − T = m_B a → ${p.F} − ${fmt(r.T,1)} = ${p.mB} × ${fmt(r.a)}.`:`Smooth floor, string internal: F = (m_A + m_B)a, a = ${fmt(r.a)} m/s².`;}},
+ {id:'atw', l:'Atwood machine', bodies:[{id:'1',l:'Mass m₁ (left)'},{id:'2',l:'Mass m₂ (right)'}],
+  params:[{k:'m1',l:'left mass m₁',min:0.5,max:10,step:0.5,v:2,u:'kg'},{k:'m2',l:'right mass m₂',min:0.5,max:10,step:0.5,v:3,u:'kg'}],
+  solve(p){const a=(p.m2-p.m1)*G/(p.m1+p.m2);return {a,T:2*p.m1*p.m2*G/(p.m1+p.m2)};},
+  forces(b,p,r){const m=b==='1'?p.m1:p.m2;return [{n:'T',v:r.T,d:[0,-1]},{n:(b==='1'?'m₁g':'m₂g'),v:m*G,d:[0,1]}];},
+  acc(b,p,r){return [Math.abs(r.a),[0,(b==='1'?-1:1)*Math.sign(r.a||0)]];},
+  pred:{q:'The tension T is:',o:['less than both weights','between the two weights (equal to both if m₁ = m₂)','more than both weights'],ans:()=>1},
+  kv(p,r){return [['acceleration',fmt(Math.abs(r.a))+' m/s²'+(Math.abs(r.a)<1e-9?'':(r.a>0?' (m₂ down)':' (m₁ down)'))],['tension T',fmt(r.T,1)+' N'],['m₁g, m₂g',fmt(p.m1*G,1)+' N, '+fmt(p.m2*G,1)+' N']];},
+  cap(b,p,r){return b==='1'?`m₁ (up positive if m₂ is heavier): T − m₁g = m₁a. T must exceed m₁g to lift it.`:`m₂ (down positive): m₂g − T = m₂a. T must be less than m₂g for it to sink. Add the two equations: a = (m₂ − m₁)g/(m₁ + m₂) = ${fmt(r.a)} m/s², T = 2m₁m₂g/(m₁ + m₂) = ${fmt(r.T,1)} N.`;}},
+ {id:'tab', l:'Block on a table pulled by a hanging block', bodies:[{id:'1',l:'Block on table m₁'},{id:'2',l:'Hanging block m₂'}],
+  params:[{k:'m1',l:'table block m₁',min:1,max:30,step:1,v:20,u:'kg'},{k:'m2',l:'hanging block m₂',min:0.5,max:10,step:0.5,v:3,u:'kg'},{k:'mu',l:'friction µ (table)',min:0,max:0.5,step:0.01,v:0.04,u:''}],
+  solve(p){const drive=p.m2*G-p.mu*p.m1*G;if(drive>0){const a=drive/(p.m1+p.m2);return {a,T:p.m2*(G-a),f:p.mu*p.m1*G,moving:true};}return {a:0,T:p.m2*G,f:p.m2*G,moving:false};},
+  forces(b,p,r){if(b==='1')return [{n:'m₁g',v:p.m1*G,d:[0,1]},{n:'N',v:p.m1*G,d:[0,-1]},{n:'T',v:r.T,d:[1,0]},{n:'f',v:r.f,d:[-1,0]}];
+    return [{n:'T',v:r.T,d:[0,-1]},{n:'m₂g',v:p.m2*G,d:[0,1]}];},
+  acc(b,p,r){return [r.a,b==='1'?[1,0]:[0,1]];},
+  pred:{q:'Compared with the hanging block\'s weight m₂g, the tension T is:',o:['less','equal','more'],ans:(p,r)=>r.moving?0:1},
+  kv(p,r){return [['acceleration',fmt(r.a)+' m/s²'],['tension T',fmt(r.T,1)+' N'],['friction on m₁',fmt(r.f,1)+' N'+(r.moving?' (sliding)':' (holding)')]];},
+  cap(b,p,r){return !r.moving?`m₂g = ${fmt(p.m2*G,1)} N is no more than µm₁g = ${fmt(p.mu*p.m1*G,1)} N, so friction holds the block (simplified: one µ for static and sliding). T = m₂g.`:b==='1'?`m₁: T − µm₁g = m₁a. m₂: m₂g − T = m₂a. Adding: a = (m₂ − µm₁)g/(m₁ + m₂) = ${fmt(r.a)} m/s².`:`m₂ (down positive): m₂g − T = m₂a, so T = m₂(g − a) = ${fmt(r.T,1)} N: less than m₂g because m₂ accelerates downward.`;}},
+ {id:'lift', l:'Person in a lift', bodies:[{id:'p',l:'Person'}],
+  params:[{k:'m',l:'person\'s mass',min:30,max:100,step:1,v:70,u:'kg'},{k:'a',l:'lift acceleration (up +)',min:-9.8,max:5,step:0.1,v:2,u:'m/s²'}],
+  presets:[{l:'Rising at steady speed',a:0},{l:'Speeding up, going up',a:5},{l:'Speeding up, going down',a:-5},{l:'Cable snaps: free fall',a:-9.8}],
+  solve(p){const N=p.m*(G+p.a);return {N:Math.max(0,N),a:p.a};},
+  forces(b,p,r){return [{n:'N (scale)',v:r.N,d:[0,-1]},{n:'mg',v:p.m*G,d:[0,1]}];},
+  acc(b,p,r){return [Math.abs(p.a),[0,p.a>=0?-1:1]];},
+  pred:{q:'The weighing scale reads:',o:['more than the true mass','the true mass','less than the true mass'],ans:(p,r)=>Math.abs(p.a)<0.005?1:p.a>0?0:2},
+  kv(p,r){return [['scale force N',fmt(r.N,1)+' N'],['scale reads',fmt(r.N/G,1)+' kg'],['true weight mg',fmt(p.m*G,1)+' N']];},
+  cap(b,p,r){return `Up positive: N − mg = ma, so N = m(g + a) = ${fmt(r.N,1)} N. Only the acceleration matters, not the velocity: rising or falling at steady speed both read the true mass.`+(Math.abs(p.a+G)<0.05?' In free fall N = 0: the scale reads zero, "weightless".':'');}}
+];
+const FS={sys:'atw',body:{},p:{},rev:{},pick:{}};
+{const s=load('lom-fsys'); if(SYS.find(x=>x.id===s)) FS.sys=s;}
+SYS.forEach(S=>{FS.body[S.id]=S.bodies[0].id;FS.p[S.id]={};S.params.forEach(q=>FS.p[S.id][q.k]=q.v);});
+const fsc=$('fscene'), ffb=$('ffbd');
+let SC={}; // scene element refs
+const fbdArr=arrowPool(el('g',{},ffb));
+const fbdBody=el('rect',{width:64,height:50,rx:4,fill:'var(--ink)','fill-opacity':.07,stroke:'var(--ink)','stroke-opacity':.5},ffb);
+const fbdDot=el('circle',{cx:160,cy:140,r:3.5,fill:'var(--ink)'},ffb);
+const fbdAxes=el('line',{stroke:'var(--axis)','stroke-dasharray':'5 4',opacity:.6},ffb);
+const fbdLbl=el('text',{x:6,y:16,'font-size':11.5,fill:'var(--muted)'},ffb);
+const fbdNote=el('text',{x:314,y:306,'font-size':11,fill:'var(--muted)','text-anchor':'end'},ffb);
+/* scene builders: create once per set-up; update() moves things */
+const SCN={
+ pull:{build(){fsc.innerHTML=`<line x1="10" x2="350" y1="190" y2="190" stroke="var(--muted)" stroke-width="1.5"/>`+hatch(190)+`<rect class="body-hit" data-b="b" x="130" y="140" width="80" height="50" rx="3" fill="var(--b1)" fill-opacity=".35" stroke="var(--b1)"/><text x="170" y="170" font-size="12" text-anchor="middle" fill="var(--ink)" id="sc-m"></text>`;},
+   update(p,r){$('sc-m').textContent=p.m+' kg';return [{x1:210,y1:165,x2:210+Math.cos(p.th*deg)*(16+p.F*1.6),y2:165-Math.sin(p.th*deg)*(16+p.F*1.6),col:'var(--force)',label:'F',w:2.4},accA(170,120,r.a,[1,0])];}},
+ incl:{build(){fsc.innerHTML=`<polygon id="sc-ramp" fill="var(--ink)" fill-opacity=".07" stroke="var(--ink)" stroke-opacity=".5"/><g id="sc-blk"><rect class="body-hit" data-b="b" x="-26" y="-40" width="52" height="40" rx="3" fill="var(--b1)" fill-opacity=".35" stroke="var(--b1)"/><text id="sc-m" x="0" y="-15" font-size="12" text-anchor="middle" fill="var(--ink)"></text></g><text id="sc-th" font-size="12" fill="var(--muted)"></text>`;},
+   update(p,r){const th=p.th*deg,L=Math.min(280,200/Math.sin(th)),x0=36,y0=214,xt=x0+L*Math.cos(th),yt=y0-L*Math.sin(th);
+     $('sc-ramp').setAttribute('points',`${x0},${y0} ${xt},${yt} ${xt},${y0}`);
+     const bx=x0+0.5*L*Math.cos(th), by=y0-0.5*L*Math.sin(th);
+     $('sc-blk').setAttribute('transform',`translate(${bx} ${by}) rotate(${-p.th})`); $('sc-m').textContent=p.m+' kg';
+     const sx=$('sc-th'); setA(sx,{x:x0+42,y:y0-6}); sx.textContent='θ';
+     const ux=Math.cos(th),uy=-Math.sin(th), nx=-Math.sin(th), ny=-Math.cos(th);
+     const sx0=bx-ux*26+nx*20, sy0=by-uy*26+ny*20;
+     return [{x1:sx0-ux*(14+p.F*1.4),y1:sy0-uy*(14+p.F*1.4),x2:sx0,y2:sy0,col:'var(--force)',label:'F',w:2.4},accA(bx+nx*62,by+ny*62,r.a,[ux,uy])];}},
+ cont:{build(){fsc.innerHTML=`<line x1="10" x2="350" y1="190" y2="190" stroke="var(--muted)" stroke-width="1.5"/>`+hatch(190)+`<rect class="body-hit" data-b="1" x="110" y="130" width="70" height="60" rx="3" fill="var(--b1)" fill-opacity=".35" stroke="var(--b1)"/><rect class="body-hit" data-b="2" x="180" y="145" width="55" height="45" rx="3" fill="var(--b3)" fill-opacity=".35" stroke="var(--b3)"/><text x="145" y="164" font-size="12" text-anchor="middle" fill="var(--ink)">1</text><text x="207" y="172" font-size="12" text-anchor="middle" fill="var(--ink)">2</text>`;},
+   update(p,r){return [{x1:110-(16+p.F*1.4),y1:160,x2:110,y2:160,col:'var(--force)',label:'F',w:2.4},accA(172,112,r.a,[1,0])];}},
+ str:{build(){fsc.innerHTML=`<line x1="10" x2="350" y1="190" y2="190" stroke="var(--muted)" stroke-width="1.5"/>`+hatch(190)+`<line x1="110" x2="190" y1="165" y2="165" stroke="var(--ink)" stroke-width="1.6"/><rect class="body-hit" data-b="A" x="50" y="140" width="60" height="50" rx="3" fill="var(--b1)" fill-opacity=".35" stroke="var(--b1)"/><rect class="body-hit" data-b="B" x="190" y="134" width="70" height="56" rx="3" fill="var(--b3)" fill-opacity=".35" stroke="var(--b3)"/><text x="80" y="170" font-size="12" text-anchor="middle" fill="var(--ink)">A</text><text x="225" y="167" font-size="12" text-anchor="middle" fill="var(--ink)">B</text>`;},
+   update(p,r){return [{x1:260,y1:162,x2:260+16+p.F*0.8,y2:162,col:'var(--force)',label:'F',w:2.4},accA(155,112,r.a,[1,0])];}},
+ atw:{build(){fsc.innerHTML=`<line x1="120" x2="240" y1="10" y2="10" stroke="var(--ink)" stroke-width="3"/><line x1="180" x2="180" y1="10" y2="40" stroke="var(--ink)" stroke-width="2"/><circle cx="180" cy="50" r="22" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><circle cx="180" cy="50" r="3" fill="var(--ink)"/>
+   <line x1="158" x2="158" y1="50" y2="150" stroke="var(--ink)" stroke-width="1.6"/><line x1="202" x2="202" y1="50" y2="120" stroke="var(--ink)" stroke-width="1.6"/>
+   <rect class="body-hit" data-b="1" x="136" y="150" width="44" height="44" rx="3" fill="var(--b1)" fill-opacity=".35" stroke="var(--b1)"/><rect class="body-hit" data-b="2" x="180" y="120" width="44" height="54" rx="3" fill="var(--b3)" fill-opacity=".35" stroke="var(--b3)"/>
+   <text id="sc-m1" x="158" y="176" font-size="11.5" text-anchor="middle" fill="var(--ink)"></text><text id="sc-m2" x="202" y="151" font-size="11.5" text-anchor="middle" fill="var(--ink)"></text>`;},
+   update(p,r){$('sc-m1').textContent=p.m1+' kg';$('sc-m2').textContent=p.m2+' kg';const s=Math.sign(r.a);return [accA(110,172,Math.abs(r.a),[0,-s]),accA(250,147,Math.abs(r.a),[0,s])];}},
+ tab:{build(){fsc.innerHTML=`<rect x="30" y="110" width="232" height="10" fill="var(--b4)" fill-opacity=".35" stroke="var(--b4)"/><rect x="40" y="120" width="12" height="100" fill="var(--b4)" fill-opacity=".35" stroke="var(--b4)"/><rect x="236" y="120" width="12" height="100" fill="var(--b4)" fill-opacity=".35" stroke="var(--b4)"/>
+   <line x1="180" x2="268" y1="94" y2="94" stroke="var(--ink)" stroke-width="1.6"/><circle cx="268" cy="106" r="12" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><line x1="280" x2="280" y1="106" y2="160" stroke="var(--ink)" stroke-width="1.6"/>
+   <rect class="body-hit" data-b="1" x="110" y="70" width="70" height="40" rx="3" fill="var(--b1)" fill-opacity=".35" stroke="var(--b1)"/><rect class="body-hit" data-b="2" x="260" y="160" width="40" height="40" rx="3" fill="var(--b3)" fill-opacity=".35" stroke="var(--b3)"/>
+   <text id="sc-m1" x="145" y="95" font-size="11.5" text-anchor="middle" fill="var(--ink)"></text><text id="sc-m2" x="280" y="185" font-size="11.5" text-anchor="middle" fill="var(--ink)"></text><text id="sc-mu" x="40" y="104" font-size="11.5" fill="var(--muted)"></text>`;},
+   update(p,r){$('sc-m1').textContent=p.m1+' kg';$('sc-m2').textContent=p.m2+' kg';$('sc-mu').textContent='µ = '+p.mu.toFixed(2);return [accA(145,52,r.a,[1,0]),accA(320,180,r.a,[0,1])];}},
+ lift:{build(){fsc.innerHTML=`<line x1="180" x2="180" y1="0" y2="24" stroke="var(--ink)" stroke-width="2"/><rect x="110" y="24" width="140" height="200" rx="4" fill="var(--ink)" fill-opacity=".04" stroke="var(--ink)" stroke-width="2"/>
+   <rect x="150" y="206" width="60" height="10" rx="2" fill="var(--muted)" fill-opacity=".5"/><g class="body-hit" data-b="p"><circle cx="180" cy="104" r="14" fill="var(--b2)" fill-opacity=".45" stroke="var(--b2)"/><rect x="164" y="120" width="32" height="86" rx="10" fill="var(--b2)" fill-opacity=".45" stroke="var(--b2)"/></g>
+   <text id="sc-rd" x="180" y="236" font-size="12" text-anchor="middle" fill="var(--ink)" font-family="IBM Plex Mono,monospace"></text>`;},
+   update(p,r){$('sc-rd').textContent='scale: '+fmt(r.N/G,1)+' kg';return [accA(290,124,Math.abs(p.a),[0,p.a>=0?-1:1])];}}
+};
+function hatch(y){let s='';for(let i=0;i<18;i++)s+=`<line x1="${i*20+14}" x2="${i*20+4}" y1="${y+1}" y2="${y+10}" stroke="var(--line)"/>`;return s;}
+function accA(x,y,a,d){const L=Math.min(a*7,70);if(L<1)return {x1:x,y1:y,x2:x,y2:y,col:'var(--acc)',label:'a = 0',lx:x,ly:y+4,anchor:'middle'};
+  return {x1:x-d[0]*L/2,y1:y-d[1]*L/2,x2:x+d[0]*L/2,y2:y+d[1]*L/2,col:'var(--acc)',w:2.4,label:'a',bold:true};}
+const scG=el('g',{},fsc), scArr=arrowPool(scG);
+function buildSys(){
+  const S=SYS.find(x=>x.id===FS.sys); press('#fsys',FS.sys); store('lom-fsys',FS.sys);
+  SCN[S.id].build();
+  /* move the pool group back on top */
+  fsc.appendChild(scG);
+  $('fbodies').innerHTML=S.bodies.map(b=>`<button class="chip" data-k="${b.id}">${b.l}</button>`).join('');
+  $('fpre').innerHTML=(S.presets||[]).map((q,i)=>`<button class="chip" data-k="${i}">${q.l}</button>`).join('');
+  $('fpre').hidden=!S.presets;
+  $('fsliders').innerHTML=S.params.map(q=>`<div class="slider"><label for="fp-${q.k}">${q.l}</label><input type="range" id="fp-${q.k}" min="${q.min}" max="${q.max}" step="${q.step}" value="${FS.p[S.id][q.k]}"><output id="fo-${q.k}"></output></div>`).join('');
+  S.params.forEach(q=>$('fp-'+q.k).addEventListener('input',e=>{FS.p[S.id][q.k]=+e.target.value;updSys();}));
+  updSys();
+}
+function updSys(){
+  const S=SYS.find(x=>x.id===FS.sys), p=FS.p[S.id], r=S.solve(p), b=FS.body[S.id], rev=!!FS.rev[S.id];
+  press('#fbodies',b);
+  S.params.forEach(q=>{const v=p[q.k];$('fo-'+q.k).textContent=(q.step<0.1?v.toFixed(2):q.step<1?v.toFixed(1):v)+(q.u?' '+q.u:'');});
+  if(S.presets) press('#fpre',String(S.presets.findIndex(q=>Math.abs(q.a-p.a)<1e-9)));
+  /* highlight chosen body in the scene */
+  fsc.querySelectorAll('.body-hit').forEach(h=>{const on=h.dataset.b===b||b==='s', shapes=h.tagName.toLowerCase()==='g'?h.querySelectorAll('rect,circle'):[h];shapes.forEach(x=>{x.setAttribute('stroke-width',on?3:1);x.setAttribute('fill-opacity',on?0.55:0.2);});});
+  scArr(SCN[S.id].update(p,r));
+  /* prediction */
+  const ans=S.pred.ans(p,r), pk=FS.pick[S.id];
+  const ph=`<p><b>Predict:</b> ${S.pred.q}</p><div class="opts">${S.pred.o.map((o,j)=>`<button class="opt${rev&&j===ans?' right':''}${rev&&pk===j&&j!==ans?' wrong':''}" data-j="${j}" ${rev?'disabled':''}>${o}</button>`).join('')}</div>${rev?'':'<div><button class="btn" id="fshow">Skip: just show me</button></div>'}`;
+  if($('fpred').innerHTML!==ph&&$('fpred').dataset.h!==ph){$('fpred').innerHTML=ph;$('fpred').dataset.h=ph;}
+  /* FBD */
+  const fs=S.forces(b,p,r), fmax=Math.max(...fs.map(f=>f.v),1e-9), C=[160,140];
+  const tilt=S.id==='incl'?p.th:0;
+  setA(fbdBody,{x:C[0]-32,y:C[1]-25,transform:`rotate(${-tilt} ${C[0]} ${C[1]})`});
+  fbdAxes.style.display=tilt?'':'none';
+  setA(fbdAxes,{x1:C[0]-120*Math.cos(tilt*deg),y1:C[1]+120*Math.sin(tilt*deg),x2:C[0]+120*Math.cos(tilt*deg),y2:C[1]-120*Math.sin(tilt*deg)});
+  const arr=fs.filter(f=>f.v>1e-6).map(f=>{const L=rev?Math.max(14,105*f.v/fmax):62;return {x1:C[0],y1:C[1],x2:C[0]+f.d[0]*L,y2:C[1]+f.d[1]*L,col:'var(--force)',w:2.6,label:rev?`${f.n} = ${fmt(f.v,1)} N`:f.n,bold:true};});
+  const [am,ad]=S.acc(b,p,r);
+  if(rev){const L=Math.min(am*7,70), AC=[64,236];
+    arr.push(L<1?{x1:AC[0],y1:AC[1],x2:AC[0],y2:AC[1],col:'var(--acc)',label:'a = 0',lx:AC[0],ly:AC[1]+4}
+      :{x1:AC[0]-ad[0]*L/2,y1:AC[1]-ad[1]*L/2,x2:AC[0]+ad[0]*L/2,y2:AC[1]+ad[1]*L/2,col:'var(--acc)',w:2.6,label:'a = '+fmt(am)+' m/s²',lx:AC[0],ly:AC[1]+Math.abs(ad[1])*L/2+18,anchor:'middle'});}
+  fbdArr(arr);
+  fbdLbl.textContent='Forces on: '+S.bodies.find(x=>x.id===b).l.toLowerCase();
+  fbdNote.textContent=rev?'arrows to scale':'directions only: predict first';
+  $('fkv').innerHTML=rev?S.kv(p,r).map(x=>`<dt>${x[0]}</dt><dd>${x[1]}</dd>`).join(''):'';
+  $('fcap').innerHTML=rev?S.cap(b,p,r):'Answer the prediction (or skip) to see the diagram to scale and the numbers.';
+}
+chips('fsys',SYS,k=>{FS.sys=k;buildSys();});
+$('fbodies').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c){FS.body[FS.sys]=c.dataset.k;updSys();}});
+fsc.addEventListener('click',e=>{const h=e.target.closest('.body-hit');if(h){FS.body[FS.sys]=h.dataset.b;updSys();}});
+$('fpre').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;const S=SYS.find(x=>x.id===FS.sys),q=S.presets[+c.dataset.k];FS.p[S.id].a=q.a;$('fp-a').value=q.a;updSys();});
+$('fpred').addEventListener('click',e=>{
+  if(e.target.id==='fshow'){FS.rev[FS.sys]=true;updSys();return;}
+  const o=e.target.closest('.opt');if(!o||o.disabled)return;FS.pick[FS.sys]=+o.dataset.j;FS.rev[FS.sys]=true;updSys();});
+{const m1=8,m2=12,gq=10,a=(m2-m1)*gq/(m1+m2),T=2*m1*m2*gq/(m1+m2); const mp=70,al=5;
+quiz('q6',[
+ {q:`Masses of ${m1} kg and ${m2} kg hang over a frictionless pulley (take g = ${gq} m s⁻²). Acceleration and tension?`,
+  o:[`${fmt(a)} m s⁻², ${fmt(T)} N`,`${fmt(a)} m s⁻², ${m2*gq} N`,`${gq} m s⁻², 0 N`],a:0,
+  why:`a = (m₂ − m₁)g/(m₁ + m₂) = ${m2-m1} × ${gq}/${m1+m2} = ${fmt(a)} m s⁻². T = 2m₁m₂g/(m₁ + m₂) = ${fmt(T)} N, between ${m1*gq} N and ${m2*gq} N.`},
+ {q:`A ${mp} kg person stands on a scale in a lift accelerating <b>downward</b> at ${al} m s⁻² (g = 10 m s⁻²). The scale reads:`,
+  o:[`${mp} kg`,`${mp*(gq-al)/gq} kg`,`${mp*(gq+al)/gq} kg`],a:1,
+  why:`N = m(g − a) = ${mp} × ${gq-al} = ${mp*(gq-al)} N, which the scale shows as ${mp*(gq-al)/gq} kg. Accelerating upward it would show ${mp*(gq+al)/gq} kg; in free fall, 0.`},
+ {q:'In a free-body diagram of block A, you should include:',
+  o:['all forces on A, and the forces A exerts on other bodies','only the forces on A by other bodies','only the forces that are not balanced'],a:1,
+  why:'Forces A exerts act on other bodies; they belong in those bodies\' diagrams (as third-law partners). A free-body diagram shows only forces on the chosen system.'}
+]);}
+
+drawGal(); drawCatch(); drawCarts(); drawThird(); drawMom(); drawEq(); buildSys();
+</script>
+</body>
+</html>

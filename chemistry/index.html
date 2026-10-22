@@ -7,16 +7,18 @@
 <meta name="description" content="Interactive tools for building intuition in inorganic and organic chemistry (CBSE + JEE).">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&family=Noto+Sans+Symbols+2&text=%E2%86%90%E2%86%91%E2%86%92%E2%86%93%E2%86%94%E2%86%97%E2%87%8C%E2%87%92%E2%87%94%E2%88%82%E2%88%88%E2%88%92%E2%88%93%E2%88%9A%E2%88%9D%E2%88%9E%E2%88%AB%E2%89%88%E2%89%A0%E2%89%A1%E2%89%A4%E2%89%A5%E2%89%AA%E2%89%AB%E2%8A%95%E2%8A%97%E2%8A%99%E2%8A%A5%E2%96%B2%E2%96%B6%E2%97%80%E2%97%8B%E2%97%8F%E2%9C%93%E2%9C%97%E2%9D%9A%E2%9F%82%E2%9F%A8%E2%9F%A9&display=swap">
 <style>
 html,body{margin:0} [hidden]{display:none!important}
 /* Layout: one column — title, one-line idea, list of modules as rows, planned list, footer */
 :root{
   --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8; --accent:#2c56cc;
-  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
-  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --f-display:"Bricolage Grotesque","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","Noto Sans Math","Noto Sans Symbols 2",ui-monospace,Menlo,monospace;
 }
-@media (prefers-color-scheme: dark){:root{--bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c; --accent:#7d9dff; color-scheme:dark}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c; --accent:#7d9dff; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c; --accent:#7d9dff; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 56px}

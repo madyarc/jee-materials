@@ -1,0 +1,1190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Work and Energy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&family=Noto+Sans+Symbols+2&text=%E2%86%90%E2%86%91%E2%86%92%E2%86%93%E2%86%94%E2%86%97%E2%87%8C%E2%87%92%E2%87%94%E2%88%82%E2%88%88%E2%88%92%E2%88%93%E2%88%9A%E2%88%9D%E2%88%9E%E2%88%AB%E2%89%88%E2%89%A0%E2%89%A1%E2%89%A4%E2%89%A5%E2%89%AA%E2%89%AB%E2%8A%95%E2%8A%97%E2%8A%99%E2%8A%A5%E2%96%B2%E2%96%B6%E2%97%80%E2%97%8B%E2%97%8F%E2%9C%93%E2%9C%97%E2%9D%9A%E2%9F%82%E2%9F%A8%E2%9F%A9&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) work = F·d with a draggable force arrow  (2) work by a varying force = area under F–x, and the work–energy theorem
+   (3) three paths up a hill: gravity vs friction  (4) potential-energy curve explorer  (5) spring: F = −kx and ½kx²
+   (6) live energy bars: pendulum, roller coaster, spring  (7) vertical circle: string / rod / bead, tension graph, slack point
+   (8) power  (9) predict-then-check questions */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --acc:#b0377a; --disp:#1f8f87; --ke:#0f8a4f; --pe:#8a6d1f;
+  --c1:#56627a; --c2:#3f7f3a; /* categorical: lift A, lift B */
+  --f-display:"Bricolage Grotesque","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","Noto Sans Math","Noto Sans Symbols 2",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a; --c1:#9aa6be; --c2:#74c26c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a; --c1:#9aa6be; --c2:#74c26c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:7.5em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:7.5ch;text-align:right;font-variant-numeric:tabular-nums}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+.handle{cursor:grab;touch-action:none}
+.stepper{display:inline-flex;align-items:center;gap:6px;font-size:13.5px}
+.stepper output{font:500 13px var(--f-mono);min-width:6ch;text-align:center}
+.stepper .btn{padding:3px 10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Work and Energy</h1>
+    <p class="lede">A force does work when it pushes something along. Work is how energy gets moved in and out of motion (kinetic energy) and in and out of storage (potential energy). Drag the arrows, move the ball on the energy landscape, and watch the bars: energy only ever changes form or place, and work is the way it does so.</p>
+  </header>
+
+  <!-- 1 · work = F·d -->
+  <section class="stack" id="s-work">
+    <div>
+      <h2>1 · Work: only the part of the force along the motion counts</h2>
+      <p class="lede">The block moves a distance d to the right. Drag the tip of the orange force arrow round. Its “shadow” on the direction of motion, F cos θ, is the part that does work.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="wkchips" role="group" aria-label="Examples"></div>
+        <div class="svgbox"><svg id="wk" viewBox="0 0 620 290" role="img" aria-label="Block, displacement and draggable force" style="min-width:500px"></svg></div>
+        <div class="slider"><label for="wkd">displacement d</label><input type="range" id="wkd" min="1" max="4" step="0.1" value="3"><output id="wkdo"></output></div>
+        <div class="svgbox"><svg id="wkc" viewBox="0 0 620 140" role="img" aria-label="Work against the angle" style="min-width:500px"></svg></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="wkstate"></p>
+        <dl class="kv" id="wkkv"></dl>
+        <p class="cap key">W = F d cos θ = <b>F·d</b>, the scalar (dot) product. In components it is F<sub>x</sub>d<sub>x</sub> + F<sub>y</sub>d<sub>y</sub>: here d is along x, so only F<sub>x</sub> = F cos θ survives. Work is a scalar with a sign, measured in joules (1 J = 1 N m, dimensions [ML²T⁻²]).</p>
+        <p class="cap">No work is done when there is no displacement (pushing a wall, holding a load still), no force (a puck gliding on ice), or when force and motion are perpendicular (carrying a bag across a level floor; gravity on a body in a circular orbit).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · area under F–x -->
+  <section class="stack" id="s-area">
+    <div>
+      <h2>2 · A changing force: work is the area under F–x</h2>
+      <p class="lede">Chop the path into thin strips. In each strip the force is nearly constant, so its work is F Δx, a thin rectangle. Add the rectangles; as they get thinner the sum becomes the area under the curve. Area below the axis counts as negative work.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="fxchips" role="group" aria-label="Examples"></div>
+        <div class="svgbox"><svg id="fx" viewBox="0 0 620 300" role="img" aria-label="Force against position with shaded area" style="min-width:520px"></svg></div>
+        <div class="slider"><label for="fxx">up to x =</label><input type="range" id="fxx" min="0" max="1" step="0.005" value="1"><output id="fxxo"></output></div>
+        <div class="row"><span class="muted">strips:</span><span class="stepper"><button class="btn" id="fxm" aria-label="fewer strips">−</button><output id="fxn"></output><button class="btn" id="fxp" aria-label="more strips">+</button></span></div>
+        <div class="legend" id="fxleg"></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="fxkv"></dl>
+        <p class="cap key"><b>Work–energy theorem:</b> the work done by the <i>net</i> force equals the change in kinetic energy, W<sub>net</sub> = K<sub>f</sub> − K<sub>i</sub>, with K = ½mv². The teal bar is K: it grows where the net area grows and shrinks where it is negative.</p>
+        <p class="cap" id="fxcap"></p>
+        <p class="cap">The theorem is Newton’s second law added up along the path (dK = F dx). It is a scalar statement, so it says nothing about direction, and nothing about <i>how long</i> the motion took. Its strength: you can find the work of a force you don’t know, such as air resistance, from the change in K.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · paths -->
+  <section class="stack" id="s-path">
+    <div>
+      <h2>3 · Same climb, different paths: conservative or not</h2>
+      <p class="lede">Slide a 1 kg block slowly from A to B (3 m higher) along different tracks. Watch two running totals: the work done by gravity and the work done by friction. Predict first: which one ends up the same on every path?</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="pchips" role="group" aria-label="Choose a path"></div>
+        <div class="svgbox"><svg id="pth" viewBox="0 0 620 250" role="img" aria-label="Three paths from A to B" style="min-width:500px"></svg></div>
+        <div class="slider"><label for="ps">how far along</label><input type="range" id="ps" min="0" max="1" step="0.002" value="1"><output id="pso"></output></div>
+        <div class="row"><button class="btn primary" id="pplay">Walk it</button></div>
+        <div class="svgbox"><svg id="pthc" viewBox="0 0 620 220" role="img" aria-label="Running work against distance walked" style="min-width:500px"></svg></div>
+        <div class="legend"><span><i style="background:var(--pe)"></i>work by gravity</span><span><i style="background:var(--muted)"></i>work by friction (dashed)</span><span>faint: the other paths</span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="pkv"></dl>
+        <p class="cap key"><b>Gravity is conservative.</b> Its work depends only on where you start and finish: −mgh = −29.4 J for every path to B, and zero for any round trip. That is what lets us store it as potential energy: ΔU = −W<sub>gravity</sub>, so U = mgh (taking g constant, fine for h much less than the Earth’s radius).</p>
+        <p class="cap"><b>Friction is not.</b> It always opposes the motion, so its work keeps piling up with distance and never cancels on the way back. No potential energy can be defined for it. <span class="hw">simplified model</span> friction here has a fixed size of 2 N along the path.</p>
+        <p class="cap">Three equivalent tests for a conservative force: it comes from a potential, F = −dU/dx; its work depends only on the end points; its work round any closed path is zero. Only <i>changes</i> in U matter, so where you put U = 0 is your choice; keep it fixed through a problem.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · U(x) explorer -->
+  <section class="stack" id="s-ux">
+    <div>
+      <h2>4 · The potential-energy landscape</h2>
+      <p class="lede">The curve is U(x). The dashed line is the total energy E, which stays fixed. Where the ball sits, the gap between the line and the curve is its kinetic energy. Drag the ball to place it at rest anywhere (E then equals U there), or raise the energy line with its handle on the right to give it a push. Then release it.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="uchips" role="group" aria-label="Choose a landscape"></div>
+        <div class="svgbox"><svg id="ux" viewBox="0 0 640 300" role="img" aria-label="Potential energy curve with ball and energy line" style="min-width:520px"></svg></div>
+        <div class="svgbox"><svg id="uf" viewBox="0 0 640 120" role="img" aria-label="Force against position" style="min-width:520px"></svg></div>
+        <div class="slider"><label for="uxx">ball position x</label><input type="range" id="uxx" min="0" max="1" step="0.001"><output id="uxxo"></output></div>
+        <div class="slider"><label for="uxe">total energy E</label><input type="range" id="uxe" min="0" max="1" step="0.001"><output id="uxeo"></output></div>
+        <div class="row"><button class="btn primary" id="uplay">Release</button><button class="btn" id="unudge">Nudge</button></div>
+        <div class="legend"><span><i style="background:var(--pe)"></i>U(x)</span><span><i style="background:var(--ke);height:8px"></i>kinetic energy, K = E − U</span><span><i style="background:var(--force)"></i>force F = −dU/dx</span><span><i style="background:var(--vel)"></i>velocity</span><span>▲ turning point</span></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="ustate"></p>
+        <dl class="kv" id="ukv"></dl>
+        <p class="cap" id="ucap"></p>
+        <p class="cap key"><b>Read the slope as a force.</b> F = −dU/dx: the force always points downhill on the curve, and is bigger where the curve is steeper. The lower graph is that slope, flipped.</p>
+        <p class="cap"><b>Turning points</b> are where E = U: there K = 0, the ball stops and turns back. It can never enter the shaded parts, where U &gt; E would need negative K. <b>Equilibrium</b> is where the slope is zero (F = 0): at a valley bottom it is <b>stable</b> (nudge it, it comes back), on a hilltop <b>unstable</b> (it rolls away), on a flat stretch <b>neutral</b> (it just stays wherever you leave it).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · spring -->
+  <section class="stack" id="s-spring">
+    <div>
+      <h2>5 · The spring: a force that grows as you pull</h2>
+      <p class="lede">Drag the block to stretch or compress the spring. The spring always pulls back towards x = 0 (Hooke’s law, F = −kx). The work you do is the shaded area under your force, a triangle, and it is stored in the spring.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="sp" viewBox="0 0 620 160" role="img" aria-label="Block on a spring, draggable" style="min-width:500px"></svg></div>
+        <div class="svgbox"><svg id="spg" viewBox="0 0 620 250" role="img" aria-label="Force against extension, shaded work" style="min-width:500px"></svg></div>
+        <div class="slider"><label for="spx">extension x</label><input type="range" id="spx" min="-0.5" max="0.5" step="0.005" value="0.3"><output id="spxo"></output></div>
+        <div class="slider"><label for="spx1">start at x₁</label><input type="range" id="spx1" min="-0.5" max="0.5" step="0.005" value="0"><output id="spx1o"></output></div>
+        <div class="slider"><label for="spk">spring constant k</label><input type="range" id="spk" min="20" max="200" step="5" value="100"><output id="spko"></output></div>
+        <div class="legend"><span><i style="background:var(--force)"></i>spring force, −kx</span><span><i style="background:var(--force);opacity:.55"></i>your hand, +kx (dashed)</span><span><i style="background:var(--pe);height:8px;opacity:.6"></i>work you do = energy stored</span><span><i style="background:var(--disp)"></i>extension x</span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="spkv"></dl>
+        <p class="cap key">From 0 to x the triangle has base x and height kx, so the work stored is <b>U = ½kx²</b>. The spring itself does the opposite work, −½kx². Starting from x₁ instead, the area is a trapezium: W = ½k(x² − x₁²).</p>
+        <p class="cap">Stretch and come back to where you started: the two areas cancel and the spring’s total work is zero. So the spring force is conservative, and ½kx² is its potential energy (zero at the natural length). A large k is a stiff spring; k is in N m⁻¹. <span class="hw">ideal model</span> massless spring obeying Hooke’s law exactly.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · energy bars -->
+  <section class="stack" id="s-bars">
+    <div>
+      <h2>6 · Energy bars: watch it change form</h2>
+      <p class="lede">Pick a system and let it go. Kinetic and potential energy trade back and forth while their sum stays level. Switch on friction: the sum now leaks away as heat, but the grand total (including heat) still does not change.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="echips" role="group" aria-label="Choose a system"></div>
+        <div class="svgbox"><svg id="esc" viewBox="0 0 440 290" role="img" aria-label="Moving system" style="min-width:320px;max-width:520px;margin:0 auto"></svg></div>
+        <div class="slider"><label for="erel" id="erell">release</label><input type="range" id="erel" min="0" max="1" step="0.01" value="0.6"><output id="erelo"></output></div>
+        <div class="row"><button class="btn primary" id="eplay">Play</button><button class="btn" id="ereset">Reset</button><label class="muted"><input type="checkbox" id="efric"> friction / air drag</label></div>
+      </div>
+      <div class="panel stack">
+        <svg id="ebar" viewBox="0 0 300 250" role="img" aria-label="Energy bar chart" style="width:100%;max-width:360px;height:auto;display:block"></svg>
+        <p class="cap key" id="ecap"></p>
+        <p class="cap">Mechanical energy K + U is conserved only when the forces doing work are conservative. With friction, its change equals the work of the non-conservative forces: E<sub>f</sub> − E<sub>i</sub> = W<sub>nc</sub> (negative, so E falls). The tension in a pendulum string does no work: it is always perpendicular to the motion.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · vertical circle -->
+  <section class="stack" id="s-vc">
+    <div>
+      <h2>7 · Round a vertical circle</h2>
+      <p class="lede">Give the bob a speed u at the bottom and let it climb. Energy conservation fixes its speed at every height. What it is attached to then decides whether it gets round: a string can only pull, a rod (or a bead threaded on a ring) can pull or push. Predict first: for a string, is u = 2√(gL), just enough to reach the top height, enough?</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="vcmode" role="group" aria-label="What holds the bob"></div>
+        <div class="svgbox"><svg id="vc" viewBox="0 0 360 330" role="img" aria-label="Bob going round a vertical circle" style="min-width:300px;max-width:440px;margin:0 auto"></svg></div>
+        <div class="slider"><label for="vcu">speed at bottom u</label><input type="range" id="vcu" min="0.5" max="3" step="0.01" value="2"><output id="vcuo" style="min-width:16ch"></output></div>
+        <div class="chips" id="vcpre" role="group" aria-label="Key speeds"></div>
+        <div class="row"><button class="btn primary" id="vcplay">Play</button><button class="btn" id="vcreset">Back to the bottom</button><span class="muted">L = 1.0 m, m = 1 kg, slowed down 2×</span></div>
+        <div class="legend"><span><i style="background:var(--force)"></i>forces: weight mg, and the pull (or push) along the string, rod or ring</span><span><i style="background:var(--vel)"></i>velocity</span><span><i style="background:var(--vel);opacity:.3;height:6px"></i>path it will follow</span></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="vcstate"></p>
+        <svg id="vcg" viewBox="0 0 360 215" role="img" aria-label="Tension against angle" style="width:100%;max-width:440px;height:auto;display:block"></svg>
+        <svg id="vce" viewBox="0 0 360 46" role="img" aria-label="Kinetic and potential energy" style="width:100%;max-width:440px;height:auto;display:block"></svg>
+        <dl class="kv" id="vckv"></dl>
+        <p class="cap" id="vccap"></p>
+        <p class="cap key">Measure θ from the bottom. Energy: <b>v² = u² − 2gL(1 − cos θ)</b>. Toward the centre, the pull T and the weight’s component must give the centripetal force: T − mg cos θ = mv²/L, so <b>T = mv²/L + mg cos θ = m(u²/L − 2g + 3g cos θ)</b>. T is largest at the bottom and smallest at the top, and T<sub>bottom</sub> − T<sub>top</sub> = 6mg whatever u is.</p>
+        <p class="cap"><b>String:</b> needs T ≥ 0 at the top, so u ≥ √(5gL) (then v<sub>top</sub> ≥ √(gL)). For √(2gL) &lt; u &lt; √(5gL), T reaches zero above the centre, at cos θ = (2gL − u²)/(3gL): the string goes slack and the bob leaves on a parabola. For u ≤ √(2gL) it never rises above the centre and just swings. <b>Rod or bead:</b> it can push, so the bob only has to reach the top: u ≥ 2√(gL) (v<sub>top</sub> may be 0). Below that it swings back.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="vquiz"></div>
+  </section>
+
+  <!-- 8 · power -->
+  <section class="stack" id="s-power">
+    <div>
+      <h2>8 · Power: how fast the work is done</h2>
+      <p class="lede">Two lifts raise the same load through the same 12 m, so they do the same work against gravity. Set their speeds and run them. On the work–time graph, the steeper line is the more powerful lift.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="pw" viewBox="0 0 620 250" role="img" aria-label="Two lifts and their work against time" style="min-width:520px"></svg></div>
+        <div class="slider"><label for="pwm">load m</label><input type="range" id="pwm" min="100" max="1000" step="50" value="500"><output id="pwmo"></output></div>
+        <div class="slider"><label for="pwa">speed of lift A</label><input type="range" id="pwa" min="0.5" max="3" step="0.1" value="2"><output id="pwao"></output></div>
+        <div class="slider"><label for="pwb">speed of lift B</label><input type="range" id="pwb" min="0.5" max="3" step="0.1" value="0.8"><output id="pwbo"></output></div>
+        <div class="row"><button class="btn primary" id="pwrun">Run both</button></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="pwkv"></dl>
+        <p class="cap key">Average power P = W/t. Instantaneous power P = dW/dt = <b>F·v</b>. A lift at constant speed must pull with F = mg, so P = mgv: double the speed, double the power, same total work. <span class="hw">simplified model</span> no friction in the shaft.</p>
+        <p class="cap">Units: 1 watt = 1 J s⁻¹; 1 horsepower (hp) = 746 W. The kilowatt hour on an electricity bill is energy, not power: 1 kWh = 1000 W × 3600 s = 3.6 × 10⁶ J. In atomic physics you will meet the electronvolt, 1 eV = 1.60 × 10⁻¹⁹ J.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · quiz -->
+  <section class="stack">
+    <div>
+      <h2>9 · Predict, then check</h2>
+      <p class="lede">Exam-style questions. Choose first; the reasoning appears after.</p>
+    </div>
+    <div class="qgrid" id="quiz"></div>
+    <div><button class="btn" id="qreset">Reset answers</button></div>
+    <p class="muted">Next: <a href="collisions.html">Collisions</a>, where momentum is always conserved but kinetic energy need not be. For rolling bodies, where some energy goes into spin, see <a href="rolling-motion.html">Rolling Motion</a>.</p>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> point masses; g = 9.8 m s⁻² and constant (heights much less than the Earth’s radius) unless a question states 10; ideal massless springs obeying Hooke’s law; friction of fixed size along a path in section 3; air drag and friction in section 6 as a simple force proportional to speed; a light inextensible string, a light rigid rod or a smooth ring, with no air drag, in section 7; frictionless lifts in section 8. The energy landscapes in section 4 are illustrative shapes, not real systems (except the spring); the two-atom curve is schematic, in arbitrary units, not to scale.</p>
+    <p><b>Based on:</b> NCERT Physics Class 11, “Work, Energy and Power”; H. C. Verma, <i>Concepts of Physics</i> Vol. 1, “Work and Energy”; Halliday, Resnick &amp; Walker, <i>Fundamentals of Physics</i>.</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+const G=9.8; // m s^-2
+const HP=746; // W per horsepower (NCERT value)
+/* 1 · force presets: F in N, angle in degrees from the direction of motion */
+const WKPRE=[
+ {l:'Pull a suitcase at 30°', F:30, a:30},
+ {l:'Carry a bag (90°)',      F:25, a:90},
+ {l:'Friction (180°)',        F:20, a:180},
+ {l:'Hold back at 135°',      F:30, a:135}
+];
+/* 2 · variable-force examples (NCERT worked examples) */
+const FXPRE=[
+ {id:'trunk', l:'Woman pushes a trunk', xmax:20, unit:'m', fmin:-70, fmax:120, fstep:50, Ki:0,
+  forces:[
+   {n:'her push F', col:'var(--force)', f:x=>x<=10?100:100-5*(x-10), W:x=>x<=10?100*x:1000+(100+(100-5*(x-10)))/2*(x-10)},
+   {n:'friction f', col:'var(--muted)', f:x=>-50, W:x=>-50*x}],
+  cap:'Her push: 100 N for 10 m, then tiring linearly to 50 N at 20 m. Friction: a steady 50 N backwards. Her area is a rectangle plus a trapezium; friction’s is a rectangle below the axis. The trunk starts from rest, so the net work is the kinetic energy it has gained.'},
+ {id:'patch', l:'Block crosses a rough patch', xmax:2.2, unit:'m', fmin:-5.5, fmax:1, fstep:1, m:1, vi:2,
+  forces:[
+   {n:'retarding force −k/x', col:'var(--force)', f:x=>(x>0.1&&x<2.01)?-0.5/x:0, W:x=>x<=0.1?0:-0.5*Math.log(Math.min(x,2.01)/0.1)}],
+  cap:'A 1 kg block arrives at 2 m s⁻¹ (K = 2 J) and crosses a rough patch from x = 0.10 m to 2.01 m, where the retarding force is k/x with k = 0.5 J. The area is all below the axis, so K only falls.'}
+];
+/* 3 · paths from A (0,0) to B (8 m, 3 m); heights in m */
+const PM=1, PF=2; // block mass (kg), friction size along path (N)
+const PATHS=[
+ {id:'ramp', l:'Straight ramp',  y:x=>3*x/8},
+ {id:'dip',  l:'Through a dip',  y:x=>3*x/8-2*Math.sin(Math.PI*x/8)},
+ {id:'bump', l:'Over a bump',    y:x=>3*x/8+2*Math.sin(Math.PI*x/8)},
+ {id:'loop', l:'Round trip: over the bump, back down the ramp', round:true}
+];
+/* 4 · potential-energy landscapes, U in J, x in m, m = 1 kg (shapes are illustrative) */
+function cosSeg(knots){ /* smooth curve through knots with zero slope at each knot */
+  return x=>{ if(x<=knots[0][0]) return knots[0][1];
+    for(let i=0;i<knots.length-1;i++){const [xa,ua]=knots[i],[xb,ub]=knots[i+1];
+      if(x<=xb){const t=(x-xa)/(xb-xa);return ua+(ub-ua)*(1-Math.cos(Math.PI*t))/2;}}
+    return knots[knots.length-1][1];};
+}
+const UPRE=[
+ {id:'land', l:'Valley, hill and shelf', x0:-4, x1:4, u0:0, u1:3.6, emax:3.4, start:-2.9,
+  U:cosSeg([[-4,3.5],[-2,0.5],[0,2.2],[1.5,1.2],[2.5,1.2],[4,3.5]]),
+  eq:[{x:-2,t:'stable'},{x:0,t:'unstable'},{x:2,t:'neutral'}], ts:1.4},
+ {id:'spring', l:'Spring, ½kx²', x0:-3, x1:3, u0:0, u1:4.6, emax:4.4, start:-2,
+  U:x=>0.5*x*x, eq:[{x:0,t:'stable'}], ts:1.4},
+ {id:'dw', l:'Double well', x0:-3.2, x1:3.2, u0:0, u1:4.6, emax:4.4, start:-3,
+  U:x=>(x*x-4)*(x*x-4)/8, eq:[{x:-2,t:'stable'},{x:0,t:'unstable'},{x:2,t:'stable'}], ts:1.4},
+ {id:'mol', l:'Two atoms (schematic)', x0:0.86, x1:3.2, u0:-1.2, u1:1.2, emax:1.0, start:0.92, open:true,
+  U:r=>Math.pow(1/r,12)-2*Math.pow(1/r,6), eq:[{x:1,t:'stable'}], ts:0.35, xl:'separation r'}
+];
+/* 6 · energy-bar systems (m = 1 kg) */
+const EL=1.0, EK=10, ECP=0.25, ECC=0.15, ECS=0.3; // pendulum length m, spring k N/m, drag coefficients s^-1
+const COASTER=cosSeg([[0,5],[2.6,0.4],[5,3],[7.2,1],[10,5.5]]);
+const ESYS=[
+ {id:'pend', l:'Pendulum'},
+ {id:'coast', l:'Roller coaster'},
+ {id:'spr', l:'Spring and block'}
+];
+/* 7 · lift */
+const PWH=12; // m
+const QUIZ=[];
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function mk(p,tag,a,txt){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;p.appendChild(e);return e;}
+function at(e,a){for(const k in a)e.setAttribute(k,a[k]);return e;}
+function mkArrow(p,col,w,dash){const g=mk(p,'g',{});const l=mk(g,'line',{stroke:col,'stroke-width':w||2.4,'stroke-linecap':'round'});if(dash)l.setAttribute('stroke-dasharray',dash);const h=mk(g,'polygon',{fill:col});return {g,l,h,w:w||2.4};}
+function setArrow(a,x1,y1,x2,y2,head){
+  const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy);
+  if(L<2){a.g.setAttribute('visibility','hidden');return;} a.g.setAttribute('visibility','visible');
+  const hh=Math.min(head||9,L*0.6),ux=dx/L,uy=dy/L,bx=x2-ux*hh,by=y2-uy*hh,px=-uy*hh*0.5,py=ux*hh*0.5;
+  at(a.l,{x1:x1.toFixed(1),y1:y1.toFixed(1),x2:bx.toFixed(1),y2:by.toFixed(1)});
+  a.h.setAttribute('points',`${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px).toFixed(1)},${(by+py).toFixed(1)} ${(bx-px).toFixed(1)},${(by-py).toFixed(1)}`);
+}
+function svgPt(svg,e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
+function drag(el,svg,onMove){
+  let on=false;
+  el.addEventListener('pointerdown',e=>{e.preventDefault();on=true;try{el.setPointerCapture(e.pointerId);}catch(_){}el.style.cursor='grabbing';onMove(svgPt(svg,e),'start');});
+  el.addEventListener('pointermove',e=>{if(on)onMove(svgPt(svg,e),'move');});
+  const end=e=>{on=false;try{el.releasePointerCapture(e.pointerId);}catch(_){}el.style.cursor='';};
+  el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
+}
+function store(k,v){try{localStorage.setItem('wep-'+k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem('wep-'+k);}catch(e){return null;}}
+const fx=(v,n)=>{const s=v.toFixed(n);return (+s===0?(0).toFixed(n):s).replace('-','−');};
+const sg=(v,n)=>(v>0.5*Math.pow(10,-n)?'+':'')+fx(v,n);
+function chips(id,list,onPick){const box=$(id);list.forEach((x,i)=>{const b=document.createElement('button');b.className='chip';b.dataset.k=i;b.textContent=x.l;box.appendChild(b);});
+  box.addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)onPick(+c.dataset.k);});}
+function press(id,i){document.querySelectorAll('#'+id+' .chip').forEach(c=>c.setAttribute('aria-pressed',+c.dataset.k===i));}
+function niceStep(x){const p=Math.pow(10,Math.floor(Math.log10(x))),m=x/p;return (m<1.5?1:m<3.5?2:m<7.5?5:10)*p;}
+/* visibility: pause loops while a section is off screen */
+const VIS={};
+function watch(id,onShow){VIS[id]=true;if(!('IntersectionObserver' in window))return;
+  new IntersectionObserver(es=>es.forEach(en=>{const was=VIS[id];VIS[id]=en.isIntersecting;if(!was&&VIS[id]&&onShow)onShow();}),{rootMargin:'80px'}).observe($(id));}
+
+/* =================== 1 · WORK =================== */
+const WK={F:30,a:30,d:3,ox:420,oy:162,s:3,ppm:60};
+{const s=$('wk');
+ mk(s,'line',{x1:0,x2:620,y1:190,y2:190,stroke:'var(--muted)','stroke-width':1.5});
+ for(let i=0;i<31;i++) mk(s,'line',{x1:i*20+4,x2:i*20-6,y1:191,y2:200,stroke:'var(--line)'});
+ WK.ghost=mk(s,'rect',{y:135,width:70,height:55,rx:4,fill:'none',stroke:'var(--muted)','stroke-dasharray':'4 3'});
+ WK.gl=mk(s,'text',{y:128,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'start');
+ mk(s,'rect',{x:WK.ox-35,y:135,width:70,height:55,rx:4,fill:'var(--ink)','fill-opacity':.08,stroke:'var(--ink)','stroke-opacity':.6});
+ WK.dA=mkArrow(s,'var(--disp)',2.6); WK.dl=mk(s,'text',{y:232,'font-size':12.5,fill:'var(--disp)','font-weight':600,'text-anchor':'middle'});
+ WK.ref=mk(s,'line',{y1:WK.oy,y2:WK.oy,stroke:'var(--muted)','stroke-dasharray':'2 4'});
+ WK.arc=mk(s,'path',{fill:'none',stroke:'var(--muted)'}); WK.al=mk(s,'text',{'font-size':12,fill:'var(--muted)'},'θ');
+ WK.drop=mk(s,'line',{stroke:'var(--force)','stroke-dasharray':'3 3',opacity:.7});
+ WK.comp=mkArrow(s,'var(--force)',5); WK.comp.g.setAttribute('opacity','.45');
+ WK.cl=mk(s,'text',{'font-size':11.5,fill:'var(--force)','text-anchor':'middle'});
+ WK.fA=mkArrow(s,'var(--force)',3,null); WK.fl=mk(s,'text',{'font-size':13,'font-weight':600,fill:'var(--force)'},'F');
+ mk(s,'circle',{cx:WK.ox,cy:WK.oy,r:3.5,fill:'var(--ink)'});
+ WK.hd=mk(s,'circle',{r:16,fill:'var(--force)','fill-opacity':.14,stroke:'var(--force)','stroke-dasharray':'3 3',class:'handle'});
+ mk(s,'text',{x:610,y:280,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'drag the circle at the arrow tip');
+ drag(WK.hd,s,p=>{const dx=p.x-WK.ox,dy=WK.oy-p.y;WK.F=Math.max(3,Math.min(40,Math.hypot(dx,dy)/WK.s));
+   let a=Math.atan2(dy,dx)*180/Math.PI;a=Math.round(a/5)*5;if(a<0)a+=360;WK.a=a;drawWork();});
+ /* W(θ) chart */
+ const c=$('wkc'), L=56,R=600,T=14,B=110;
+ WK.cX=t=>L+t/180*(R-L); WK.cT=T;WK.cB=B;
+ mk(c,'rect',{x:L,y:T,width:(R-L)/2,height:(B-T)/2,fill:'var(--ok)','fill-opacity':.07});
+ mk(c,'rect',{x:(L+R)/2,y:(T+B)/2,width:(R-L)/2,height:(B-T)/2,fill:'var(--flag)','fill-opacity':.07});
+ mk(c,'line',{x1:L,x2:R,y1:(T+B)/2,y2:(T+B)/2,stroke:'var(--muted)'});
+ mk(c,'line',{x1:L,x2:L,y1:T,y2:B,stroke:'var(--muted)'});
+ [0,45,90,135,180].forEach(t=>mk(c,'text',{x:WK.cX(t),y:B+15,'font-size':11.5,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},t+'°'));
+ mk(c,'text',{x:(L+R)/2,y:B+29,'font-size':11.5,fill:'var(--ink)','text-anchor':'middle'},'angle θ between F and d');
+ mk(c,'text',{x:L+8,y:T+13,'font-size':11,fill:'var(--ok)'},'positive work');
+ mk(c,'text',{x:R-8,y:B-6,'font-size':11,fill:'var(--flag)','text-anchor':'end'},'negative work');
+ mk(c,'text',{x:(L+R)/2+6,y:T+12,'font-size':11,fill:'var(--muted)'},'zero at 90°');
+ mk(c,'text',{transform:`translate(14 ${(T+B)/2}) rotate(-90)`,'font-size':11.5,fill:'var(--ink)','text-anchor':'middle'},'W');
+ WK.cmax=mk(c,'text',{x:L-5,y:T+4,'font-size':11,fill:'var(--muted)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'});
+ WK.cmin=mk(c,'text',{x:L-5,y:B,'font-size':11,fill:'var(--muted)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'});
+ WK.curve=mk(c,'path',{fill:'none',stroke:'var(--force)','stroke-width':2.2});
+ WK.dot=mk(c,'circle',{r:5,fill:'var(--force)'});
+}
+chips('wkchips',WKPRE,i=>{WK.F=WKPRE[i].F;WK.a=WKPRE[i].a;drawWork();});
+$('wkd').addEventListener('input',e=>{WK.d=+e.target.value;drawWork();});
+function drawWork(){
+  const {F,a,d,ox,oy,s}=WK, r=a*Math.PI/180, tx=ox+F*s*Math.cos(r), ty=oy-F*s*Math.sin(r);
+  press('wkchips',WKPRE.findIndex(p=>p.F===F&&p.a===a));
+  $('wkdo').textContent=d.toFixed(1)+' m';
+  const dpx=d*WK.ppm, gx=ox-dpx;
+  at(WK.ghost,{x:gx-35}); at(WK.gl,{x:gx});
+  setArrow(WK.dA,gx,218,ox,218); at(WK.dl,{x:(gx+ox)/2,y:236}); WK.dl.textContent='d = '+d.toFixed(1)+' m';
+  at(WK.ref,{x1:ox,x2:ox+130});
+  const th=a<=180?a:360-a; // angle between vectors
+  const ar=30, sweep=a<=180?0:1, ex=ox+ar*Math.cos(r), ey=oy-ar*Math.sin(r);
+  WK.arc.setAttribute('d',th<1?'':`M${ox+ar} ${oy} A${ar} ${ar} 0 ${th>180?1:0} ${sweep} ${ex.toFixed(1)} ${ey.toFixed(1)}`);
+  const mid=(a<=180?a/2:(360+a)/2)*Math.PI/180; at(WK.al,{x:ox+44*Math.cos(mid)-4,y:oy-44*Math.sin(mid)+4});
+  WK.al.setAttribute('visibility',th<8?'hidden':'visible');
+  const cx=ox+F*s*Math.cos(r);
+  at(WK.drop,{x1:tx,y1:ty,x2:cx,y2:oy});
+  setArrow(WK.comp,ox,oy,cx,oy,10);
+  at(WK.cl,{x:(ox+cx)/2,y:oy+(Math.sin(r)>=0?18:-10)}); WK.cl.textContent=Math.abs(Math.cos(r))>0.05?'F cos θ':'';
+  setArrow(WK.fA,ox,oy,tx,ty,12);
+  at(WK.fl,{x:tx+(Math.cos(r)>=0?8:-18),y:ty+(Math.sin(r)>=0?-6:16)});
+  at(WK.hd,{cx:tx,cy:ty});
+  const W=F*d*Math.cos(r), Fx=F*Math.cos(r), Fy=F*Math.sin(r);
+  $('wkkv').innerHTML=`<dt>force F</dt><dd>${fx(F,1)} N</dd><dt>angle θ</dt><dd>${th}°</dd><dt>along d, F cos θ</dt><dd>${fx(Fx,1)} N</dd><dt>across d, F sin θ</dt><dd>${fx(Fy,1)} N (no work)</dd><dt>work W</dt><dd>${fx(W,1)} J</dd>`;
+  $('wkstate').textContent=Math.abs(W)<0.05?'Zero work: force ⟂ motion':W>0?'Positive work: the force helps the motion':'Negative work: the force resists the motion';
+  /* chart */
+  const Wm=40*4, Y=w=>(WK.cT+WK.cB)/2-w/Wm*((WK.cB-WK.cT)/2);
+  let p='';for(let t=0;t<=180;t+=3)p+=(t?'L':'M')+WK.cX(t).toFixed(1)+' '+Y(F*d*Math.cos(t*Math.PI/180)).toFixed(1);
+  WK.curve.setAttribute('d',p); at(WK.dot,{cx:WK.cX(th),cy:Y(W)});
+  WK.cmax.textContent='+'+Wm; WK.cmin.textContent='−'+Wm;
+}
+
+/* =================== 2 · AREA UNDER F–x =================== */
+const FXS=[4,8,16,32,64,0]; // 0 = exact area
+const FX={p:0,frac:1,ni:1};
+const FXG={L:60,R:520,T:16,B:250};
+{const s=$('fx');
+ FX.grid=mk(s,'g',{}); FX.areas=mk(s,'g',{}); FX.curves=mk(s,'g',{}); FX.labels=mk(s,'g',{});
+ FX.vline=mk(s,'line',{stroke:'var(--ink)','stroke-width':1.5,'stroke-dasharray':'4 3'});
+ /* KE bar */
+ mk(s,'line',{x1:560,x2:600,y1:FXG.B,y2:FXG.B,stroke:'var(--muted)'});
+ FX.kbar=mk(s,'rect',{x:566,width:28,fill:'var(--ke)','fill-opacity':.85});
+ FX.kt=mk(s,'text',{x:580,'font-size':11.5,fill:'var(--ink)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'});
+ mk(s,'text',{x:580,y:FXG.B+15,'font-size':11.5,fill:'var(--ke)','text-anchor':'middle','font-weight':600},'K');
+}
+chips('fxchips',FXPRE,i=>{FX.p=i;FX.frac=1;$('fxx').value=1;store('fx',i);buildFx();drawFx();});
+$('fxx').addEventListener('input',e=>{FX.frac=+e.target.value;drawFx();});
+$('fxm').onclick=()=>{FX.ni=Math.max(0,FX.ni-1);drawFx();};
+$('fxp').onclick=()=>{FX.ni=Math.min(FXS.length-1,FX.ni+1);drawFx();};
+function fxX(x){const P=FXPRE[FX.p];return FXG.L+x/P.xmax*(FXG.R-FXG.L);}
+function fxY(f){const P=FXPRE[FX.p];return FXG.B-(f-P.fmin)/(P.fmax-P.fmin)*(FXG.B-FXG.T);}
+function buildFx(){
+  const P=FXPRE[FX.p]; press('fxchips',FX.p);
+  FX.grid.innerHTML='';FX.curves.innerHTML='';FX.areas.innerHTML='';FX.labels.innerHTML='';
+  const g=FX.grid, {L,R,T,B}=FXG;
+  for(let f=Math.ceil(P.fmin/P.fstep)*P.fstep;f<=P.fmax+1e-9;f+=P.fstep){
+    mk(g,'line',{x1:L,x2:R,y1:fxY(f),y2:fxY(f),stroke:Math.abs(f)<1e-9?'var(--muted)':'var(--line)'});
+    mk(g,'text',{x:L-6,y:fxY(f)+4,'font-size':11.5,fill:'var(--muted)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'},fx(f,0));
+  }
+  const xs=niceStep(P.xmax/5);
+  for(let x=0;x<=P.xmax+1e-9;x+=xs) mk(g,'text',{x:fxX(x),y:B+15,'font-size':11.5,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},+x.toFixed(2));
+  mk(g,'text',{x:(L+R)/2,y:B+32,'font-size':12,fill:'var(--ink)','text-anchor':'middle'},'position x (m)');
+  mk(g,'text',{transform:`translate(14 ${(T+B)/2}) rotate(-90)`,'font-size':12,fill:'var(--ink)','text-anchor':'middle'},'force (N)');
+  FX.F=P.forces.map((F,i)=>{
+    let d='';const N=600;for(let k=0;k<=N;k++){const x=P.xmax*k/N;d+=(k?'L':'M')+fxX(x).toFixed(1)+' '+fxY(F.f(x)).toFixed(1);}
+    const area=mk(FX.areas,'path',{fill:F.col,'fill-opacity':.22,stroke:'none'});
+    const strips=mk(FX.areas,'path',{fill:F.col,'fill-opacity':.25,stroke:F.col,'stroke-opacity':.7,'stroke-width':.8});
+    mk(FX.curves,'path',{d,fill:'none',stroke:F.col,'stroke-width':2.6});
+    const lt=mk(FX.labels,'text',{'font-size':12,'font-weight':600,fill:F.col});
+    return {area,strips,lt};
+  });
+  $('fxleg').innerHTML=P.forces.map(F=>`<span><i style="background:${F.col}"></i>${F.n}</span>`).join('')+`<span><i style="background:var(--ke);height:8px"></i>kinetic energy</span>`;
+  $('fxcap').textContent=P.cap;
+}
+function drawFx(){
+  const P=FXPRE[FX.p], xe=P.xmax*FX.frac, n=FXS[FX.ni], {T,B}=FXG, y0=fxY(0);
+  $('fxxo').textContent=fx(xe,2)+' m'; $('fxn').textContent=n?n:'exact';
+  at(FX.vline,{x1:fxX(xe),x2:fxX(xe),y1:T,y2:B});
+  let rows='', net=0;
+  P.forces.forEach((F,i)=>{
+    const o=FX.F[i];
+    /* exact area */
+    let d=`M${fxX(0)} ${y0}`;const N=300;for(let k=0;k<=N;k++){const x=xe*k/N;d+=`L${fxX(x).toFixed(1)} ${fxY(F.f(x)).toFixed(1)}`;}
+    d+=`L${fxX(xe).toFixed(1)} ${y0}Z`;
+    o.area.setAttribute('d',xe>0?d:''); o.area.setAttribute('visibility',n?'hidden':'visible');
+    /* strips: left endpoint of each */
+    let sd='',sum=0;
+    if(n&&xe>0){const dx=xe/n;for(let k=0;k<n;k++){const x=k*dx,f=F.f(x);sum+=f*dx;
+      const xa=fxX(x),xb=fxX(x+dx),yf=fxY(f);sd+=`M${xa.toFixed(1)} ${y0}L${xa.toFixed(1)} ${yf.toFixed(1)}L${xb.toFixed(1)} ${yf.toFixed(1)}L${xb.toFixed(1)} ${y0}Z`;}}
+    o.strips.setAttribute('d',sd);
+    const W=F.W(xe); net+=W;
+    /* label inside the region it describes */
+    const lx=fxX(Math.max(xe,P.xmax*0.12)/2), fm=F.f(Math.max(xe,P.xmax*0.12)/2);
+    at(o.lt,{x:lx,y:fm>=0?(fxY(fm)+y0)/2+4:Math.min(B-6,(fxY(fm)+y0)/2+4),'text-anchor':'middle'});
+    o.lt.textContent=(xe>0?'W = '+fx(W,W<10&&W>-10?2:0)+' J':'');
+    rows+=`<dt>${F.n}</dt><dd>${n?'strips '+fx(sum,Math.abs(sum)<10?2:0)+' J · ':''}area ${fx(W,Math.abs(W)<10?2:0)} J</dd>`;
+  });
+  let K, Kmax;
+  if(P.m){const Ki=0.5*P.m*P.vi*P.vi;K=Ki+net;Kmax=Ki;rows+=`<dt>net work</dt><dd>${fx(net,2)} J</dd><dt>K = K<sub>i</sub> + W</dt><dd>${fx(Ki,2)} + (${fx(net,2)}) = ${fx(K,2)} J</dd><dt>speed</dt><dd>${fx(Math.sqrt(2*Math.max(0,K)/P.m),2)} m s⁻¹</dd>`;}
+  else {K=P.Ki+net;let mx=0;for(let k=0;k<=200;k++){const x=P.xmax*k/200;mx=Math.max(mx,P.forces.reduce((s,F)=>s+F.W(x),0));}Kmax=mx;
+    rows+=`<dt>net work</dt><dd>${fx(net,0)} J</dd><dt>gain in K</dt><dd>${fx(K,0)} J (from rest)</dd>`;}
+  $('fxkv').innerHTML=rows;
+  const h=Kmax>0?Math.max(0,K)/Kmax*(B-T-14):0;
+  at(FX.kbar,{y:B-h,height:h}); at(FX.kt,{y:B-h-5}); FX.kt.textContent=fx(K,P.m?2:0)+' J';
+}
+
+/* =================== 3 · PATHS =================== */
+const PS={p:0,s:1,play:false,last:0};
+const PX=x=>50+x*62, PY=y=>196-y*40;
+function polyOf(fn,rev){const pts=[];for(let k=0;k<=200;k++){const x=8*k/200;pts.push([x,fn(x)]);}return rev?pts.reverse():pts;}
+PATHS.forEach(P=>{
+  const pts=P.round?polyOf(PATHS[2].y).concat(polyOf(PATHS[0].y,true).slice(1)):polyOf(P.y);
+  const cum=[0];for(let i=1;i<pts.length;i++)cum.push(cum[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));
+  P.pts=pts;P.cum=cum;P.len=cum[cum.length-1];
+});
+const PSMAX=Math.max(...PATHS.map(P=>P.len));
+function pathAt(P,s){ /* s = distance walked */
+  const c=P.cum;let i=1;while(i<c.length-1&&c[i]<s)i++;
+  const t=c[i]>c[i-1]?Math.min(1,Math.max(0,(s-c[i-1])/(c[i]-c[i-1]))):0;
+  return [P.pts[i-1][0]+t*(P.pts[i][0]-P.pts[i-1][0]),P.pts[i-1][1]+t*(P.pts[i][1]-P.pts[i-1][1])];
+}
+const PCG={L:56,R:600,T:12,B:180,wmin:-45,wmax:10};
+const PCX=s=>PCG.L+s/PSMAX*(PCG.R-PCG.L), PCY=w=>PCG.B-(w-PCG.wmin)/(PCG.wmax-PCG.wmin)*(PCG.B-PCG.T);
+{const s=$('pth');
+ mk(s,'line',{x1:20,x2:610,y1:PY(0)+0.5,y2:PY(0)+0.5,stroke:'var(--line)'});
+ mk(s,'line',{x1:PX(8),x2:610,y1:PY(3),y2:PY(3),stroke:'var(--line)'});
+ mk(s,'line',{x1:PX(8)+40,x2:PX(8)+40,y1:PY(0),y2:PY(3),stroke:'var(--muted)'});
+ mk(s,'text',{x:PX(8)+46,y:(PY(0)+PY(3))/2+4,'font-size':12,fill:'var(--muted)'},'h = 3 m');
+ PS.lines=PATHS.slice(0,3).map(P=>mk(s,'path',{d:P.pts.map((q,i)=>(i?'L':'M')+PX(q[0]).toFixed(1)+' '+PY(q[1]).toFixed(1)).join(''),fill:'none',stroke:'var(--ink)','stroke-width':2}));
+ mk(s,'circle',{cx:PX(0),cy:PY(0),r:5,fill:'var(--ink)'});mk(s,'circle',{cx:PX(8),cy:PY(3),r:5,fill:'var(--ink)'});
+ mk(s,'text',{x:PX(0)-8,y:PY(0)+5,'font-size':14,'font-weight':600,fill:'var(--ink)','text-anchor':'end'},'A');
+ mk(s,'text',{x:PX(8)+2,y:PY(3)-10,'font-size':14,'font-weight':600,fill:'var(--ink)'},'B');
+ mk(s,'text',{x:PX(4),y:PY(-0.5)+20,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'dip');
+ mk(s,'text',{x:PX(4.6),y:PY(3.6)-6,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'bump');
+ mk(s,'text',{x:PX(3.2)+10,y:PY(1.2)+16,'font-size':11,fill:'var(--muted)'},'ramp');
+ PS.blk=mk(s,'rect',{width:16,height:16,rx:3,fill:'var(--ink)','fill-opacity':.75});
+ PS.gA=mkArrow(s,'var(--force)',2.4);
+ mk(s,'text',{x:610,y:244,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'side view, to scale');
+ const c=$('pthc'),{L,R,T,B}=PCG;
+ for(let w=-40;w<=10;w+=10){mk(c,'line',{x1:L,x2:R,y1:PCY(w),y2:PCY(w),stroke:w?'var(--line)':'var(--muted)'});
+   mk(c,'text',{x:L-6,y:PCY(w)+4,'font-size':11.5,fill:'var(--muted)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'},fx(w,0));}
+ for(let d=0;d<=PSMAX;d+=4)mk(c,'text',{x:PCX(d),y:B+15,'font-size':11.5,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},d);
+ mk(c,'text',{x:(L+R)/2,y:B+32,'font-size':12,fill:'var(--ink)','text-anchor':'middle'},'distance walked (m)');
+ mk(c,'text',{transform:`translate(14 ${(T+B)/2}) rotate(-90)`,'font-size':12,fill:'var(--ink)','text-anchor':'middle'},'work so far (J)');
+ mk(c,'line',{x1:L,x2:R,y1:PCY(-PM*G*3),y2:PCY(-PM*G*3),stroke:'var(--pe)','stroke-dasharray':'2 3',opacity:.6});
+ mk(c,'text',{x:R-4,y:PCY(-PM*G*3)-5,'font-size':11.5,fill:'var(--pe)','text-anchor':'end'},'−mgh = −29.4 J');
+ PS.gc=PATHS.map(()=>mk(c,'path',{fill:'none',stroke:'var(--pe)','stroke-width':1.2,opacity:.3}));
+ PS.fc=mk(c,'path',{fill:'none',stroke:'var(--muted)','stroke-width':2,'stroke-dasharray':'6 4'});
+ PS.gcur=mk(c,'path',{fill:'none',stroke:'var(--pe)','stroke-width':2.8});
+ PS.gd=mk(c,'circle',{r:4.5,fill:'var(--pe)'}); PS.fd=mk(c,'circle',{r:4.5,fill:'var(--muted)'});
+ PATHS.forEach((P,i)=>{let d='';for(let k=0;k<=160;k++){const sd=P.len*k/160,q=pathAt(P,sd);d+=(k?'L':'M')+PCX(sd).toFixed(1)+' '+PCY(-PM*G*q[1]).toFixed(1);}PS.gc[i].setAttribute('d',d);});
+}
+chips('pchips',PATHS,i=>{PS.p=i;PS.play=false;$('pplay').textContent='Walk it';drawPath();});
+$('ps').addEventListener('input',e=>{PS.s=+e.target.value;drawPath();});
+function drawPath(){
+  const P=PATHS[PS.p], sd=PS.s*P.len, q=pathAt(P,sd);
+  press('pchips',PS.p); $('pso').textContent=Math.round(PS.s*100)+'%';
+  PS.lines.forEach((l,i)=>at(l,{opacity:(P.round?(i===0||i===2):i===PS.p)?1:.25,'stroke-width':(P.round?(i===0||i===2):i===PS.p)?2.6:1.5}));
+  at(PS.blk,{x:PX(q[0])-8,y:PY(q[1])-8});
+  setArrow(PS.gA,PX(q[0]),PY(q[1]),PX(q[0]),PY(q[1])+30,8);
+  PS.gc.forEach((c,i)=>c.setAttribute('visibility',i===PS.p?'hidden':'visible'));
+  let d='';const N=Math.max(2,Math.round(160*PS.s));for(let k=0;k<=N;k++){const s2=sd*k/N,qq=pathAt(P,s2);d+=(k?'L':'M')+PCX(s2).toFixed(1)+' '+PCY(-PM*G*qq[1]).toFixed(1);}
+  PS.gcur.setAttribute('d',d);
+  PS.fc.setAttribute('d',`M${PCX(0)} ${PCY(0)}L${PCX(sd).toFixed(1)} ${PCY(-PF*sd).toFixed(1)}`);
+  const Wg=-PM*G*q[1], Wf=-PF*sd;
+  at(PS.gd,{cx:PCX(sd),cy:PCY(Wg)}); at(PS.fd,{cx:PCX(sd),cy:PCY(Wf)});
+  $('pkv').innerHTML=`<dt>path length</dt><dd>${fx(P.len,2)} m</dd><dt>walked so far</dt><dd>${fx(sd,2)} m</dd><dt>height now</dt><dd>${fx(q[1],2)} m</dd><dt>work by gravity</dt><dd>${fx(Wg,1)} J</dd><dt>change in U</dt><dd>${sg(-Wg,1)} J</dd><dt>work by friction</dt><dd>${fx(Wf,1)} J</dd>`;
+}
+function loopPath(ts){
+  if(!PS.play)return; if(!VIS['s-path']){PS.last=0;requestAnimationFrame(loopPath);return;}
+  const dt=PS.last?Math.min(0.05,(ts-PS.last)/1000):0;PS.last=ts;
+  PS.s=Math.min(1,PS.s+dt/4);$('ps').value=PS.s;drawPath();
+  if(PS.s>=1){PS.play=false;$('pplay').textContent='Walk it';return;}
+  requestAnimationFrame(loopPath);
+}
+$('pplay').addEventListener('click',()=>{
+  if(RM){PS.s=1;$('ps').value=1;drawPath();return;}
+  if(PS.play){PS.play=false;$('pplay').textContent='Walk it';return;}
+  if(PS.s>=1)PS.s=0; PS.play=true;PS.last=0;$('pplay').textContent='Pause';requestAnimationFrame(loopPath);
+});
+watch('s-path');
+
+/* =================== 4 · U(x) EXPLORER =================== */
+const UX={p:0,x:0,v:0,E:0,play:false,last:0,msg:''};
+const UG={L:52,R:624,T:14,B:262};
+{const s=$('ux');
+ UX.grid=mk(s,'g',{}); UX.forb=mk(s,'path',{fill:'var(--muted)','fill-opacity':.13});
+ UX.curve=mk(s,'path',{fill:'none',stroke:'var(--pe)','stroke-width':2.8});
+ UX.eqg=mk(s,'g',{}); UX.tpg=mk(s,'g',{});
+ UX.eline=mk(s,'line',{stroke:'var(--ink)','stroke-width':1.6,'stroke-dasharray':'6 4'});
+ UX.elab=mk(s,'text',{'font-size':12,fill:'var(--ink)','text-anchor':'end','font-weight':600});
+ UX.gap=mk(s,'line',{stroke:'var(--ke)','stroke-width':7,'stroke-linecap':'butt',opacity:.85});
+ UX.tan=mk(s,'line',{stroke:'var(--muted)','stroke-width':1.3,'stroke-dasharray':'3 3'});
+ UX.fA=mkArrow(s,'var(--force)',3); UX.vA=mkArrow(s,'var(--vel)',3);
+ UX.ball=mk(s,'circle',{r:9,fill:'var(--ink)',stroke:'var(--surface)','stroke-width':2,class:'handle'});
+ UX.ehd=mk(s,'rect',{width:22,height:22,rx:5,fill:'var(--ink)','fill-opacity':.12,stroke:'var(--ink)',class:'handle'});
+ drag(UX.ball,s,p=>{const P=UPRE[UX.p];let x=P.x0+(p.x-UG.L)/(UG.R-UG.L)*(P.x1-P.x0);x=Math.max(P.x0+0.01,Math.min(P.x1-0.01,x));setBall(x);});
+ drag(UX.ehd,s,p=>{const P=UPRE[UX.p];setE(P.u0+(UG.B-p.y)/(UG.B-UG.T)*(P.u1-P.u0));});
+ const f=$('uf');
+ UX.fgrid=mk(f,'g',{}); UX.fcurve=mk(f,'path',{fill:'none',stroke:'var(--force)','stroke-width':2.2});
+ UX.fmark=mk(f,'line',{stroke:'var(--ink)','stroke-width':1.2,opacity:.6}); UX.fdot=mk(f,'circle',{r:4.5,fill:'var(--ink)'});
+}
+const UXc=x=>{const P=UPRE[UX.p];return UG.L+(x-P.x0)/(P.x1-P.x0)*(UG.R-UG.L);};
+const UYc=u=>{const P=UPRE[UX.p];return UG.B-(Math.min(P.u1+0.3*(P.u1-P.u0),u)-P.u0)/(P.u1-P.u0)*(UG.B-UG.T);};
+const Ud=x=>{const P=UPRE[UX.p],h=1e-4;return (P.U(x+h)-P.U(x-h))/(2*h);};
+const Udd=x=>{const P=UPRE[UX.p],h=1e-3;return (P.U(x+h)-2*P.U(x)+P.U(x-h))/(h*h);};
+const FG={T:10,B:96}; let FSC=1;
+chips('uchips',UPRE,i=>{UX.p=i;store('ux',i);buildU();});
+$('uxx').addEventListener('input',e=>{const P=UPRE[UX.p];setBall(P.x0+0.01+(+e.target.value)*(P.x1-P.x0-0.02));});
+$('uxe').addEventListener('input',e=>{const P=UPRE[UX.p];setE(P.u0+(+e.target.value)*(P.emax-P.u0));});
+function stopU(){UX.play=false;$('uplay').textContent='Release';}
+function setBall(x){const P=UPRE[UX.p];stopU();if(P.U(x)>P.emax){drawU();return;}UX.x=x;UX.v=0;UX.E=Math.min(P.emax,P.U(x));UX.msg='';drawU();} /* placed at rest: E = U(x) */
+function setE(E){const P=UPRE[UX.p];stopU();UX.E=Math.max(P.U(UX.x),Math.min(P.emax,E));UX.v=Math.sqrt(2*Math.max(0,UX.E-P.U(UX.x)))*(UX.v<0?-1:1);UX.msg='';drawU();}
+function buildU(){
+  const P=UPRE[UX.p];press('uchips',UX.p);stopU();
+  UX.x=P.start;UX.E=P.U(P.start);UX.v=0;UX.msg='';
+  const g=UX.grid;g.innerHTML='';
+  const us=niceStep((P.u1-P.u0)/5);
+  for(let u=Math.ceil(P.u0/us)*us;u<=P.u1+1e-9;u+=us){mk(g,'line',{x1:UG.L,x2:UG.R,y1:UYc(u),y2:UYc(u),stroke:Math.abs(u)<1e-9?'var(--muted)':'var(--line)'});
+    mk(g,'text',{x:UG.L-6,y:UYc(u)+4,'font-size':11.5,fill:'var(--muted)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'},fx(u,us<1?1:0));}
+  const xs=niceStep((P.x1-P.x0)/6);
+  for(let x=Math.ceil(P.x0/xs)*xs;x<=P.x1+1e-9;x+=xs)mk(g,'text',{x:UXc(x),y:UG.B+15,'font-size':11.5,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},fx(x,xs<1?1:0));
+  mk(g,'text',{x:(UG.L+UG.R)/2,y:UG.B+31,'font-size':11.5,fill:'var(--ink)','text-anchor':'middle'},(P.xl||'position x')+(P.open?' (arbitrary units)':' (m)'));
+  mk(g,'text',{transform:`translate(13 ${(UG.T+UG.B)/2}) rotate(-90)`,'font-size':11.5,fill:'var(--ink)','text-anchor':'middle'},'energy'+(P.open?'':' (J)'));
+  let d='';const N=400;for(let k=0;k<=N;k++){const x=P.x0+(P.x1-P.x0)*k/N;d+=(k?'L':'M')+UXc(x).toFixed(1)+' '+UYc(P.U(x)).toFixed(1);}
+  UX.curve.setAttribute('d',d);
+  UX.eqg.innerHTML='';
+  P.eq.forEach((q,i)=>{const X=UXc(q.x),Y=UYc(P.U(q.x));
+    if(q.t==='neutral'){mk(UX.eqg,'line',{x1:UXc(1.5),x2:UXc(2.5),y1:Y,y2:Y,stroke:'var(--pe)','stroke-width':6,opacity:.35});}
+    else mk(UX.eqg,'circle',{cx:X,cy:Y,r:4,fill:'var(--surface)',stroke:'var(--pe)','stroke-width':2});
+    const below=q.t==='stable';
+    mk(UX.eqg,'text',{x:X,y:below?Y+18:Y-10,'font-size':11,fill:'var(--pe)','text-anchor':'middle','font-weight':600},q.t);
+  });
+  /* F plot */
+  const f=UX.fgrid;f.innerHTML='';
+  let fm=0;for(let k=0;k<=N;k++){const x=P.x0+(P.x1-P.x0)*k/N;fm=Math.max(fm,Math.abs(Ud(x)));}
+  FSC=Math.min(fm,P.open?12:4.5);
+  mk(f,'line',{x1:UG.L,x2:UG.R,y1:(FG.T+FG.B)/2,y2:(FG.T+FG.B)/2,stroke:'var(--muted)'});
+  mk(f,'text',{x:UG.L-6,y:FG.T+8,'font-size':11.5,fill:'var(--muted)','text-anchor':'end'},'+');
+  mk(f,'text',{x:UG.L-6,y:FG.B,'font-size':11.5,fill:'var(--muted)','text-anchor':'end'},'−');
+  mk(f,'text',{x:UG.L-6,y:(FG.T+FG.B)/2+4,'font-size':11.5,fill:'var(--muted)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'},'0');
+  mk(f,'text',{transform:`translate(13 ${(FG.T+FG.B)/2}) rotate(-90)`,'font-size':11.5,fill:'var(--force)','text-anchor':'middle'},'F');
+  mk(f,'text',{x:UG.R,y:FG.B+18,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'F = −dU/dx: positive means pushed to the right');
+  P.eq.forEach(q=>mk(f,'circle',{cx:UXc(q.x),cy:(FG.T+FG.B)/2,r:3.5,fill:'var(--surface)',stroke:'var(--pe)','stroke-width':2}));
+  const FY=F=>(FG.T+FG.B)/2-Math.max(-1.1,Math.min(1.1,F/FSC))*((FG.B-FG.T)/2);
+  let fd='';for(let k=0;k<=N;k++){const x=P.x0+(P.x1-P.x0)*k/N;fd+=(k?'L':'M')+UXc(x).toFixed(1)+' '+FY(-Ud(x)).toFixed(1);}
+  UX.fcurve.setAttribute('d',fd); UX.FY=FY;
+  drawU();
+}
+function turningPoints(){ /* roots of U = E around the ball, plus all crossings for the markers */
+  const P=UPRE[UX.p],E=UX.E,N=800,pts=[];let prev=P.U(P.x0)-E;
+  for(let k=1;k<=N;k++){const x=P.x0+(P.x1-P.x0)*k/N,cur=P.U(x)-E;
+    if((prev<0&&cur>=0)||(prev>=0&&cur<0)){let a=x-(P.x1-P.x0)/N,b=x;for(let j=0;j<30;j++){const m=(a+b)/2;((P.U(a)-E)<0)===((P.U(m)-E)<0)?a=m:b=m;}pts.push((a+b)/2);}prev=cur;}
+  return pts;
+}
+function drawU(){
+  const P=UPRE[UX.p],x=UX.x,U=P.U(x),E=UX.E,K=Math.max(0,E-U);
+  $('uxx').value=(x-P.x0-0.01)/(P.x1-P.x0-0.02); $('uxe').value=(E-P.u0)/(P.emax-P.u0);
+  $('uxxo').textContent=fx(x,2); $('uxeo').textContent=fx(E,2)+(P.open?'':' J');
+  at(UX.eline,{x1:UG.L,x2:UG.R-26,y1:UYc(E),y2:UYc(E)}); at(UX.ehd,{x:UG.R-22,y:UYc(E)-11});
+  at(UX.elab,{x:UG.R-28,y:UYc(E)-6}); UX.elab.textContent='E';
+  /* forbidden shading */
+  let d='',inF=false,xs=0;const N=400;
+  for(let k=0;k<=N;k++){const xx=P.x0+(P.x1-P.x0)*k/N,f=P.U(xx)>E+1e-9;
+    if(f&&!inF){inF=true;xs=xx;} if((!f||k===N)&&inF){inF=false;d+=`M${UXc(xs).toFixed(1)} ${UG.T}H${UXc(xx).toFixed(1)}V${UG.B}H${UXc(xs).toFixed(1)}Z`;}}
+  UX.forb.setAttribute('d',d);
+  /* turning points */
+  const tp=turningPoints();UX.tpg.innerHTML='';
+  tp.forEach(t=>{const X=UXc(t),Y=UYc(E);mk(UX.tpg,'polygon',{points:`${X},${Y+2} ${X-5},${Y+11} ${X+5},${Y+11}`,fill:'var(--ink)'});});
+  const bx=UXc(x),by=UYc(U);
+  at(UX.ball,{cx:bx,cy:by-9}); at(UX.gap,{x1:bx,x2:bx,y1:by,y2:UYc(E)}); UX.gap.setAttribute('visibility',K>1e-3?'visible':'hidden');
+  /* tangent: slope in px */
+  const sl=Ud(x), kx=(UG.R-UG.L)/(P.x1-P.x0), ky=(UG.B-UG.T)/(P.u1-P.u0), m=-sl*ky/kx, c=Math.cos(Math.atan(m))*40, s=Math.sin(Math.atan(m))*40;
+  at(UX.tan,{x1:bx-c,y1:by-s,x2:bx+c,y2:by+s});
+  const F=-sl, fl=Math.max(-80,Math.min(80,F/FSC*70));
+  setArrow(UX.fA,bx,by+16,bx+fl,by+16,9);
+  setArrow(UX.vA,bx,by-26,bx+Math.max(-80,Math.min(80,UX.v*(P.open?18:22))),by-26,9);
+  at(UX.fmark,{x1:bx,x2:bx,y1:FG.T,y2:FG.B}); at(UX.fdot,{cx:bx,cy:UX.FY(F)});
+  /* state */
+  /* allowed stretch around the ball: walk outwards while U ≤ E */
+  const span=P.x1-P.x0, stp=span/2000, ok=xx=>P.U(xx)<=E+1e-6;
+  let left=x,right=x;while(left-stp>P.x0&&ok(left-stp))left-=stp;while(right+stp<P.x1&&ok(right+stp))right+=stp;
+  const lOpen=left-stp<=P.x0, rOpen=right+stp>=P.x1;
+  let st,cap;
+  const atRest=K<2e-3, flat=Math.abs(sl)<0.02;
+  if(UX.msg){st='Escaped';cap=UX.msg;}
+  else if(atRest&&flat){const c2=Udd(x);
+    if(Math.abs(c2)<0.05){st='Neutral equilibrium';cap='Flat ground: no force here, and none if you move it a little either. It stays wherever it is put.';}
+    else if(c2>0){st='Stable equilibrium';cap='Bottom of a valley: no force here, and a nudge either way creates a force pointing back. Press “Nudge” to see it oscillate.';}
+    else {st='Unstable equilibrium';cap='Top of a hill: no force right here, but a nudge either way creates a force pushing it further away. Press “Nudge”.';}}
+  else if(P.open&&rOpen){st='Free: not bound';cap='E ≥ 0: nothing stops it on the right, so the atoms fly apart. There is only one turning point, on the steep repulsive wall.';}
+  else if(!lOpen&&!rOpen&&right-left>1e-3){st=(atRest?'Released from rest: ':'')+'trapped, oscillates';cap=`It runs back and forth between the turning points x = ${fx(left,2)} and x = ${fx(right,2)}, fastest where U is lowest. Raise E above the next hill and it escapes the valley.`+(P.open?' Here E &lt; 0: the two atoms stay bound as a molecule.':'');}
+  else {st='Moving';cap='';}
+  $('ustate').textContent=st; $('ucap').innerHTML=cap;
+  $('ukv').innerHTML=`<dt>position</dt><dd>${fx(x,2)}</dd><dt>potential U</dt><dd>${fx(U,2)}</dd><dt>kinetic K = E − U</dt><dd>${fx(K,2)}</dd><dt>total E</dt><dd>${fx(E,2)}</dd><dt>force −dU/dx</dt><dd>${fx(F,2)}</dd>`;
+}
+function stepU(dt){
+  const P=UPRE[UX.p],sub=40,h=dt*P.ts/sub;
+  for(let i=0;i<sub;i++){
+    const a=-Ud(UX.x);UX.x+=UX.v*h+0.5*a*h*h;
+    if(UX.x<=P.x0||UX.x>=P.x1){UX.x=Math.max(P.x0+0.01,Math.min(P.x1-0.01,UX.x));stopU();UX.msg=P.open?'The atoms have flown apart: with E ≥ 0 there is no turning point on the right. Lower E below zero for a bound molecule.':'';return;}
+    const a2=-Ud(UX.x);UX.v+=0.5*(a+a2)*h;
+    /* hold E fixed: correct speed from energy, keep direction */
+    const K=UX.E-P.U(UX.x);if(K>0)UX.v=(UX.v<0?-1:1)*Math.sqrt(2*K);
+  }
+}
+function loopU(ts){
+  if(!UX.play)return; if(!VIS['s-ux']){UX.last=0;requestAnimationFrame(loopU);return;}
+  const dt=UX.last?Math.min(0.04,(ts-UX.last)/1000):0;UX.last=ts;stepU(dt);drawU();if(UX.play)requestAnimationFrame(loopU);
+}
+function playU(){if(RM){stepU(0.25);drawU();return;}UX.play=true;UX.last=0;$('uplay').textContent='Pause';requestAnimationFrame(loopU);}
+if(RM)$('uplay').textContent='Step →';
+$('uplay').addEventListener('click',()=>{if(UX.play){stopU();return;}UX.msg='';playU();});
+$('unudge').addEventListener('click',()=>{const P=UPRE[UX.p];UX.msg='';const K=UX.E-P.U(UX.x);UX.E=Math.min(P.emax,UX.E+0.04);UX.v=(UX.v<0?-1:1)*Math.sqrt(2*Math.max(0,UX.E-P.U(UX.x)));if(Math.abs(UX.v)<1e-6)UX.v=0.2;stopU();playU();if(RM)$('uplay').textContent='Step →';});
+watch('s-ux');
+
+/* =================== 5 · SPRING =================== */
+const SP={x:0.3,x1:0,k:100,ox:300,ppm:400};
+const SPG={L:60,R:600,T:12,B:212};
+const SPX=x=>SPG.L+(x+0.5)*(SPG.R-SPG.L), SPY=f=>(SPG.T+SPG.B)/2-f/100*((SPG.B-SPG.T)/2);
+{const s=$('sp');
+ mk(s,'rect',{x:14,y:30,width:12,height:100,fill:'var(--muted)','fill-opacity':.35});
+ mk(s,'line',{x1:26,x2:620,y1:130,y2:130,stroke:'var(--muted)','stroke-width':1.5});
+ mk(s,'line',{x1:SP.ox,x2:SP.ox,y1:20,y2:140,stroke:'var(--muted)','stroke-dasharray':'3 4'});
+ mk(s,'text',{x:SP.ox,y:154,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'x = 0 (natural length)');
+ SP.coil=mk(s,'path',{fill:'none',stroke:'var(--ink)','stroke-width':2,'stroke-linejoin':'round'});
+ SP.blk=mk(s,'rect',{y:80,width:50,height:50,rx:4,fill:'var(--ink)','fill-opacity':.12,stroke:'var(--ink)','stroke-opacity':.6,class:'handle'});
+ SP.xA=mkArrow(s,'var(--disp)',2.4); SP.xl=mk(s,'text',{y:30,'font-size':12,fill:'var(--disp)','text-anchor':'middle','font-weight':600});
+ SP.fA=mkArrow(s,'var(--force)',3); SP.fl=mk(s,'text',{y:74,'font-size':12,fill:'var(--force)','text-anchor':'middle'});
+ SP.hA=mkArrow(s,'var(--force)',3,'5 3'); SP.hl=mk(s,'text',{y:116,'font-size':12,fill:'var(--force)'});
+ drag(SP.blk,s,p=>{SP.x=Math.max(-0.5,Math.min(0.5,Math.round((p.x-25-SP.ox)/SP.ppm/0.005)*0.005));$('spx').value=SP.x;drawSpring();});
+ const g=$('spg'),{L,R,T,B}=SPG;
+ for(let f=-100;f<=100;f+=50){mk(g,'line',{x1:L,x2:R,y1:SPY(f),y2:SPY(f),stroke:f?'var(--line)':'var(--muted)'});
+   mk(g,'text',{x:L-6,y:SPY(f)+4,'font-size':11.5,fill:'var(--muted)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'},fx(f,0));}
+ mk(g,'line',{x1:SPX(0),x2:SPX(0),y1:T,y2:B,stroke:'var(--muted)'});
+ for(let x=-0.5;x<=0.5001;x+=0.25)mk(g,'text',{x:SPX(x),y:B+15,'font-size':11.5,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},fx(x,2));
+ mk(g,'text',{x:(L+R)/2,y:B+32,'font-size':12,fill:'var(--ink)','text-anchor':'middle'},'extension x (m)');
+ mk(g,'text',{transform:`translate(14 ${(T+B)/2}) rotate(-90)`,'font-size':12,fill:'var(--ink)','text-anchor':'middle'},'force (N)');
+ SP.area=mk(g,'path',{fill:'var(--pe)','fill-opacity':.3});
+ SP.harea=mk(g,'path',{fill:'var(--force)','fill-opacity':.08});
+ SP.ly=mk(g,'line',{stroke:'var(--force)','stroke-width':2,'stroke-dasharray':'6 4',opacity:.7});
+ SP.ls=mk(g,'line',{stroke:'var(--force)','stroke-width':2.6});
+ SP.at=mk(g,'text',{'font-size':12,fill:'var(--pe)','font-weight':600,'text-anchor':'middle'});
+ SP.st=mk(g,'text',{'font-size':11,fill:'var(--force)'});
+ SP.d1=mk(g,'circle',{r:4.5,fill:'var(--force)'});
+}
+$('spx').addEventListener('input',e=>{SP.x=+e.target.value;drawSpring();});
+$('spx1').addEventListener('input',e=>{SP.x1=+e.target.value;drawSpring();});
+$('spk').addEventListener('input',e=>{SP.k=+e.target.value;drawSpring();});
+function drawSpring(){
+  const {x,x1,k,ox,ppm}=SP, bl=ox+x*ppm;
+  $('spxo').textContent=sg(x,3)+' m';$('spx1o').textContent=sg(x1,3)+' m';$('spko').textContent=k+' N/m';
+  at(SP.blk,{x:bl});
+  /* coil from wall (26) to block left face */
+  const x0=26,x2=bl,n=16,y=105,amp=12;let d=`M${x0} ${y}H${x0+12}`;const seg=(x2-x0-24)/n;
+  for(let i=0;i<n;i++)d+=`L${(x0+12+seg*(i+0.5)).toFixed(1)} ${y+(i%2?amp:-amp)}`;d+=`L${x2-12} ${y}H${x2}`;SP.coil.setAttribute('d',d);
+  /* the block's left face sits on the x = 0 line at natural length */
+  setArrow(SP.xA,ox,40,ox+x*ppm,40,8); at(SP.xl,{x:ox+x*ppm/2,y:32}); SP.xl.textContent=Math.abs(x)>0.004?'x = '+sg(x,2)+' m':'';
+  const Fs=-k*x, fl=Fs*1.1;
+  setArrow(SP.fA,bl+25,62,bl+25+fl,62,9); at(SP.fl,{x:bl+25+fl/2,y:56}); SP.fl.textContent=Math.abs(Fs)>0.5?'spring −kx':'';
+  setArrow(SP.hA,bl+(x>=0?50:0),116,bl+(x>=0?50:0)-fl,116,9); at(SP.hl,{x:x>=0?bl+50-fl+6:bl-fl-6,y:120,'text-anchor':x>=0?'start':'end'}); SP.hl.textContent=Math.abs(Fs)>0.5?'hand':'';
+  /* graph */
+  at(SP.ls,{x1:SPX(-0.5),y1:SPY(k*0.5),x2:SPX(0.5),y2:SPY(-k*0.5)});
+  at(SP.ly,{x1:SPX(-0.5),y1:SPY(-k*0.5),x2:SPX(0.5),y2:SPY(k*0.5)});
+  const ya=SPY(k*x1),yb=SPY(k*x),y0=SPY(0);
+  SP.area.setAttribute('d',`M${SPX(x1)} ${y0}L${SPX(x1)} ${ya}L${SPX(x)} ${yb}L${SPX(x)} ${y0}Z`);
+  const W=0.5*k*(x*x-x1*x1);
+  const xo=Math.abs(x)>=Math.abs(x1)?x:x1, yo=SPY(k*xo);
+  at(SP.at,xo>=0?{x:SPX(xo)-6,y:yo-8,'text-anchor':'end'}:{x:SPX(xo)+6,y:yo+16,'text-anchor':'start'});
+  SP.at.textContent=Math.abs(x-x1)>0.03?'W = '+sg(W,2)+' J':'';
+  at(SP.d1,{cx:SPX(x),cy:SPY(-k*x)});
+  $('spkv').innerHTML=`<dt>extension x</dt><dd>${sg(x,3)} m</dd><dt>spring force −kx</dt><dd>${fx(-k*x,1)} N</dd><dt>stored U = ½kx²</dt><dd>${fx(0.5*k*x*x,2)} J</dd><dt>your work, x₁ → x</dt><dd>${sg(W,2)} J</dd><dt>spring’s work</dt><dd>${sg(-W,2)} J</dd>`;
+}
+
+/* =================== 6 · ENERGY BARS =================== */
+const EB={s:0,rel:0.6,fric:false,play:false,last:0,q:0,v:0,heat:0,E0:0,t:0};
+const EPX={x:x=>20+x*40,y:y=>268-y*40};
+{const s=$('esc');
+ EB.static=mk(s,'g',{}); EB.path=mk(s,'path',{fill:'none',stroke:'var(--muted)','stroke-width':1.2,'stroke-dasharray':'3 4'});
+ EB.rod=mk(s,'line',{stroke:'var(--ink)','stroke-width':1.6}); EB.coil=mk(s,'path',{fill:'none',stroke:'var(--ink)','stroke-width':2});
+ EB.body=mk(s,'circle',{r:13,fill:'var(--ink)','fill-opacity':.75}); EB.blk=mk(s,'rect',{width:44,height:44,rx:4,fill:'var(--ink)','fill-opacity':.35});
+ EB.vA=mkArrow(s,'var(--vel)',2.8);
+ const b=$('ebar');EB.bars={};
+ const cols=[['K','var(--ke)','kinetic'],['U','var(--pe)','potential'],['Q','var(--muted)','from friction']];
+ mk(b,'line',{x1:10,x2:290,y1:200,y2:200,stroke:'var(--muted)'});
+ cols.forEach(([k,c,n],i)=>{const x=20+i*62;EB.bars[k]={r:mk(b,'rect',{x,width:44,fill:c,'fill-opacity':.85}),t:mk(b,'text',{x:x+22,'font-size':11,fill:'var(--ink)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'})};
+   mk(b,'text',{x:x+22,y:216,'font-size':12,fill:c,'text-anchor':'middle','font-weight':600},k==='Q'?'heat':k);mk(b,'text',{x:x+22,y:230,'font-size':11.5,fill:'var(--muted)','text-anchor':'middle'},n);});
+ const xt=216;EB.st={K:mk(b,'rect',{x:xt,width:50,fill:'var(--ke)','fill-opacity':.85}),U:mk(b,'rect',{x:xt,width:50,fill:'var(--pe)','fill-opacity':.85}),Q:mk(b,'rect',{x:xt,width:50,fill:'var(--muted)','fill-opacity':.6})};
+ mk(b,'text',{x:xt+25,y:216,'font-size':12,fill:'var(--ink)','text-anchor':'middle','font-weight':600},'total');
+ mk(b,'text',{x:xt+25,y:230,'font-size':11.5,fill:'var(--muted)','text-anchor':'middle'},'K + U + heat');
+ EB.tt=mk(b,'text',{x:xt+25,'font-size':11,fill:'var(--ink)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'});
+ EB.mech=mk(b,'line',{x1:12,x2:200,stroke:'var(--ink)','stroke-dasharray':'4 3'}); EB.ml=mk(b,'text',{x:198,'font-size':11.5,fill:'var(--ink)','text-anchor':'end'},'K + U');
+}
+chips('echips',ESYS,i=>{EB.s=i;store('eb',i);buildE();});
+$('erel').addEventListener('input',e=>{EB.rel=+e.target.value;resetE();});
+$('efric').addEventListener('change',e=>{EB.fric=e.target.checked;resetE();});
+$('ereset').addEventListener('click',resetE);
+function eRel(){const r=EB.rel;return EB.s===0?10+r*80:EB.s===1?0.3+r*1.9:0.2+r*0.8;}
+function eU(q){return EB.s===0?G*EL*(1-Math.cos(q)):EB.s===1?G*COASTER(q):0.5*EK*q*q;}
+function eK(q,v){if(EB.s===1){const h=1e-4,dy=(COASTER(q+h)-COASTER(q-h))/(2*h);return 0.5*v*v*(1+dy*dy);}return EB.s===0?0.5*EL*EL*v*v:0.5*v*v;}
+function eAcc(q,v){const c=EB.fric?(EB.s===0?ECP:EB.s===1?ECC:ECS):0;
+  if(EB.s===0)return -(G/EL)*Math.sin(q)-c*v;
+  if(EB.s===2)return -EK*q-c*v;
+  const h=1e-4,y1=(COASTER(q+h)-COASTER(q-h))/(2*h),y2=(COASTER(q+h)-2*COASTER(q)+COASTER(q-h))/(h*h);
+  return -(G*y1+y1*y2*v*v)/(1+y1*y1)-c*v;}
+function buildE(){
+  press('echips',EB.s);const g=EB.static;g.innerHTML='';
+  $('erell').textContent=EB.s===0?'release angle':EB.s===1?'release point':'amplitude';
+  EB.path.setAttribute('d','');EB.rod.setAttribute('visibility',EB.s===0?'visible':'hidden');EB.coil.setAttribute('visibility',EB.s===2?'visible':'hidden');
+  EB.body.setAttribute('visibility',EB.s===2?'hidden':'visible');EB.blk.setAttribute('visibility',EB.s===2?'visible':'hidden');
+  if(EB.s===0){mk(g,'line',{x1:150,x2:290,y1:30,y2:30,stroke:'var(--muted)','stroke-width':3});mk(g,'circle',{cx:220,cy:30,r:3.5,fill:'var(--ink)'});
+    mk(g,'line',{x1:80,x2:360,y1:230,y2:230,stroke:'var(--line)'});mk(g,'text',{x:360,y:244,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'U = 0 at the lowest point');
+    mk(g,'text',{x:430,y:282,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'L = 1.0 m, m = 1 kg');}
+  else if(EB.s===1){let d='';for(let k=0;k<=200;k++){const x=10*k/200;d+=(k?'L':'M')+EPX.x(x).toFixed(1)+' '+EPX.y(COASTER(x)).toFixed(1);}
+    mk(g,'path',{d:d+`L${EPX.x(10)} 280L${EPX.x(0)} 280Z`,fill:'var(--ink)','fill-opacity':.06});mk(g,'path',{d,fill:'none',stroke:'var(--ink)','stroke-width':2.4});
+    mk(g,'line',{x1:EPX.x(0),x2:EPX.x(10),y1:EPX.y(0),y2:EPX.y(0),stroke:'var(--line)'});mk(g,'text',{x:EPX.x(10),y:EPX.y(0)+13,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'U = 0 at ground level · m = 1 kg');}
+  else {mk(g,'rect',{x:14,y:150,width:12,height:90,fill:'var(--muted)','fill-opacity':.35});mk(g,'line',{x1:26,x2:440,y1:240,y2:240,stroke:'var(--muted)','stroke-width':1.5});
+    mk(g,'line',{x1:220,x2:220,y1:140,y2:250,stroke:'var(--muted)','stroke-dasharray':'3 4'});mk(g,'text',{x:220,y:262,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'x = 0');
+    mk(g,'text',{x:430,y:282,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'k = 10 N/m, m = 1 kg');}
+  resetE();
+}
+function resetE(){EB.play=false;$('eplay').textContent=RM?'Step →':'Play';
+  const r=eRel();EB.q=EB.s===0?r*Math.PI/180:EB.s===1?r:r;EB.v=0;EB.heat=0;EB.E0=eU(EB.q);EB.t=0;
+  if(EB.s===0){const a=EB.q;let d='';for(let k=0;k<=60;k++){const t=-a+2*a*k/60;d+=(k?'L':'M')+(220+200*Math.sin(t)).toFixed(1)+' '+(30+200*Math.cos(t)).toFixed(1);}EB.path.setAttribute('d',d);}
+  drawE();}
+function drawE(){
+  const r=eRel();$('erelo').textContent=EB.s===0?r.toFixed(0)+'°':EB.s===1?'x = '+r.toFixed(1)+' m':r.toFixed(2)+' m';
+  const q=EB.q,v=EB.v,K=eK(q,v),U=eU(q),Q=Math.max(0,EB.E0-K-U);
+  let bx,by,vx,vy;
+  if(EB.s===0){bx=220+200*Math.sin(q);by=30+200*Math.cos(q);at(EB.rod,{x1:220,y1:30,x2:bx,y2:by});at(EB.body,{cx:bx,cy:by});const sp=v*EL*16;vx=Math.cos(q)*sp;vy=-Math.sin(q)*sp;}
+  else if(EB.s===1){const h=1e-4,dy=(COASTER(q+h)-COASTER(q-h))/(2*h),n=Math.hypot(1,dy);
+    bx=EPX.x(q)-13*dy/n;by=EPX.y(COASTER(q))-13/n;at(EB.body,{cx:bx,cy:by});vx=v*12;vy=-v*dy*12;}
+  else {const xl=220+q*150-22;at(EB.blk,{x:xl,y:196});bx=xl+22;by=218;
+    let d=`M26 218H36`;const n=14,seg=(xl-26-20)/n;for(let i=0;i<n;i++)d+=`L${(36+seg*(i+0.5)).toFixed(1)} ${218+(i%2?9:-9)}`;d+=`L${xl-10} 218H${xl}`;EB.coil.setAttribute('d',d);vx=v*40;vy=0;by=190;}
+  setArrow(EB.vA,bx,by,bx+vx,by+vy,9);
+  /* bars: scale to E0 */
+  const H=170,sc=EB.E0>0?H/EB.E0:0;
+  [['K',K],['U',U],['Q',Q]].forEach(([k,val])=>{const h=val*sc;at(EB.bars[k].r,{y:200-h,height:Math.max(0,h)});at(EB.bars[k].t,{y:200-h-5});EB.bars[k].t.textContent=fx(val,2);});
+  let y=200;[['K',K],['U',U],['Q',Q]].forEach(([k,val])=>{const h=val*sc;at(EB.st[k],{y:y-h,height:Math.max(0,h)});y-=h;});
+  at(EB.tt,{y:200-H-6});EB.tt.textContent=fx(EB.E0,2)+' J';
+  const my=200-(K+U)*sc;at(EB.mech,{y1:my,y2:my});at(EB.ml,{y:my-4});
+  $('ecap').innerHTML=(EB.s===0?'At the ends of the swing the bob stops: all potential. At the bottom it is fastest: all kinetic. ':EB.s===1?'The car is fastest in the lowest dip. Without friction it can never rise above the height it was released from. ':'At the ends the block stops and all the energy is in the spring; at x = 0 it is all kinetic, so v<sub>max</sub> = √(k/m)·x<sub>max</sub>. ')+
+    (EB.fric?`With friction, K + U has fallen by ${fx(Q,2)} J; that energy is now heat.`:'No friction: K + U stays at '+fx(EB.E0,2)+' J.');
+}
+function stepE(dt){const sub=20,h=dt/sub;for(let i=0;i<sub;i++){ /* RK2 midpoint */
+  const a1=eAcc(EB.q,EB.v),qm=EB.q+EB.v*h/2,vm=EB.v+a1*h/2,a2=eAcc(qm,vm);EB.q+=vm*h;EB.v+=a2*h;}
+  if(EB.s===1)EB.q=Math.max(0.01,Math.min(9.99,EB.q));
+  /* in the frictionless case, remove numerical drift */
+  if(!EB.fric){const K=EB.E0-eU(EB.q),k1=eK(EB.q,1);if(K>0)EB.v=(EB.v<0?-1:1)*Math.sqrt(K/k1);}
+}
+function loopE(ts){if(!EB.play)return;if(!VIS['s-bars']){EB.last=0;requestAnimationFrame(loopE);return;}
+  const dt=EB.last?Math.min(0.04,(ts-EB.last)/1000):0;EB.last=ts;stepE(dt);drawE();requestAnimationFrame(loopE);}
+$('eplay').addEventListener('click',()=>{if(RM){stepE(0.15);drawE();return;}
+  EB.play=!EB.play;$('eplay').textContent=EB.play?'Pause':'Play';if(EB.play){EB.last=0;requestAnimationFrame(loopE);}});
+watch('s-bars');
+
+/* =================== 7 · VERTICAL CIRCLE =================== */
+/* θ from the bottom; L = 1 m, m = 1 kg; k = u/√(gL). T/mg = k² − 2 + 3 cos θ (string/rod pull, ring's inward push) */
+const VCL=1.0, VSG=Math.sqrt(G*VCL);
+const VCMODE=[{l:'String'},{l:'Rigid rod'},{l:'Bead on a ring'}];
+const VCPRE=[{l:'u = √(2gL)',k:Math.SQRT2},{l:'u = 2√(gL)',k:2},{l:'u = √(3.5gL)',k:Math.sqrt(3.5)},{l:'u = √(5gL)',k:Math.sqrt(5)}];
+const VC={mode:0,k:2,th:0,w:0,phase:'circle',x:0,y:0,vx:0,vy:0,tf:0,play:false,last:0};
+const VCC={cx:180,cy:160,R:120}, FPX=30; // px per mg
+const VGG={L:46,R:352,T:12,B:178,y0:-5,y1:10};
+const VGX=t=>VGG.L+t/360*(VGG.R-VGG.L), VGY=v=>VGG.B-(Math.max(VGG.y0-0.5,Math.min(VGG.y1+0.5,v))-VGG.y0)/(VGG.y1-VGG.y0)*(VGG.B-VGG.T);
+function vcPredict(){ /* analytic outcome for the current u and mode */
+  const k2=VC.k*VC.k,tol=1e-9;
+  if(VC.mode===0){
+    if(k2>=5-tol)return {kind:'round',crit:Math.abs(k2-5)<1e-6};
+    if(k2<=2+tol)return {kind:'swing',thm:Math.acos(1-k2/2)};
+    const c=(2-k2)/3;return {kind:'slack',ths:Math.acos(c),vs:Math.sqrt(-c)}; // vs in units of √(gL)
+  }
+  if(k2>4+1e-6)return {kind:'round'};
+  if(Math.abs(k2-4)<1e-6)return {kind:'crit'};
+  return {kind:'swing',thm:Math.acos(1-k2/2)};
+}
+const vcP=(th,r)=>[VCC.cx+(r||VCC.R)*Math.sin(th),VCC.cy+(r||VCC.R)*Math.cos(th)];
+{const s=$('vc'),{cx,cy,R}=VCC;
+ VC.track=mk(s,'circle',{cx,cy,r:R,fill:'none',stroke:'var(--muted)','stroke-dasharray':'3 4'});
+ VC.ring=mk(s,'circle',{cx,cy,r:R,fill:'none',stroke:'var(--muted)','stroke-width':5,opacity:.45});
+ VC.pathA=mk(s,'path',{fill:'none',stroke:'var(--vel)','stroke-width':7,opacity:.18,'stroke-linecap':'round'});
+ VC.hl=mk(s,'line',{stroke:'var(--muted)','stroke-dasharray':'2 3'}); VC.ht=mk(s,'text',{'font-size':11.5,fill:'var(--muted)'});
+ VC.mark=mk(s,'circle',{r:5,fill:'var(--surface)',stroke:'var(--ink)','stroke-width':2});
+ VC.mt=mk(s,'text',{'font-size':11.5,fill:'var(--ink)','font-weight':600});
+ VC.link=mk(s,'line',{stroke:'var(--ink)'});
+ mk(s,'circle',{cx,cy,r:4,fill:'var(--ink)'});
+ mk(s,'text',{x:cx-16,y:cy+R+26,'font-size':11.5,fill:'var(--muted)','text-anchor':'end'},'bottom: θ = 0, U = 0');
+ VC.tA=mkArrow(s,'var(--force)',3); VC.tl=mk(s,'text',{'font-size':12,'font-weight':600,fill:'var(--force)'});
+ VC.gA=mkArrow(s,'var(--force)',3); VC.gl=mk(s,'text',{'font-size':12,'font-weight':600,fill:'var(--force)'},'mg');
+ VC.vA=mkArrow(s,'var(--vel)',2.6);
+ VC.bob=mk(s,'circle',{r:10,fill:'var(--ink)','fill-opacity':.75});
+ VC.bead=mk(s,'circle',{r:9,fill:'none',stroke:'var(--ink)','stroke-width':5,'stroke-opacity':.75});
+ const g=$('vcg'),{L,R:Rr,T,B}=VGG;
+ VC.neg=mk(g,'rect',{x:L,y:VGY(0),width:Rr-L,height:VGY(-5)-VGY(0),fill:'var(--flag)','fill-opacity':.06});
+ VC.negt=mk(g,'text',{x:Rr-4,y:VGY(-4.2),'font-size':11,fill:'var(--flag)','text-anchor':'end'});
+ [-5,0,5,10].forEach(v=>{mk(g,'line',{x1:L,x2:Rr,y1:VGY(v),y2:VGY(v),stroke:v?'var(--line)':'var(--muted)'});
+   mk(g,'text',{x:L-5,y:VGY(v)+4,'font-size':11,fill:'var(--muted)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'},v);});
+ [[0,'0°'],[90,'90°'],[180,'180°'],[270,'270°'],[360,'360°']].forEach(([t,l])=>mk(g,'text',{x:VGX(t),y:B+14,'font-size':11,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},l));
+ mk(g,'text',{x:VGX(0)+3,y:B+28,'font-size':11,fill:'var(--muted)'},'bottom');mk(g,'text',{x:VGX(180),y:B+28,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'top');
+ mk(g,'text',{x:VGX(360)-3,y:B+28,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'bottom');
+ mk(g,'text',{x:VGX(270),y:B+28,'font-size':11,fill:'var(--ink)','text-anchor':'middle'},'angle θ');
+ VC.ylab=mk(g,'text',{transform:`translate(12 ${(T+B)/2}) rotate(-90)`,'font-size':11.5,fill:'var(--force)','text-anchor':'middle'});
+ VC.gfaint=mk(g,'path',{fill:'none',stroke:'var(--force)','stroke-width':1.5,'stroke-dasharray':'4 4',opacity:.5});
+ VC.gcur=mk(g,'path',{fill:'none',stroke:'var(--force)','stroke-width':2.6});
+ VC.gm=mk(g,'circle',{r:4.5,fill:'var(--surface)',stroke:'var(--ink)','stroke-width':2});
+ VC.gd=mk(g,'circle',{r:5,fill:'var(--ink)'});
+ const e=$('vce');
+ mk(e,'text',{x:0,y:12,'font-size':11.5,fill:'var(--ink)','font-weight':600},'Energy (stays constant)');
+ VC.eK=mk(e,'rect',{x:0,y:18,height:16,fill:'var(--ke)','fill-opacity':.85});VC.eU=mk(e,'rect',{y:18,height:16,fill:'var(--pe)','fill-opacity':.85});
+ VC.eKt=mk(e,'text',{y:44,'font-size':11,fill:'var(--ke)','font-weight':600});VC.eUt=mk(e,'text',{y:44,'font-size':11,fill:'var(--pe)','font-weight':600,'text-anchor':'end'});
+}
+chips('vcmode',VCMODE,i=>{VC.mode=i;store('vc',i);resetVC();});
+chips('vcpre',VCPRE,i=>{VC.k=VCPRE[i].k;$('vcu').value=VC.k;resetVC();});
+$('vcu').addEventListener('input',e=>{VC.k=+e.target.value;resetVC();});
+$('vcreset').addEventListener('click',resetVC);
+function resetVC(){VC.play=false;$('vcplay').textContent=RM?'Step →':'Play';VC.th=0;VC.w=VC.k*VSG/VCL;VC.phase='circle';VC.tf=0;buildVC();drawVC();}
+function vcFlight(th,vs){ /* start of free flight (y up, centre at origin, m and m/s) */
+  return {x:VCL*Math.sin(th),y:-VCL*Math.cos(th),vx:vs*Math.cos(th),vy:vs*Math.sin(th)};}
+function vcFlightEnd(f){ /* time at which the bob is back at distance L (string taut again) */
+  let t=0.005;while(t<3){const x=f.x+f.vx*t,y=f.y+f.vy*t-0.5*G*t*t;if(x*x+y*y>=VCL*VCL)return t;t+=0.002;}return 3;}
+function buildVC(){
+  press('vcmode',VC.mode);press('vcpre',VCPRE.findIndex(p=>Math.abs(p.k-VC.k)<1e-6));
+  $('vcuo').textContent=fx(VC.k,2)+'√(gL) = '+fx(VC.k*VSG,2)+' m/s';
+  const P=vcPredict(),{cx,cy,R}=VCC,m=VC.mode;
+  VC.ring.setAttribute('visibility',m===2?'visible':'hidden');VC.track.setAttribute('visibility',m===2?'hidden':'visible');
+  /* predicted path */
+  const arc=(a)=>{let d='';for(let i=0;i<=90;i++){const t=a*i/90,[x,y]=vcP(t);d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}return d;};
+  let d='',mk1=null;
+  if(P.kind==='round'||P.kind==='crit')d=P.kind==='crit'?arc(Math.PI):arc(2*Math.PI-1e-3);
+  else if(P.kind==='swing'){const a=P.thm;d=arc(a)+arc(-a).replace('M','M');}
+  else {d=arc(P.ths);const f=vcFlight(P.ths,P.vs*VSG),te=vcFlightEnd(f);
+    for(let i=1;i<=60;i++){const t=te*i/60,x=f.x+f.vx*t,y=f.y+f.vy*t-0.5*G*t*t;d+='L'+(cx+x/VCL*R).toFixed(1)+' '+(cy-y/VCL*R).toFixed(1);}
+    mk1=P.ths;VC.fl={f,te};}
+  VC.pathA.setAttribute('d',d);
+  if(P.kind==='crit'||(m===0&&P.crit))mk1=Math.PI;
+  if(mk1!==null){const [x,y]=vcP(mk1);at(VC.mark,{cx:x,cy:y,visibility:'visible'});
+    const h=1-Math.cos(mk1),yy=cy-R*(h-1);at(VC.hl,{x1:cx-R-8,x2:cx+R+8,y1:yy,y2:yy,visibility:P.kind==='slack'?'visible':'hidden'});
+    at(VC.ht,{x:cx+R+10,y:yy+4,visibility:P.kind==='slack'?'visible':'hidden'});VC.ht.textContent='h = '+fx(h,2)+'L';
+    at(VC.mt,{x:x+(x>=cx?10:-10),y:y-10,'text-anchor':x>=cx?'start':'end'});
+    VC.mt.textContent=P.kind==='slack'?'slack here':m===0?'T = 0 here':'v = 0 here';}
+  else{at(VC.mark,{visibility:'hidden'});at(VC.hl,{visibility:'hidden'});at(VC.ht,{visibility:'hidden'});VC.mt.textContent='';}
+  /* tension graph */
+  const k2=VC.k*VC.k, Tf=t=>k2-2+3*Math.cos(t*Math.PI/180);
+  let lim=360; if(P.kind==='swing')lim=P.thm*180/Math.PI; if(P.kind==='slack')lim=P.ths*180/Math.PI; if(P.kind==='crit')lim=180;
+  let dc='',df='';
+  if(P.kind==='swing'){const a=lim;for(let i=0;i<=60;i++){const t=a*i/60;dc+=(i?'L':'M')+VGX(t).toFixed(1)+' '+VGY(Tf(t)).toFixed(1);}
+    for(let i=0;i<=60;i++){const t=360-a+a*i/60;dc+=(i?'L':'M')+VGX(t).toFixed(1)+' '+VGY(Tf(t)).toFixed(1);}}
+  else if(P.kind==='crit'){for(let i=0;i<=90;i++){const t=180*i/90;dc+=(i?'L':'M')+VGX(t).toFixed(1)+' '+VGY(Tf(t)).toFixed(1);}}
+  else for(let i=0;i<=180;i++){const t=lim*i/180;dc+=(i?'L':'M')+VGX(t).toFixed(1)+' '+VGY(Tf(t)).toFixed(1);}
+  if(lim<360&&P.kind!=='crit'){for(let i=0;i<=120;i++){const t=360*i/120;df+=(i?'L':'M')+VGX(t).toFixed(1)+' '+VGY(Tf(t)).toFixed(1);}}
+  VC.gcur.setAttribute('d',dc);VC.gfaint.setAttribute('d',P.kind==='slack'?df:'');
+  if(P.kind==='slack'){at(VC.gm,{cx:VGX(lim),cy:VGY(0),visibility:'visible'});}else at(VC.gm,{visibility:'hidden'});
+  VC.neg.setAttribute('visibility',m===0?'visible':'hidden');
+  VC.negt.textContent=m===0?'below 0: a string would have to push':m===1?'below 0: the rod pushes (compression)':'below 0: the ring pushes outward';
+  VC.ylab.textContent=m===2?'N / mg (inward +)':'T / mg';
+  /* state + captions */
+  const deg=t=>fx(t*180/Math.PI,1)+'°', Ttop=k2-5, vtop2=k2-4;
+  let st,cap;
+  if(m===0){
+    if(P.kind==='round'){st=P.crit?'Just gets round: T = 0 at the top':'Goes all the way round';cap=P.crit?'At the top gravity alone supplies the centripetal force: mg = mv²/L, so v<sub>top</sub> = √(gL). Any slower and the string would have to push.':`Slowest at the top, v = ${fx(Math.sqrt(vtop2),2)}√(gL), where the string still pulls with T = ${fx(Ttop,2)} mg.`;}
+    else if(P.kind==='swing'){st='Swings back and forth';cap=`It rises to θ = ${deg(P.thm)}, never above the centre, so the weight’s component keeps the string taut (T ≥ 0) everywhere: an ordinary pendulum.`;}
+    else {st='String goes slack before the top';cap=`T falls to zero at θ = ${deg(P.ths)}, height ${fx(1-Math.cos(P.ths),2)}L, while the bob is still moving at ${fx(P.vs,2)}√(gL) = ${fx(P.vs*VSG,2)} m/s. From there it is a projectile: it leaves the circle and falls inside it until the string jerks taut again.`;}
+  } else {
+    const who=m===1?'rod':'ring';
+    if(P.kind==='round'){st='Goes all the way round';cap=`It only has to reach the top: the ${who} can push as well as pull. At the top v = ${fx(Math.sqrt(vtop2),2)}√(gL) and the ${who} ${Ttop>=0?'pulls in with '+fx(Ttop,2)+' mg':'pushes out with '+fx(-Ttop,2)+' mg'}.`;}
+    else if(P.kind==='crit'){st='Just reaches the top, at rest';cap=`u = 2√(gL) gives exactly enough energy to climb 2L: it arrives with v = 0, and the ${who} holds it up with a push of mg (an unstable balance).`;}
+    else {st='Swings back';cap=`Not enough energy to climb 2L: it stops at θ = ${deg(P.thm)} and comes back. Above the centre the ${who} pushes to keep it on the circle; a string would already have gone slack.`;}
+  }
+  $('vcstate').textContent=st;$('vccap').innerHTML=cap;
+  VC.P=P;
+}
+function drawVC(){
+  const {cx,cy,R}=VCC,m=VC.mode,k2=VC.k*VC.k;let bx,by,vx,vy,T=null,K,U,thd;
+  if(VC.phase==='circle'){
+    const th=VC.th;[bx,by]=vcP(th);const v=VC.w*VCL;vx=v*Math.cos(th);vy=-v*Math.sin(th);
+    T=VCL*VC.w*VC.w/G+Math.cos(th); // T/mg from the current motion
+    K=0.5*v*v;U=G*VCL*(1-Math.cos(th));thd=((th*180/Math.PI)%360+360)%360;
+  } else {
+    bx=cx+VC.x/VCL*R;by=cy-VC.y/VCL*R;vx=VC.vx;vy=-VC.vy;K=0.5*(VC.vx*VC.vx+VC.vy*VC.vy);U=G*(VC.y+VCL);
+  }
+  at(VC.link,{x1:cx,y1:cy,x2:bx,y2:by,'stroke-width':m===1?5:1.6,opacity:m===1?.55:1,'stroke-dasharray':VC.phase==='circle'?'':'4 4',visibility:m===2?'hidden':'visible'});
+  at(VC.bob,{cx:bx,cy:by,visibility:m===2?'hidden':'visible'});at(VC.bead,{cx:bx,cy:by,visibility:m===2?'visible':'hidden'});
+  setArrow(VC.gA,bx,by,bx,by+FPX,8);at(VC.gl,{x:bx+5,y:by+FPX+12});
+  if(T!==null&&Math.abs(T)>0.02){const ux=(cx-bx)/R,uy=(cy-by)/R,len=Math.min(130,Math.abs(T)*FPX),sgn=T>0?1:-1;
+    setArrow(VC.tA,bx,by,bx+sgn*ux*len,by+sgn*uy*len,9);const lx=bx+sgn*ux*len*0.55-uy*12,ly=by+sgn*uy*len*0.55+ux*12;
+    at(VC.tl,{x:lx,y:ly+4,'text-anchor':'middle'});VC.tl.textContent=(m===2?'N':T>0?'T':'push');}
+  else {VC.tA.g.setAttribute('visibility','hidden');VC.tl.textContent=T===null?'':'T = 0';at(VC.tl,{x:bx,y:by-16,'text-anchor':'middle'});}
+  setArrow(VC.vA,bx,by,bx+vx/VSG*24,by+vy/VSG*24,9);
+  /* graph marker */
+  if(T!==null){at(VC.gd,{cx:VGX(thd),cy:VGY(T),visibility:'visible'});}else at(VC.gd,{visibility:'hidden'});
+  /* energy bar */
+  const E=0.5*k2*VSG*VSG,W=360,sc=W/Math.max(E,1e-9);
+  at(VC.eK,{width:Math.max(0,K*sc)});at(VC.eU,{x:K*sc,width:Math.max(0,U*sc)});
+  at(VC.eKt,{x:0});VC.eKt.textContent='K '+fx(K,1)+' J';at(VC.eUt,{x:W});VC.eUt.textContent='U '+fx(U,1)+' J';
+  const v=Math.sqrt(2*Math.max(0,K));
+  $('vckv').innerHTML=(VC.phase==='circle'?`<dt>angle θ</dt><dd>${fx(thd,0)}°</dd>`:`<dt>angle θ</dt><dd>off the circle</dd>`)+
+    `<dt>height above bottom</dt><dd>${fx(U/G,2)} m</dd><dt>speed v</dt><dd>${fx(v,2)} m/s</dd>`+
+    `<dt>${m===2?'ring force N':'tension T'}</dt><dd>${T===null?'0 (slack)':fx(T,2)+' mg'}</dd>`+
+    `<dt>T at bottom · top</dt><dd>${fx(k2+1,2)} mg · ${VC.P.kind==='round'||VC.P.kind==='crit'?fx(k2-5,2)+' mg':'(never reaches)'}</dd>`;
+}
+function stepVC(dt){
+  const sub=30,h=dt/sub,P=VC.P;
+  for(let i=0;i<sub;i++){
+    if(VC.phase==='circle'){
+      const f=(th,w)=>[w,-(G/VCL)*Math.sin(th)];
+      const [a1,b1]=f(VC.th,VC.w),[a2,b2]=f(VC.th+a1*h/2,VC.w+b1*h/2),[a3,b3]=f(VC.th+a2*h/2,VC.w+b2*h/2),[a4,b4]=f(VC.th+a3*h,VC.w+b3*h);
+      VC.th+=h*(a1+2*a2+2*a3+a4)/6;VC.w+=h*(b1+2*b2+2*b3+b4)/6;
+      /* string: leaves when the pull would have to become negative */
+      if(VC.mode===0&&P.kind==='slack'&&VC.th>=P.ths){const fl=VC.fl.f;Object.assign(VC,{phase:'fly',x:fl.x,y:fl.y,vx:fl.vx,vy:fl.vy,tf:0});VC.th=P.ths;}
+      if(P.kind==='crit'&&VC.th>=Math.PI-1e-3){VC.th=Math.PI;VC.w=0;VC.play=false;}
+    } else if(VC.phase==='fly'){
+      VC.tf+=h;const fl=VC.fl.f,t=Math.min(VC.tf,VC.fl.te);
+      VC.x=fl.x+fl.vx*t;VC.y=fl.y+fl.vy*t-0.5*G*t*t;VC.vx=fl.vx;VC.vy=fl.vy-G*t;
+      if(VC.tf>=VC.fl.te){VC.phase='done';VC.play=false;}
+    }
+  }
+}
+function loopVC(ts){if(!VC.play){$('vcplay').textContent=RM?'Step →':'Play';drawVC();return;}
+  if(!VIS['s-vc']){VC.last=0;requestAnimationFrame(loopVC);return;}
+  const dt=VC.last?Math.min(0.04,(ts-VC.last)/1000):0;VC.last=ts;stepVC(dt*0.5);drawVC();requestAnimationFrame(loopVC);}
+$('vcplay').addEventListener('click',()=>{
+  if(VC.phase==='done'||(VC.P.kind==='crit'&&VC.th>=Math.PI-1e-3))resetVC();
+  if(RM){VC.play=true;stepVC(0.12);VC.play=false;drawVC();return;}
+  VC.play=!VC.play;$('vcplay').textContent=VC.play?'Pause':'Play';if(VC.play){VC.last=0;requestAnimationFrame(loopVC);}});
+watch('s-vc');
+/* section 7 questions */
+const VQ=[];
+{const u=6.0,k2=u*u/(G*VCL),c=(2-k2)/3,ths=Math.acos(c),h=VCL*(1-c);
+ VQ.push({q:`A stone on a 1.0 m string is whirled in a vertical circle with speed ${fx(u,1)} m s⁻¹ at the bottom (g = 9.8 m s⁻²). What happens?`,
+  o:['It goes all the way round','The string goes slack at a height of about '+fx(h,2)+' m','The string goes slack exactly at the top','It swings back without ever going slack'],a:1,
+  why:`It needs u ≥ √(5gL) = ${fx(Math.sqrt(5*G*VCL),2)} m s⁻¹, so it falls short. But u &gt; √(2gL) = ${fx(Math.sqrt(2*G*VCL),2)} m s⁻¹, so it rises above the centre. T = m(u²/L − 2g + 3g cos θ) = 0 at cos θ = (2gL − u²)/(3gL) = ${fx(c,3)}, θ = ${fx(ths*180/Math.PI,1)}°, height L(1 − cos θ) = ${fx(h,2)} m. Set u = ${fx(u/VSG,2)}√(gL) above to watch it.`});
+ VQ.push({q:'A stone goes round a vertical circle on a string. How much bigger is the tension at the bottom than at the top?',
+  o:['2mg','4mg','6mg','it depends on the speed'],a:2,
+  why:'T = m(u²/L − 2g + 3g cos θ). Bottom (cos θ = 1): m(u²/L + g). Top (cos θ = −1): m(u²/L − 5g). The difference is 6mg for any u that gets it round: the speed terms cancel.'});
+}
+
+/* =================== 8 · POWER =================== */
+const PW={m:500,va:2,vb:0.8,t:1e9,run:false,last:0};
+const PWG={L:320,R:604,T:14,B:210};
+{const s=$('pw');
+ PW.sh=[60,170].map((x,i)=>{mk(s,'rect',{x,y:20,width:70,height:200,fill:'none',stroke:'var(--line)','stroke-width':2});
+   mk(s,'text',{x:x+35,y:240,'font-size':12.5,'font-weight':600,fill:'var(--ink)','text-anchor':'middle'},i?'lift B':'lift A');
+   const car=mk(s,'rect',{x:x+8,width:54,height:34,rx:3,fill:i?'var(--c2)':'var(--c1)','fill-opacity':.8});return car;});
+ mk(s,'line',{x1:50,x2:250,y1:20,y2:20,stroke:'var(--muted)','stroke-dasharray':'3 4'});
+ mk(s,'text',{x:150,y:14,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'top: 12 m');
+ PW.g=mk(s,'g',{});
+ PW.la=mk(s,'line',{stroke:'var(--c1)','stroke-width':2.4});PW.lb=mk(s,'line',{stroke:'var(--c2)','stroke-width':2.4});
+ PW.da=mk(s,'circle',{r:4.5,fill:'var(--c1)'});PW.db=mk(s,'circle',{r:4.5,fill:'var(--c2)'});
+ PW.ta=mk(s,'text',{'font-size':11,fill:'var(--c1)','font-weight':600});PW.tb=mk(s,'text',{'font-size':11,fill:'var(--c2)','font-weight':600});
+}
+['pwm','pwa','pwb'].forEach(id=>$(id).addEventListener('input',e=>{const v=+e.target.value;if(id==='pwm')PW.m=v;else if(id==='pwa')PW.va=v;else PW.vb=v;PW.run=false;PW.t=1e9;$('pwrun').textContent='Run both';drawPw();}));
+function drawPw(){
+  const {m,va,vb}=PW, W=m*G*PWH, ta=PWH/va, tb=PWH/vb, tmax=Math.max(ta,tb)*1.05, {L,R,T,B}=PWG;
+  $('pwmo').textContent=m+' kg';$('pwao').textContent=va.toFixed(1)+' m/s';$('pwbo').textContent=vb.toFixed(1)+' m/s';
+  const X=t=>L+t/tmax*(R-L), Wmax=1000*G*PWH, Y=w=>B-w/Wmax*(B-T);
+  if(PW.gk!==tmax){PW.gk=tmax;PW.g.innerHTML='';const g=PW.g;
+    mk(g,'line',{x1:L,x2:R,y1:B,y2:B,stroke:'var(--muted)'});mk(g,'line',{x1:L,x2:L,y1:T,y2:B,stroke:'var(--muted)'});
+    for(let w=0;w<=Wmax+1;w+=40000){mk(g,'line',{x1:L,x2:R,y1:Y(w),y2:Y(w),stroke:'var(--line)'});mk(g,'text',{x:L-5,y:Y(w)+4,'font-size':11,fill:'var(--muted)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'},w/1000);}
+    const ts=niceStep(tmax/5);for(let t=0;t<=tmax;t+=ts)mk(g,'text',{x:X(t),y:B+14,'font-size':11,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},+t.toFixed(1));
+    mk(g,'text',{x:(L+R)/2,y:B+29,'font-size':11.5,fill:'var(--ink)','text-anchor':'middle'},'time (s)');
+    mk(g,'text',{x:L+6,y:T+10,'font-size':11,fill:'var(--ink)'},'work (kJ)');
+    PW.wl=mk(g,'line',{x1:L,x2:R,stroke:'var(--ink)','stroke-dasharray':'2 3',opacity:.6});PW.wt=mk(g,'text',{x:R,'font-size':11.5,fill:'var(--ink)','text-anchor':'end'});}
+  at(PW.wl,{y1:Y(W),y2:Y(W)});at(PW.wt,{y:Y(W)-5});PW.wt.textContent='mgh = '+fx(W/1000,1)+' kJ';
+  const t=Math.min(PW.t,Math.max(ta,tb)), ca=Math.min(t,ta), cb=Math.min(t,tb);
+  at(PW.la,{x1:X(0),y1:Y(0),x2:X(ca),y2:Y(W*ca/ta)});at(PW.lb,{x1:X(0),y1:Y(0),x2:X(cb),y2:Y(W*cb/tb)});
+  at(PW.da,{cx:X(ca),cy:Y(W*ca/ta)});at(PW.db,{cx:X(cb),cy:Y(W*cb/tb)});
+  at(PW.ta,{x:X(ca)+6,y:Y(W*ca/ta)+(ca>=ta?14:-6)});PW.ta.textContent=t>0?'A':'';
+  at(PW.tb,{x:X(cb)+6,y:Y(W*cb/tb)+(cb>=tb?14:-6)});PW.tb.textContent=t>0?'B':'';
+  const hy=h=>220-h/PWH*200;
+  at(PW.sh[0],{y:hy(va*ca)-34});at(PW.sh[1],{y:hy(vb*cb)-34});
+  const Pa=m*G*va,Pb=m*G*vb;
+  $('pwkv').innerHTML=`<dt>work, each lift</dt><dd>${fx(W/1000,1)} kJ</dd><dt>lift A: time · power</dt><dd>${fx(ta,1)} s · ${fx(Pa/1000,2)} kW (${fx(Pa/HP,1)} hp)</dd><dt>lift B: time · power</dt><dd>${fx(tb,1)} s · ${fx(Pb/1000,2)} kW (${fx(Pb/HP,1)} hp)</dd><dt>power ratio A : B</dt><dd>${fx(Pa/Pb,2)} = ratio of speeds</dd>`;
+}
+function loopPw(ts){if(!PW.run)return;if(!VIS['s-power']){PW.last=0;requestAnimationFrame(loopPw);return;}
+  const dt=PW.last?Math.min(0.05,(ts-PW.last)/1000):0;PW.last=ts;PW.t+=dt*2;const end=Math.max(PWH/PW.va,PWH/PW.vb);
+  if(PW.t>=end){PW.t=end;PW.run=false;$('pwrun').textContent='Run both';drawPw();return;}drawPw();requestAnimationFrame(loopPw);}
+$('pwrun').addEventListener('click',()=>{if(RM){PW.t=Math.max(PWH/PW.va,PWH/PW.vb);drawPw();return;}
+  if(PW.run){PW.run=false;$('pwrun').textContent='Run both';return;}
+  const end=Math.max(PWH/PW.va,PWH/PW.vb);if(PW.t>=end)PW.t=0;PW.run=true;PW.last=0;$('pwrun').textContent='Pause';requestAnimationFrame(loopPw);});
+watch('s-power');
+
+/* =================== 9 · QUIZ (every number computed here) =================== */
+{
+ /* Q1: angle between F = (3,4,−5) and d = (5,4,3) */
+ const Fv=[3,4,-5],dv=[5,4,3],dot=Fv.reduce((s,v,i)=>s+v*dv[i],0),cs=dot/(Math.hypot(...Fv)*Math.hypot(...dv)),ang=Math.acos(cs)*180/Math.PI;
+ QUIZ.push({q:'A force F = (3î + 4ĵ − 5k̂) N moves a body through d = (5î + 4ĵ + 3k̂) m. The angle between F and d is about:',
+  o:[fx(ang,0)+'°','90°',fx(Math.acos(dot/50/2)*180/Math.PI,0)+'°','37°'],a:0,
+  why:`F·d = 15 + 16 − 15 = ${dot} J, and |F| = |d| = √50, so cos θ = ${dot}/50 = ${fx(cs,2)} and θ ≈ ${fx(ang,1)}°. The work done is the dot product, ${dot} J.`});
+ /* Q2: cyclist */
+ QUIZ.push({q:'A cyclist skids to a stop in 10 m; the road pushes back on the cycle with 200 N. Work done by the road on the cycle, and by the cycle on the road?',
+  o:['−2000 J and +2000 J','−2000 J and 0','−2000 J and −2000 J','0 and 0'],a:1,
+  why:'On the cycle: force opposite to its 10 m displacement, W = 200 × 10 × cos 180° = −2000 J. The cycle pushes the road with an equal and opposite 200 N (third law), but the road does not move, so that force does no work. Equal and opposite forces need not do equal and opposite work.'});
+ /* Q3: bullet keeps 10 % of K */
+ const vb=200*Math.sqrt(0.1);
+ QUIZ.push({q:'A 50 g bullet at 200 m s⁻¹ passes through a plank and comes out with 10% of its kinetic energy. Its exit speed?',
+  o:['20 m s⁻¹',fx(vb,1)+' m s⁻¹','100 m s⁻¹',fx(200*0.9,0)+' m s⁻¹'],a:1,
+  why:`K ∝ v², so v<sub>f</sub> = 200 × √0.1 = ${fx(vb,1)} m s⁻¹. Keeping 10% of the energy means keeping ${fx(Math.sqrt(0.1)*100,0)}% of the speed: the speed drops by about ${fx(100-Math.sqrt(0.1)*100,0)}%, not 90%.`});
+ /* Q4: raindrop, g = 10 */
+ const mR=1e-3,hR=1000,vR=50,Wg=mR*10*hR,dK=0.5*mR*vR*vR;
+ QUIZ.push({q:'A 1.00 g raindrop falls 1.00 km and lands at 50.0 m s⁻¹ (take g = 10 m s⁻²). How much work did air resistance do on it?',
+  o:[fx(dK-Wg,2)+' J',fx(-dK,2)+' J',fx(-Wg,1)+' J','0, it is at terminal speed'],a:0,
+  why:`Gravity: W<sub>g</sub> = mgh = ${fx(Wg,1)} J. Gain in K: ½mv² = ${fx(dK,2)} J. Work–energy theorem: W<sub>g</sub> + W<sub>air</sub> = ΔK, so W<sub>air</sub> = ${fx(dK,2)} − ${fx(Wg,1)} = ${fx(dK-Wg,2)} J. We never needed to know how the air force varies.`});
+ /* Q5: car into spring with friction, g = 10 */
+ const mC=1000,vC=18/3.6,kC=6.25e3,mu=0.5,a=0.5*kC,b=mu*mC*10,c=-0.5*mC*vC*vC,xs=(-b+Math.sqrt(b*b-4*a*c))/(2*a),x0=Math.sqrt(mC*vC*vC/kC);
+ QUIZ.push({q:'A 1000 kg car at 18 km h⁻¹ hits a spring buffer, k = 6.25 × 10³ N m⁻¹. With no friction the spring compresses '+fx(x0,2)+' m. With friction µ = 0.5 (g = 10 m s⁻²), the maximum compression is:',
+  o:[fx(x0,2)+' m',fx(xs,2)+' m',fx(x0/2,2)+' m',fx(x0*Math.sqrt(0.5),2)+' m'],a:1,
+  why:`The car’s K = ½mv² = ${fx(-c,0)} J now goes into the spring and into friction: ½kx² + µmg·x = ${fx(-c,0)}. That is ${fx(a,0)}x² + ${fx(b,0)}x − ${fx(-c,0)} = 0, so x = ${fx(xs,2)} m. Friction’s share, µmg·x = ${fx(b*xs,0)} J, is energy lost as heat.`});
+ /* Q6: pendulum completes the circle */
+ QUIZ.push({q:'A bob on a string is given just enough speed at the bottom to go round a vertical circle (string just slack at the top). Ratio of its kinetic energy halfway up (string horizontal) to that at the top?',
+  o:['2','3','5','√3'],a:1,
+  why:'At the top, tension is zero, so gravity alone supplies the centripetal force: mg = mv<sub>C</sub>²/L, v<sub>C</sub>² = gL. Energy conservation from top to the halfway point (L lower): v<sub>B</sub>² = gL + 2gL = 3gL. So K<sub>B</sub>/K<sub>C</sub> = 3. (And at the bottom v₀² = 5gL.)'});
+ /* Q7: elevator power, g = 10 */
+ const Fel=1800*10+4000,Pel=Fel*2;
+ QUIZ.push({q:'A lift of total mass 1800 kg moves up at a steady 2 m s⁻¹ against a friction force of 4000 N (g = 10 m s⁻²). Minimum power from the motor?',
+  o:[fx(1800*10*2/1000,0)+' kW',fx(Pel/1000,0)+' kW ≈ '+fx(Pel/HP,0)+' hp',fx(4000*2/1000,0)+' kW',fx(Fel/1000,0)+' kW'],a:1,
+  why:`At steady speed the motor must pull with mg + friction = ${fx(Fel,0)} N. P = Fv = ${fx(Fel,0)} × 2 = ${fx(Pel,0)} W = ${fx(Pel/HP,0)} hp (1 hp = 746 W).`});
+ /* Q8: constant power */
+ QUIZ.push({q:'A body starts from rest and is driven by a source of <b>constant power</b> along a straight line (no friction). Its displacement grows as:',
+  o:['t<sup>1/2</sup>','t','t<sup>3/2</sup>','t²'],a:2,
+  why:'Constant P means K = ½mv² = Pt, so v ∝ t<sup>1/2</sup>. Then x = ∫v dt ∝ t<sup>3/2</sup>. (Compare constant force, where x ∝ t².)'});
+ /* Q9: turning points for V = kx²/2 */
+ const kq=0.5,Eq=1,xt=Math.sqrt(2*Eq/kq);
+ QUIZ.push({q:'A particle moves in V(x) = ½kx² with k = 0.5 N m⁻¹ and total energy 1 J. Where does it turn back?',
+  o:['x = ±1 m','x = ±'+fx(xt,0)+' m','x = ±4 m','it never turns'],a:1,
+  why:`At a turning point K = 0, so E = V: ½ × 0.5 × x² = 1, x² = ${fx(xt*xt,0)}, x = ±${fx(xt,0)} m. Beyond that V &gt; E would need negative kinetic energy. Try it on the “Spring” landscape in section 4.`});
+ /* Q10: conservative force does positive work */
+ QUIZ.push({q:'A conservative force does positive work on a body. The body’s potential energy:',
+  o:['increases','decreases','stays the same'],a:1,
+  why:'ΔU = −W<sub>conservative</sub>. Gravity doing positive work on a falling stone: the stone loses height and U = mgh falls, while K rises by the same amount.'});
+}
+function renderQuizIn(id,list,pre){
+  $(id).innerHTML=list.map((q,i)=>`<div class="panel"><p class="qn">${pre}${i+1}</p><p>${q.q}</p>
+    <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');
+}
+function renderQuiz(){renderQuizIn('quiz',QUIZ,'Q');}
+[['quiz',QUIZ],['vquiz',VQ]].forEach(([id,list])=>$(id).addEventListener('click',e=>{
+  const b=e.target.closest('.opt');if(!b||b.disabled)return;
+  const box=b.parentElement,q=list[+box.dataset.i],j=+b.dataset.j;
+  box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+  const w=box.nextElementSibling;w.hidden=false;w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+}));
+$('qreset').onclick=renderQuiz;
+
+/* =================== INIT =================== */
+{const f=+load('fx');if(f>=0&&f<FXPRE.length)FX.p=f;
+ const u=+load('ux');if(u>=0&&u<UPRE.length)UX.p=u;
+ const e=+load('eb');if(e>=0&&e<ESYS.length)EB.s=e;
+ const v=+load('vc');if(v>=0&&v<VCMODE.length)VC.mode=v;}
+drawWork(); buildFx(); drawFx(); drawPath(); buildU(); drawSpring(); buildE(); resetVC(); drawPw(); renderQuiz(); renderQuizIn('vquiz',VQ,'7.');
+</script>
+</body>
+</html>

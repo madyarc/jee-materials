@@ -7,16 +7,18 @@
 <meta name="description" content="Interactive tools for building physical intuition (CBSE + JEE).">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&family=Noto+Sans+Symbols+2&text=%E2%86%90%E2%86%91%E2%86%92%E2%86%93%E2%86%94%E2%86%97%E2%87%8C%E2%87%92%E2%87%94%E2%88%82%E2%88%88%E2%88%92%E2%88%93%E2%88%9A%E2%88%9D%E2%88%9E%E2%88%AB%E2%89%88%E2%89%A0%E2%89%A1%E2%89%A4%E2%89%A5%E2%89%AA%E2%89%AB%E2%8A%95%E2%8A%97%E2%8A%99%E2%8A%A5%E2%96%B2%E2%96%B6%E2%97%80%E2%97%8B%E2%97%8F%E2%9C%93%E2%9C%97%E2%9D%9A%E2%9F%82%E2%9F%A8%E2%9F%A9&display=swap">
 <style>
 html,body{margin:0} [hidden]{display:none!important}
 /* Layout: one column — title, one-line idea, list of modules as rows, planned list, footer */
 :root{
   --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8; --accent:#2c56cc;
-  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
-  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --f-display:"Bricolage Grotesque","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","Noto Sans Math","Noto Sans Symbols 2",ui-monospace,Menlo,monospace;
 }
-@media (prefers-color-scheme: dark){:root{--bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c; --accent:#7d9dff; color-scheme:dark}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c; --accent:#7d9dff; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c; --accent:#7d9dff; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 56px}
@@ -33,6 +35,7 @@ p{margin:0}
 .mod p{color:var(--muted);font-size:15px;margin-top:4px}
 .mod .tags{font:500 12px var(--f-mono);color:var(--muted);margin-top:6px}
 .planned{font-size:15px;color:var(--muted)}
+.group{font:600 12px var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 0;padding-bottom:6px;border-bottom:1px solid var(--line)}
 .planned ul{margin:6px 0 0;padding-left:18px}
 .back a{font-size:14px;color:var(--muted);text-decoration:none}
 .back a:hover{color:var(--accent)}
@@ -47,60 +50,147 @@ footer{font-size:13px;color:var(--muted)}
     <p class="lede">See the physical picture first: where the mass sits, which way each point moves, where friction has to act. The equation comes after, as a caption on what you can see.</p>
   </header>
 
-  <nav class="mods" aria-label="Modules">
-    <a class="mod" href="mechanics/moment-of-inertia.html">
+  <nav class="mods" aria-label="Modules" style="border-top:0">
+    <h3 class="group">Mechanics</h3>
+    <a class="mod" href="mechanics/motion-in-a-line.html">
       <span class="num">01</span>
+      <div><h2>Motion in a Straight Line</h2>
+      <p>A car on a track drives live x–t, v–t and a–t graphs. Drag the velocity graph and watch slope and area tie the three together; the equations of motion read off one trapezium; free fall, stopping distance and relative velocity.</p>
+      <p class="tags">kinematics · graphs · equations of motion</p></div>
+    </a>
+    <a class="mod" href="mechanics/vectors-relative-motion.html">
+      <span class="num">02</span>
+      <div><h2>Vectors and Relative Motion</h2>
+      <p>Drag arrows to add, subtract and resolve vectors; watch average velocity turn into the tangent; rain–umbrella and river–boat, each seen from the ground and from the moving observer side by side.</p>
+      <p class="tags">vectors · components · relative velocity</p></div>
+    </a>
+    <a class="mod" href="mechanics/projectile-circular.html">
+      <span class="num">03</span>
+      <div><h2>Projectiles and Circular Motion</h2>
+      <p>A projectile launcher with velocity components, range vs angle and complementary angles; throwing up a slope; two projectiles seen from one of them; and the Δv construction that gives v²/r.</p>
+      <p class="tags">projectile · inclined plane · centripetal acceleration</p></div>
+    </a>
+    <a class="mod" href="mechanics/laws-of-motion.html">
+      <span class="num">04</span>
+      <div><h2>Newton's Laws</h2>
+      <p>Galileo's double incline, F = dp/dt and impulse, third-law pairs on different bodies, recoil, closed force triangles, and a free-body-diagram builder for blocks, pulleys and lifts.</p>
+      <p class="tags">inertia · momentum · free-body diagrams</p></div>
+    </a>
+    <a class="mod" href="mechanics/friction-circular-dynamics.html">
+      <span class="num">05</span>
+      <div><h2>Friction and Circular Motion</h2>
+      <p>Static friction adjusting itself up to µ<sub>s</sub>N, the rough incline and angle of repose, centripetal force as a role a real force plays, the level-road turn and the banked road.</p>
+      <p class="tags">friction · banking · centripetal force</p></div>
+    </a>
+    <a class="mod" href="mechanics/work-energy.html">
+      <span class="num">06</span>
+      <div><h2>Work and Energy</h2>
+      <p>Positive, zero and negative work; work as the area under F–x; path-independent gravity vs friction; a potential-energy landscape with turning points and equilibria; springs, energy bars and power.</p>
+      <p class="tags">work · potential energy · power</p></div>
+    </a>
+    <a class="mod" href="mechanics/collisions.html">
+      <span class="num">07</span>
+      <div><h2>Collisions</h2>
+      <p>A two-cart lab with restitution e: momentum bars stay put while kinetic energy is shared and lost. The same collision in the centre-of-mass frame, and equal balls leaving at 90°.</p>
+      <p class="tags">momentum · elastic and inelastic · CM frame</p></div>
+    </a>
+    <a class="mod" href="mechanics/centre-of-mass.html">
+      <span class="num">08</span>
+      <div><h2>Centre of Mass</h2>
+      <p>Drag masses and watch the weighted average move; find the CM of shapes by symmetry; a shell explodes but its CM keeps to the parabola; walk on a boat; hang a card to find the centre of gravity.</p>
+      <p class="tags">centre of mass · system momentum</p></div>
+    </a>
+    <a class="mod" href="mechanics/torque-angular-momentum.html">
+      <span class="num">09</span>
+      <div><h2>Torque and Angular Momentum</h2>
+      <p>The cross product as a parallelogram, the lever arm on a door, constant angular momentum of a straight-moving particle, a swivel chair spinning up, balancing a metre stick, and every translation quantity paired with its rotation twin.</p>
+      <p class="tags">torque · angular momentum · equilibrium</p></div>
+    </a>
+    <a class="mod" href="mechanics/moment-of-inertia.html">
+      <span class="num">10</span>
       <div><h2>Moment of Inertia</h2>
-      <p>See where the mass of a ring, disc, sphere or rod sits relative to the axis. Drag the axis to watch I = I<sub>cm</sub> + Md² build up, check I<sub>z</sub> = I<sub>x</sub> + I<sub>y</sub> on a lamina, and work out a body's other standard axes from one value you remember.</p>
-      <p class="tags">mechanics · rotation</p></div>
+      <p>See where a body's mass sits relative to the axis. Slide it along the axis (I unchanged) or pull it in (I drops); drag the axis for I = I<sub>cm</sub> + Md²; the perpendicular-axis theorem; one remembered value gives the whole family.</p>
+      <p class="tags">rotation · moment of inertia</p></div>
     </a>
     <a class="mod" href="mechanics/rolling-motion.html">
-      <span class="num">02</span>
+      <span class="num">11</span>
       <div><h2>Rolling Motion</h2>
-      <p>Velocity arrows on a wheel for translation, rotation, rolling and slipping. Race bodies down an incline by β = k²/R², find the friction needed to roll, and watch slipping turn into rolling.</p>
-      <p class="tags">mechanics · rotation · friction</p></div>
+      <p>Velocity arrows on a wheel for rolling and slipping. Race bodies down an incline by β = k²/R², find the friction needed to roll, and watch slipping turn into rolling.</p>
+      <p class="tags">rotation · rolling · friction</p></div>
     </a>
-    <a class="mod" href="thermodynamics/laws-and-pv.html">
-      <span class="num">03</span>
-      <div><h2>Thermodynamics: the PV Diagram</h2>
-      <p>Drag a process on the PV diagram and watch the gas in its cylinder: work is the area under the path, Q = ΔU + W as bars, cycles, path dependence, why C<sub>p</sub> &gt; C<sub>v</sub>, and the physics vs chemistry sign conventions on one picture.</p>
-      <p class="tags">thermodynamics · zeroth and first law · sign conventions</p></div>
+    <a class="mod" href="mechanics/gravitation.html">
+      <span class="num">12</span>
+      <div><h2>Gravitation</h2>
+      <p>Kepler's ellipse with equal-time wedges, T² ∝ a³ on real planet data, the inverse-square law and shell theorem, g with latitude, height and depth, and how −GMm/r becomes mgh.</p>
+      <p class="tags">Kepler · g(h), g(d) · potential energy</p></div>
     </a>
-    <a class="mod" href="thermodynamics/heat-engines.html">
-      <span class="num">04</span>
-      <div><h2>Heat Engines and the Second Law</h2>
-      <p>Hot source → engine → cold sink as bands whose widths add up. The two "impossible machines" (Kelvin–Planck, Clausius), a step-through Carnot cycle, and refrigerators as engines run backwards.</p>
-      <p class="tags">thermodynamics · second law · engines</p></div>
+    <a class="mod" href="mechanics/orbits-satellites.html">
+      <span class="num">13</span>
+      <div><h2>Orbits, Escape and Satellites</h2>
+      <p>Newton's cannon (falls back, circle, ellipse, escape), escape speed as climbing out of an energy well, orbital speed and period vs height, geostationary and polar orbits, satellite energy and weightlessness.</p>
+      <p class="tags">orbits · escape speed · satellites</p></div>
     </a>
-    <a class="mod" href="thermodynamics/kinetic-theory.html">
-      <span class="num">05</span>
-      <div><h2>Kinetic Theory: Gas as Moving Molecules</h2>
-      <p>A box of bouncing molecules whose wall hits make the pressure and the gas laws. Temperature as average kinetic energy, the speed distribution with v<sub>mp</sub>, v<sub>avg</sub> and v<sub>rms</sub> and why each sits where it does, Graham's law, mean free path, and when a real gas stops being ideal.</p>
-      <p class="tags">kinetic theory · speeds · mean free path</p></div>
-    </a>
-    <a class="mod" href="thermodynamics/degrees-of-freedom.html">
-      <span class="num">06</span>
-      <div><h2>Degrees of Freedom and Equipartition</h2>
-      <p>Switch on each way a molecule can move (translation, rotation, vibration) for He, O₂, CO₂, H₂O and CH₄, and watch ½k<sub>B</sub>T energy buckets add up to C<sub>v</sub>, C<sub>p</sub> and γ. Gas mixtures, solids (3R), water, and why modes freeze when cold.</p>
-      <p class="tags">kinetic theory · equipartition · specific heats</p></div>
-    </a>
-    <a class="mod" href="thermodynamics/heat-transfer.html">
-      <span class="num">07</span>
-      <div><h2>Heat Transfer: Conduction, Convection, Radiation</h2>
-      <p>Heat flowing along a rod and through rods in series and parallel, ice growing on a pond, sea and land breezes, black-body spectra with Wien's and Stefan's laws, a thermos flask taken apart, and Newton's law of cooling.</p>
-      <p class="tags">heat transfer · radiation · cooling</p></div>
-    </a>
+    <h3 class="group">Thermal physics</h3>
     <a class="mod" href="thermodynamics/temperature-expansion.html">
-      <span class="num">08</span>
+      <span class="num">14</span>
       <div><h2>Temperature and Thermal Expansion</h2>
-      <p>Drag one marker across °C, °F, K and a scale of your own. Extend gas-thermometer lines back to absolute zero. See why solids grow when heated, why area and volume expand by 2α and 3α, why water is densest at 4 °C, and what happens when expansion is blocked.</p>
+      <p>Drag one marker across °C, °F, K and a scale of your own; extend gas-thermometer lines to absolute zero; why solids grow, why area and volume expand by 2α and 3α, water at 4 °C, and thermal stress.</p>
       <p class="tags">thermometry · expansion · thermal stress</p></div>
     </a>
     <a class="mod" href="thermodynamics/calorimetry-phase.html">
-      <span class="num">09</span>
+      <span class="num">15</span>
       <div><h2>Heat, Calorimetry and Change of State</h2>
-      <p>Same heat, different warming. Drag your guess until heat lost equals heat gained. The heating curve from ice to steam drawn to scale, ice that doesn't all melt, phase diagrams of water and CO₂, cooking on hills and in a pressure cooker, and regelation.</p>
+      <p>Same heat, different warming; drag your guess until heat lost equals heat gained; the heating curve from ice to steam drawn to scale; phase diagrams of water and CO₂; cooking on hills and in a pressure cooker.</p>
       <p class="tags">calorimetry · latent heat · phase diagrams</p></div>
+    </a>
+    <a class="mod" href="thermodynamics/heat-transfer.html">
+      <span class="num">16</span>
+      <div><h2>Heat Transfer: Conduction, Convection, Radiation</h2>
+      <p>Heat flowing along rods in series and parallel, ice growing on a pond, sea and land breezes, black-body spectra with Wien's and Stefan's laws, a thermos taken apart, and Newton's law of cooling.</p>
+      <p class="tags">heat transfer · radiation · cooling</p></div>
+    </a>
+    <a class="mod" href="thermodynamics/laws-and-pv.html">
+      <span class="num">17</span>
+      <div><h2>Thermodynamics: the PV Diagram</h2>
+      <p>Drag a process on the PV diagram and watch the gas in its cylinder: work is the area under the path, Q = ΔU + W as bars, cycles, path dependence, C<sub>p</sub> vs C<sub>v</sub>, and physics vs chemistry sign conventions on one picture.</p>
+      <p class="tags">thermodynamics · first law · sign conventions</p></div>
+    </a>
+    <a class="mod" href="thermodynamics/heat-engines.html">
+      <span class="num">18</span>
+      <div><h2>Heat Engines and the Second Law</h2>
+      <p>Hot source → engine → cold sink as bands whose widths add up. The two "impossible machines", a step-through Carnot cycle, and refrigerators as engines run backwards.</p>
+      <p class="tags">second law · engines · Carnot</p></div>
+    </a>
+    <a class="mod" href="thermodynamics/kinetic-theory.html">
+      <span class="num">19</span>
+      <div><h2>Kinetic Theory: Gas as Moving Molecules</h2>
+      <p>A box of molecules whose wall hits make the pressure and the gas laws; temperature as average KE; the speed distribution with v<sub>mp</sub>, v<sub>avg</sub> and v<sub>rms</sub>; Graham's law and mean free path.</p>
+      <p class="tags">kinetic theory · speeds · mean free path</p></div>
+    </a>
+    <a class="mod" href="thermodynamics/degrees-of-freedom.html">
+      <span class="num">20</span>
+      <div><h2>Degrees of Freedom and Equipartition</h2>
+      <p>Switch on each way a molecule can move and watch ½k<sub>B</sub>T energy buckets add up to C<sub>v</sub>, C<sub>p</sub> and γ; mixtures, solids (3R), water, and why modes freeze when cold.</p>
+      <p class="tags">equipartition · specific heats</p></div>
+    </a>
+    <h3 class="group">Oscillations and waves</h3>
+    <a class="mod" href="waves/oscillations.html">
+      <span class="num">21</span>
+      <div><h2>Oscillations and SHM</h2>
+      <p>SHM as the shadow of circular motion: x, v and a with their phases, F = −kx, energy sloshing between KE and PE, the spring and the pendulum (and where the small-angle rule fails), plus damping and resonance.</p>
+      <p class="tags">SHM · energy · pendulum · resonance</p></div>
+    </a>
+    <a class="mod" href="waves/travelling-waves.html">
+      <span class="num">22</span>
+      <div><h2>Travelling Waves</h2>
+      <p>Watch one particle bob while the wave moves on; transverse vs longitudinal; a snapshot vs one particle's history labels a, λ, T, k and ω; speed on a string, and Newton vs Laplace for sound.</p>
+      <p class="tags">waves · wave speed · sound</p></div>
+    </a>
+    <a class="mod" href="waves/standing-waves-beats.html">
+      <span class="num">23</span>
+      <div><h2>Superposition, Standing Waves and Beats</h2>
+      <p>Pulses pass through each other and flip at a fixed end; standing waves on strings and in open and closed pipes, harmonic by harmonic; beats you can hear; and the Doppler effect.</p>
+      <p class="tags">superposition · harmonics · beats · Doppler</p></div>
     </a>
   </nav>
 

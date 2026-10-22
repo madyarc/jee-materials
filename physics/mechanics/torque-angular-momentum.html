@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Torque and Angular Momentum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&family=Noto+Sans+Symbols+2&text=%E2%86%90%E2%86%91%E2%86%92%E2%86%93%E2%86%94%E2%86%97%E2%87%8C%E2%87%92%E2%87%94%E2%88%82%E2%88%88%E2%88%92%E2%88%93%E2%88%9A%E2%88%9D%E2%88%9E%E2%88%AB%E2%89%88%E2%89%A0%E2%89%A1%E2%89%A4%E2%89%A5%E2%89%AA%E2%89%AB%E2%8A%95%E2%8A%97%E2%8A%99%E2%8A%A5%E2%96%B2%E2%96%B6%E2%97%80%E2%97%8B%E2%97%8F%E2%9C%93%E2%9C%97%E2%9D%9A%E2%9F%82%E2%9F%A8%E2%9F%A9&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) rotation about a fixed axis: ω and v = ωr  (2) cross product as a parallelogram  (3) torque on a door: lever arm
+   (4) angular momentum of a particle, τ = dL/dt  (5) conservation: swivel chair  (6) equilibrium: lever, two supports, couple
+   (7) rotational kinematics: ω–t graph  (8) translation ↔ rotation, side by side  (9) predict-then-check */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --acc:#b0377a; --disp:#1f8f87; --ke:#0f8a4f; --pe:#8a6d1f;
+  --b1:#7a52c7; --b2:#1f8f87; --b3:#b0377a; --b4:#8a6d1f;
+  --f-display:"Bricolage Grotesque","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","Noto Sans Math","Noto Sans Symbols 2",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a;
+  --b1:#a585f0; --b2:#3cb8ad; --b3:#e86fae; --b4:#d4b44a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a;
+  --b1:#a585f0; --b2:#3cb8ad; --b3:#e86fae; --b4:#d4b44a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:7.5em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:8.5em;text-align:right}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+a{color:var(--accent)}
+
+/* page-specific */
+.drag{cursor:grab;touch-action:none}
+.drag:active{cursor:grabbing}
+.mrow{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:6px 10px;align-items:center;font-size:14px}
+.mrow .sw{width:12px;height:12px;border-radius:50%}
+.step{font:600 14px var(--f-mono);width:28px;height:28px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);cursor:pointer;padding:0}
+.mval{font:500 13px var(--f-mono);min-width:6.5em;text-align:center;font-variant-numeric:tabular-nums}
+.pairs{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:6px 10px;font-size:14px;align-items:stretch}
+.pairs .hd{font:600 13px var(--f-body);color:var(--muted);padding:0 10px}
+.pairs .c{background:var(--bg);border-radius:8px;padding:6px 10px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;border-left:3px solid var(--line)}
+.pairs .c b{font-weight:600}
+.pairs .c span{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pairs .lk{align-self:center;color:var(--muted);font:500 14px var(--f-mono)}
+.pairs .hl{outline:2px solid var(--ok);outline-offset:-2px}
+@media (max-width:560px){.pairs{gap:6px 4px;font-size:13px}.pairs .c{padding:5px 7px}.pairs .c span{white-space:normal;font-size:12px;overflow-wrap:anywhere}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Torque and Angular Momentum</h1>
+    <p class="lede">Turning has its own versions of force, momentum and Newton’s second law. Every one is built the same way: take the straight-line quantity, and weight it by how far from the axis it acts. That “how far” needs a new way to multiply vectors, the cross product. Build it, then use it to open doors, balance beams and spin up a swivel chair.</p>
+  </header>
+
+  <!-- 1 · rotation -->
+  <section class="stack">
+    <div>
+      <h2>1 · Rotation about a fixed axis</h2>
+      <p class="lede">A disc turns about a fixed axis through its centre (you are looking straight down the axis). Every point moves in a circle round the axis. Spin it with the slider: which points move fastest?</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="rot" viewBox="0 0 600 290" role="img" aria-label="Rotating disc with velocity arrows" style="min-width:460px">
+          <circle cx="190" cy="145" r="126" fill="var(--ink)" fill-opacity=".05" stroke="var(--ink)" stroke-opacity=".45" stroke-width="2"/>
+          <g id="rotg"></g>
+          <g id="rotside"></g>
+        </svg></div>
+        <div class="slider"><label for="rw">angular velocity ω</label><input type="range" id="rw" min="-3" max="3" step="0.1" value="1.5"><output id="rwo"></output></div>
+        <div class="row"><button class="btn primary" id="rplay">Play</button><span class="muted">disc radius 0.30 m</span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="rkv"></dl>
+        <p class="cap key" id="rcap"></p>
+        <p class="cap">One angle θ describes the whole body, so one ω = dθ/dt (and one angular acceleration α = dω/dt) belongs to every point. Their speeds differ: v = ωr, where r is the distance from the axis. As a vector, ω points along the axis by the right-hand rule: curl your right-hand fingers the way it turns, and your thumb gives ω. Then v = ω × r.</p>
+        <p class="cap">A <b>rigid body</b> is the model here: distances between its particles never change. Real bodies bend a little. An axis need not be fixed in every case: a spinning top keeps only one point (its tip) fixed, and its axis sweeps round a cone (precession). This page sticks to a fixed axis.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · cross product -->
+  <section class="stack">
+    <div>
+      <h2>2 · The cross product is an area with a direction</h2>
+      <p class="lede">Drag the tips of <b style="color:var(--b2)">a</b> and <b style="color:var(--b3)">b</b>. The shaded parallelogram’s area is |a × b| = ab sin θ. The result points straight out of the screen (⊙) or into it (⊗).</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="crs" viewBox="0 0 600 330" role="img" aria-label="Two vectors, their parallelogram and the cross product" style="min-width:460px"></svg></div>
+        <div class="row"><button class="btn" id="cswap">Swap the order</button><div class="chips" id="cchips" role="group" aria-label="Presets"></div></div>
+        <svg viewBox="0 0 260 120" role="img" aria-label="Cyclic order of unit vectors" style="width:100%;max-width:300px;height:auto;display:block">
+          <circle cx="60" cy="60" r="38" fill="none" stroke="var(--line)" stroke-width="2"/>
+          <path d="M60 22A38 38 0 0 1 93 79" fill="none" stroke="var(--spin)" stroke-width="2"/><polygon points="93,79 86,72 96,70" fill="var(--spin)"/>
+          <text x="60" y="18" font-size="14" font-weight="600" text-anchor="middle" fill="var(--ink)">î</text>
+          <text x="99" y="96" font-size="14" font-weight="600" fill="var(--ink)">ĵ</text>
+          <text x="14" y="96" font-size="14" font-weight="600" fill="var(--ink)">k̂</text>
+          <text x="125" y="38" font-size="12.5" fill="var(--ink)">with the arrow: +</text>
+          <text x="125" y="58" font-size="12" fill="var(--muted)" font-family="IBM Plex Mono,monospace">î×ĵ = k̂, ĵ×k̂ = î</text>
+          <text x="125" y="80" font-size="12.5" fill="var(--ink)">against it: −</text>
+          <text x="125" y="100" font-size="12" fill="var(--muted)" font-family="IBM Plex Mono,monospace">ĵ×î = −k̂</text>
+        </svg>
+        <p class="cap">Rules that follow from the picture: a × a = 0 (no area); b × a = −a × b (the curl reverses); a × (b + c) = a × b + a × c. In components, a × b = (a<sub>y</sub>b<sub>z</sub> − a<sub>z</sub>b<sub>y</sub>, a<sub>z</sub>b<sub>x</sub> − a<sub>x</sub>b<sub>z</sub>, a<sub>x</sub>b<sub>y</sub> − a<sub>y</sub>b<sub>x</sub>), the determinant with î, ĵ, k̂ in the top row. The triangle with sides a and b has half the area, ½|a × b|; and a·(b × c) is the volume of the box built on a, b, c. Reverse both vectors, as a reflection through the origin does (a → −a, b → −b), and a × b does not change.</p>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="cbig"></p>
+        <dl class="kv" id="ckv"></dl>
+        <p class="cap key" id="ccap"></p>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · torque -->
+  <section class="stack">
+    <div>
+      <h2>3 · Torque: where and how you push</h2>
+      <p class="lede">A door seen from above, hinged at H. Drag the point where you push along the door, and drag the tip of the force arrow to change its size and direction. Before you try: what does a push straight along the door do?</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="tchips" role="group" aria-label="Presets"></div>
+        <div class="svgbox"><svg id="door" viewBox="0 0 600 320" role="img" aria-label="Door with a force, its lever arm and torque" style="min-width:460px"></svg></div>
+        <div class="legend"><span><i style="background:var(--disp)"></i>r, from the hinge</span><span><i style="background:var(--force)"></i>force F</span><span><i style="background:var(--ink)"></i>lever arm r⊥ (from H to the line of F)</span></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="tbig"></p>
+        <dl class="kv" id="tkv"></dl>
+        <p class="cap key" id="tcap"></p>
+        <p class="cap">τ = r × F. Its size can be read two ways, both on the picture: τ = r⊥F (the whole force times the lever arm) or τ = rF⊥ (the whole distance times the part of F across the door). The unit is N m. That is the same unit as the joule, but torque is a vector and not energy: nothing has moved yet. Reverse F and τ reverses.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · angular momentum -->
+  <section class="stack">
+    <div>
+      <h2>4 · Angular momentum of a moving particle</h2>
+      <p class="lede">A particle (1 kg) moves at constant velocity along a straight line. Does it have angular momentum about a point O that is not on the line? Is it changing? Drag O, play, then try the other cases.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="lchips" role="group" aria-label="Choose a case"></div>
+        <div class="svgbox"><svg id="lsv" viewBox="0 0 600 280" role="img" aria-label="Particle path, position vector and swept areas" style="min-width:460px">
+          <g id="lstat"></g><g id="lwedge"></g><g id="ldyn"></g>
+        </svg></div>
+        <div class="svgbox"><svg id="lgr" viewBox="0 0 600 150" role="img" aria-label="Angular momentum against time" style="min-width:460px"></svg></div>
+        <div class="row"><button class="btn primary" id="lplay">Play</button></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="lkv"></dl>
+        <p class="cap key" id="lcap"></p>
+        <p class="cap">l = r × p, of size l = r⊥p: momentum times the perpendicular distance from O to its line. Differentiate: dl/dt = v × mv + r × F. The first term is zero (parallel vectors), so <b>dl/dt = r × F = τ</b>, the rotational form of F = dp/dt. For many particles add them up: L = Σl<sub>i</sub>. Internal forces act in equal, opposite pairs along the line joining the two particles, so their torques cancel, leaving dL/dt = τ<sub>ext</sub>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · conservation -->
+  <section class="stack">
+    <div>
+      <h2>5 · Conservation: the swivel chair</h2>
+      <p class="lede">Someone spins on a frictionless swivel chair holding a dumbbell in each hand. Nothing outside twists the chair, so τ<sub>ext</sub> = 0 and L = Iω stays fixed. Predict: arms pulled in, does the spin speed up or slow down? Does the kinetic energy change?</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="sk" viewBox="0 0 600 270" role="img" aria-label="Top view of the chair and the I, ω, L bars" style="min-width:460px">
+          <g id="skbody"></g><g id="skbars"></g>
+        </svg></div>
+        <div class="slider"><label for="sr">dumbbells at r</label><input type="range" id="sr" min="0.25" max="0.9" step="0.01" value="0.8"><output id="sro"></output></div>
+        <div class="row"><button class="btn primary" id="skplay">Play</button><span class="muted">illustrative numbers: I₀ = 1.2 kg m² (person + chair), two 2 kg dumbbells, ω = 2.0 rad/s with arms at 0.80 m</span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="skkv"></dl>
+        <p class="cap key" id="skcap"></p>
+        <p class="cap">I = I₀ + 2mr² (why mass far out counts as r²: <a href="moment-of-inertia.html">Moment of Inertia</a>). For fixed-axis rotation, L<sub>z</sub> = Iω, and dL<sub>z</sub>/dt = τ<sub>z</sub>. Divers, skaters, dancers in a pirouette all use this: tuck in to spin fast, open out to slow down. Strictly, L lies along the axis only for a body symmetric about it; for a lopsided one, L and ω point in different directions.</p>
+        <p class="cap">When a torque does act, L changes in its direction. If the torque is at right angles to L (a spinning bicycle wheel held by one end of its axle), L turns round instead of growing: the axle swings sideways. That is precession, the same thing a top does.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · equilibrium -->
+  <section class="stack">
+    <div>
+      <h2>6 · Equilibrium: no net force AND no net torque</h2>
+      <p class="lede">A rigid body stays at rest only if both add to zero: ΣF = 0 (it does not start moving off) and Στ = 0 (it does not start turning). Either can hold without the other.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="echips" role="group" aria-label="Choose a setup"></div>
+        <div class="svgbox"><svg id="eq" viewBox="0 0 600 270" role="img" aria-label="Beam with loads and supports" style="min-width:460px"></svg></div>
+        <div class="stack" id="emass"></div>
+        <div class="slider" id="eloadrow"><label for="eload">load position</label><input type="range" id="eload" min="0" max="70" step="1" value="30"><output id="eloado"></output></div>
+        <div class="chips" id="ecpl" role="group" aria-label="Force directions"></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="ebig"></p>
+        <dl class="kv" id="ekv"></dl>
+        <p class="cap key" id="ecap"></p>
+        <p class="cap" id="enote"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · kinematics -->
+  <section class="stack">
+    <div>
+      <h2>7 · Rotational kinematics: the same graphs, new letters</h2>
+      <p class="lede">With constant angular acceleration α, angular velocity grows in a straight line, exactly like v with constant a. The area under the ω–t graph is the angle turned, just as the area under v–t is the distance.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="kchips" role="group" aria-label="Presets"></div>
+        <div class="svgbox"><svg id="kg" viewBox="0 0 600 270" role="img" aria-label="Angular velocity against time with the area shaded" style="min-width:460px"></svg></div>
+        <div class="slider"><label for="kt">time t</label><input type="range" id="kt" min="0" max="1" step="0.001" value="1"><output id="kto"></output></div>
+        <div class="slider"><label for="kw0">starting ω₀</label><input type="range" id="kw0" min="0" max="3000" step="60" value="1200"><output id="kw0o"></output></div>
+        <div class="slider"><label for="ka">α</label><input type="range" id="ka" min="-200" max="200" step="10" value="120"><output id="kao"></output></div>
+        <div class="slider"><label for="kT">duration</label><input type="range" id="kT" min="2" max="30" step="1" value="16"><output id="kTo"></output></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="kkv"></dl>
+        <p class="cap key" id="kcap"></p>
+        <p class="cap">ω = ω₀ + αt is the straight line. θ = ω₀t + ½αt² is the shaded area (a rectangle plus a triangle). Eliminate t and you get ω² = ω₀² + 2αθ. These are v = u + at, s = ut + ½at² and v² = u² + 2as with θ for s, ω for v, α for a. To use them, angles must be in radians: 1 rev = 2π rad, so ω in rad/s = 2π × (rpm)/60.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · dictionary -->
+  <section class="stack">
+    <div>
+      <h2>8 · Translation and rotation, side by side</h2>
+      <p class="lede">Left: a 20 kg block pulled by 25 N on a frictionless floor. Right: a 20 kg flywheel of radius 0.20 m (a disc, I = ½MR² = 0.4 kg m²), with a cord round its rim pulled with the same 25 N. Run them together and read across each row.</p>
+    </div>
+    <div class="panel stack">
+      <div class="svgbox"><svg id="dict" viewBox="0 0 640 190" role="img" aria-label="Block pulled by a force and flywheel turned by a cord" style="min-width:480px;max-width:760px;margin:0 auto"></svg></div>
+      <div class="slider"><label for="dt">time t</label><input type="range" id="dt" min="0" max="2" step="0.005" value="1.265"><output id="dto"></output></div>
+      <div class="row"><button class="btn primary" id="dplay">Play</button><button class="btn" id="d2m">Stop when 2 m of cord is off</button></div>
+      <div class="pairs" id="pairs"></div>
+      <p class="cap key" id="dcap"></p>
+      <p class="cap">Why τ = Iα and not something else: the work done by a torque turning a body through dθ is τ dθ (the force times the arc r dθ its point moves). So power is τω. With no friction all of it becomes kinetic energy, d(½Iω²)/dt = Iωα. Set τω = Iωα and τ = Iα drops out. (The kinetic energy of rotation itself: each bit moves at v = ωr, so K = Σ½mr²ω² = ½(Σmr²)ω² = ½Iω².) For a fixed axis, only the part of a torque along the axis turns the body; the bearings supply whatever is needed to cancel the rest, which would only try to tilt the axle.</p>
+    </div>
+  </section>
+
+  <!-- 9 · quiz -->
+  <section class="stack">
+    <div>
+      <h2>9 · Predict, then check</h2>
+      <p class="lede">Classic exam questions. Choose first; the reasoning appears after.</p>
+    </div>
+    <div class="qgrid" id="quiz"></div>
+    <div><button class="btn" id="qreset">Reset answers</button></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> rigid bodies turning about a fixed axis; point masses; light (massless) rods, beams where stated, and cords that do not slip or stretch; frictionless hinges, pivots and bearings; uniform gravity g = 9.8 m s⁻². The swivel-chair numbers are illustrative, not measured. Arrow lengths are to scale within each picture.</p>
+    <p><b>Based on:</b> NCERT Physics Class 11, "System of Particles and Rotational Motion"; H. C. Verma, <i>Concepts of Physics</i> Vol. 1, "Rotational Mechanics".</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+const G=9.8; // m s^-2
+/* 1: disc radius (m) and marked points: [radius as fraction of disc, angle offset] */
+const DISC_R=0.30, MARKS=[[0,0],[1/3,0.9],[2/3,2.6],[1,4.4]];
+/* 3: door presets: point d (fraction of width), force (N) as [Fx, Fy] with y up, door along +x */
+const DOOR_W=0.9; // m
+const TPRE=[
+ {id:'edge', l:'Edge, at right angles', d:1,    F:[0,20]},
+ {id:'mid',  l:'Halfway, at right angles', d:0.5, F:[0,20]},
+ {id:'along',l:'Along the door', d:1, F:[-22,0]},
+ {id:'slant',l:'Edge, at 30° to the door', d:1, F:[-17.3,10]}
+];
+/* 5: swivel chair (illustrative) */
+const SK={I0:1.2, m:2, w0:2.0, r0:0.8};
+/* 6: lever = metre stick (cm, g); supports = NCERT bar (cm, kg) */
+const LEVERS=[
+ {id:'coins', l:'Metre stick with coins', pivot:45, stick:40, loads:[{x:12,m:10}], note:'Two 5 g coins (10 g) at the 12 cm mark balance the stick on a knife edge at 45 cm. Change the stick’s mass with − / + until it balances. That is how you would weigh the stick.'},
+ {id:'seesaw',l:'Two loads', pivot:50, stick:0, loads:[{x:20,m:60},{x:75,m:40}], note:'A light stick (no weight of its own) with two loads. Drag the loads or the pivot until it balances.'}
+];
+const BAR={L:70, W:4.00, k1:10, k2:60, W1:6.00}; // cm, kg (NCERT example: knife edges 10 cm from each end)
+/* 8: block and flywheel */
+const DICT={M:20, R:0.20, F:25};
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fx=(v,n)=>(Math.abs(v)<0.5*Math.pow(10,-n)?0:v).toFixed(n);
+const f1=v=>fx(v,1), f2=v=>fx(v,2), f3=v=>fx(v,3);
+const sg=(v,n)=>(v>0.5*Math.pow(10,-n)?'+':v<-0.5*Math.pow(10,-n)?'−':'')+Math.abs(v).toFixed(n);
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function set(e,attrs){for(const k in attrs)e.setAttribute(k,attrs[k]);}
+function arrow(x1,y1,x2,y2,col,w,head,extra){
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy); if(L<1.5) return '';
+  const h=Math.min(head||9,L*0.6), ux=dx/L, uy=dy/L, bx=x2-ux*h, by=y2-uy*h, px=-uy*h*0.5, py=ux*h*0.5;
+  return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="${w||2}" stroke-linecap="round" ${extra||''}/><polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px).toFixed(1)},${(by+py).toFixed(1)} ${(bx-px).toFixed(1)},${(by-py).toFixed(1)}" fill="${col}"/>`;
+}
+/* ⊙ (out of the page) or ⊗ (into it) */
+function outIn(x,y,r,sign,col){
+  if(Math.abs(sign)<1e-9) return `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${col}" stroke-dasharray="3 3" stroke-width="1.5"/>`;
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="var(--surface)" stroke="${col}" stroke-width="2"/>`+(sign>0?`<circle cx="${x}" cy="${y}" r="${Math.max(2,r*0.22)}" fill="${col}"/>`:
+    `<path d="M${x-r*0.62} ${y-r*0.62}L${x+r*0.62} ${y+r*0.62}M${x-r*0.62} ${y+r*0.62}L${x+r*0.62} ${y-r*0.62}" stroke="${col}" stroke-width="2"/>`);
+}
+/* curved arrow round (cx,cy), radius r, from angle a0 to a1 (radians, svg angles: y down) */
+function curl(cx,cy,r,a0,a1,col,w){
+  const p=a=>[cx+r*Math.cos(a),cy+r*Math.sin(a)], [x0,y0]=p(a0), [x1,y1]=p(a1), large=Math.abs(a1-a0)>Math.PI?1:0, sw=a1>a0?1:0;
+  const tx=-Math.sin(a1)*(sw?1:-1), ty=Math.cos(a1)*(sw?1:-1), h=8;
+  return `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)}A${r} ${r} 0 ${large} ${sw} ${x1.toFixed(1)} ${y1.toFixed(1)}" fill="none" stroke="${col}" stroke-width="${w||2}"/>`+
+    `<polygon points="${(x1+tx*h).toFixed(1)},${(y1+ty*h).toFixed(1)} ${(x1-ty*h*0.45).toFixed(1)},${(y1+tx*h*0.45).toFixed(1)} ${(x1+ty*h*0.45).toFixed(1)},${(y1-tx*h*0.45).toFixed(1)}" fill="${col}"/>`;
+}
+function press(sel,k){document.querySelectorAll(sel+' .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===k));}
+function chips(id,list,onPick){$(id).innerHTML=list.map(x=>`<button class="chip" data-k="${x.id}">${x.l}</button>`).join('');
+  $(id).addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)onPick(c.dataset.k);});}
+function svgPt(svg,e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
+function draggable(svg,target,move){
+  target.addEventListener('pointerdown',e=>{
+    e.preventDefault();
+    const mv=ev=>move(svgPt(svg,ev)), up=()=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);window.removeEventListener('pointercancel',up);};
+    window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);
+    move(svgPt(svg,e));
+  });
+}
+function handle(parent,id,col,r){const g=el('g',{id,class:'drag'},parent);el('circle',{r:(r||8)+8,fill:col,'fill-opacity':0.001},g);el('circle',{r:r||8,fill:col,stroke:'var(--surface)','stroke-width':2},g);return g;}
+function onScreen(elm,cb){if(!('IntersectionObserver' in window)){cb(true);return;}new IntersectionObserver(es=>es.forEach(x=>cb(x.isIntersecting))).observe(elm);}
+/* simple animation driver: f(dt) returns false to stop */
+function animator(btn,svg,step,draw,stepRM){
+  const A={on:false,last:0,vis:true};
+  onScreen(svg,v=>A.vis=v);
+  const loop=ts=>{if(!A.on)return;const dt=A.last?Math.min(0.05,(ts-A.last)/1000):0;A.last=ts;
+    if(A.vis){if(step(dt)===false){A.on=false;btn.textContent='Play';draw();return;}draw();}else A.last=0;
+    requestAnimationFrame(loop);};
+  if(RM) btn.textContent='Step →';
+  btn.addEventListener('click',()=>{if(RM){step(stepRM||0.25);draw();return;}A.on=!A.on;btn.textContent=A.on?'Pause':'Play';if(A.on){A.last=0;requestAnimationFrame(loop);}});
+  A.stop=()=>{A.on=false;btn.textContent=RM?'Step →':'Play';};
+  return A;
+}
+function stepper(container,items){
+  container.innerHTML='';
+  items.forEach(it=>{
+    const r=document.createElement('div'); r.className='mrow';
+    r.innerHTML=`<span class="sw" style="background:${it.col}"></span><span>${it.label}</span><button class="step" aria-label="less">−</button><span class="mval"></span><button class="step" aria-label="more">+</button>`;
+    const [,,minus,val,plus]=r.children, show=()=>{val.textContent=it.fmt(it.get());};
+    minus.onclick=()=>{it.set(Math.max(it.min,+(it.get()-it.step).toFixed(6)));show();};
+    plus.onclick=()=>{it.set(Math.min(it.max,+(it.get()+it.step).toFixed(6)));show();};
+    show(); container.appendChild(r);
+  });
+}
+
+/* =================== 1 · ROTATION =================== */
+const RT={w:1.5,phi:0};
+const RC=[190,145], RPX=126; // centre, disc radius in px
+const rotg=$('rotg');
+(function(){
+  MARKS.forEach((m,i)=>{el('circle',{id:'rc'+i,r:m[0]*RPX,cx:RC[0],cy:RC[1],fill:'none',stroke:'var(--line)','stroke-dasharray':'3 4'},rotg);});
+  el('line',{id:'rspoke',stroke:'var(--ink)','stroke-opacity':.25,'stroke-width':1.5},rotg);
+  el('g',{id:'rarr'},rotg);
+  MARKS.forEach((m,i)=>{el('circle',{id:'rp'+i,r:i?6:5,fill:i?'var(--b'+i+')':'var(--axis)'},rotg);});
+})();
+$('rw').addEventListener('input',e=>{RT.w=+e.target.value;rDraw();});
+function rDraw(){
+  const w=RT.w; $('rwo').textContent=sg(w,1)+' rad/s';
+  let a='';const K=100; // px per (m/s)
+  set($('rspoke'),{x1:RC[0],y1:RC[1],x2:RC[0]+RPX*Math.cos(RT.phi+MARKS[3][1]),y2:RC[1]+RPX*Math.sin(RT.phi+MARKS[3][1])});
+  MARKS.forEach((m,i)=>{const ang=RT.phi+m[1], r=m[0]*RPX, x=RC[0]+r*Math.cos(ang), y=RC[1]+r*Math.sin(ang);
+    set($('rp'+i),{cx:x.toFixed(1),cy:y.toFixed(1)});
+    /* screen: positive ω = anticlockwise seen from above; svg y is down so velocity direction = (sin, −cos)*sign */
+    const v=w*m[0]*DISC_R, L=v*K; if(i) a+=arrow(x,y,x+L*Math.sin(ang),y-L*Math.cos(ang),'var(--vel)',2.4,8);});
+  $('rarr').innerHTML=a;
+  /* side view with ω vector along the axis */
+  const sx=470, sy=160;
+  let s=`<text x="${sx}" y="22" font-size="12" fill="var(--muted)" text-anchor="middle">side view</text>`;
+  s+=`<line x1="${sx}" x2="${sx}" y1="40" y2="252" stroke="var(--axis)" stroke-width="1.5" stroke-dasharray="6 4"/>`;
+  s+=`<ellipse cx="${sx}" cy="${sy}" rx="90" ry="16" fill="var(--ink)" fill-opacity=".06" stroke="var(--ink)" stroke-opacity=".45" stroke-width="2"/>`;
+  if(Math.abs(w)>0.05){const L=Math.min(90,22+Math.abs(w)*22), up=w>0;
+    s+=arrow(sx,sy,sx,up?sy-L:sy+L,'var(--spin)',3.4,11)+`<text x="${sx+10}" y="${up?sy-L+6:sy+L}" font-size="13" font-weight="600" fill="var(--spin)">ω</text>`;
+    /* sense of turning drawn on the ellipse (front edge moving) */
+    s+=arrow(up?sx-20:sx+20,sy+16,up?sx+20:sx-20,sy+16,'var(--vel)',1.6,7);
+  }
+  s+=`<text x="${sx}" y="276" font-size="11.5" fill="var(--muted)" text-anchor="middle">${Math.abs(w)<0.05?'not turning':w>0?'anticlockwise from above: ω up':'clockwise from above: ω down'}</text>`;
+  s+=`<g transform="translate(${RC[0]} ${RC[1]})">${outIn(0,0,9,Math.abs(w)<0.05?0:w,'var(--spin)')}</g>`;
+  $('rotside').innerHTML=s;
+  $('rkv').innerHTML=MARKS.slice(1).map((m,i)=>`<dt><span style="color:var(--b${i+1})">●</span> r = ${f2(m[0]*DISC_R)} m</dt><dd>v = ${f2(Math.abs(w)*m[0]*DISC_R)} m/s</dd>`).join('')+`<dt><span style="color:var(--axis)">●</span> on the axis</dt><dd>v = 0</dd>`;
+  $('rcap').innerHTML=Math.abs(w)<0.05?'Not turning: every point is at rest.':`All points turn through the same angle in the same time: ω = ${f1(Math.abs(w))} rad/s for each. But the rim point covers the biggest circle, so it is fastest: three times the speed of the point at one third of the radius. The point on the axis does not move at all. (The ⊙ or ⊗ at the centre is ω seen end-on.)`;
+}
+animator($('rplay'),$('rot'),dt=>{RT.phi-=RT.w*dt;return true;},rDraw,0.4);
+
+/* =================== 2 · CROSS PRODUCT =================== */
+const CR={a:[4,1],b:[1.5,3],swap:false};
+const CO=[300,200], CU=36;
+const cX=x=>CO[0]+x*CU, cY=y=>CO[1]-y*CU;
+const crs=$('crs');
+chips('cchips',[{id:'perp',l:'At 90°'},{id:'para',l:'Parallel'},{id:'anti',l:'Opposite'}],k=>{
+  if(k==='perp'){CR.a=[4,0];CR.b=[0,3];} if(k==='para'){CR.a=[3,1];CR.b=[6,2];} if(k==='anti'){CR.a=[4,1];CR.b=[-4,-1];} cDraw();});
+(function(){let g='';
+  for(let i=-8;i<=8;i++) g+=`<line x1="${cX(i)}" x2="${cX(i)}" y1="6" y2="324" stroke="var(--line)" stroke-opacity=".6"/>`;
+  for(let j=-3;j<=5;j++) g+=`<line x1="10" x2="590" y1="${cY(j)}" y2="${cY(j)}" stroke="var(--line)" stroke-opacity=".6"/>`;
+  crs.innerHTML=g+`<polygon id="cpar" fill="var(--spin)" fill-opacity=".14" stroke="var(--spin)" stroke-opacity=".4"/><g id="cdyn"></g>`;
+  const ha=handle(crs,'cha','var(--b2)',7), hb=handle(crs,'chb','var(--b3)',7);
+  const snap=v=>Math.round(v*2)/2;
+  draggable(crs,ha,p=>{CR.a=[Math.max(-8,Math.min(8,snap((p.x-CO[0])/CU))),Math.max(-5,Math.min(5,snap((CO[1]-p.y)/CU)))];cDraw();});
+  draggable(crs,hb,p=>{CR.b=[Math.max(-8,Math.min(8,snap((p.x-CO[0])/CU))),Math.max(-5,Math.min(5,snap((CO[1]-p.y)/CU)))];cDraw();});
+})();
+$('cswap').onclick=()=>{CR.swap=!CR.swap;cDraw();};
+function cDraw(){
+  const [P,Q]=CR.swap?[CR.b,CR.a]:[CR.a,CR.b], [nP,nQ]=CR.swap?['b','a']:['a','b'], [cP,cQ]=CR.swap?['var(--b3)','var(--b2)']:['var(--b2)','var(--b3)'];
+  const z=P[0]*Q[1]-P[1]*Q[0], la=Math.hypot(...CR.a), lb=Math.hypot(...CR.b);
+  const dot=CR.a[0]*CR.b[0]+CR.a[1]*CR.b[1], th=(la&&lb)?Math.acos(Math.max(-1,Math.min(1,dot/(la*lb)))):0;
+  set($('cpar'),{points:[[0,0],CR.a,[CR.a[0]+CR.b[0],CR.a[1]+CR.b[1]],CR.b].map(p=>cX(p[0])+','+cY(p[1])).join(' ')});
+  let g=arrow(CO[0],CO[1],cX(CR.a[0]),cY(CR.a[1]),'var(--b2)',3,11)+arrow(CO[0],CO[1],cX(CR.b[0]),cY(CR.b[1]),'var(--b3)',3,11);
+  const lab=(v,n,c)=>{const L=Math.hypot(...v)||1;return `<text x="${cX(v[0])+v[0]/L*14}" y="${cY(v[1])-v[1]/L*14+4}" font-size="15" font-weight="700" fill="${c}" text-anchor="middle">${n}</text>`;};
+  g+=lab(CR.a,'a','var(--b2)')+lab(CR.b,'b','var(--b3)');
+  /* curl from first to second through the smaller angle */
+  if(Math.abs(z)>1e-9){const a0=Math.atan2(-P[1],P[0]), d=Math.atan2(-(P[0]*Q[1]-P[1]*Q[0]),P[0]*Q[0]+P[1]*Q[1]);
+    g+=curl(CO[0],CO[1],30,a0,a0+d,'var(--ink)',1.8);}
+  /* result marker at the parallelogram centre */
+  const mc=[(CR.a[0]+CR.b[0])/2,(CR.a[1]+CR.b[1])/2], rr=Math.min(22,6+Math.sqrt(Math.abs(z))*3);
+  g+=outIn(cX(mc[0]),cY(mc[1]),rr,z,'var(--spin)');
+  g+=`<circle cx="${CO[0]}" cy="${CO[1]}" r="3" fill="var(--ink)"/>`;
+  $('cdyn').innerHTML=g;
+  set($('cha'),{transform:`translate(${cX(CR.a[0])} ${cY(CR.a[1])})`}); set($('chb'),{transform:`translate(${cX(CR.b[0])} ${cY(CR.b[1])})`});
+  $('cbig').innerHTML=`${nP} × ${nQ} = ${Math.abs(z)<1e-9?'0':(z>0?'+':'−')+Math.abs(z).toFixed(1)+' k̂ '+(z>0?'(⊙ out of the screen)':'(⊗ into the screen)')}`;
+  $('ckv').innerHTML=`<dt>${nP}</dt><dd>(${P[0]}, ${P[1]}, 0)</dd><dt>${nQ}</dt><dd>(${Q[0]}, ${Q[1]}, 0)</dd><dt>angle θ between</dt><dd>${(th*180/Math.PI).toFixed(0)}°</dd><dt>ab sin θ = area</dt><dd>${(la*lb*Math.sin(th)).toFixed(1)}</dd><dt>z-part: ${nP}ₓ${nQ}ᵧ − ${nP}ᵧ${nQ}ₓ</dt><dd>${z.toFixed(1)}</dd><dt>a · b (for contrast)</dt><dd>${dot.toFixed(1)}</dd>`;
+  $('ccap').innerHTML=Math.abs(z)<1e-9?'The vectors lie along one line: the parallelogram is squashed flat, its area is zero, so the cross product is zero. This is why a force along a door does nothing to turn it.':
+    `Curl the fingers of your right hand from <b>${nP}</b> to <b>${nQ}</b> the short way round (black arc): your thumb points ${z>0?'out of the screen, ⊙':'into the screen, ⊗'}. Only the part of ${nQ} across ${nP} counts: area = base × height = ${nP} × (${nQ} sin θ). Press “Swap the order”: same area, opposite direction.`;
+}
+
+/* =================== 3 · TORQUE ON A DOOR =================== */
+const DR={d:1,F:[0,20],pre:'edge'};
+const H=[70,200], DPX=460/DOOR_W, FPX=4; // hinge, px per m, px per N
+const door=$('door');
+chips('tchips',TPRE,k=>{const p=TPRE.find(x=>x.id===k);DR.d=p.d;DR.F=p.F.slice();tDraw();});
+(function(){
+  door.innerHTML=`<rect x="${H[0]-20}" y="${H[1]-80}" width="14" height="160" fill="var(--muted)" fill-opacity=".3"/><text x="${H[0]-24}" y="${H[1]-86}" font-size="11" fill="var(--muted)">wall</text>
+    <rect x="${H[0]}" y="${H[1]-6}" width="${DOOR_W*DPX}" height="12" rx="3" fill="var(--b4)" fill-opacity=".45" stroke="var(--b4)"/>
+    <g id="tdyn"></g><circle cx="${H[0]}" cy="${H[1]}" r="6" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><text x="${H[0]+10}" y="${H[1]-12}" font-size="12.5" font-weight="600" fill="var(--ink)">H</text>`;
+  const hp=handle(door,'tp','var(--disp)',7), hf=handle(door,'tf','var(--force)',7);
+  draggable(door,hp,p=>{DR.d=Math.max(0,Math.min(1,Math.round((p.x-H[0])/(DOOR_W*DPX)*20)/20));tDraw();});
+  draggable(door,hf,p=>{p={x:Math.max(12,Math.min(588,p.x)),y:Math.max(12,Math.min(308,p.y))};const P=[H[0]+DR.d*DOOR_W*DPX,H[1]];let F=[(p.x-P[0])/FPX,-(p.y-P[1])/FPX];const L=Math.hypot(...F);if(L>40)F=F.map(v=>v*40/L);DR.F=F.map(v=>Math.round(v));tDraw();});
+})();
+function tDraw(){
+  const P=[H[0]+DR.d*DOOR_W*DPX,H[1]], F=DR.F, r=DR.d*DOOR_W, Fm=Math.hypot(...F), tau=r*F[1]; // door along +x: τz = x·Fy
+  press('#tchips',(TPRE.find(p=>p.d===DR.d&&p.F[0]===F[0]&&p.F[1]===F[1])||{}).id||'');
+  const tip=[P[0]+F[0]*FPX,P[1]-F[1]*FPX];
+  let g='';
+  /* line of action and lever arm */
+  if(Fm>0.5){const u=[F[0]/Fm,-F[1]/Fm], t=(H[0]-P[0])*u[0]+(H[1]-P[1])*u[1], Q=[P[0]+t*u[0],P[1]+t*u[1]];
+    g+=`<line x1="${P[0]-u[0]*700}" y1="${P[1]-u[1]*700}" x2="${P[0]+u[0]*700}" y2="${P[1]+u[1]*700}" stroke="var(--force)" stroke-dasharray="4 5" opacity=".55"/>`;
+    const rp=Math.hypot(Q[0]-H[0],Q[1]-H[1]);
+    if(rp>2){g+=`<line x1="${H[0]}" y1="${H[1]}" x2="${Q[0].toFixed(1)}" y2="${Q[1].toFixed(1)}" stroke="var(--ink)" stroke-width="2.4"/>`;
+      const n=[(Q[0]-H[0])/rp,(Q[1]-H[1])/rp], s=9, c1=[Q[0]-n[0]*s,Q[1]-n[1]*s], sgn=(t>0?1:-1);
+      g+=`<path d="M${c1[0].toFixed(1)} ${c1[1].toFixed(1)}l${(-u[0]*s*sgn).toFixed(1)} ${(-u[1]*s*sgn).toFixed(1)}l${(n[0]*s).toFixed(1)} ${(n[1]*s).toFixed(1)}" fill="none" stroke="var(--ink)" stroke-width="1.2"/>`;
+      g+=`<text x="${((H[0]+Q[0])/2+n[1]*20).toFixed(1)}" y="${((H[1]+Q[1])/2-n[0]*20+4).toFixed(1)}" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">r⊥</text>`;}
+    /* F-perpendicular component (across the door) */
+    if(Math.abs(F[1])>0.5&&Math.abs(F[0])>0.5) g+=arrow(P[0],P[1],P[0],P[1]-F[1]*FPX,'var(--force)',1.6,7,'stroke-dasharray="3 3" opacity=".8"')+`<text x="${P[0]+8}" y="${P[1]-F[1]*FPX/2}" font-size="12" fill="var(--force)">F⊥</text>`;
+  }
+  g+=arrow(H[0],H[1]+16,P[0],P[1]+16,'var(--disp)',2,8)+`<text x="${(H[0]+P[0])/2}" y="${H[1]+34}" font-size="13" font-weight="600" fill="var(--disp)" text-anchor="middle">r = ${f2(r)} m</text>`;
+  g+=arrow(P[0],P[1],tip[0],tip[1],'var(--force)',3.4,12)+`<text x="${tip[0]+(F[0]>=0?10:-10)}" y="${tip[1]+(F[1]>=0?-6:16)}" font-size="13" font-weight="600" fill="var(--force)" text-anchor="${F[0]>=0?'start':'end'}">F</text>`;
+  /* torque sense at the hinge */
+  if(Math.abs(tau)>0.05) g+=curl(H[0],H[1],34,tau>0?0.6:-0.6,tau>0?-1.6:1.6,'var(--spin)',2.4)+`<g transform="translate(${H[0]+40} ${H[1]+(tau>0?-56:56)})">${outIn(0,0,9,tau,'var(--spin)')}</g>`;
+  $('tdyn').innerHTML=g;
+  set($('tp'),{transform:`translate(${P[0]} ${P[1]})`}); set($('tf'),{transform:`translate(${tip[0]} ${tip[1]})`});
+  const th=Fm>0?Math.atan2(F[1],F[0]):0, rp=Fm>0?Math.abs(tau)/Fm:0;
+  $('tbig').innerHTML=`τ = ${Math.abs(tau).toFixed(1)} N m `+(Math.abs(tau)<0.05?'':tau>0?'⊙ (opens anticlockwise)':'⊗ (closes clockwise)');
+  $('tkv').innerHTML=`<dt>r (hinge to push)</dt><dd>${f2(r)} m</dd><dt>F</dt><dd>${Fm.toFixed(1)} N</dd><dt>angle between r and F</dt><dd>${(Math.abs(th)*180/Math.PI).toFixed(0)}°</dd><dt>lever arm r⊥ = r sin θ</dt><dd>${f2(rp)} m</dd><dt>F⊥ = F sin θ</dt><dd>${Math.abs(F[1]).toFixed(1)} N</dd><dt>τ = r⊥F = rF⊥</dt><dd>${Math.abs(tau).toFixed(1)} N m</dd>`;
+  let c;
+  if(Fm<0.5) c='No force, no torque.';
+  else if(Math.abs(tau)<0.05) c=r<0.01?'Pushing at the hinge itself: r = 0, so no torque, however hard you push.':'The force points along the door, so its line passes through the hinge: lever arm r⊥ = 0, torque 0. The door does not turn; the hinge simply pushes back.';
+  else c=`Only the part of F across the door turns it, and it counts more the further out it acts. Same force at half the distance: half the torque. That is why handles are on the edge away from the hinges.`;
+  $('tcap').innerHTML=c;
+}
+
+/* =================== 4 · ANGULAR MOMENTUM =================== */
+const LM={mode:'line',t:0,O:[0,-1.5],m:1};
+const LS=36, LC=[300,150]; // px per m, world origin on screen
+const lX=x=>LC[0]+x*LS, lY=y=>LC[1]-y*LS;
+const LMODES=[
+ {id:'line', l:'Straight line, no force', T:7},
+ {id:'grav', l:'Thrown ball (gravity acts)', T:1.43},
+ {id:'two',  l:'Two particles, opposite ways', T:7}
+];
+chips('lchips',LMODES,k=>{LM.mode=k;LM.t=0;lSetup();});
+function lPart(t){ /* returns list of {p:[x,y], v:[vx,vy], F:[Fx,Fy]} */
+  if(LM.mode==='line') return [{p:[-7+2*t,1.5],v:[2,0],F:[0,0]}];
+  if(LM.mode==='two') return [{p:[-7+2*t,1.2],v:[2,0],F:[0,0]},{p:[7-2*t,-1.2],v:[-2,0],F:[0,0]}];
+  const v0=[3,7], p0=[-2.2,-2.5]; return [{p:[p0[0]+v0[0]*t,p0[1]+v0[1]*t-0.5*G*t*t],v:[v0[0],v0[1]-G*t],F:[0,-LM.m*G]}];
+}
+const Lz=(q,O)=>LM.m*((q.p[0]-O[0])*q.v[1]-(q.p[1]-O[1])*q.v[0]);
+const Tz=(q,O)=>(q.p[0]-O[0])*q.F[1]-(q.p[1]-O[1])*q.F[0];
+function lSetup(){
+  press('#lchips',LM.mode);
+  const md=LMODES.find(x=>x.id===LM.mode);
+  let s='';
+  for(let i=-8;i<=8;i++) s+=`<line x1="${lX(i)}" x2="${lX(i)}" y1="0" y2="280" stroke="var(--line)" stroke-opacity=".5"/>`;
+  for(let j=-3;j<=3;j++) s+=`<line x1="0" x2="600" y1="${lY(j)}" y2="${lY(j)}" stroke="var(--line)" stroke-opacity=".5"/>`;
+  /* full paths */
+  const N=60; const n=lPart(0).length;
+  for(let i=0;i<n;i++){let d='';for(let k=0;k<=N;k++){const q=lPart(md.T*k/N)[i];d+=(k?'L':'M')+lX(q.p[0]).toFixed(1)+' '+lY(q.p[1]).toFixed(1);}
+    s+=`<path d="${d}" fill="none" stroke="var(--muted)" stroke-dasharray="5 5"/>`;}
+  $('lstat').innerHTML=s;
+  $('ldyn').innerHTML='';
+  const d=$('ldyn');
+  el('g',{id:'lvec'},d);
+  for(let i=0;i<n;i++) el('circle',{id:'lq'+i,r:8,fill:i?'var(--b3)':'var(--b2)'},d);
+  const o=el('g',{id:'lO',class:'drag'},d); el('circle',{r:16,fill:'var(--ink)','fill-opacity':0.001},o); el('circle',{r:5,fill:'var(--ink)'},o); el('text',{x:-9,y:18,'font-size':13,'font-weight':600,fill:'var(--ink)','text-anchor':'end'},o).textContent='O';
+  draggable($('lsv'),o,p=>{LM.O=[Math.max(-7.5,Math.min(7.5,Math.round((p.x-LC[0])/LS*2)/2)),Math.max(-3.5,Math.min(3.5,Math.round((LC[1]-p.y)/LS*2)/2))];lGraphSetup();lDraw();});
+  lGraphSetup(); lDraw();
+}
+let LG=null;
+function lGraphSetup(){
+  const md=LMODES.find(x=>x.id===LM.mode), N=120, n=lPart(0).length, series=[];
+  for(let i=0;i<=n;i++) series.push([]);
+  for(let k=0;k<=N;k++){const t=md.T*k/N, Q=lPart(t);let tot=0;Q.forEach((q,i)=>{const l=Lz(q,LM.O);series[i].push([t,l]);tot+=l;});series[n].push([t,tot]);}
+  const all=series.flat().map(p=>p[1]), mx=Math.max(1,...all.map(Math.abs))*1.15;
+  const L=56,R=588,T=12,B=118, X=t=>L+t/md.T*(R-L), Y=v=>(T+B)/2-v/mx*(B-T)/2;
+  let g=`<line x1="${L}" x2="${R}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)"/><line x1="${L}" x2="${L}" y1="${T}" y2="${B}" stroke="var(--muted)"/>`;
+  g+=`<text x="${L-6}" y="${Y(mx/1.15)+4}" font-size="10.5" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono,monospace">${(mx/1.15).toFixed(1)}</text><text x="${L-6}" y="${Y(0)+4}" font-size="10.5" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono,monospace">0</text><text x="${L-6}" y="${Y(-mx/1.15)+4}" font-size="10.5" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono,monospace">${(-mx/1.15).toFixed(1)}</text>`;
+  g+=`<text x="${(L+R)/2}" y="142" font-size="11.5" fill="var(--muted)" text-anchor="middle">time → · vertical: L about O (kg m²/s, + = ⊙ anticlockwise)</text>`;
+  const cols=n>1?['var(--b2)','var(--b3)','var(--spin)']:['var(--spin)'];
+  const use=n>1?series:[series[0]];
+  use.forEach((sr,i)=>{g+=`<path d="${sr.map((p,k)=>(k?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)).join('')}" fill="none" stroke="${cols[i]}" stroke-width="${i===use.length-1?2.6:1.6}" ${n>1&&i<n?'stroke-dasharray="5 4"':''}/>`;});
+  if(n>1) g+=`<text x="${R}" y="${Y(series[n][0][1])-6}" font-size="11" fill="var(--spin)" text-anchor="end">total</text>`;
+  g+=`<g id="lgdyn"></g>`;
+  $('lgr').innerHTML=g; LG={X,Y,n,mx};
+}
+function lDraw(){
+  const Q=lPart(LM.t), O=LM.O, md=LMODES.find(x=>x.id===LM.mode);
+  set($('lO'),{transform:`translate(${lX(O[0])} ${lY(O[1])})`});
+  let v='', tot=0, ttot=0;
+  Q.forEach((q,i)=>{set($('lq'+i),{cx:lX(q.p[0]).toFixed(1),cy:lY(q.p[1]).toFixed(1)});
+    v+=arrow(lX(O[0]),lY(O[1]),lX(q.p[0]),lY(q.p[1]),'var(--disp)',1.8,8);
+    v+=arrow(lX(q.p[0]),lY(q.p[1]),lX(q.p[0]+q.v[0]*0.5),lY(q.p[1]+q.v[1]*0.5),'var(--vel)',2.6,9);
+    if(q.F[1]) v+=arrow(lX(q.p[0]),lY(q.p[1]),lX(q.p[0]),lY(q.p[1])-30,'var(--force)',2.2,8);
+    tot+=Lz(q,O); ttot+=Tz(q,O);});
+  /* perpendicular from O to the line of motion (first particle) */
+  {const q=Q[0], s=Math.hypot(...q.v), u=[q.v[0]/s,q.v[1]/s], t=(O[0]-q.p[0])*u[0]+(O[1]-q.p[1])*u[1], F=[q.p[0]+t*u[0],q.p[1]+t*u[1]];
+    if(LM.mode!=='grav') v+=`<line x1="${lX(O[0])}" y1="${lY(O[1])}" x2="${lX(F[0])}" y2="${lY(F[1])}" stroke="var(--ink)" stroke-width="2" stroke-dasharray="2 3"/><text x="${lX(O[0])+8}" y="${(lY(O[1])+lY(F[1]))/2+4}" font-size="12.5" font-weight="600" fill="var(--ink)">r⊥</text>`;}
+  $('lvec').innerHTML=v;
+  /* swept wedges, one per second (straight line only) */
+  let w='';
+  if(LM.mode==='line'){for(let k=0;k+1<=LM.t+1e-9;k++){const a=lPart(k)[0].p,b=lPart(k+1)[0].p;w+=`<polygon points="${lX(O[0])},${lY(O[1])} ${lX(a[0])},${lY(a[1])} ${lX(b[0])},${lY(b[1])}" fill="var(--spin)" fill-opacity="${k%2?0.10:0.2}"/>`;}}
+  $('lwedge').innerHTML=w;
+  /* graph marker and tangent */
+  const {X,Y}=LG; let g=`<line x1="${X(LM.t)}" x2="${X(LM.t)}" y1="12" y2="118" stroke="var(--ink)" opacity=".35"/><circle cx="${X(LM.t)}" cy="${Y(tot)}" r="4.5" fill="var(--spin)"/>`;
+  if(LM.mode==='grav'){const dt=0.25;g+=`<line x1="${X(LM.t-dt)}" y1="${Y(tot-ttot*dt)}" x2="${X(LM.t+dt)}" y2="${Y(tot+ttot*dt)}" stroke="var(--force)" stroke-width="2"/>`;}
+  $('lgdyn').innerHTML=g;
+  $('lkv').innerHTML=(LM.mode==='two'?Q.map((q,i)=>`<dt>particle ${i+1}</dt><dd>${sg(Lz(q,O),2)} kg m²/s</dd>`).join(''):'')+
+    `<dt>${LM.mode==='two'?'total L':'L about O'}</dt><dd>${sg(tot,2)} kg m²/s ${Math.abs(tot)<0.005?'':tot>0?'⊙':'⊗'}</dd><dt>torque about O</dt><dd>${sg(ttot,2)} N m</dd>`+(LM.mode==='line'?`<dt>r⊥ × p</dt><dd>${f2(Math.abs(tot)/2)} m × 2 kg m/s</dd>`:'');
+  $('lcap').innerHTML=LM.mode==='line'?`Yes: L = r⊥p = ${f2(Math.abs(tot))} kg m²/s, and it never changes. r grows and turns, but r⊥ (the distance from O to the line) is fixed, and so is p. The shaded triangles, one per second, all have the same area: base 2 m along the line, same height r⊥. No force, no torque, so L is constant. Move O onto the line and L becomes 0.`:
+    LM.mode==='grav'?`Gravity gives a torque about O: τ = (x-distance from O) × mg, ${ttot>0?'⊙':'⊗'} here. So L changes, and its rate of change, the slope of the graph, equals τ at every instant (orange tangent line). Move O so it is directly below the ball at some moment: there τ = 0 and the graph is flat for an instant.`:
+    `Two 1 kg particles, same speed, opposite directions, 2.4 m apart. Drag O anywhere: each particle’s L changes (dashed), but the total (solid) is always mvd = 1 × 2 × 2.4 = 4.8 kg m²/s. Their total momentum is zero, and with zero total momentum, L is the same about every point.`;
+}
+const LA=animator($('lplay'),$('lsv'),dt=>{const md=LMODES.find(x=>x.id===LM.mode);LM.t+=dt*(LM.mode==='grav'?0.5:1);if(LM.t>md.T){LM.t=0;}return true;},lDraw,0.5);
+
+/* =================== 5 · SWIVEL CHAIR =================== */
+const SC={r:SK.r0,phi:0};
+const L0=(SK.I0+2*SK.m*SK.r0*SK.r0)*SK.w0;
+$('sr').addEventListener('input',e=>{SC.r=+e.target.value;skDraw();});
+(function(){
+  const b=$('skbody');
+  b.innerHTML=`<circle cx="140" cy="135" r="120" fill="none" stroke="var(--line)" stroke-dasharray="3 5"/><g id="skrot"><line id="skarm" stroke="var(--b4)" stroke-width="7" stroke-linecap="round"/><circle cx="140" cy="135" r="34" fill="var(--b4)" fill-opacity=".45" stroke="var(--b4)"/><circle cx="140" cy="113" r="9" fill="var(--b4)" fill-opacity=".8"/><circle id="skh1" r="11" fill="var(--b3)"/><circle id="skh2" r="11" fill="var(--b3)"/></g>
+    <g id="skw"></g><text x="140" y="264" font-size="11.5" fill="var(--muted)" text-anchor="middle">top view</text>`;
+})();
+function skDraw(){
+  const r=SC.r, I=SK.I0+2*SK.m*r*r, w=L0/I, K=0.5*I*w*w, K0=0.5*L0*SK.w0, px=r*130;
+  $('sro').textContent=f2(r)+' m';
+  set($('skarm'),{x1:140-px,y1:135,x2:140+px,y2:135}); set($('skh1'),{cx:140-px,cy:135}); set($('skh2'),{cx:140+px,cy:135});
+  $('skrot').setAttribute('transform',`rotate(${(-SC.phi*180/Math.PI).toFixed(2)} 140 135)`);
+  $('skw').innerHTML=curl(140,135,52,0.4,-1.9,'var(--spin)',2.4);
+  /* bars */
+  const bars=[['I','kg m²',I,4.5,'var(--b4)'],['ω','rad/s',w,6,'var(--spin)'],['L = Iω','kg m²/s',I*w,9,'var(--spin)'],['K = ½Iω²','J',K,22,'var(--ke)']];
+  $('skbars').innerHTML=bars.map((b,i)=>{const y=40+i*52, W=b[2]/b[3]*240;
+    return `<text x="320" y="${y-6}" font-size="12.5" fill="var(--ink)" font-weight="600">${b[0]}</text><rect x="320" y="${y}" width="${W.toFixed(1)}" height="16" rx="2" fill="${b[4]}" fill-opacity="${i===2?0.45:0.8}"/><text x="${(326+W).toFixed(1)}" y="${y+13}" font-size="11.5" fill="var(--ink)" font-family="IBM Plex Mono,monospace">${b[2].toFixed(2)} ${b[1]}</text>`;}).join('');
+  $('skkv').innerHTML=`<dt>I = I₀ + 2mr²</dt><dd>${I.toFixed(2)} kg m²</dd><dt>ω = L/I</dt><dd>${w.toFixed(2)} rad/s</dd><dt>L</dt><dd>${(I*w).toFixed(2)} kg m²/s (fixed)</dd><dt>kinetic energy ½Iω²</dt><dd>${K.toFixed(1)} J</dd><dt>change from arms out</dt><dd>${sg(K-K0,1)} J</dd>`;
+  $('skcap').innerHTML=Math.abs(r-SK.r0)<0.005?'Arms out at 0.80 m. Slide the dumbbells inward.':
+    r<SK.r0?`Arms in to ${f2(r)} m: I fell to ${(I/(SK.I0+2*SK.m*SK.r0**2)).toFixed(2)} of its first value, so ω rose by the inverse factor, ${(w/SK.w0).toFixed(2)}×, keeping Iω fixed. The kinetic energy L²/2I went <b>up</b> by ${f1(K-K0)} J. It comes from the person’s muscles: pulling a spinning dumbbell inward takes work, because it “wants” to fly outward.`:
+    `Arms further out: I is larger, so the spin slows. The kinetic energy falls; the dumbbells do work on the arms as they are let out.`;
+}
+animator($('skplay'),$('sk'),dt=>{const I=SK.I0+2*SK.m*SC.r*SC.r;SC.phi+=L0/I*dt;return true;},skDraw,0.3);
+
+/* =================== 6 · EQUILIBRIUM =================== */
+const EQ={mode:'lever',lev:null,load:30,cpl:'couple',O:[300,200]};
+const EMODES=[{id:'lever',l:'Lever on a pivot'},{id:'bar',l:'Bar on two supports'},{id:'couple',l:'Two forces on a free rod'}];
+chips('echips',EMODES.concat([]),k=>{EQ.mode=k;store('sys-tam-eq',k);eBuild();});
+chips('ecpl',[{id:'couple',l:'Opposite (a couple)'},{id:'same',l:'Same direction'}],k=>{EQ.cpl=k;eDraw();});
+$('eload').addEventListener('input',e=>{EQ.load=+e.target.value;eDraw();});
+const eq=$('eq');
+const SX0=50, SPC=5, BY=120; // lever: stick 0 cm at x=50, 5 px per cm
+function eBuild(){
+  press('#echips',EQ.mode);
+  $('emass').hidden=EQ.mode!=='lever'; $('eloadrow').hidden=EQ.mode!=='bar'; $('ecpl').hidden=EQ.mode!=='couple';
+  eq.innerHTML='<g id="estat"></g><g id="edyn"></g><g id="ehand"></g>';
+  if(EQ.mode==='lever'){
+    if(!EQ.lev) EQ.lev=JSON.parse(JSON.stringify(LEVERS[0]));
+    const items=[{label:'stick mass',col:'var(--b4)',get:()=>EQ.lev.stick,set:v=>{EQ.lev.stick=v;eDraw();},fmt:v=>v+' g',min:0,max:150,step:2}]
+      .concat(EQ.lev.loads.map((L,i)=>({label:'load '+(i+1),col:i?'var(--b3)':'var(--b2)',get:()=>L.m,set:v=>{L.m=v;eDraw();},fmt:v=>v+' g',min:5,max:150,step:5})));
+    $('emass').innerHTML='<div class="chips" id="elev"></div><div class="stack" id="emst"></div>';
+    $('elev').innerHTML=LEVERS.map(x=>`<button class="chip" data-k="${x.id}">${x.l}</button>`).join('');
+    $('elev').onclick=e=>{const c=e.target.closest('.chip');if(!c)return;EQ.lev=JSON.parse(JSON.stringify(LEVERS.find(x=>x.id===c.dataset.k)));eBuild();};
+    press('#elev',EQ.lev.id);
+    stepper($('emst'),items);
+    const hg=$('ehand');
+    EQ.lev.loads.forEach((L,i)=>{const h=handle(hg,'eL'+i,i?'var(--b3)':'var(--b2)',8);draggable(eq,h,p=>{L.x=Math.max(0,Math.min(100,Math.round((p.x-SX0)/SPC)));eDraw();});});
+    const pv=el('g',{id:'ePv',class:'drag'},hg); el('rect',{x:-16,y:-4,width:32,height:34,fill:'var(--ink)','fill-opacity':0.001},pv); el('path',{d:'M0 0L-12 22H12Z',fill:'var(--muted)'},pv);
+    draggable(eq,pv,p=>{EQ.lev.pivot=Math.max(5,Math.min(95,Math.round((p.x-SX0)/SPC)));eDraw();});
+  }
+  if(EQ.mode==='couple'){const o=el('g',{id:'eO',class:'drag'},$('ehand'));el('circle',{r:16,fill:'var(--ink)','fill-opacity':0.001},o);el('circle',{r:5,fill:'var(--ink)'},o);el('text',{x:9,y:18,'font-size':13,'font-weight':600,fill:'var(--ink)'},o).textContent='O';
+    draggable(eq,o,p=>{EQ.O=[Math.max(20,Math.min(580,p.x)),Math.max(20,Math.min(250,p.y))];eDraw();});}
+  eDraw();
+}
+function eDraw(){
+  let g='';
+  if(EQ.mode==='lever'){
+    const L=EQ.lev, gk=G/1000, pv=L.pivot;
+    /* moments about the pivot (N m), anticlockwise + : a weight left of the pivot turns it anticlockwise */
+    const parts=[...L.loads.map((q,i)=>({x:q.x,m:q.m,c:i?'var(--b3)':'var(--b2)',n:'load '+(i+1)})),...(L.stick>0?[{x:50,m:L.stick,c:'var(--b4)',n:'stick (at its CG, 50 cm)'}]:[])];
+    let ac=0,cw=0; parts.forEach(p=>{const t=p.m*gk*(pv-p.x)/100; if(t>0)ac+=t;else cw-=t;});
+    const net=ac-cw, tot=parts.reduce((s,p)=>s+p.m,0)*gk, bal=Math.abs(net)<1e-7;
+    const ang=bal?0:Math.max(-9,Math.min(9,-net/(Math.max(ac,cw)||1)*9)); // degrees, svg rotate (+ = clockwise)
+    const px=SX0+pv*SPC;
+    let b=`<g transform="rotate(${ang.toFixed(2)} ${px} ${BY})"><rect x="${SX0}" y="${BY-6}" width="${100*SPC}" height="10" rx="2" fill="var(--b4)" fill-opacity="${L.stick>0?0.55:0.2}" stroke="var(--b4)"/>`;
+    for(let c=0;c<=100;c+=10) b+=`<line x1="${SX0+c*SPC}" x2="${SX0+c*SPC}" y1="${BY-6}" y2="${BY-1}" stroke="var(--ink)" stroke-opacity=".5"/>`;
+    parts.forEach(p=>{const x=SX0+p.x*SPC, Lw=Math.min(72,14+p.m*0.45);
+      b+=arrow(x,BY+4,x,BY+4+Lw,p.c,2.6,8);
+      if(p.n.startsWith('load')) b+=`<rect x="${x-9}" y="${BY-6-Math.min(26,4+p.m*0.18)}" width="18" height="${Math.min(26,4+p.m*0.18)}" fill="${p.c}" rx="2"/>`;});
+    b+=`<text x="${SX0}" y="${BY-12}" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono,monospace">0</text><text x="${SX0+100*SPC}" y="${BY-12}" font-size="10.5" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono,monospace">100 cm</text></g>`;
+    if(bal){const Lr=Math.min(60,10+tot/gk*0.35); b+=arrow(px,BY+30+Lr,px,BY+30,'var(--force)',2.6,8)+`<text x="${px+8}" y="${BY+30+Lr}" font-size="12" fill="var(--force)">R = ${(tot).toFixed(3)} N</text>`;}
+    /* moment bars */
+    const mx=Math.max(ac,cw,1e-9), W=200;
+    b+=`<text x="${SX0}" y="238" font-size="12" fill="var(--ink)">anticlockwise moments</text><rect x="${SX0+150}" y="227" width="${(ac/mx*W).toFixed(1)}" height="13" fill="var(--spin)" fill-opacity=".8"/><text x="${SX0+156+ac/mx*W}" y="238" font-size="11" fill="var(--ink)" font-family="IBM Plex Mono,monospace">${(ac*1000).toFixed(1)} mN m</text>`;
+    b+=`<text x="${SX0}" y="260" font-size="12" fill="var(--ink)">clockwise moments</text><rect x="${SX0+150}" y="249" width="${(cw/mx*W).toFixed(1)}" height="13" fill="var(--spin)" fill-opacity=".4"/><text x="${SX0+156+cw/mx*W}" y="260" font-size="11" fill="var(--ink)" font-family="IBM Plex Mono,monospace">${(cw*1000).toFixed(1)} mN m</text>`;
+    $('edyn').innerHTML=b;
+    /* handles follow the tilted stick */
+    const rotP=(x,y)=>{const a=ang*Math.PI/180,dx=x-px,dy=y-BY;return [px+dx*Math.cos(a)-dy*Math.sin(a),BY+dx*Math.sin(a)+dy*Math.cos(a)];};
+    L.loads.forEach((q,i)=>{const p=rotP(SX0+q.x*SPC,BY-36);set($('eL'+i),{transform:`translate(${p[0].toFixed(1)} ${p[1].toFixed(1)})`});});
+    set($('ePv'),{transform:`translate(${px} ${BY+5})`});
+    $('ebig').textContent=bal?'Balanced':net>0?'Tips anticlockwise (left end down)':'Tips clockwise (right end down)';
+    $('ekv').innerHTML=parts.map(p=>`<dt>${p.n}: ${p.m} g at ${p.x} cm</dt><dd>${sg(p.m*gk*(pv-p.x)/100*1000,1)} mN m</dd>`).join('')+`<dt>pivot at</dt><dd>${pv} cm</dd><dt>net torque about pivot</dt><dd>${sg(net*1000,1)} mN m</dd>`;
+    $('ecap').innerHTML=(bal?'<b>Principle of moments:</b> anticlockwise moments = clockwise moments, load × load arm = effort × effort arm. And the pivot pushes up with R equal to the total weight, so ΣF = 0 too. ':'Not balanced: the moments about the pivot do not cancel, so the stick starts to turn. Drag a load, the pivot, or change a mass. ')+L.note;
+    $('enote').innerHTML='Mechanical advantage of a lever = load/effort = effort arm/load arm. A long effort arm (crowbar, spanner) lets a small force lift a big load. The stick’s own weight acts at its centre of gravity, its middle for a uniform stick (<a href="centre-of-mass.html">Centre of Mass</a>, section 6).';
+    return;
+  }
+  if(EQ.mode==='bar'){
+    const x0=55, s=7, y=110, X=c=>x0+c*s, W=BAR.W*G, W1=BAR.W1*G, xl=EQ.load;
+    /* torques about K1: R2 (k2−k1) = W (35−k1) + W1 (xl−k1) */
+    const R2=(W*(BAR.L/2-BAR.k1)+W1*(xl-BAR.k1))/(BAR.k2-BAR.k1), R1=W+W1-R2, k=0.9; // the load stays on the bar, so both reactions stay positive
+    $('eloado').textContent=xl+' cm from A';
+    g+=`<rect x="${X(0)}" y="${y-7}" width="${BAR.L*s}" height="14" rx="2" fill="var(--b4)" fill-opacity=".5" stroke="var(--b4)"/>`;
+    g+=`<text x="${X(0)-6}" y="${y+4}" font-size="12" font-weight="600" fill="var(--ink)" text-anchor="end">A</text><text x="${X(BAR.L)+6}" y="${y+4}" font-size="12" font-weight="600" fill="var(--ink)">B</text>`;
+    [BAR.k1,BAR.k2].forEach((c,i)=>{g+=`<path d="M${X(c)} ${y+7}l-10 26h20Z" fill="var(--muted)"/><text x="${X(c)}" y="${y+48}" font-size="11.5" fill="var(--muted)" text-anchor="middle">K${i+1} (${c} cm)</text>`;});
+    g+=arrow(X(BAR.L/2),y,X(BAR.L/2),y+W*k,'var(--force)',2.6,8)+`<text x="${X(BAR.L/2)+6}" y="${y+W*k+4}" font-size="11.5" fill="var(--force)">W = ${W.toFixed(1)} N</text>`;
+    g+=`<line x1="${X(xl)}" x2="${X(xl)}" y1="${y}" y2="${y+20}" stroke="var(--ink)"/><rect x="${X(xl)-13}" y="${y+20}" width="26" height="22" rx="3" fill="var(--b3)" fill-opacity=".8"/>`+arrow(X(xl),y+42,X(xl),y+42+W1*k,'var(--force)',2.6,8)+`<text x="${X(xl)+(xl<35?-8:8)}" y="${y+46+W1*k}" font-size="11.5" fill="var(--force)" text-anchor="${xl<35?'end':'start'}">${W1.toFixed(1)} N</text>`;
+    [[BAR.k1,R1,'R₁'],[BAR.k2,R2,'R₂']].forEach(([c,R,n])=>{if(R>0.05) g+=arrow(X(c),y-7,X(c),y-7-R*k,'var(--force)',2.6,8)+`<text x="${X(c)+8}" y="${y-R*k+4}" font-size="12" font-weight="600" fill="var(--force)">${n} = ${R.toFixed(2)} N</text>`;
+      else g+=`<text x="${X(c)}" y="${y-16}" font-size="12" fill="var(--flag)" text-anchor="middle">${n} = ${R.toFixed(1)} N</text>`;});
+    $('edyn').innerHTML=g;
+    $('ebig').textContent='In equilibrium';
+    $('ekv').innerHTML=`<dt>bar</dt><dd>70 cm, 4.00 kg, W at 35 cm</dd><dt>load</dt><dd>6.00 kg at ${xl} cm</dd><dt>R₁ at K₁</dt><dd>${R1.toFixed(2)} N</dd><dt>R₂ at K₂</dt><dd>${R2.toFixed(2)} N</dd><dt>R₁ + R₂</dt><dd>${(R1+R2).toFixed(2)} N = W + load</dd>`;
+    $('ecap').innerHTML=
+      `Two unknowns, two conditions. ΣF = 0 gives R₁ + R₂ = ${(W+W1).toFixed(1)} N. Take torques about K₁ (R₁ then has no lever arm): R₂ × 50 cm = W × 25 cm + load × ${xl-BAR.k1} cm. Move the load toward a support and that support takes more of it.`+(xl===30?' At 30 cm this is the textbook example: about 55 N and 43 N.':'');
+    $('enote').innerHTML='Trick: take torques about the point where an unknown force acts. That force drops out of the equation. When ΣF = 0, the torque equation holds about every point, so you may choose the most convenient one.';
+    return;
+  }
+  /* couple */
+  const y=130, xa=170, xb=430, Fp=60, O=EQ.O, s=EQ.cpl==='couple'?-1:1, Fn=10; // forces 10 N, rod 1 m (260 px)
+  const pxm=260; // px per m
+  g+=`<rect x="${xa}" y="${y-5}" width="${xb-xa}" height="10" rx="3" fill="var(--b4)" fill-opacity=".45" stroke="var(--b4)"/><text x="${xa-8}" y="${y+4}" font-size="12" font-weight="600" fill="var(--ink)" text-anchor="end">A</text><text x="${xb+8}" y="${y+4}" font-size="12" font-weight="600" fill="var(--ink)">B</text>`;
+  g+=arrow(xa,y,xa,y-Fp,'var(--force)',3,10)+`<text x="${xa+8}" y="${y-Fp+8}" font-size="12.5" font-weight="600" fill="var(--force)">F</text>`;
+  g+=arrow(xb,y,xb,y-s*Fp,'var(--force)',3,10)+`<text x="${xb+8}" y="${y-s*Fp+(s>0?8:4)}" font-size="12.5" font-weight="600" fill="var(--force)">${s>0?'F':'−F'}</text>`;
+  /* torques about O: τ = Σ (x−xO)·Fy  (y up) */
+  const Ax=(xa-O[0])/pxm, Bx=(xb-O[0])/pxm, tau=Ax*Fn+Bx*s*Fn, netF=Fn+s*Fn;
+  g+=`<line x1="${O[0]}" y1="${O[1]}" x2="${xa}" y2="${y}" stroke="var(--disp)" stroke-dasharray="3 4"/><line x1="${O[0]}" y1="${O[1]}" x2="${xb}" y2="${y}" stroke="var(--disp)" stroke-dasharray="3 4"/>`;
+  if(Math.abs(tau)>0.01) g+=curl(300,y,40,tau>0?0.5:-0.5+Math.PI,tau>0?-2.2:Math.PI+2.2,'var(--spin)',2.2);
+  $('edyn').innerHTML=g;
+  set($('eO'),{transform:`translate(${O[0]} ${O[1]})`});
+  $('ebig').textContent=s<0?'ΣF = 0, but Στ ≠ 0: it spins':'Στ about the middle = 0, but ΣF ≠ 0: it moves off';
+  $('ekv').innerHTML=`<dt>forces</dt><dd>10 N each, rod 1.00 m</dd><dt>net force</dt><dd>${netF.toFixed(0)} N ${netF?'up':''}</dd><dt>torque about O</dt><dd>${sg(tau,2)} N m</dd>`;
+  $('ecap').innerHTML=s<0?`Equal and opposite forces with different lines of action form a <b>couple</b>. Net force zero, so the CM stays put; but the torque is F × (distance between the lines) = 10 × 1.00 = 10 N m, and it comes out the same whichever point O you take moments about. Drag O and check. A couple produces rotation without translation: turning a bottle cap, a compass needle in Earth’s field.`:
+    `Both forces up: the net force is 20 N, so the rod accelerates upward. About its middle the two torques cancel (rotational equilibrium without translational equilibrium). But drag O: now the torque changes with O, because ΣF ≠ 0.`;
+  $('enote').innerHTML='For forces in one plane, equilibrium needs three conditions: ΣF<sub>x</sub> = 0, ΣF<sub>y</sub> = 0 and Στ = 0 about an axis perpendicular to the plane. In three dimensions there are six (three for force, three for torque).';
+}
+
+/* =================== 7 · KINEMATICS =================== */
+const KM={w0:1200,a:120,T:16,f:1};
+chips('kchips',[{id:'motor',l:'Motor: 1200 → 3120 rpm in 16 s'},{id:'brake',l:'Fan switched off'}],k=>{
+  if(k==='motor'){KM.w0=1200;KM.a=120;KM.T=16;}else{KM.w0=1200;KM.a=-100;KM.T=12;} KM.f=1;
+  $('kw0').value=KM.w0;$('ka').value=KM.a;$('kT').value=KM.T;$('kt').value=1;kDraw();});
+['kw0','ka','kT'].forEach(id=>$(id).addEventListener('input',e=>{KM[{kw0:'w0',ka:'a',kT:'T'}[id]]=+e.target.value;kDraw();}));
+$('kt').addEventListener('input',e=>{KM.f=+e.target.value;kDraw();});
+const rpm2=v=>v*2*Math.PI/60;
+function kDraw(){
+  const {w0,a,T}=KM, t=KM.f*T, w=w0+a*t, th=(w0*t+0.5*a*t*t)/60; // th in revolutions
+  press('#kchips',w0===1200&&a===120&&T===16?'motor':w0===1200&&a===-100&&T===12?'brake':'');
+  $('kw0o').textContent=w0+' rpm'; $('kao').textContent=sg(a,0)+' rpm/s'; $('kTo').textContent=T+' s'; $('kto').textContent=t.toFixed(2)+' s';
+  const wEnd=w0+a*T, top=Math.max(w0,wEnd,10)*1.1, bot=Math.min(0,w0,wEnd)*1.1;
+  const L=58,R=440,Tp=14,B=230, X=s=>L+s/T*(R-L), Y=v=>B-(v-bot)/(top-bot)*(B-Tp);
+  let g=`<line x1="${L}" x2="${R}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)"/><line x1="${L}" x2="${L}" y1="${Tp}" y2="${B}" stroke="var(--muted)"/>`;
+  const st=[100,200,500,1000,2000][[100,200,500,1000,2000].findIndex(v=>(top-bot)/v<=7)]||2000;
+  for(let v=Math.ceil(bot/st)*st;v<=top;v+=st) g+=`<line x1="${L-4}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-7}" y="${Y(v)+4}" font-size="10.5" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono,monospace">${v}</text>`;
+  const ts=T<=10?2:T<=20?4:5;
+  for(let s=0;s<=T;s+=ts) g+=`<text x="${X(s)}" y="${B+16}" font-size="10.5" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono,monospace">${s}</text>`;
+  g+=`<text x="${(L+R)/2}" y="${B+34}" font-size="11.5" fill="var(--muted)" text-anchor="middle">time (s)</text><text transform="translate(14 ${(Tp+B)/2}) rotate(-90)" font-size="11.5" fill="var(--muted)" text-anchor="middle">ω (rpm) · like v</text>`;
+  /* shaded area: rectangle ω0·t and triangle ½αt² */
+  g+=`<polygon points="${X(0)},${Y(0)} ${X(0)},${Y(w0)} ${X(t)},${Y(w0)} ${X(t)},${Y(0)}" fill="var(--spin)" fill-opacity=".22"/>`;
+  g+=`<polygon points="${X(0)},${Y(w0)} ${X(t)},${Y(w)} ${X(t)},${Y(w0)}" fill="var(--spin)" fill-opacity=".42"/>`;
+  g+=`<line x1="${X(0)}" y1="${Y(w0)}" x2="${X(T)}" y2="${Y(wEnd)}" stroke="var(--spin)" stroke-width="2.6"/><circle cx="${X(t)}" cy="${Y(w)}" r="5" fill="var(--spin)"/>`;
+  if(t>T*0.15) g+=`<text x="${X(t/2)}" y="${(Y(0)+Y(Math.min(w0,w)))/2+4}" font-size="11.5" fill="var(--ink)" text-anchor="middle">ω₀t</text>`;
+  if(t>T*0.15&&Math.abs(a*t)>(top-bot)*0.12) g+=`<text x="${X(t*0.68)}" y="${(Y(w0)*2+Y(w))/3+(a>0?6:-2)}" font-size="11.5" fill="var(--ink)" text-anchor="middle">½αt²</text>`;
+  /* wheel turned by θ */
+  const cx=525, cy=110, r=58, ang=(th%1)*2*Math.PI;
+  g+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="var(--ink)" fill-opacity=".05" stroke="var(--ink)" stroke-opacity=".5" stroke-width="2"/><line x1="${cx}" y1="${cy}" x2="${cx+r}" y2="${cy}" stroke="var(--line)" stroke-dasharray="3 3"/>`;
+  g+=`<line x1="${cx}" y1="${cy}" x2="${(cx+r*Math.cos(-ang)).toFixed(1)}" y2="${(cy+r*Math.sin(-ang)).toFixed(1)}" stroke="var(--spin)" stroke-width="3"/><circle cx="${cx}" cy="${cy}" r="4" fill="var(--ink)"/>`;
+  g+=`<text x="${cx}" y="${cy+r+22}" font-size="12" fill="var(--ink)" text-anchor="middle" font-family="IBM Plex Mono,monospace">${th.toFixed(1)} rev</text><text x="${cx}" y="${cy+r+38}" font-size="10.5" fill="var(--muted)" text-anchor="middle">(spoke shows the last part turn)</text>`;
+  $('kg').innerHTML=g;
+  const thr=th*2*Math.PI;
+  $('kkv').innerHTML=`<dt>ω₀</dt><dd>${w0} rpm = ${rpm2(w0).toFixed(1)} rad/s</dd><dt>α</dt><dd>${sg(a,0)} rpm/s = ${sg(rpm2(a),2)} rad/s²</dd><dt>ω at t</dt><dd>${w.toFixed(0)} rpm = ${rpm2(w).toFixed(1)} rad/s</dd><dt>θ = area</dt><dd>${thr.toFixed(0)} rad = ${th.toFixed(1)} rev</dd><dt>check ω² − ω₀² = 2αθ</dt><dd>${(rpm2(w)**2-rpm2(w0)**2).toFixed(0)} = ${(2*rpm2(a)*thr).toFixed(0)}</dd>`;
+  $('kcap').innerHTML=w<0?'ω has gone negative: the wheel stopped and is now turning the other way (only if the torque keeps acting; a real fan just stops). The area below the axis counts as negative angle.':
+    (w0===1200&&a===120&&T===16&&KM.f===1)?'The textbook motor: 1200 rpm = 40π rad/s to 3120 rpm = 104π rad/s in 16 s, so α = 4π rad/s². The area is 640π + 512π = 1152π rad, which is 576 revolutions.':
+    'Drag the time slider: the shaded area (angle turned) grows as a rectangle plus a triangle, while ω climbs the straight line.';
+}
+
+/* =================== 8 · DICTIONARY =================== */
+const DT={t:1.265};
+const I8=0.5*DICT.M*DICT.R*DICT.R, a8=DICT.F/DICT.M, tau8=DICT.F*DICT.R, al8=tau8/I8, t2m=Math.sqrt(2*(2/DICT.R)/al8);
+$('dt').addEventListener('input',e=>{DT.t=+e.target.value;dDraw();});
+$('d2m').onclick=()=>{DT.t=t2m;$('dt').value=t2m;dDraw();};
+function dDraw(){
+  const t=DT.t, x=0.5*a8*t*t, v=a8*t, th=0.5*al8*t*t, w=al8*t;
+  $('dto').textContent=t.toFixed(3)+' s';
+  /* picture */
+  const s=55, bx=40+x*s;
+  let g=`<line x1="10" x2="300" y1="150" y2="150" stroke="var(--muted)" stroke-width="1.5"/>`;
+  g+=`<rect x="${bx.toFixed(1)}" y="110" width="44" height="40" rx="3" fill="var(--b4)" fill-opacity=".55" stroke="var(--b4)"/>`+arrow(bx+44,130,bx+44+DICT.F*2.2,130,'var(--force)',3,10)+`<text x="${bx+48}" y="122" font-size="12" fill="var(--force)">25 N</text>`;
+  g+=arrow(40,170,40+x*s,170,'var(--disp)',2,8)+`<text x="44" y="186" font-size="11.5" fill="var(--disp)">x = ${x.toFixed(2)} m</text>`;
+  g+=`<text x="10" y="22" font-size="12" fill="var(--muted)">block, M = 20 kg, frictionless floor</text>`;
+  const cx=440, cy=95, R=60;
+  g+=`<line x1="320" x2="320" y1="10" y2="180" stroke="var(--line)"/><text x="340" y="22" font-size="12" fill="var(--muted)">flywheel, I = 0.4 kg m²</text>`;
+  g+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="var(--b1)" fill-opacity=".25" stroke="var(--b1)" stroke-width="2"/>`;
+  for(let k=0;k<3;k++){const a=-th+k*2*Math.PI/3;g+=`<line x1="${cx}" y1="${cy}" x2="${(cx+R*Math.cos(a)).toFixed(1)}" y2="${(cy+R*Math.sin(a)).toFixed(1)}" stroke="var(--b1)" stroke-width="${k?1.5:3}"/>`;}
+  g+=`<circle cx="${cx}" cy="${cy}" r="5" fill="var(--ink)"/>`;
+  /* cord leaves the top of the rim to the right; cord end moves Rθ */
+  const off=Math.min(60,DICT.R*th*s);
+  g+=`<line x1="${cx}" y1="${cy-R}" x2="${cx+60+off}" y2="${cy-R}" stroke="var(--ink)" stroke-width="1.6"/>`+arrow(cx+60+off,cy-R,cx+60+off+DICT.F*2.2,cy-R,'var(--force)',3,10)+`<text x="${cx+64+off}" y="${cy-R-8}" font-size="12" fill="var(--force)">25 N</text>`;
+  g+=`<text x="${cx}" y="${cy+R+22}" font-size="11.5" fill="var(--spin)" text-anchor="middle">θ = ${th.toFixed(2)} rad · cord off = Rθ = ${(DICT.R*th).toFixed(2)} m</text>`;
+  $('dict').innerHTML=g;
+  const rows=[
+   ['position','x',x.toFixed(2)+' m','angle','θ',th.toFixed(2)+' rad'],
+   ['velocity','v = at',v.toFixed(2)+' m/s','angular velocity','ω = αt',w.toFixed(2)+' rad/s'],
+   ['acceleration','a = F/M',a8.toFixed(2)+' m/s²','angular acceleration','α = τ/I',al8.toFixed(2)+' rad/s²'],
+   ['mass (inertia)','M','20 kg','moment of inertia','I = ½MR²',I8.toFixed(2)+' kg m²'],
+   ['force','F','25 N','torque','τ = FR',tau8.toFixed(2)+' N m'],
+   ['work done','W = Fx',(DICT.F*x).toFixed(1)+' J','work done','W = τθ',(tau8*th).toFixed(1)+' J'],
+   ['kinetic energy','½Mv²',(0.5*DICT.M*v*v).toFixed(1)+' J','kinetic energy','½Iω²',(0.5*I8*w*w).toFixed(1)+' J'],
+   ['power','P = Fv',(DICT.F*v).toFixed(1)+' W','power','P = τω',(tau8*w).toFixed(1)+' W'],
+   ['momentum','p = Mv',(DICT.M*v).toFixed(1)+' kg m/s','angular momentum','L = Iω',(I8*w).toFixed(2)+' kg m²/s'],
+   ['Newton’s 2nd law','F = dp/dt','','rotational 2nd law','τ = dL/dt','']];
+  const at2=Math.abs(t-t2m)<0.003;
+  $('pairs').innerHTML=`<div class="hd">Translation (block)</div><div></div><div class="hd">Rotation about a fixed axis (flywheel)</div>`+
+    rows.map((r,i)=>`<div class="c${at2&&(i===5||i===6)?' hl':''}" style="border-left-color:var(--b4)"><b>${r[0]}</b> <span>${r[1]}${r[2]?' = '+r[2]:''}</span></div><div class="lk">↔</div><div class="c${at2&&(i===5||i===6)?' hl':''}" style="border-left-color:var(--b1)"><b>${r[3]}</b> <span>${r[4]}${r[5]?' = '+r[5]:''}</span></div>`).join('');
+  $('dcap').innerHTML=at2?`2 m of cord is off: θ = 2/0.20 = 10 rad. The pull has done τθ = 5 × 10 = 50 J of work on the wheel, and its kinetic energy is ½Iω² = ½ × 0.4 × 250 = 50 J: they match, because frictionless bearings waste nothing. The block’s column matches too (${(DICT.F*x).toFixed(1)} J and ${(0.5*DICT.M*v*v).toFixed(1)} J), but it is less: in the same time the block moved only ${x.toFixed(2)} m, while 2 m of cord came off the wheel.`:
+    `Same 25 N, same 20 kg, very different motion: the wheel’s mass sits at up to 0.20 m from the axle, so I = 0.4 kg m², and τ = FR = 5 N m gives α = ${al8.toFixed(1)} rad/s². Every row on the right is the row on the left with x → θ, v → ω, a → α, M → I, F → τ. In each column, work done = kinetic energy at every instant. A heavy flywheel (large I) is used in engines for exactly this reason: it needs a large torque to change its ω quickly, so it smooths out jerky motion.`;
+}
+animator($('dplay'),$('dict'),dt=>{DT.t+=dt*0.5;if(DT.t>=2){DT.t=2;$('dt').value=2;return false;}$('dt').value=DT.t;return true;},dDraw,0.2);
+
+/* =================== 9 · QUIZ =================== */
+const qa=[3,-4,5], qb=[-2,1,-3], qx=[qa[1]*qb[2]-qa[2]*qb[1],qa[2]*qb[0]-qa[0]*qb[2],qa[0]*qb[1]-qa[1]*qb[0]];
+const vec=v=>`${v[0]<0?'−':''}${Math.abs(v[0])}î ${v[1]<0?'−':'+'} ${Math.abs(v[1])===1?'':Math.abs(v[1])}ĵ ${v[2]<0?'−':'+'} ${Math.abs(v[2])}k̂`;
+const qLad=(()=>{const W=20*G, base=1, len=3, h=Math.sqrt(len*len-base*base);return {W,F1:W*(base/2)/h};})();
+const qRot={P:180*200}, qMot=(()=>{const w0=2*Math.PI*1200/60,w=2*Math.PI*3120/60,t=16,a=(w-w0)/t;return {rev:(w0*t+0.5*a*t*t)/(2*Math.PI)};})();
+const qCyl=(()=>{const M=3,R=0.4,F=30,al=F*R/(M*R*R);return {al,a:al*R};})();
+const QUIZ=[
+ {q:'You can push a door with 20 N at its edge. To get the same torque pushing at the middle of the door (at right angles), you need:',o:['10 N','20 N','40 N','80 N'],a:2,
+  why:'τ = rF. Half the distance needs twice the force: 40 N. That is why door handles are at the edge.'},
+ {q:`a = ${vec(qa)} and b = ${vec(qb)}. What is a × b?`,o:[vec(qx),vec(qx.map(v=>-v)),'−25 (a number)',vec([qx[0],-qx[1],-qx[2]])],a:0,
+  why:`Determinant: î(a<sub>y</sub>b<sub>z</sub> − a<sub>z</sub>b<sub>y</sub>) = î((−4)(−3) − 5·1) = 7î; ĵ(a<sub>z</sub>b<sub>x</sub> − a<sub>x</sub>b<sub>z</sub>) = ĵ(5(−2) − 3(−3)) = −ĵ; k̂(a<sub>x</sub>b<sub>y</sub> − a<sub>y</sub>b<sub>x</sub>) = k̂(3·1 − (−4)(−2)) = −5k̂. −25 is a · b, the dot product. b × a is the second option.`},
+ {q:'A child on a frictionless turntable spins at 40 rev/min with arms out, then folds them, making the moment of inertia 2/5 of what it was. New spin rate?',o:['16 rev/min','40 rev/min','100 rev/min','250 rev/min'],a:2,
+  why:'No external torque, so Iω is fixed: ω = 40 × 5/2 = 100 rev/min. The kinetic energy ½Iω² = L²/2I goes up 2.5 times; the child’s muscles supply it.'},
+ {q:'A particle moves at constant velocity along a straight line that misses point O. Its angular momentum about O:',o:['is zero','grows as it gets further away','is constant','first rises, then falls'],a:2,
+  why:'l = r⊥p. Both r⊥ (distance from O to the line) and p are fixed. Also, no force means no torque, so l cannot change.'},
+ {q:'To keep a rotor turning steadily at 200 rad/s, an engine must supply 180 N m (to beat friction). Power needed?',o:['0.9 kW','3.6 kW','36 kW','360 kW'],a:2,
+  why:`P = τω = 180 × 200 = ${qRot.P} W = ${qRot.P/1000} kW. (Without friction, steady rotation would need no torque at all.)`},
+ {q:'A motor speeds up uniformly from 1200 rpm to 3120 rpm in 16 s. How many revolutions does it make meanwhile?',o:['432','576','768','1152'],a:1,
+  why:`Average speed × time: (1200 + 3120)/2 = 2160 rpm = 36 rev/s; 36 × 16 = ${qMot.rev.toFixed(0)} revolutions. (1152 is the angle in units of π rad.)`},
+ {q:'A rope wound round a hollow cylinder (3 kg, radius 0.40 m, free on its axle) is pulled with 30 N. Angular acceleration?',o:['12.5 rad/s²','25 rad/s²','50 rad/s²','10 rad/s²'],a:1,
+  why:`I = MR² = 0.48 kg m², τ = FR = 12 N m, α = τ/I = ${qCyl.al.toFixed(0)} rad/s². The rope’s acceleration is αR = ${qCyl.a.toFixed(0)} m/s².`},
+ {q:'A 3 m ladder of mass 20 kg leans on a frictionless wall, foot 1 m from the wall. Force from the wall (g = 9.8 m s⁻²)?',o:['about 35 N','about 69 N','98 N','196 N'],a:0,
+  why:`Torques about the foot: the wall pushes horizontally at height √(3² − 1²) = 2√2 m; the weight ${qLad.W.toFixed(0)} N acts 0.5 m out from the foot. F × 2√2 = ${qLad.W.toFixed(0)} × 0.5, so F = ${qLad.F1.toFixed(1)} N. Floor friction must equal it, toward the wall.`},
+ {q:'Equal torques act on a hollow cylinder and a solid sphere of the same mass and radius, each free about its central axis. After the same time, which spins faster?',o:['The hollow cylinder','The solid sphere','Same'],a:1,
+  why:'α = τ/I. I<sub>cylinder</sub> = MR², I<sub>sphere</sub> = 2/5 MR², so the sphere gets 2.5 times the angular acceleration and spins faster.'}
+];
+function renderQuiz(){
+  $('quiz').innerHTML=QUIZ.map((q,i)=>`<div class="panel"><p class="qn">Q${i+1}</p><p>${q.q}</p>
+    <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');
+}
+$('quiz').addEventListener('click',e=>{
+  const b=e.target.closest('.opt'); if(!b||b.disabled) return;
+  const box=b.parentElement, q=QUIZ[+box.dataset.i], j=+b.dataset.j;
+  box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+  const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+});
+$('qreset').onclick=renderQuiz;
+
+/* =================== INIT =================== */
+rDraw(); cDraw(); tDraw(); lSetup(); skDraw();
+{const m=load('sys-tam-eq'); if(EMODES.some(x=>x.id===m)) EQ.mode=m;} eBuild();
+kDraw(); dDraw(); renderQuiz();
+</script>
+</body>
+</html>

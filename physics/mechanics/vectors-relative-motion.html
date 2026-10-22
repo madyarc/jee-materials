@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vectors and Relative Motion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&family=Noto+Sans+Symbols+2&text=%E2%86%90%E2%86%91%E2%86%92%E2%86%93%E2%86%94%E2%86%97%E2%87%8C%E2%87%92%E2%87%94%E2%88%82%E2%88%88%E2%88%92%E2%88%93%E2%88%9A%E2%88%9D%E2%88%9E%E2%88%AB%E2%89%88%E2%89%A0%E2%89%A1%E2%89%A4%E2%89%A5%E2%89%AA%E2%89%AB%E2%8A%95%E2%8A%97%E2%8A%99%E2%8A%A5%E2%96%B2%E2%96%B6%E2%97%80%E2%97%8B%E2%97%8F%E2%9C%93%E2%9C%97%E2%9D%9A%E2%9F%82%E2%9F%A8%E2%9F%A9&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) scalars vs vectors, path vs displacement  (2) drag A and B: add, subtract, scale
+   (3) components with a rotating arrow (î ĵ, or slanted axes)  (4) position, displacement, velocity on a curved path
+   (5) rain and umbrella, ground frame vs walker frame  (6) river and boat, ground frame vs water frame */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --acc:#b0377a; --disp:#1f8f87; --ke:#0f8a4f; --pe:#8a6d1f;
+  --va:#2f7d4a; --vb:#8b5a2b; --water:#2c56cc;
+  --f-display:"Bricolage Grotesque","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","Noto Sans Math","Noto Sans Symbols 2",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a;
+  --va:#6fcf8f; --vb:#d29a62; --water:#7d9dff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a;
+  --va:#6fcf8f; --vb:#d29a62; --water:#7d9dff; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:8.5em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:8ch;text-align:right;white-space:nowrap}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+a{color:var(--accent)}
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+/* page-specific */
+.sort{max-width:560px;display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;font-size:14px}
+.sort .pair{display:flex;gap:4px}
+.sort .pair .chip.right{background:var(--ok);border-color:var(--ok);color:var(--surface)}
+.sort .pair .chip.wrong{background:var(--flag);border-color:var(--flag);color:var(--surface)}
+.sortwhy{grid-column:1/-1;font-size:13px;color:var(--muted);margin:-2px 0 4px}
+.halo{paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round}
+.river .slider label{min-width:12.5em}
+.drag{cursor:grab;touch-action:none} .drag:active{cursor:grabbing}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Vectors and Relative Motion</h1>
+    <p class="lede">On a line, a sign (+ or −) is enough to say which way. In a plane it is not: you need an arrow. This page builds the arrow rules by hand (adding, subtracting, scaling, splitting into components) and then uses them for what they are for: velocity in a plane, and how the same rain or the same river looks different to people who are moving.</p>
+  </header>
+
+  <!-- 1 · scalars vs vectors -->
+  <section class="stack">
+    <div>
+      <h2>1 · Scalars, vectors, and why displacement ignores the path</h2>
+      <p class="lede">A <b>scalar</b> is one number with a unit. A <b>vector</b> has a size and a direction, and two of them combine by the triangle rule (section 2). Pick a route from P to Q: the distance walked changes, the displacement arrow does not.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="pchips" role="group" aria-label="Choose a route"></div>
+        <div class="svgbox"><svg id="paths" viewBox="0 0 520 260" role="img" aria-label="Routes from P to Q with the displacement arrow" style="min-width:380px"></svg></div>
+        <div class="legend"><span><i style="background:var(--muted)"></i>route walked</span><span><i style="background:var(--disp)"></i>displacement (position vector change)</span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="pkv"></dl>
+        <p class="cap key" id="pcap"></p>
+        <p class="cap">Displacement is the straight arrow from start to finish, so its size can never exceed the path length. They are equal only if you never turn. A round trip has zero displacement: the <b>null vector</b>, which has no direction at all.</p>
+      </div>
+    </div>
+    <div class="panel stack">
+      <h3>Scalar or vector? Sort them, then check.</h3>
+      <div class="sort" id="sort"></div>
+    </div>
+  </section>
+
+  <!-- 2 · add, subtract, scale -->
+  <section class="stack">
+    <div>
+      <h2>2 · Adding, subtracting, scaling: drag the arrow heads</h2>
+      <p class="lede">Drag the round handles at the tips of <b style="color:var(--va)">A</b> and <b style="color:var(--vb)">B</b>. A vector is only a length and a direction, so sliding it parallel to itself leaves it the same vector. That is what lets us put B’s tail on A’s head.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="vmode" role="group" aria-label="Operation"></div>
+        <div class="svgbox"><svg id="vplay" viewBox="0 0 560 400" role="img" aria-label="Two draggable vectors and their sum" style="min-width:380px"></svg></div>
+        <div class="slider" id="lamrow"><label for="lam">multiplier λ</label><input type="range" id="lam" min="-2" max="2" step="0.1" value="1.5"><output id="lamo"></output></div>
+        <label class="muted"><input type="checkbox" id="vcomp"> show x and y components of the result</label>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="vtitle"></p>
+        <dl class="kv" id="vkv"></dl>
+        <div><h3>How big can the sum be?</h3>
+        <svg id="ineq" viewBox="0 0 320 64" role="img" aria-label="Range of possible resultants" style="width:100%;max-width:400px;height:auto;display:block"></svg></div>
+        <p class="cap key" id="vcap"></p>
+      </div>
+    </div>
+    <div class="qgrid" id="q2"></div>
+  </section>
+
+  <!-- 3 · components -->
+  <section class="stack">
+    <div>
+      <h2>3 · Components: turn the arrow</h2>
+      <p class="lede">Any arrow in the plane is “so much along î plus so much along ĵ”, where î and ĵ are arrows of length 1 along x and y. Turn A all the way round and watch the components shrink, vanish and change sign.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="cmode" role="group" aria-label="Axes"></div>
+        <div class="svgbox"><svg id="comp" viewBox="0 0 420 340" role="img" aria-label="A vector and its components" style="min-width:340px;max-width:520px;margin:0 auto"></svg></div>
+        <div class="slider"><label for="cang">direction θ</label><input type="range" id="cang" min="0" max="359" step="1" value="35"><output id="cango"></output></div>
+        <div class="slider"><label for="cmag">size |A|</label><input type="range" id="cmag" min="0.5" max="5" step="0.1" value="4"><output id="cmago"></output></div>
+        <div class="slider" id="cphirow" hidden><label for="cphi">angle of b</label><input type="range" id="cphi" min="30" max="150" step="1" value="60"><output id="cphio"></output></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="ckv"></dl>
+        <p class="cap key" id="ccap"></p>
+        <p class="cap">In three dimensions the same idea adds k̂ along z: A = A<sub>x</sub>î + A<sub>y</sub>ĵ + A<sub>z</sub>k̂, with |A| = √(A<sub>x</sub>² + A<sub>y</sub>² + A<sub>z</sub>²). A unit vector along A is n̂ = A/|A|: same direction, length 1, no unit.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q3"></div>
+  </section>
+
+  <!-- 4 · motion in a plane -->
+  <section class="stack">
+    <div>
+      <h2>4 · Position, displacement and velocity on a curved path</h2>
+      <p class="lede">A particle moves so that x = 3t and y = 2t² (metres, t in seconds). Its position vector r runs from the origin to the particle. Shrink the time gap Δt and watch the average velocity Δr/Δt swing round onto the tangent.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="plane" viewBox="0 0 460 360" role="img" aria-label="Curved path with position, displacement and velocity vectors" style="min-width:360px"></svg></div>
+        <div class="slider"><label for="pt">time t</label><input type="range" id="pt" min="0" max="1.2" step="0.05" value="0.6"><output id="pto"></output></div>
+        <div class="slider"><label for="pdt">gap Δt</label><input type="range" id="pdt" min="0.02" max="0.8" step="0.02" value="0.6"><output id="pdto"></output></div>
+        <label class="muted"><input type="checkbox" id="pacc"> show the change in velocity Δv</label>
+        <div class="legend"><span><i style="background:var(--disp)"></i>position r, displacement Δr</span><span><i style="background:var(--vel)"></i>velocity</span><span><i style="background:var(--acc)"></i>Δv (sets the acceleration)</span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="plkv"></dl>
+        <p class="cap key" id="plcap"></p>
+        <p class="cap">In components: v = (dx/dt) î + (dy/dt) ĵ = 3 î + 4t ĵ m s⁻¹, and a = dv/dt = 4 ĵ m s⁻². x and y behave as two separate straight-line motions happening at once: x at steady speed, y with steady acceleration. Unlike motion on a line, v and a here point in different directions; in a plane the angle between them can be anything from 0° to 180°.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q4"></div>
+  </section>
+
+  <!-- 5 · rain -->
+  <section class="stack">
+    <div>
+      <h2>5 · Rain and an umbrella: two observers, one rain</h2>
+      <p class="lede">Velocity always means velocity <i>relative to someone</i>. The rain’s velocity relative to you is v<sub>rain</sub> − v<sub>you</sub>: you subtract your own motion. (On a line this is just subtraction of signed numbers; see <a href="motion-in-a-line.html">Motion in a Straight Line</a>.) Hold the umbrella against that relative velocity. Left: seen from the ground. Right: seen by the person.</p>
+    </div>
+    <div class="panel stack">
+      <div class="chips" id="rpre" role="group" aria-label="Presets"></div>
+      <div class="two">
+        <div><h3>Seen from the ground</h3><svg id="rg" viewBox="0 0 300 240" role="img" aria-label="Rain and person seen from the ground" style="width:100%;height:auto;display:block"></svg></div>
+        <div><h3>Seen by the person</h3><svg id="rm" viewBox="0 0 300 240" role="img" aria-label="Rain seen by the person" style="width:100%;height:auto;display:block"></svg></div>
+      </div>
+      <div class="split">
+        <div class="stack">
+          <div class="slider"><label for="rv">rain falls at</label><input type="range" id="rv" min="5" max="40" step="1" value="35"><output id="rvo"></output></div>
+          <div class="slider"><label for="rw">wind</label><input type="range" id="rw" min="-20" max="20" step="1" value="-12"><output id="rwo"></output></div>
+          <div class="slider"><label for="ru">you walk</label><input type="range" id="ru" min="-15" max="15" step="1" value="0"><output id="ruo"></output></div>
+          <div class="row"><button class="btn primary" id="rplay">Pause</button><span class="muted">East is to the right. Rain is slowed down for the picture.</span></div>
+        </div>
+        <div class="stack">
+          <svg id="rtri" viewBox="0 0 280 190" role="img" aria-label="Vector triangle for the rain" style="width:100%;max-width:320px;height:auto;display:block"></svg>
+          <p class="cap key" id="rcap"></p>
+        </div>
+      </div>
+    </div>
+    <div class="qgrid" id="q5"></div>
+  </section>
+
+  <!-- 6 · river -->
+  <section class="stack">
+    <div>
+      <h2>6 · Crossing a river: shortest time or shortest path?</h2>
+      <p class="lede">The boat’s engine gives it speed v <i>relative to the water</i>; the water itself moves downstream at u. Relative to the ground the boat moves at v<sub>boat</sub> + u. Choose where to point the boat, then cross. Left: seen from the bank. Right: seen by someone drifting on a raft.</p>
+    </div>
+    <div class="panel stack">
+      <div class="two">
+        <div><h3>Seen from the bank</h3><svg id="bg" viewBox="0 0 320 270" role="img" aria-label="Boat crossing seen from the bank" style="width:100%;height:auto;display:block"></svg></div>
+        <div><h3>Seen from a raft drifting with the water</h3><svg id="bw" viewBox="0 0 320 270" role="img" aria-label="Boat crossing seen from the water" style="width:100%;height:auto;display:block"></svg></div>
+      </div>
+      <div class="split">
+        <div class="stack river">
+          <div class="row"><button class="btn primary" id="bplay">Cross</button><button class="btn" id="bmin">Shortest time</button><button class="btn" id="bzero">Shortest path</button></div>
+          <div class="slider"><label for="bal">heading α (upstream +)</label><input type="range" id="bal" min="-80" max="80" step="1" value="0"><output id="balo"></output></div>
+          <div class="slider"><label for="bv">boat speed v (in water)</label><input type="range" id="bv" min="1" max="8" step="0.5" value="5"><output id="bvo"></output></div>
+          <div class="slider"><label for="bu">river speed u</label><input type="range" id="bu" min="0" max="8" step="0.5" value="3"><output id="buo"></output></div>
+          <div class="slider"><label for="bd">river width d</label><input type="range" id="bd" min="40" max="200" step="10" value="100"><output id="bdo"></output></div>
+        </div>
+        <div class="stack">
+          <dl class="kv" id="bkv"></dl>
+          <p class="cap key" id="bcap"></p>
+        </div>
+      </div>
+      <p class="cap">Only the across-component v cos α carries the boat over, and the current cannot help or hurt it, so the time is d/(v cos α): shortest when α = 0, pointing straight across, whatever u is. The drift is (u − v sin α) × time. To land straight opposite, aim upstream so that v sin α = u. That needs v &gt; u; if the river is faster than the boat, the least drift comes from sin α = v/u instead.</p>
+    </div>
+    <div class="qgrid" id="q6"></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> point particles; velocities constant (steady rain, steady wind, a river flowing at the same speed everywhere across its width, which real rivers do not: they are slower near the banks); speeds much less than light, so velocities simply subtract. Pictures are to scale within each panel; the rain is shown in slow motion.</p>
+    <p><b>Based on:</b> NCERT Physics Class 11, "Motion in a Plane"; H. C. Verma, <i>Concepts of Physics</i> Vol. 1, "Physics and Mathematics" and "Rest and Motion: Kinematics".</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+/* Section 1 routes on a 1 m grid (x right, y up). P = (0,0), Q = (8,3). */
+const ROUTES=[
+ {id:'str',  l:'Straight',        pts:[[0,0],[8,3]]},
+ {id:'ell',  l:'Along the roads', pts:[[0,0],[8,0],[8,3]]},
+ {id:'det',  l:'A detour',        pts:[[0,0],[2,4],[5,4],[6,1],[8,3]]},
+ {id:'back', l:'There and back',  pts:[[0,0],[8,3],[0,0]]}
+];
+/* Section 1 sort: s = scalar? */
+const SORT=[
+ {n:'mass',s:true},{n:'displacement',s:false},{n:'speed',s:true},{n:'velocity',s:false},
+ {n:'temperature',s:true},{n:'force',s:false},{n:'time',s:true},{n:'acceleration',s:false},
+ {n:'electric current',s:true,why:'It flows one way along a wire, but two currents meeting at a junction just add as numbers (2 A + 3 A = 5 A whatever the angle). They do not obey the triangle rule, so current is a scalar.'}
+];
+/* Section 5 presets: rain speed, wind (+ = toward east), walker (+ = toward east), all m/s */
+const RPRE=[
+ {l:'Wind 12 m/s toward west, you stand', v:35, w:-12, u:0},
+ {l:'No wind, you walk east', v:20, w:0, u:6},
+ {l:'Wind behind you, same speed', v:20, w:6, u:6}
+];
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const D2R=Math.PI/180, R2D=180/Math.PI;
+const f1=v=>(Math.abs(v)<0.05?0:v).toFixed(1), f2=v=>(Math.abs(v)<0.005?0:v).toFixed(2);
+const sg1=v=>{const s=f1(v);return s.startsWith('-')?'−'+s.slice(1):s;};
+const sg2=v=>{const s=f2(v);return s.startsWith('-')?'−'+s.slice(1):s;};
+const vec=(x,y,f)=>{f=f||sg1;const b=f(y);return `${f(x)} î ${b.startsWith('−')?'− '+b.slice(1):'+ '+b} ĵ`;};
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function el(parent,tag,attrs,txt){const e=document.createElementNS(NS,tag);if(attrs)for(const k in attrs)e.setAttribute(k,attrs[k]);if(txt!=null)e.textContent=txt;parent.appendChild(e);return e;}
+function at(e,attrs){for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+function show(e,b){e.style.display=b?'':'none';}
+/* persistent arrow: line + head; update with set() */
+function mkArrow(parent,col,w,opt){
+  opt=opt||{};
+  const g=el(parent,'g',{}), l=el(g,'line',{stroke:col,'stroke-width':w,'stroke-linecap':'round'}), p=el(g,'polygon',{fill:col});
+  if(opt.dash) l.setAttribute('stroke-dasharray',opt.dash);
+  if(opt.op) g.setAttribute('opacity',opt.op);
+  const head=opt.head||9;
+  return {g,set(x1,y1,x2,y2){
+    const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy);
+    if(L<1.5){g.style.display='none';return;} g.style.display='';
+    const h=Math.min(head,L*0.6),ux=dx/L,uy=dy/L,bx=x2-ux*h,by=y2-uy*h,px=-uy*h*0.5,py=ux*h*0.5;
+    at(l,{x1:x1.toFixed(1),y1:y1.toFixed(1),x2:bx.toFixed(1),y2:by.toFixed(1)});
+    p.setAttribute('points',`${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px).toFixed(1)},${(by+py).toFixed(1)} ${(bx-px).toFixed(1)},${(by-py).toFixed(1)}`);
+  },hide(){g.style.display='none';}};
+}
+function chips(box,list,key,onPick){
+  box.innerHTML=list.map((x,i)=>`<button class="chip" data-k="${key?x[key]:i}">${x.l}</button>`).join('');
+  box.addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)onPick(c.dataset.k);});
+}
+function press(box,k){box.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===String(k)));}
+function svgPt(svg,e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const m=svg.getScreenCTM();return m?p.matrixTransform(m.inverse()):{x:0,y:0};}
+/* pointer drag on an element; cb(svgX, svgY) */
+function draggable(svg,handle,cb){
+  let on=false;
+  handle.addEventListener('pointerdown',e=>{on=true;try{handle.setPointerCapture(e.pointerId);}catch(_){}e.preventDefault();});
+  handle.addEventListener('pointermove',e=>{if(!on)return;const p=svgPt(svg,e);cb(p.x,p.y);});
+  const end=e=>{on=false;try{handle.releasePointerCapture(e.pointerId);}catch(_){}};
+  handle.addEventListener('pointerup',end);handle.addEventListener('pointercancel',end);
+}
+/* quiz: items {q, o:[], a, why} */
+function quiz(box,items){
+  const render=()=>{box.innerHTML=items.map((q,i)=>`<div class="panel"><p class="qn">Predict</p><p>${q.q}</p>
+    <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');};
+  box.addEventListener('click',e=>{
+    const b=e.target.closest('.opt'); if(!b||b.disabled) return;
+    const o=b.parentElement, q=items[+o.dataset.i], j=+b.dataset.j;
+    o.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+    const w=o.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+  });
+  render();
+}
+/* run an animation only while its element is on screen */
+function visWatch(elm,cb){
+  if(!('IntersectionObserver' in window)){cb(true);return;}
+  new IntersectionObserver(es=>es.forEach(en=>cb(en.isIntersecting)),{threshold:0.05}).observe(elm);
+}
+function angDeg(x,y){let a=Math.atan2(y,x)*R2D;if(a<0)a+=360;return a;}
+
+/* =================== 1 · ROUTES =================== */
+{
+  const svg=$('paths'), S=46, O=[50,200];
+  const X=x=>O[0]+x*S, Y=y=>O[1]-y*S;
+  for(let i=-1;i<=10;i++) el(svg,'line',{x1:X(i),x2:X(i),y1:Y(-1),y2:Y(4.2),stroke:'var(--line)'});
+  for(let j=-1;j<=4;j++) el(svg,'line',{x1:X(-1),x2:X(9.8),y1:Y(j),y2:Y(j),stroke:'var(--line)'});
+  el(svg,'text',{x:X(9.8)-4,y:Y(-1)-6,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'grid: 1 m');
+  const route=el(svg,'polyline',{fill:'none',stroke:'var(--muted)','stroke-width':3,'stroke-linejoin':'round','stroke-dasharray':'7 5'});
+  const disp=mkArrow(svg,'var(--disp)',3.4,{head:13});
+  const zero=el(svg,'text',{x:X(0)+12,y:Y(0)+24,'font-size':12.5,fill:'var(--disp)','font-weight':600},'displacement = 0 (null vector)');
+  el(svg,'circle',{cx:X(0),cy:Y(0),r:6,fill:'var(--ink)'}); el(svg,'text',{x:X(0)-10,y:Y(0)+5,'font-size':14,'font-weight':600,fill:'var(--ink)','text-anchor':'end'},'P');
+  el(svg,'circle',{cx:X(8),cy:Y(3),r:6,fill:'var(--ink)'}); el(svg,'text',{x:X(8)+11,y:Y(3)+5,'font-size':14,'font-weight':600,fill:'var(--ink)'},'Q');
+  const box=$('pchips');
+  const pick=k=>{
+    const r=ROUTES.find(x=>x.id===k)||ROUTES[0]; press(box,r.id); store('kin2-route',r.id);
+    route.setAttribute('points',r.pts.map(p=>X(p[0])+','+Y(p[1])).join(' '));
+    let L=0; for(let i=1;i<r.pts.length;i++) L+=Math.hypot(r.pts[i][0]-r.pts[i-1][0],r.pts[i][1]-r.pts[i-1][1]);
+    const e=r.pts[r.pts.length-1], d=Math.hypot(e[0],e[1]);
+    if(d<1e-9){disp.hide();show(zero,true);} else {disp.set(X(0),Y(0),X(e[0]),Y(e[1]));show(zero,false);}
+    $('pkv').innerHTML=`<dt>path length (scalar)</dt><dd>${L.toFixed(2)} m</dd><dt>displacement</dt><dd>${d<1e-9?'0':`${e[0]} î + ${e[1]} ĵ m`}</dd><dt>its size</dt><dd>${d.toFixed(2)} m</dd>`;
+    $('pcap').innerHTML=d<1e-9?'Back where you started: you walked '+L.toFixed(2)+' m, but your position has not changed, so the displacement is the null vector.'
+      : r.id==='str'?'Straight with no turning: path length equals the size of the displacement.'
+      : `You walked ${L.toFixed(2)} m, yet the displacement is the same ${d.toFixed(2)} m arrow from P to Q as on every other route.`;
+  };
+  chips(box,ROUTES,'id',pick); pick(load('kin2-route')||'det');
+
+  /* sort */
+  const sb=$('sort');
+  sb.innerHTML=SORT.map((s,i)=>`<span>${s.n}</span><span class="pair" data-i="${i}"><button class="chip" data-v="1">scalar</button><button class="chip" data-v="0">vector</button></span><span class="sortwhy" id="sw${i}" hidden></span>`).join('');
+  sb.addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;const pr=c.parentElement;if(pr.dataset.done)return;
+    const s=SORT[+pr.dataset.i], ok=(c.dataset.v==='1')===s.s; pr.dataset.done=1;
+    pr.querySelectorAll('.chip').forEach(x=>{if((x.dataset.v==='1')===s.s)x.classList.add('right');else if(x===c)x.classList.add('wrong');});
+    if(s.why){const w=$('sw'+pr.dataset.i);w.hidden=false;w.textContent=s.why;}
+  });
+}
+
+/* =================== 2 · PLAYGROUND =================== */
+const VP={A:[4,1],B:[1.5,3],mode:'tri',lam:1.5,comp:false};
+{
+  const svg=$('vplay'), S=40, O=[200,250];
+  const X=x=>O[0]+x*S, Y=y=>O[1]-y*S, XMIN=-4.5,XMAX=8.5,YMIN=-3.5,YMAX=6;
+  for(let i=Math.ceil(XMIN);i<=XMAX;i++) el(svg,'line',{x1:X(i),x2:X(i),y1:Y(YMIN),y2:Y(YMAX),stroke:'var(--line)'});
+  for(let j=Math.ceil(YMIN);j<=YMAX;j++) el(svg,'line',{x1:X(XMIN),x2:X(XMAX),y1:Y(j),y2:Y(j),stroke:'var(--line)'});
+  el(svg,'line',{x1:X(XMIN),x2:X(XMAX),y1:Y(0),y2:Y(0),stroke:'var(--muted)'}); el(svg,'line',{x1:X(0),x2:X(0),y1:Y(YMIN),y2:Y(YMAX),stroke:'var(--muted)'});
+  el(svg,'text',{x:X(XMAX)-2,y:Y(0)-6,'font-size':12,fill:'var(--muted)','text-anchor':'end'},'x');
+  el(svg,'text',{x:X(0)+6,y:Y(YMAX)+12,'font-size':12,fill:'var(--muted)'},'y');
+  el(svg,'text',{x:X(XMIN)+4,y:Y(YMIN)-6,'font-size':11,fill:'var(--muted)'},'grid: 1 unit');
+  const gC=el(svg,'g',{}); /* components */
+  const cxA=mkArrow(gC,'var(--va)',4,{head:7,op:.75}), cxB=mkArrow(gC,'var(--vb)',4,{head:7,op:.75}), cyA=mkArrow(gC,'var(--va)',4,{head:7,op:.75}), cyB=mkArrow(gC,'var(--vb)',4,{head:7,op:.75});
+  const pjx=el(gC,'line',{stroke:'var(--ink)','stroke-dasharray':'3 4',opacity:.6}), pjy=el(gC,'line',{stroke:'var(--ink)','stroke-dasharray':'3 4',opacity:.6});
+  const cxt=el(gC,'text',{'font-size':11.5,fill:'var(--ink)','font-family':'IBM Plex Mono,monospace'}), cyt=el(gC,'text',{'font-size':11.5,fill:'var(--ink)','font-family':'IBM Plex Mono,monospace'});
+  const pl1=el(svg,'line',{stroke:'var(--muted)','stroke-dasharray':'5 5'}), pl2=el(svg,'line',{stroke:'var(--muted)','stroke-dasharray':'5 5'});
+  const ghostB=mkArrow(svg,'var(--vb)',2,{dash:'4 4',op:.5}), ghostA=mkArrow(svg,'var(--va)',2,{dash:'4 4',op:.5});
+  const aA=mkArrow(svg,'var(--va)',3.2,{head:12}), aB=mkArrow(svg,'var(--vb)',3.2,{head:12});
+  const aA2=mkArrow(svg,'var(--va)',3.2,{head:12}), aB2=mkArrow(svg,'var(--vb)',3.2,{head:12}), aNB=mkArrow(svg,'var(--vb)',3.2,{head:12,dash:'7 4'});
+  const aR=mkArrow(svg,'var(--ink)',4,{head:14}), aR2=mkArrow(svg,'var(--ink)',2.4,{head:11,dash:'6 4'});
+  const tA=el(svg,'text',{'font-size':14,'font-weight':700,fill:'var(--va)'},'A'), tB=el(svg,'text',{'font-size':14,'font-weight':700,fill:'var(--vb)'},'B');
+  const tR=el(svg,'text',{'font-size':13,'font-weight':700,fill:'var(--ink)'}), tR2=el(svg,'text',{'font-size':12,'font-weight':600,fill:'var(--ink)'}), tX=el(svg,'text',{'font-size':12.5,'font-weight':600,fill:'var(--vb)'});
+  const hA=el(svg,'circle',{r:11,fill:'var(--va)','fill-opacity':.22,stroke:'var(--va)','stroke-width':2,class:'drag'});
+  const hB=el(svg,'circle',{r:11,fill:'var(--vb)','fill-opacity':.22,stroke:'var(--vb)','stroke-width':2,class:'drag'});
+  el(svg,'circle',{cx:X(0),cy:Y(0),r:4,fill:'var(--ink)'}); el(svg,'text',{x:X(0)-8,y:Y(0)+16,'font-size':12,fill:'var(--ink)','text-anchor':'end'},'O');
+  const snap=v=>Math.round(v*2)/2, clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const toU=(x,y)=>[clamp(snap((x-O[0])/S),XMIN,XMAX),clamp(snap((O[1]-y)/S),YMIN,YMAX)];
+  draggable(svg,hA,(x,y)=>{VP.A=toU(x,y);drawVP();});
+  draggable(svg,hB,(x,y)=>{VP.B=toU(x,y);drawVP();});
+  /* label placed off the middle of an arrow, on its left-hand side */
+  function lab(t,x1,y1,x2,y2,txt,off){const mx=(x1+x2)/2,my=(y1+y2)/2,L=Math.hypot(x2-x1,y2-y1)||1,nx=(y2-y1)/L,ny=-(x2-x1)/L,o=off||14;
+    at(t,{x:(mx+nx*o).toFixed(1),y:(my+ny*o+4).toFixed(1),'text-anchor':'middle'}); if(txt!=null)t.textContent=txt; show(t,true);}
+  const MODES=[{id:'tri',l:'A + B (triangle)'},{id:'para',l:'A + B (parallelogram)'},{id:'comm',l:'B + A = A + B'},{id:'sub',l:'A − B'},{id:'lam',l:'λA'}];
+  chips($('vmode'),MODES,'id',k=>{VP.mode=k;store('kin2-vmode',k);drawVP();});
+  {const m=load('kin2-vmode'); if(MODES.some(x=>x.id===m)) VP.mode=m;}
+  $('lam').addEventListener('input',e=>{VP.lam=+e.target.value;drawVP();});
+  $('vcomp').addEventListener('change',e=>{VP.comp=e.target.checked;drawVP();});
+  const ineq=$('ineq'); const iq={};
+  {const L=14,Rr=306;iq.L=L;iq.Rr=Rr;
+    el(ineq,'line',{x1:L,x2:Rr,y1:30,y2:30,stroke:'var(--line)','stroke-width':6,'stroke-linecap':'round'});
+    iq.band=el(ineq,'rect',{y:24,height:12,rx:3,fill:'var(--ink)','fill-opacity':.14});
+    iq.mk=el(ineq,'line',{y1:16,y2:44,stroke:'var(--ink)','stroke-width':3});
+    iq.lo=el(ineq,'text',{y:58,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'});
+    iq.hi=el(ineq,'text',{y:58,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'});
+    iq.mt=el(ineq,'text',{y:11,'font-size':11,fill:'var(--ink)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'});
+  }
+  window.drawVP=function(){
+    press($('vmode'),VP.mode); show($('lamrow'),VP.mode==='lam');
+    $('lamo').textContent='λ = '+sg1(VP.lam);
+    const [ax,ay]=VP.A,[bx,by]=VP.B, m=VP.mode;
+    const A=Math.hypot(ax,ay), B=Math.hypot(bx,by);
+    let rx,ry,title;
+    if(m==='sub'){rx=ax-bx;ry=ay-by;title='R = A − B = A + (−B)';}
+    else if(m==='lam'){rx=VP.lam*ax;ry=VP.lam*ay;title='λA, with λ = '+sg1(VP.lam);}
+    else {rx=ax+bx;ry=ay+by;title=m==='comm'?'B + A lands on the same point as A + B':'R = A + B';}
+    const R=Math.hypot(rx,ry);
+    [aA2,aB2,aNB,aR2,ghostA,ghostB].forEach(a=>a.hide()); [pl1,pl2,tR2,tX].forEach(e=>show(e,false));
+    aA.set(X(0),Y(0),X(ax),Y(ay)); lab(tA,X(0),Y(0),X(ax),Y(ay),null,-14);
+    at(hA,{cx:X(ax),cy:Y(ay)}); at(hB,{cx:X(bx),cy:Y(by)}); show(hB,m!=='lam'); show(tB,m!=='lam');
+    if(m==='tri'){
+      ghostB.set(X(0),Y(0),X(bx),Y(by)); aB.set(X(ax),Y(ay),X(ax+bx),Y(ay+by)); lab(tB,X(ax),Y(ay),X(ax+bx),Y(ay+by),null,-14);
+    } else if(m==='para'){
+      aB.set(X(0),Y(0),X(bx),Y(by)); lab(tB,X(0),Y(0),X(bx),Y(by),null,14);
+      at(pl1,{x1:X(ax),y1:Y(ay),x2:X(ax+bx),y2:Y(ay+by)}); at(pl2,{x1:X(bx),y1:Y(by),x2:X(ax+bx),y2:Y(ay+by)}); show(pl1,true);show(pl2,true);
+    } else if(m==='comm'){
+      aB.set(X(0),Y(0),X(bx),Y(by)); lab(tB,X(0),Y(0),X(bx),Y(by),null,14);
+      aB2.set(X(ax),Y(ay),X(ax+bx),Y(ay+by)); aA2.set(X(bx),Y(by),X(ax+bx),Y(ay+by));
+    } else if(m==='sub'){
+      aB.set(X(0),Y(0),X(bx),Y(by)); lab(tB,X(0),Y(0),X(bx),Y(by),null,14);
+      aNB.set(X(ax),Y(ay),X(ax-bx),Y(ay-by)); lab(tX,X(ax),Y(ay),X(ax-bx),Y(ay-by),'−B',-14);
+      aR2.set(X(bx),Y(by),X(ax),Y(ay)); lab(tR2,X(bx),Y(by),X(ax),Y(ay),'A − B',14);
+    } else { aB.hide(); }
+    aR.set(X(0),Y(0),X(rx),Y(ry));
+    if(R>0.01) lab(tR,X(0),Y(0),X(rx),Y(ry),m==='lam'?'λA':m==='sub'?'A − B':'R',m==='sub'?-16:16); else {at(tR,{x:X(0)+10,y:Y(0)-10,'text-anchor':'start'});tR.textContent='0 (null vector)';show(tR,true);}
+    if(m==='lam'){ghostA.hide();}
+    /* components */
+    show(gC,VP.comp);
+    if(VP.comp){
+      const parts=m==='lam'?[[rx,ry],[0,0]]:m==='sub'?[[ax,ay],[-bx,-by]]:[[ax,ay],[bx,by]];
+      const o1=10, o2=-10; /* offsets from the axes in px */
+      cxA.set(X(0),Y(0)+o1,X(parts[0][0]),Y(0)+o1); cxB.set(X(parts[0][0]),Y(0)+o1,X(rx),Y(0)+o1);
+      cyA.set(X(0)+o2,Y(0),X(0)+o2,Y(parts[0][1])); cyB.set(X(0)+o2,Y(parts[0][1]),X(0)+o2,Y(ry));
+      if(m==='lam'){cxB.hide();cyB.hide();}
+      at(pjx,{x1:X(rx),y1:Y(ry),x2:X(rx),y2:Y(0)}); at(pjy,{x1:X(rx),y1:Y(ry),x2:X(0),y2:Y(ry)});
+      at(cxt,{x:X(rx)+(rx>=0?4:-4),y:Y(0)+(ry<0?-8:28),'text-anchor':rx>=0?'start':'end'}); cxt.textContent='Rx = '+sg1(rx);
+      at(cyt,{x:X(0)-16,y:Y(ry)+(ry>=0?-4:14),'text-anchor':'end'}); cyt.textContent='Ry = '+sg1(ry);
+    }
+    /* readouts */
+    const dot=ax*bx+ay*by, th=A>0&&B>0?Math.acos(Math.max(-1,Math.min(1,dot/(A*B))))*R2D:0;
+    $('vtitle').textContent=title;
+    let kv=`<dt>A</dt><dd>${vec(ax,ay)}</dd><dt>|A|</dt><dd>${f2(A)}</dd>`;
+    if(m!=='lam') kv+=`<dt>B</dt><dd>${vec(bx,by)}</dd><dt>|B|</dt><dd>${f2(B)}</dd><dt>angle between A and B</dt><dd>θ = ${th.toFixed(1)}°</dd>`;
+    kv+=`<dt>result</dt><dd>${vec(rx,ry)}</dd><dt>its size</dt><dd>${f2(R)}</dd>`;
+    if(m==='tri'||m==='para'||m==='comm') kv+=`<dt>√(A² + B² + 2AB cos θ)</dt><dd>${f2(Math.sqrt(Math.max(0,A*A+B*B+2*A*B*Math.cos(th*D2R))))}</dd>`;
+    if(m==='sub') kv+=`<dt>√(A² + B² − 2AB cos θ)</dt><dd>${f2(Math.sqrt(Math.max(0,A*A+B*B-2*A*B*Math.cos(th*D2R))))}</dd>`;
+    $('vkv').innerHTML=kv;
+    /* inequality strip */
+    const lo=m==='lam'?0:Math.abs(A-B), hi=m==='lam'?2*A:A+B, sc=hi>0?(iq.Rr-iq.L)/Math.max(hi,0.01):1, P=v=>iq.L+v*sc;
+    at(iq.band,{x:P(lo),width:Math.max(1,P(hi)-P(lo))}); at(iq.mk,{x1:P(R),x2:P(R)});
+    at(iq.lo,{x:P(lo)}); iq.lo.textContent=m==='lam'?'0':'smallest '+f2(lo);
+    at(iq.hi,{x:P(hi)}); iq.hi.textContent=m==='lam'?'2|A|':'largest '+f2(hi);
+    if(Math.abs(P(hi)-P(lo))<150){at(iq.lo,{'text-anchor':'end',x:P(lo)-2});at(iq.hi,{'text-anchor':'start',x:P(hi)+2});} else {at(iq.lo,{'text-anchor':'start'});at(iq.hi,{'text-anchor':'end'});}
+    at(iq.mt,{x:Math.min(iq.Rr-30,Math.max(iq.L+30,P(R)))}); iq.mt.textContent='|result| = '+f2(R);
+    $('ineq').style.display=m==='lam'?'none':'';
+    let c;
+    if(m==='tri') c='Head to tail: put B’s tail on A’s head (the faded B at O is the same vector before it slid). The sum runs from the first tail to the last head. The three arrows make a triangle, so its sides obey the triangle rule: |A + B| lies between the difference of the sizes, ||A| − |B|| (A and B pointing opposite ways), and their sum, |A| + |B| (pointing the same way).';
+    else if(m==='para') c='Tails together, complete the parallelogram: the diagonal from O is A + B. It is the same arrow as the triangle method, because the far side of the parallelogram is just B slid along A.';
+    else if(m==='comm') c='Going A then B, or B then A, are the two halves of one parallelogram: both reach the same corner. Vector addition is <b>commutative</b>, A + B = B + A. It is also <b>associative</b>: for three arrows, (A + B) + C = A + (B + C), because the chain of heads and tails ends at the same point however you group it.';
+    else if(m==='sub') c='A − B is A plus the reversed arrow −B. It is also the arrow <b>from B’s head to A’s head</b> (dashed): the other diagonal of the parallelogram. “What do I add to B to get A?” This is exactly the arrow used for relative velocity in sections 5 and 6.';
+    else c=VP.lam===0?'λ = 0 gives the null vector: zero length, no direction.':VP.lam<0?'A negative λ flips the arrow and scales it by |λ|. λ = −1 gives −A, the same size pointing the opposite way.':'A positive λ stretches or shrinks the arrow but keeps its direction. If λ has a unit, so does the result: velocity × time = displacement.';
+    $('vcap').innerHTML=c;
+  };
+  drawVP();
+}
+/* section 2 questions (numbers computed) */
+{
+  const a=3,b=4, r90=Math.hypot(a,b), r120=Math.sqrt(a*a+b*b+2*a*b*Math.cos(120*D2R));
+  const p=5, q=5, th=120, rr=Math.sqrt(p*p+q*q+2*p*q*Math.cos(th*D2R));
+  quiz($('q2'),[
+   {q:`Two forces of ${a} N and ${b} N act on a point. Which of these can <b>not</b> be the size of their resultant?`,o:['1 N','5 N','7 N','8 N'],a:3,
+    why:`The resultant lies between |${a} − ${b}| = ${Math.abs(a-b)} N (opposite) and ${a} + ${b} = ${a+b} N (same direction). ${r90.toFixed(0)} N is the 90° case. 8 N is beyond the maximum.`},
+   {q:`Two vectors of equal size ${p} units have a resultant of the same size ${p} units. The angle between them is:`,o:['60°','90°','120°','180°'],a:2,
+    why:`R² = A² + A² + 2A² cos θ = A² needs cos θ = −1/2, θ = 120°. Check: √(${p}² + ${q}² + 2·${p}·${q}·cos 120°) = ${rr.toFixed(2)}. Drag A and B into this shape: they and R form an equilateral triangle.`},
+   {q:`|A + B| = |A − B|. What is the angle between A and B?`,o:['0°','45°','90°','180°'],a:2,
+    why:`The two diagonals of the parallelogram are equal only when it is a rectangle. Algebraically A² + B² + 2AB cos θ = A² + B² − 2AB cos θ gives cos θ = 0.`}
+  ]);
+}
+
+/* =================== 3 · COMPONENTS =================== */
+const CP={th:35,mag:4,mode:'perp',phi:60};
+{
+  const svg=$('comp'), S=28, O=[210,170];
+  const X=x=>O[0]+x*S, Y=y=>O[1]-y*S;
+  for(let i=-7;i<=7;i++) el(svg,'line',{x1:X(i),x2:X(i),y1:Y(-6),y2:Y(6),stroke:'var(--line)'});
+  for(let j=-6;j<=6;j++) el(svg,'line',{x1:X(-7),x2:X(7),y1:Y(j),y2:Y(j),stroke:'var(--line)'});
+  el(svg,'line',{x1:X(-7),x2:X(7),y1:Y(0),y2:Y(0),stroke:'var(--muted)'}); el(svg,'line',{x1:X(0),x2:X(0),y1:Y(-6),y2:Y(6),stroke:'var(--muted)'});
+  el(svg,'text',{x:X(7)-4,y:Y(0)-6,'font-size':12,fill:'var(--muted)','text-anchor':'end'},'x'); el(svg,'text',{x:X(0)+6,y:Y(6)+12,'font-size':12,fill:'var(--muted)'},'y');
+  const quad=el(svg,'rect',{fill:'var(--va)','fill-opacity':.06});
+  const baxis=el(svg,'line',{stroke:'var(--muted)','stroke-dasharray':'6 5'}), btxt=el(svg,'text',{'font-size':12,fill:'var(--muted)'},'b direction');
+  const arc=el(svg,'path',{fill:'none',stroke:'var(--ink)','stroke-width':1.3}), arct=el(svg,'text',{'font-size':12.5,fill:'var(--ink)'},'θ');
+  const px=el(svg,'line',{stroke:'var(--ink)','stroke-dasharray':'3 4',opacity:.65}), py=el(svg,'line',{stroke:'var(--ink)','stroke-dasharray':'3 4',opacity:.65});
+  const cx=mkArrow(svg,'var(--va)',5,{head:9,op:.55}), cy=mkArrow(svg,'var(--va)',5,{head:9,op:.55});
+  const cxt=el(svg,'text',{'font-size':12,'font-family':'IBM Plex Mono,monospace',fill:'var(--va)','font-weight':500}), cyt=el(svg,'text',{'font-size':12,'font-family':'IBM Plex Mono,monospace',fill:'var(--va)','font-weight':500});
+  const ui=mkArrow(svg,'var(--ink)',3,{head:8}), uj=mkArrow(svg,'var(--ink)',3,{head:8});
+  /* unit vectors in a corner key, so they never collide with the component labels */
+  {const kx=X(-6.6),ky=Y(-5.4);ui.set(kx,ky,kx+S,ky);uj.set(kx,ky,kx,ky-S);
+   el(svg,'text',{x:kx+S+4,y:ky+5,'font-size':13,'font-weight':700,fill:'var(--ink)'},'î');
+   el(svg,'text',{x:kx+5,y:ky-S+4,'font-size':13,'font-weight':700,fill:'var(--ink)'},'ĵ');
+   el(svg,'text',{x:kx+S+16,y:ky+5,'font-size':11,fill:'var(--muted)'},'unit vectors (length 1)');}
+  const aA=mkArrow(svg,'var(--va)',3.4,{head:13});
+  const tA=el(svg,'text',{'font-size':14,'font-weight':700,fill:'var(--va)'},'A');
+  const h=el(svg,'circle',{r:11,fill:'var(--va)','fill-opacity':.22,stroke:'var(--va)','stroke-width':2,class:'drag'});
+  draggable(svg,h,(x,y)=>{const ux=(x-O[0])/S,uy=(O[1]-y)/S;CP.th=Math.round(angDeg(ux,uy))%360;CP.mag=Math.max(0.5,Math.min(5,Math.round(Math.hypot(ux,uy)*10)/10));$('cang').value=CP.th;$('cmag').value=CP.mag;drawC();});
+  chips($('cmode'),[{id:'perp',l:'Along x and y (î, ĵ)'},{id:'slant',l:'Along two slanted directions a, b'}],'id',k=>{CP.mode=k;drawC();});
+  $('cang').addEventListener('input',e=>{CP.th=+e.target.value;drawC();});
+  $('cmag').addEventListener('input',e=>{CP.mag=+e.target.value;drawC();});
+  $('cphi').addEventListener('input',e=>{CP.phi=+e.target.value;drawC();});
+  window.drawC=function(){
+    press($('cmode'),CP.mode); show($('cphirow'),CP.mode==='slant');
+    $('cango').textContent=CP.th+'°'; $('cmago').textContent=CP.mag.toFixed(1); $('cphio').textContent=CP.phi+'°';
+    const t=CP.th*D2R, ax=CP.mag*Math.cos(t), ay=CP.mag*Math.sin(t), ex=X(ax), ey=Y(ay);
+    aA.set(X(0),Y(0),ex,ey); at(h,{cx:ex,cy:ey});
+    const nx=Math.cos(t),ny=Math.sin(t); at(tA,{x:ex+nx*16-4,y:ey-ny*16+5});
+    /* angle arc */
+    const ra=26, large=CP.th>180?1:0;
+    at(arc,{d:CP.th<1?'':`M${X(0)+ra} ${Y(0)} A${ra} ${ra} 0 ${large} 0 ${(X(0)+ra*Math.cos(t)).toFixed(1)} ${(Y(0)-ra*Math.sin(t)).toFixed(1)}`});
+    const tm=t/2; at(arct,{x:(X(0)+(ra+10)*Math.cos(tm)-4).toFixed(1),y:(Y(0)-(ra+10)*Math.sin(tm)+5).toFixed(1)}); show(arct,CP.th>=12);
+    /* unit vectors */
+    let kv;
+    if(CP.mode==='perp'){
+      show(baxis,false);show(btxt,false);
+      at(px,{x1:ex,y1:ey,x2:ex,y2:Y(0)}); at(py,{x1:ex,y1:ey,x2:X(0),y2:ey}); show(px,true);show(py,true);
+      cx.set(X(0),Y(0),X(ax),Y(0)); cy.set(X(0),Y(0),X(0),Y(ay));
+      at(cxt,{x:X(ax/2),y:Y(0)+(ay>=0?18:-8),'text-anchor':'middle'}); cxt.textContent='Ax î';
+      at(cyt,{x:X(0)+(ax>=0?-8:8),y:Y(ay/2)+4,'text-anchor':ax>=0?'end':'start'}); cyt.textContent='Ay ĵ';
+      show(cxt,Math.abs(ax)>0.6); show(cyt,Math.abs(ay)>0.6);
+      const qd=ax>=0?(ay>=0?1:4):(ay>=0?2:3);
+      at(quad,{x:ax>=0?X(0):X(-7),y:ay>=0?Y(6):Y(0),width:7*S,height:6*S});
+      const raw=Math.abs(ax)<1e-9?(ay>0?90:-90):Math.atan(ay/ax)*R2D;
+      kv=`<dt>A<sub>x</sub> = A cos θ</dt><dd>${sg2(ax)}</dd><dt>A<sub>y</sub> = A sin θ</dt><dd>${sg2(ay)}</dd><dt>A</dt><dd>${vec(ax,ay,sg2)}</dd>
+        <dt>√(A<sub>x</sub>² + A<sub>y</sub>²)</dt><dd>${f2(Math.hypot(ax,ay))}</dd><dt>tan⁻¹(A<sub>y</sub>/A<sub>x</sub>)</dt><dd>${raw.toFixed(1)}°</dd><dt>quadrant</dt><dd>${['','I (+, +)','II (−, +)','III (−, −)','IV (+, −)'][qd]}</dd>`;
+      $('ccap').innerHTML=(qd===1?'In the first quadrant tan⁻¹(A<sub>y</sub>/A<sub>x</sub>) gives θ directly.'
+        :`Careful: a calculator’s tan⁻¹ only returns angles between −90° and 90°, so it cannot tell (${sg2(ax)}, ${sg2(ay)}) from (${sg2(-ax)}, ${sg2(-ay)}). The signs of the components put A in quadrant ${['','I','II','III','IV'][qd]}, so θ = ${CP.th}°.`)
+        +' Components are numbers that can be positive, negative or zero; A<sub>x</sub>î and A<sub>y</sub>ĵ are the vectors.';
+    } else {
+      show(quad,false);
+      const p=CP.phi*D2R, bxu=Math.cos(p), byu=Math.sin(p), mu=ay/byu, lam=ax-mu*bxu;
+      show(baxis,true);show(btxt,true); at(baxis,{x1:X(-6*bxu),y1:Y(-6*byu),x2:X(6*bxu),y2:Y(6*byu)}); at(btxt,{x:X(5.4*bxu)+6,y:Y(5.4*byu)});
+      /* parallelogram: from tip, line parallel to b to the x axis at λ; line parallel to a (x) to the b axis at µb */
+      at(px,{x1:ex,y1:ey,x2:X(lam),y2:Y(0)}); at(py,{x1:ex,y1:ey,x2:X(mu*bxu),y2:Y(mu*byu)}); show(px,true);show(py,true);
+      cx.set(X(0),Y(0),X(lam),Y(0)); cy.set(X(0),Y(0),X(mu*bxu),Y(mu*byu));
+      at(cxt,{x:X(lam/2),y:Y(0)+(ay>=0?18:-8),'text-anchor':'middle'}); cxt.textContent='λa';
+      at(cyt,{x:X(mu*bxu/2)-10,y:Y(mu*byu/2),'text-anchor':'end'}); cyt.textContent='µb';
+      show(cxt,Math.abs(lam)>0.6); show(cyt,Math.abs(mu)>0.6);
+      kv=`<dt>a</dt><dd>î (length 1 along x)</dd><dt>b</dt><dd>length 1 at ${CP.phi}° to x</dd><dt>λ</dt><dd>${sg2(lam)}</dd><dt>µ</dt><dd>${sg2(mu)}</dd><dt>check λa + µb</dt><dd>${vec(lam+mu*bxu,mu*byu,sg2)}</dd>`;
+      $('ccap').innerHTML='Through A’s head, draw lines parallel to a and to b. Where they cut the two directions gives λa and µb, with A = λa + µb. Any two non-parallel directions work; perpendicular ones (b at 90°) are simply the most convenient, because then λ and µ are just A cos θ and A sin θ.';
+    }
+    show(quad,CP.mode==='perp');
+    $('ckv').innerHTML=kv;
+  };
+  drawC();
+}
+{
+  const A=10, th=150, ax=A*Math.cos(th*D2R), ay=A*Math.sin(th*D2R);
+  const Bx=-3, By=-4, Bm=Math.hypot(Bx,By), Bang=angDeg(Bx,By);
+  quiz($('q3'),[
+   {q:`A vector of size ${A} units points at ${th}° to the +x axis. Its components (A<sub>x</sub>, A<sub>y</sub>) are about:`,o:[`(${sg2(-ax)}, ${sg2(ay)})`,`(${sg2(ax)}, ${sg2(ay)})`,`(${sg2(ay)}, ${sg2(ax)})`,`(${sg2(ax)}, ${sg2(-ay)})`],a:1,
+    why:`A<sub>x</sub> = ${A} cos ${th}° = ${sg2(ax)} (it points left), A<sub>y</sub> = ${A} sin ${th}° = ${sg2(ay)} (up). Second quadrant: (−, +). Set θ = ${th}° above to see it.`},
+   {q:`B = ${Bx} î ${By<0?'−':'+'} ${Math.abs(By)} ĵ. A calculator gives tan⁻¹(${By}/${Bx}) = ${(Math.atan(By/Bx)*R2D).toFixed(1)}°. What angle does B really make with +x?`,o:[`${(Math.atan(By/Bx)*R2D).toFixed(1)}°`,`${(180-Math.atan(By/Bx)*R2D).toFixed(1)}°`,`${Bang.toFixed(1)}°`,`${(360-Math.atan(By/Bx)*R2D).toFixed(1)}°`],a:2,
+    why:`Both components are negative, so B is in the third quadrant: θ = 180° + ${(Math.atan(By/Bx)*R2D).toFixed(1)}° = ${Bang.toFixed(1)}°. Its size is √(${Bx*Bx} + ${By*By}) = ${Bm}.`}
+  ]);
+}
+
+/* =================== 4 · MOTION IN A PLANE =================== */
+/* r(t) = 3t î + 2t² ĵ (m), v = 3 î + 4t ĵ (m/s), a = 4 ĵ (m/s²) */
+const PL={t:0.6,dt:0.6,acc:false};
+{
+  const rx=t=>3*t, ry=t=>2*t*t, vx=t=>3, vy=t=>4*t;
+  const svg=$('plane'), S=40, O=[40,340], X=x=>O[0]+x*S, Y=y=>O[1]-y*S, KV=32; /* px per m/s */
+  for(let i=0;i<=7;i++){el(svg,'line',{x1:X(i),x2:X(i),y1:Y(0),y2:Y(8),stroke:'var(--line)'});el(svg,'text',{x:X(i),y:Y(0)+15,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},i);}
+  for(let j=0;j<=8;j++){el(svg,'line',{x1:X(0),x2:X(7),y1:Y(j),y2:Y(j),stroke:'var(--line)'});if(j)el(svg,'text',{x:X(0)-6,y:Y(j)+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'},j);}
+  el(svg,'text',{x:X(7),y:Y(0)-6,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'x (m)'); el(svg,'text',{x:X(0)+6,y:Y(8)+14,'font-size':11,fill:'var(--muted)'},'y (m)');
+  let d=''; for(let i=0;i<=80;i++){const t=2*i/80;d+=(i?'L':'M')+X(rx(t)).toFixed(1)+' '+Y(ry(t)).toFixed(1);}
+  el(svg,'path',{d,fill:'none',stroke:'var(--ink)','stroke-width':2,opacity:.45});
+  const r1=mkArrow(svg,'var(--disp)',2.2,{op:.8}), r2=mkArrow(svg,'var(--disp)',2.2,{op:.45,dash:'5 4'}), dr=mkArrow(svg,'var(--disp)',3.2,{head:11});
+  const vav=mkArrow(svg,'var(--vel)',2.6,{dash:'6 4',head:10}), vin=mkArrow(svg,'var(--vel)',3.2,{head:12});
+  const vxa=mkArrow(svg,'var(--vel)',1.6,{op:.6,head:7}), vya=mkArrow(svg,'var(--vel)',1.6,{op:.6,head:7});
+  const pP=el(svg,'circle',{r:5,fill:'var(--ink)'}), pQ=el(svg,'circle',{r:4,fill:'none',stroke:'var(--ink)','stroke-width':2});
+  const tP=el(svg,'text',{class:'halo','font-size':13,'font-weight':600,fill:'var(--ink)'},'P'), tQ=el(svg,'text',{class:'halo','font-size':13,'font-weight':600,fill:'var(--ink)'},'P′');
+  const tdr=el(svg,'text',{class:'halo','font-size':12,'font-weight':600,fill:'var(--disp)'},'Δr'), tv=el(svg,'text',{class:'halo','font-size':12,'font-weight':600,fill:'var(--vel)'},'v'), tva=el(svg,'text',{class:'halo','font-size':11.5,fill:'var(--vel)'},'Δr/Δt');
+  const tr=el(svg,'text',{class:'halo','font-size':12,'font-weight':600,fill:'var(--disp)'},'r');
+  /* Δv inset */
+  const gI=el(svg,'g',{}), IO=[385,330];
+  el(gI,'rect',{x:340,y:150,width:116,height:196,fill:'var(--surface)',stroke:'var(--line)',rx:6});
+  el(gI,'text',{x:398,y:166,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'v and v′, tail to tail');
+  const iv1=mkArrow(gI,'var(--vel)',3,{head:10}), iv2=mkArrow(gI,'var(--vel)',2.4,{head:10,op:.55}), idv=mkArrow(gI,'var(--acc)',3.2,{head:10});
+  const it1=el(gI,'text',{'font-size':12,fill:'var(--vel)','font-weight':600},'v'), it2=el(gI,'text',{'font-size':12,fill:'var(--vel)'},'v′'), itd=el(gI,'text',{'font-size':12,fill:'var(--acc)','font-weight':600},'Δv');
+  el(gI,'circle',{cx:IO[0],cy:IO[1],r:3,fill:'var(--ink)'});
+  $('pt').addEventListener('input',e=>{PL.t=+e.target.value;drawPL();});
+  $('pdt').addEventListener('input',e=>{PL.dt=+e.target.value;drawPL();});
+  $('pacc').addEventListener('change',e=>{PL.acc=e.target.checked;drawPL();});
+  window.drawPL=function(){
+    const t=PL.t, t2=t+PL.dt;
+    $('pto').textContent=t.toFixed(2)+' s'; $('pdto').textContent=PL.dt.toFixed(2)+' s';
+    const x1=rx(t),y1=ry(t),x2=rx(t2),y2=ry(t2), ax=(x2-x1)/PL.dt, ay=(y2-y1)/PL.dt;
+    r1.set(X(0),Y(0),X(x1),Y(y1)); r2.set(X(0),Y(0),X(x2),Y(y2)); dr.set(X(x1),Y(y1),X(x2),Y(y2));
+    at(pP,{cx:X(x1),cy:Y(y1)}); at(pQ,{cx:X(x2),cy:Y(y2)});
+    at(tP,{x:X(x1)+9,y:Y(y1)+15}); at(tQ,{x:X(x2)-9,y:Y(y2)-5,'text-anchor':'end'}); /* P′ on the outer side of the curve, away from the arrows */
+    at(tr,{x:X(x1/2)-4,y:Y(y1/2)-6,'text-anchor':'end'}); show(tr,Math.hypot(x1,y1)>0.8);
+    const mx=X(x1)+(X(x2)-X(x1))*0.35, my=Y(y1)+(Y(y2)-Y(y1))*0.35; at(tdr,{x:mx-8,y:my-2,'text-anchor':'end'}); show(tdr,Math.hypot(x2-x1,y2-y1)>0.5);
+    vin.set(X(x1),Y(y1),X(x1)+KV*vx(t),Y(y1)-KV*vy(t));
+    vav.set(X(x1),Y(y1),X(x1)+KV*ax,Y(y1)-KV*ay);
+    vxa.set(X(x1),Y(y1),X(x1)+KV*vx(t),Y(y1)); vya.set(X(x1),Y(y1),X(x1),Y(y1)-KV*vy(t));
+    at(tv,{x:X(x1)+KV*vx(t)+6,y:Y(y1)-KV*vy(t)+12});
+    const ang1=Math.atan2(vy(t),vx(t)),ang2=Math.atan2(ay,ax);
+    at(tva,{x:X(x1)+KV*ax+7,y:Y(y1)-KV*ay-3,'text-anchor':'start'}); show(tva,Math.abs(ang2-ang1)>0.08);
+    /* inset */
+    show(gI,PL.acc);
+    if(PL.acc){
+      const v1=[vx(t),vy(t)],v2=[vx(t2),vy(t2)], K=18;
+      iv1.set(IO[0],IO[1],IO[0]+K*v1[0],IO[1]-K*v1[1]); iv2.set(IO[0],IO[1],IO[0]+K*v2[0],IO[1]-K*v2[1]);
+      idv.set(IO[0]+K*v1[0],IO[1]-K*v1[1],IO[0]+K*v2[0],IO[1]-K*v2[1]);
+      at(it1,{x:IO[0]+K*v1[0]/2-14,y:IO[1]-K*v1[1]/2+4}); at(it2,{x:IO[0]+K*v2[0]/2-22,y:IO[1]-K*v2[1]/2});
+      at(itd,{x:IO[0]+K*v1[0]+8,y:IO[1]-K*(v1[1]+v2[1])/2+4});
+    }
+    const sp=Math.hypot(vx(t),vy(t)), sa=Math.hypot(ax,ay), dA=Math.abs(ang2-ang1)*R2D;
+    $('plkv').innerHTML=`<dt>r at P</dt><dd>${f2(x1)} î + ${f2(y1)} ĵ m</dd><dt>Δr = r′ − r</dt><dd>${f2(x2-x1)} î + ${f2(y2-y1)} ĵ m</dd>
+      <dt>average velocity Δr/Δt</dt><dd>${f2(ax)} î + ${f2(ay)} ĵ m/s</dd><dt>velocity at P</dt><dd>${f2(vx(t))} î + ${f2(vy(t))} ĵ m/s</dd>
+      <dt>speed at P</dt><dd>${f2(sp)} m/s at ${(ang1*R2D).toFixed(1)}° to x</dd><dt>angle gap, average vs actual</dt><dd>${dA.toFixed(1)}°</dd>`+
+      (PL.acc?`<dt>Δv/Δt</dt><dd>${f2((vx(t2)-vx(t))/PL.dt)} î + ${f2((vy(t2)-vy(t))/PL.dt)} ĵ m/s²</dd>`:'');
+    $('plcap').innerHTML=(PL.dt>0.1?'The average velocity (dashed) points along the chord Δr, which cuts across the curve. ':'With Δt this small, the chord hugs the curve, and the average velocity has almost become the actual velocity. ')
+      +'As Δt → 0 the chord turns into the tangent: the velocity at any point is along the tangent to the path, in the direction of motion. '
+      +(PL.acc?'The Δv arrow is straight up for every t and Δt, because the acceleration here is constant, 4 ĵ m s⁻²: only v<sub>y</sub> changes.':'');
+  };
+  drawPL();
+  quiz($('q4'),[
+   {q:'For r = 3t î + 2t² ĵ (m), what is the speed at t = 1 s?',o:['4 m/s','5 m/s','7 m/s','3 m/s'],a:1,
+    why:`v = 3 î + 4t ĵ, so at t = 1 s, v = 3 î + 4 ĵ and |v| = √(9 + 16) = ${Math.hypot(3,4)} m/s, at tan⁻¹(4/3) = ${(Math.atan2(4,3)*R2D).toFixed(1)}° to x. Set t = 1 above (max t is 1.2 s).`},
+   {q:'A car goes once round a circular track of length 400 m in 40 s. Its average speed and the size of its average velocity are:',o:['10 m/s and 10 m/s','10 m/s and 0','0 and 10 m/s','0 and 0'],a:1,
+    why:'Average speed = path length / time = 400/40 = 10 m/s. It ends where it started, so the displacement is the null vector and the average velocity is zero. Average speed is always at least as large as the size of the average velocity.'}
+  ]);
+}
+
+/* =================== 5 · RAIN =================== */
+const RN={v:35,w:-12,u:0,play:!RM,vis:false,last:0};
+{
+  const W=300,H=240,GY=212,K=5; /* px per second per (m/s) */
+  const mkPanel=(svg)=>{
+    const sky=el(svg,'rect',{x:0,y:0,width:W,height:GY,fill:'var(--vel)','fill-opacity':.04});
+    el(svg,'line',{x1:0,x2:W,y1:GY,y2:GY,stroke:'var(--muted)','stroke-width':1.5});
+    const ticks=el(svg,'g',{}); const tk=[];
+    for(let i=0;i<16;i++) tk.push(el(ticks,'line',{y1:GY+1,y2:GY+9,stroke:'var(--line)','stroke-width':1.5}));
+    const drops=[]; const gd=el(svg,'g',{});
+    let s=7; const rnd=()=>{s=(s*16807)%2147483647;return s/2147483647;};
+    for(let i=0;i<46;i++) drops.push({x:rnd()*W,y:rnd()*GY,e:el(gd,'line',{stroke:'var(--vel)','stroke-width':1.6,'stroke-linecap':'round',opacity:.7})});
+    /* person: umbrella group rotates about the hand */
+    const pg=el(svg,'g',{});
+    el(pg,'circle',{cx:0,cy:-52,r:7,fill:'none',stroke:'var(--ink)','stroke-width':2});
+    el(pg,'path',{d:'M0 -45 L0 -18 M0 -18 L-8 0 M0 -18 L8 0 M0 -38 L8 -30',fill:'none',stroke:'var(--ink)','stroke-width':2,'stroke-linecap':'round'});
+    const ug=el(pg,'g',{});
+    el(ug,'line',{x1:0,y1:0,x2:0,y2:-50,stroke:'var(--ink)','stroke-width':1.8});
+    el(ug,'path',{d:'M-30 -50 A30 22 0 0 1 30 -50 Z',fill:'var(--force)','fill-opacity':.85});
+    const vy=el(svg,'g',{}); const yv=mkArrow(vy,'var(--vel)',2.6,{head:9});
+    const ylab=el(svg,'text',{'font-size':11,fill:'var(--vel)','font-weight':600});
+    return {svg,drops,ticks:tk,pg,ug,yv,ylab,off:0,px:W/2};
+  };
+  const PG=mkPanel($('rg')), PM=mkPanel($('rm'));
+  chips($('rpre'),RPRE,null,k=>{const p=RPRE[+k];RN.v=p.v;RN.w=p.w;RN.u=p.u;$('rv').value=p.v;$('rw').value=p.w;$('ru').value=p.u;drawRN();});
+  ['rv','rw','ru'].forEach(id=>$(id).addEventListener('input',e=>{RN[id[1]]=+e.target.value;drawRN();}));
+  const dirTxt=v=>v>0?'toward east':v<0?'toward west':'';
+  /* vector triangle */
+  const tri=$('rtri'), TO=[140,22], TK=3.6;
+  const tv1=mkArrow(tri,'var(--vel)',2.2,{head:9}), tv2=mkArrow(tri,'var(--vel)',2.2,{head:9,dash:'5 4'}), tv3=mkArrow(tri,'var(--vel)',3.6,{head:12});
+  const vline=el(tri,'line',{x1:TO[0],x2:TO[0],y1:TO[1],y2:TO[1]+46,stroke:'var(--muted)','stroke-dasharray':'2 4'}); /* short: only the reference for the angle */
+  const t1=el(tri,'text',{'font-size':11.5,fill:'var(--vel)'}), t2=el(tri,'text',{'font-size':11.5,fill:'var(--vel)'}), t3=el(tri,'text',{'font-size':12,fill:'var(--vel)','font-weight':600});
+  const tang=el(tri,'text',{'font-size':12,fill:'var(--ink)','font-weight':600});
+  function placeLabel(t,x1,y1,x2,y2,txt,side,again){const mx=(x1+x2)/2,my=(y1+y2)/2,L=Math.hypot(x2-x1,y2-y1)||1,nx=(y2-y1)/L*side,ny=-(x2-x1)/L*side;
+    const x=mx+nx*12, anc=nx>0.3?'start':nx<-0.3?'end':'middle';
+    at(t,{x,y:my+ny*12+4,'text-anchor':anc});t.textContent=txt;show(t,L>14);
+    /* if the label would run off the 280-wide picture, put it on the other side of its arrow */
+    let w=0;try{w=t.getComputedTextLength();}catch(e){}
+    const left=anc==='start'?x:anc==='end'?x-w:x-w/2;
+    if(!again&&w>0&&(left<2||left+w>278)) placeLabel(t,x1,y1,x2,y2,txt,-side,true);}
+  function setPanel(P,vx,vyv,personVx){
+    /* drops streak along the frame velocity */
+    const L=Math.hypot(vx,vyv)||1, sx=vx/L*13, sy=vyv/L*13;
+    P.vx=vx;P.vy=vyv;P.pvx=personVx;
+    P.drops.forEach(d=>at(d.e,{x1:d.x.toFixed(1),y1:d.y.toFixed(1),x2:(d.x-sx).toFixed(1),y2:(d.y-sy).toFixed(1)}));
+  }
+  window.drawRN=function(){
+    $('rvo').textContent=RN.v+' m/s'; $('rwo').textContent=(RN.w?Math.abs(RN.w)+(RN.w>0?' → E':' → W'):'0')+'';
+    $('ruo').textContent=(RN.u?Math.abs(RN.u)+(RN.u>0?' → E':' → W'):'0');
+    press($('rpre'),RPRE.findIndex(p=>p.v===RN.v&&p.w===RN.w&&p.u===RN.u));
+    const hx=RN.w-RN.u; /* horizontal rain velocity relative to the person (+ east) */
+    const tilt=Math.atan2(Math.abs(hx),RN.v)*R2D, tdir=hx>0?-1:1; /* umbrella top leans into the rain: opposite to hx */
+    const ground=Math.atan2(Math.abs(RN.w),RN.v)*R2D;
+    setPanel(PG,RN.w,RN.v,RN.u); setPanel(PM,hx,RN.v,0);
+    /* in both pictures the person holds the umbrella for their own frame */
+    [PG,PM].forEach(P=>{P.ug.setAttribute('transform',`rotate(${(tdir*tilt).toFixed(1)} 8 -30) translate(8 -30)`);});
+    at(PM.pg,{transform:`translate(${W/2} ${GY})`});
+    at(PG.pg,{transform:`translate(${PG.px.toFixed(1)} ${GY})`});
+    /* small velocity labels for the person */
+    PG.yv.set(PG.px,GY-72,PG.px+RN.u*4,GY-72); at(PG.ylab,{x:PG.px,y:GY-80,'text-anchor':'middle'}); PG.ylab.textContent=RN.u?'you: '+Math.abs(RN.u)+' m/s':'';
+    PM.yv.hide(); PM.ylab.textContent='';
+    /* triangle */
+    const a=[TO[0],TO[1]], b=[TO[0]+RN.w*TK,TO[1]+RN.v*TK], c=[b[0]-RN.u*TK,b[1]];
+    tv1.set(a[0],a[1],b[0],b[1]); tv2.set(b[0],b[1],c[0],c[1]); tv3.set(a[0],a[1],c[0],c[1]);
+    if(Math.abs(RN.u)<1e-9) tv2.hide();
+    /* rain label on the outer side of its arrow, relative-velocity label on the other side */
+    const bo=b[0]-TO[0], co=c[0]-TO[0], sg=v=>v>=0?1:-1;
+    const s3=Math.abs(co)>=Math.abs(bo)?sg(co):-sg(bo), s1=-s3; /* the outer arrow's label goes outside, the inner one's away from it */
+    if(RN.u===0){show(t1,false);placeLabel(t3,a[0],a[1],c[0],c[1],'v rain = rain rel. to you',sg(bo));}
+    else {placeLabel(t1,a[0],a[1],b[0],b[1],'v rain (ground)',s1);placeLabel(t3,a[0],a[1],c[0],c[1],'rain rel. to you',s3);}
+    placeLabel(t2,b[0],b[1],c[0],c[1],'−v you',1);
+    at(tang,{x:TO[0]+(hx>=0?-6:6),y:TO[1]+40,'text-anchor':hx>=0?'end':'start'}); tang.textContent=tilt>0.5?tilt.toFixed(1)+'°':'';
+    const rel=Math.hypot(hx,RN.v);
+    let c2=`Rain relative to you: ${Math.abs(hx).toFixed(0)} m/s ${dirTxt(hx)} and ${RN.v} m/s down, ${rel.toFixed(1)} m/s in all. `;
+    c2+=tilt<0.5?'It falls straight down on you: hold the umbrella upright.':`Tilt the umbrella ${tilt.toFixed(1)}° from vertical, toward the ${hx>0?'west':'east'}, since tan θ = ${Math.abs(hx)}/${RN.v}.`;
+    if(RN.u!==0) c2+=` From the ground the rain ${Math.abs(RN.w)<1e-9?'falls straight down':'slants at '+ground.toFixed(1)+'°'}, yet you must tilt for the rain <i>you</i> meet.`;
+    if(RN.u!==0&&hx===0) c2+=' Moving with the wind at its own speed, you see vertical rain.';
+    if(c2!==RN.cap){RN.cap=c2;$('rcap').innerHTML=c2;}
+  };
+  function step(dt){
+    [PG,PM].forEach((P,k)=>{
+      const vx=P.vx*K, vy=P.vy*K;
+      P.drops.forEach(d=>{d.x+=vx*dt;d.y+=vy*dt;if(d.y>GY){d.y-=GY;}if(d.x>W)d.x-=W;if(d.x<0)d.x+=W;});
+      if(k===0){P.px+=RN.u*K*dt;if(P.px>W+20)P.px-=W+40;if(P.px<-20)P.px+=W+40;}
+      else {P.off=(P.off-RN.u*K*dt)%20;}
+    });
+    PM.ticks.forEach((t,i)=>{const x=((i*20+PM.off)%320+320)%320-10;at(t,{x1:x,x2:x-8});});
+    drawRN();
+  }
+  PG.ticks.forEach((t,i)=>at(t,{x1:i*20,x2:i*20-8}));
+  function loop(ts){
+    if(!RN.play||!RN.vis){RN.last=0;return;}
+    const dt=RN.last?Math.min(0.05,(ts-RN.last)/1000):0;RN.last=ts;step(dt);requestAnimationFrame(loop);
+  }
+  const kick=()=>{if(RN.play&&RN.vis&&!RN.last)requestAnimationFrame(t=>{RN.last=0;loop(t);});};
+  $('rplay').textContent=RN.play?'Pause':'Play';
+  $('rplay').addEventListener('click',()=>{RN.play=!RN.play;$('rplay').textContent=RN.play?'Pause':'Play';RN.last=0;kick();});
+  visWatch($('rg'),v=>{RN.vis=v;kick();});
+  drawRN(); step(0);
+}
+{
+  const v=35,w=12, th=Math.atan2(w,v)*R2D, R=Math.hypot(v,w);
+  const vr=10, u=10, th2=Math.atan2(u,vr)*R2D;
+  quiz($('q5'),[
+   {q:`Rain falls straight down at ${v} m/s. A wind starts blowing at ${w} m/s from east to west. How should someone standing still hold the umbrella?`,o:[`${th.toFixed(0)}° from vertical, toward the east`,`${th.toFixed(0)}° from vertical, toward the west`,`${(90-th).toFixed(0)}° from vertical, toward the east`,'Upright'],a:0,
+    why:`The rain now moves ${w} m/s west and ${v} m/s down: ${R.toFixed(0)} m/s in all, at tan⁻¹(${w}/${v}) = ${th.toFixed(1)}° to the vertical. It arrives from the east, so the umbrella leans east, into it. This is the first preset above.`},
+   {q:`On a windless day rain falls at ${vr} m/s. You start running at ${u} m/s. The rain seems to hit you at:`,o:['vertical','30° from vertical','45° from vertical, from in front','45° from vertical, from behind'],a:2,
+    why:`Relative to you, the rain has a horizontal velocity −${u} m/s (backward, toward you) and ${vr} m/s down: tan θ = ${u}/${vr}, θ = ${th2.toFixed(0)}°. It comes from in front, so you tilt the umbrella forward.`},
+   {q:'You walk east at 6 m/s and the rain looks vertical to you. What does someone standing still see?',o:['Vertical rain','Rain slanting, moving east','Rain slanting, moving west'],a:1,
+    why:'Vertical relative to you means the rain’s horizontal velocity equals yours: 6 m/s east. To the person standing still, it slants toward the east. This is the third preset.'}
+  ]);
+}
+
+/* =================== 6 · RIVER =================== */
+const BT={al:0,v:5,u:3,d:100,s:0,play:false,vis:false,last:0};
+{
+  const W=320,H=270,FAR=56,NEAR=224,AX=150, PXM=()=>(NEAR-FAR)/BT.d; /* px per metre */
+  const mk=(svg,frame)=>{
+    el(svg,'rect',{x:0,y:FAR,width:W,height:NEAR-FAR,fill:'var(--water)','fill-opacity':.09});
+    el(svg,'line',{x1:0,x2:W,y1:FAR,y2:FAR,stroke:'var(--muted)','stroke-width':2}); el(svg,'line',{x1:0,x2:W,y1:NEAR,y2:NEAR,stroke:'var(--muted)','stroke-width':2});
+    const bankg=el(svg,'g',{}); const marks=[];
+    for(let i=0;i<9;i++){marks.push(el(bankg,'line',{y1:FAR-8,y2:FAR,stroke:'var(--muted)','stroke-width':2}));marks.push(el(bankg,'line',{y1:NEAR,y2:NEAR+8,stroke:'var(--muted)','stroke-width':2}));}
+    const flows=[]; for(let i=0;i<3;i++) flows.push(mkArrow(svg,'var(--water)',1.6,{op:.45,head:7}));
+    const ftxt=el(svg,'text',{x:W-6,y:NEAR-8,'font-size':11,fill:'var(--water)','text-anchor':'end'});
+    const A=el(svg,'circle',{r:4.5,fill:'var(--ink)'}); const At=el(svg,'text',{'font-size':12,'font-weight':600,fill:'var(--ink)','text-anchor':'middle'},'A');
+    const opp=el(svg,'line',{stroke:'var(--muted)','stroke-dasharray':'2 4'}); const Bt=el(svg,'text',{'font-size':12,'font-weight':600,fill:'var(--muted)','text-anchor':'middle'},'B');
+    const path=el(svg,'line',{stroke:'var(--disp)','stroke-width':2.2,'stroke-dasharray':'6 4'});
+    const land=el(svg,'circle',{r:4,fill:'none',stroke:'var(--disp)','stroke-width':2});
+    const drift=mkArrow(svg,'var(--disp)',1.6,{head:7}); const dtx=el(svg,'text',{'font-size':11,fill:'var(--disp)','text-anchor':'middle'});
+    const boat=el(svg,'g',{}); el(boat,'path',{d:'M0 -11 L5 -3 L5 9 L-5 9 L-5 -3 Z',fill:'var(--ink)','fill-opacity':.85});
+    const vh=mkArrow(svg,'var(--vel)',2.6,{head:9}), vu=mkArrow(svg,'var(--vel)',1.8,{head:8,dash:'4 3',op:.8}), vg=mkArrow(svg,'var(--vel)',3.2,{head:10});
+    const note=el(svg,'text',{x:6,y:H-5,'font-size':10.5,fill:'var(--muted)'});
+    return {svg,frame,marks,flows,ftxt,A,At,opp,Bt,path,land,drift,dtx,boat,vh,vu,vg,note};
+  };
+  const G=mk($('bg'),'g'), Wt=mk($('bw'),'w');
+  $('bal').addEventListener('input',e=>{BT.al=+e.target.value;BT.s=0;drawBT();});
+  ['bv','bu','bd'].forEach(id=>$(id).addEventListener('input',e=>{BT[id[1]]=+e.target.value;BT.s=0;drawBT();}));
+  const model=()=>{const a=BT.al*D2R, vx=-BT.v*Math.sin(a), vy=BT.v*Math.cos(a), t=BT.d/vy, gx=BT.u+vx; return {a,vx,vy,t,gx,drift:gx*t};};
+  function drawPanel(P,M){
+    const k=PXM(), s=BT.s, isG=P.frame==='g';
+    /* frame-dependent x velocity of the boat (m/s) and of the banks */
+    const bx=isG?M.gx:M.vx, bankShift=isG?0:-BT.u*M.t*s; /* metres */
+    const ax=AX, ay=NEAR;
+    const endx=ax+bx*M.t*k, endy=FAR;
+    const cx=ax+bx*M.t*s*k, cy=NEAR-(NEAR-FAR)*s;
+    at(P.path,{x1:ax,y1:ay,x2:endx,y2:endy});
+    at(P.land,{cx:endx,cy:endy});
+    at(P.boat,{transform:`translate(${cx.toFixed(1)} ${cy.toFixed(1)}) rotate(${BT.al*-1})`});
+    /* boat velocity arrows at the boat (px per m/s) */
+    const KV=8;
+    P.vh.set(cx,cy,cx+M.vx*KV,cy-M.vy*KV);
+    if(isG){P.vu.set(cx+M.vx*KV,cy-M.vy*KV,cx+M.gx*KV,cy-M.vy*KV);P.vg.set(cx,cy,cx+M.gx*KV,cy-M.vy*KV);} else {P.vu.hide();P.vg.hide();}
+    /* bank marks: fixed in ground frame, shifted upstream in water frame */
+    const off=(bankShift*k)%40;
+    P.marks.forEach((m,i)=>{const x=(((Math.floor(i/2)*40+off)%360)+360)%360-20;at(m,{x1:x,x2:x});});
+    /* A and B move with the banks in the water frame */
+    const shift=bankShift*k;
+    at(P.A,{cx:ax+shift,cy:NEAR}); at(P.At,{x:ax+shift,y:NEAR+19});
+    at(P.opp,{x1:ax+shift,x2:ax+shift,y1:NEAR,y2:FAR}); at(P.Bt,{x:ax+shift-8,y:FAR-6,'text-anchor':'end'});
+    /* flow arrows: only in the ground frame */
+    P.flows.forEach((f,i)=>{if(isG&&BT.u>0){const y=FAR+28+i*42, x0=16+i*60;f.set(x0,y,x0+BT.u*7,y);}else f.hide();});
+    P.ftxt.textContent=isG?(BT.u>0?'water flows at u →':'still water'):'water at rest in this frame';
+    /* drift label (ground) or bank-shift label (water) */
+    if(isG){const dx=M.drift*k; if(Math.abs(dx)>4){P.drift.set(ax,FAR-32,ax+dx,FAR-32);at(P.dtx,{x:Math.max(40,Math.min(W-40,ax+dx/2)),y:FAR-37});P.dtx.textContent='drift '+M.drift.toFixed(1)+' m';}else{P.drift.hide();P.dtx.textContent=M.drift===0?'':'';}
+      P.note.textContent='blue: heading v, + current u = ground velocity';}
+    else {P.drift.hide();P.dtx.textContent='';P.note.textContent=BT.u>0?'banks slide upstream at u':'';}
+  }
+  window.drawBT=function(){
+    $('balo').textContent=(BT.al>0?'+':BT.al<0?'−':'')+Math.abs(BT.al)+'°'; $('bvo').textContent=BT.v.toFixed(1)+' m/s'; $('buo').textContent=BT.u.toFixed(1)+' m/s'; $('bdo').textContent=BT.d+' m';
+    const M=model(); drawPanel(G,M); drawPanel(Wt,M);
+    const tmin=BT.d/BT.v, dmin=BT.u*tmin;
+    $('bkv').innerHTML=`<dt>heading</dt><dd>${BT.al===0?'straight across':Math.abs(BT.al)+'° '+(BT.al>0?'upstream':'downstream')}</dd>
+      <dt>across speed v cos α</dt><dd>${f2(M.vy)} m/s</dd><dt>along-river speed u − v sin α</dt><dd>${sg2(M.gx)} m/s</dd>
+      <dt>speed over the ground</dt><dd>${f2(Math.hypot(M.gx,M.vy))} m/s</dd><dt>crossing time</dt><dd>${M.t.toFixed(1)} s</dd><dt>drift</dt><dd>${Math.abs(M.drift)<0.05?'0':M.drift.toFixed(1)+' m '+(M.drift>0?'downstream':'upstream')}</dd>`;
+    let c;
+    if(BT.al===0) c=`Pointed straight across: the fastest crossing, ${tmin.toFixed(1)} s = d/v, but the current carries the boat ${dmin.toFixed(1)} m = u·d/v downstream.`;
+    else if(Math.abs(M.drift)<0.05) c=`Landing straight opposite: v sin α = u. It takes ${M.t.toFixed(1)} s, longer than the ${tmin.toFixed(1)} s minimum, because part of the engine’s effort is spent cancelling the current.`;
+    else c=`Crossing takes ${M.t.toFixed(1)} s (minimum ${tmin.toFixed(1)} s when pointed straight across).`;
+    c+=' In the raft’s frame the water is still, so the boat simply goes the way it points, at v. Only the banks move.';
+    $('bcap').innerHTML=c;
+  };
+  $('bmin').addEventListener('click',()=>{BT.al=0;$('bal').value=0;BT.s=0;drawBT();});
+  $('bzero').addEventListener('click',()=>{
+    let a; if(BT.u<BT.v) a=Math.asin(BT.u/BT.v)*R2D; else a=Math.asin(BT.v/BT.u)*R2D;
+    BT.al=Math.min(80,Math.round(a)); $('bal').value=BT.al; BT.s=0; drawBT();
+    const M=model();
+    if(BT.u===BT.v) $('bcap').innerHTML=`River and boat are equally fast (${BT.u} m/s), so no heading lands at B: aiming further upstream cuts the drift, but the across-speed v cos α shrinks too and the crossing takes ever longer.`;
+    else if(BT.u>BT.v) $('bcap').innerHTML=`The river (${BT.u} m/s) is at least as fast as the boat (${BT.v} m/s), so no heading lands at B. The least drift comes from sin α = v/u, α ≈ ${BT.al}° upstream: drift ${M.drift.toFixed(1)} m = d√(u² − v²)/v.`;
+    else if(Math.abs(a-BT.al)>0.01) $('bcap').innerHTML+=` (Exact heading: sin α = u/v gives α = ${a.toFixed(1)}°; the slider rounds to ${BT.al}°.)`;
+  });
+  function loop(ts){
+    if(!BT.play||!BT.vis){BT.last=0;return;}
+    const dt=BT.last?Math.min(0.05,(ts-BT.last)/1000):0;BT.last=ts;
+    BT.s=Math.min(1,BT.s+dt/3); drawBT();
+    if(BT.s>=1){BT.play=false;$('bplay').textContent='Cross';return;}
+    requestAnimationFrame(loop);
+  }
+  $('bplay').addEventListener('click',()=>{
+    if(RM){BT.s=1;drawBT();return;}
+    BT.s=0;BT.play=true;$('bplay').textContent='Crossing…';BT.last=0;requestAnimationFrame(loop);
+  });
+  visWatch($('bg'),v=>{BT.vis=v;if(v&&BT.play){BT.last=0;requestAnimationFrame(loop);}});
+  drawBT();
+}
+{
+  const d=100,u=3,v=5, t=d/v, dr=u*t, a=Math.asin(u/v)*R2D, t2=d/(v*Math.cos(a*D2R));
+  quiz($('q6'),[
+   {q:`A river ${d} m wide flows at ${u} m/s. A boat moves at ${v} m/s in still water. Heading straight across, how far downstream does it land?`,o:[`${(dr*u/v).toFixed(0)} m`,`${dr.toFixed(0)} m`,`${(d*v/u).toFixed(0)} m`,'0 m'],a:1,
+    why:`Time = d/v = ${d}/${v} = ${t} s (the current does not change the across-speed). Drift = u × t = ${u} × ${t} = ${dr} m.`},
+   {q:`Same river and boat. To land exactly opposite, how long does the crossing take?`,o:[`${t} s`,`${t2.toFixed(0)} s`,`${(d/(v+u)).toFixed(1)} s`,`${(d/u).toFixed(1)} s`],a:1,
+    why:`Aim upstream with sin α = u/v = ${u}/${v}, α = ${a.toFixed(1)}°. The across-speed is then √(v² − u²) = ${Math.sqrt(v*v-u*u)} m/s, so t = ${d}/${Math.sqrt(v*v-u*u)} = ${t2.toFixed(0)} s, longer than the ${t} s minimum.`},
+   {q:'A boat that goes 2 m/s in still water must cross a river flowing at 4 m/s. Can it land straight opposite?',o:['Yes, aim 30° upstream','Yes, aim 60° upstream','No, whatever the heading'],a:2,
+    why:'Landing opposite needs v sin α = u, i.e. sin α = 2 > 1: impossible. The best it can do is sin α = v/u = 1/2, α = 30° upstream, which minimises the drift without removing it.'}
+  ]);
+}
+</script>
+</body>
+</html>

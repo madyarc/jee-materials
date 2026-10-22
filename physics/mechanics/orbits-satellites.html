@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Orbits, Escape and Satellites</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&family=Noto+Sans+Symbols+2&text=%E2%86%90%E2%86%91%E2%86%92%E2%86%93%E2%86%94%E2%86%97%E2%87%8C%E2%87%92%E2%87%94%E2%88%82%E2%88%88%E2%88%92%E2%88%93%E2%88%9A%E2%88%9D%E2%88%9E%E2%88%AB%E2%89%88%E2%89%A0%E2%89%A1%E2%89%A4%E2%89%A5%E2%89%AA%E2%89%AB%E2%8A%95%E2%8A%97%E2%8A%99%E2%8A%A5%E2%96%B2%E2%96%B6%E2%97%80%E2%97%8B%E2%97%8F%E2%9C%93%E2%9C%97%E2%9D%9A%E2%9F%82%E2%9F%A8%E2%9F%A9&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) Newton's cannon: launch speed → falls back / circle / ellipse / escape  (2) escape speed: energy well, vertical launch
+   (3) orbital speed and period vs height  (4) geostationary (top view, rotating Earth) and polar (ground tracks)
+   (5) energy of an orbiting satellite: K, U, E bars and curves  (6) weightlessness: scale in a lift / in orbit  (7) quiz */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --acc:#b0377a; --disp:#1f8f87; --ke:#0f8a4f; --pe:#8a6d1f;
+  --b1:#7a52c7; --b2:#1f8f87; --b3:#b0377a; --b4:#8a6d1f;
+  --earth:#3f7fbf;
+  --f-display:"Bricolage Grotesque","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","Noto Sans Math","Noto Sans Symbols 2",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a; --b1:#a585f0; --b2:#3cb8ad; --b3:#e86fae; --b4:#d4b44a;
+  --earth:#6aa6e0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a; --b1:#a585f0; --b2:#3cb8ad; --b3:#e86fae; --b4:#d4b44a;
+  --earth:#6aa6e0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+a{color:var(--accent)}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:7.5em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:15em;text-align:right}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+svg .mono{font-family:var(--f-mono)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Orbits, Escape and Satellites</h1>
+    <p class="lede">An orbit is a fall that never lands. Fire a ball sideways fast enough and the ground curves away beneath it as fast as it falls. A little faster and it swings out on an ellipse; faster still and it never comes back. This page follows that one idea through orbital speed, escape speed, the energy of a satellite and why astronauts float.</p>
+    <p class="muted">The law of gravitation, g and potential energy −GMm/r are built on the previous page: <a href="gravitation.html">Gravitation</a>.</p>
+  </header>
+
+  <!-- 1 · Newton's cannon -->
+  <section class="stack">
+    <div>
+      <h2>1 · Newton’s cannon</h2>
+      <p class="lede">A cannon on a very tall mountain fires horizontally, with no air in the way. Predict what each speed does, then fire. v<sub>orb</sub> is the speed for a circular orbit just above the ground.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="cchips" role="group" aria-label="Launch speed presets"></div>
+        <div class="svgbox"><svg id="can" viewBox="0 0 640 440" role="img" aria-label="Paths of a ball fired horizontally from a mountain at different speeds" style="min-width:420px"></svg></div>
+        <div class="slider"><label for="cv">launch speed</label><input type="range" id="cv" min="0.3" max="1.6" step="0.005" value="0.8"><output id="cvo"></output></div>
+        <div class="row"><button class="btn primary" id="cfire">Fire</button><label class="muted"><input type="checkbox" id="cghost" checked> keep earlier paths</label></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="cbig"></p>
+        <p class="verdict" id="cverd"></p>
+        <dl class="kv" id="ckv"></dl>
+        <p class="cap key">Circular orbit: gravity is exactly the centripetal force, GMm/r² = mv²/r, so v<sub>orb</sub> = √(GM/r). Near the surface GM/R² = g, so v<sub>orb</sub> = √(gR) ≈ 7.9 km s⁻¹. Slower, and the ball curves in faster than the ground falls away: it lands. Faster, and it climbs on an ellipse, with the launch point as its nearest point. At √2 v<sub>orb</sub> the ellipse never closes: that is the escape speed.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · escape speed -->
+  <section class="stack">
+    <div>
+      <h2>2 · Escape speed: climbing out of the energy well</h2>
+      <p class="lede">Fire straight up. The ball trades kinetic energy for potential energy as it climbs the curve U = −GMm/r. Its total energy E is a flat line. Where the line meets the curve, K is zero and it turns back. Raise the speed until the line reaches zero: then there is no turning point, and it escapes.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="echips" role="group" aria-label="Choose a body"></div>
+        <div class="svgbox"><svg id="well" viewBox="0 0 640 330" role="img" aria-label="Potential energy curve with total energy line" style="min-width:420px"></svg></div>
+        <div class="slider"><label for="ev">launch speed v</label><input type="range" id="ev" min="0" max="1.4" step="0.002" value="0.6"><output id="evo"></output></div>
+        <div class="legend"><span><i style="background:var(--pe)"></i>potential energy U(r)</span><span><i style="background:var(--ink)"></i>total energy E</span><span><i style="background:var(--ke)"></i>kinetic energy = E − U</span></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="ebig"></p>
+        <dl class="kv" id="ekv"></dl>
+        <p class="cap key">To reach infinity with zero speed left, E = ½mv² − GMm/R must be at least 0. So v<sub>e</sub> = √(2GM/R) = √(2gR) = √2 · v<sub>orb</sub>, about 11.2 km s⁻¹ for the Earth. The mass m cancels, and so does the direction: energy does not care which way you fire, as long as the path does not hit the planet (and we ignore air and the Earth’s spin). From a height h, use R + h in place of R.</p>
+        <p class="cap"><span class="hw">simplified</span> The Moon’s escape speed is only about 2.4 km s⁻¹. Over billions of years, the fastest gas molecules near its surface leak away, which is one reason it has almost no atmosphere.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · speed and period vs height -->
+  <section class="stack">
+    <div>
+      <h2>3 · Higher orbits are slower, and much longer</h2>
+      <p class="lede">For a circular orbit of radius r = R + h: v<sub>orb</sub> = √(GM/r) and T = 2πr/v<sub>orb</sub> = 2π√(r³/GM). Go higher and the speed drops, while the path gets longer, so the period grows fast: T² ∝ r³, Kepler’s third law again. Slide the height (the height scale is logarithmic).</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="hchips" role="group" aria-label="Height presets"></div>
+        <div class="svgbox"><svg id="vt" viewBox="0 0 640 400" role="img" aria-label="Orbital speed and period against height" style="min-width:420px"></svg></div>
+        <div class="slider"><label for="hh">height h</label><input type="range" id="hh" min="2" max="5.6" step="0.002" value="2.602"><output id="hho"></output></div>
+      </div>
+      <div class="panel stack">
+        <div class="svgbox"><svg id="pic" viewBox="0 0 260 282" role="img" aria-label="Earth and the orbit drawn to scale" style="max-width:260px;margin:0 auto"></svg></div>
+        <dl class="kv" id="hkv"></dl>
+        <p class="cap key" id="hcap"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · geostationary and polar -->
+  <section class="stack">
+    <div>
+      <h2>4 · Two useful orbits: geostationary and polar</h2>
+      <p class="lede">Pick the height so that T is exactly one rotation of the Earth, and put the orbit over the equator, going the same way the Earth turns. The satellite then hangs over one spot, so a dish can point at it and never move. Seen from above the North Pole:</p>
+    </div>
+    <div class="two">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="geo" viewBox="0 0 360 360" role="img" aria-label="Earth rotating with a geostationary satellite and a lower satellite" style="max-width:380px;margin:0 auto"></svg></div>
+        <div class="row"><button class="btn primary" id="gplay">Play</button><span class="muted">one rotation of the Earth ≈ 8 s here</span></div>
+        <p class="cap key" id="gcap"></p>
+      </div>
+      <div class="panel stack">
+        <h3>Polar orbit: the Earth turns underneath</h3>
+        <div class="svgbox"><svg id="pol" viewBox="0 0 360 230" role="img" aria-label="Ground tracks of a polar satellite on a flat map" style="min-width:300px"></svg></div>
+        <div class="slider"><label for="ph">orbit height</label><input type="range" id="ph" min="300" max="1500" step="10" value="800"><output id="pho"></output></div>
+        <p class="cap" id="pcap"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · energy -->
+  <section class="stack">
+    <div>
+      <h2>5 · The energy of an orbiting satellite</h2>
+      <p class="lede">A satellite in a circular orbit has K = ½mv<sub>orb</sub>² = GMm/2r and U = −GMm/r. So K is exactly half the size of U, and the total is E = −GMm/2r: negative. Slide the orbit outward and watch the three bars.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="en" viewBox="0 0 640 320" role="img" aria-label="Kinetic, potential and total energy of a satellite against orbit radius" style="min-width:420px"></svg></div>
+        <div class="slider"><label for="er">orbit radius r</label><input type="range" id="er" min="1" max="6" step="0.01" value="2"><output id="ero"></output></div>
+        <div class="legend"><span><i style="background:var(--ke)"></i>K = GMm/2r</span><span><i style="background:var(--pe)"></i>U = −GMm/r</span><span><i style="background:var(--ink)"></i>total E = −GMm/2r</span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="enkv"></dl>
+        <p class="cap key"><b>Why negative?</b> U is zero at infinity, and K can never be negative. If E were zero or positive, the satellite would have enough energy to reach infinity: it would escape (section 2). A bound orbit, circle or ellipse, always has E &lt; 0. For an ellipse, E = −GMm/2a, where a is the semi-major axis.</p>
+        <p class="cap"><b>The orbit paradox.</b> Moving to a higher orbit needs energy (E rises towards 0), yet the satellite ends up <i>slower</i> (K = −E falls). The extra energy, and more, goes into U. The reverse is true too: air drag takes energy away, the orbit shrinks, and the satellite speeds up. To escape from an orbit you must supply the binding energy GMm/2r, which means raising the speed from v<sub>orb</sub> to √2 v<sub>orb</sub>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · weightlessness -->
+  <section class="stack">
+    <div>
+      <h2>6 · Weightless, not gravity-less</h2>
+      <p class="lede">A bathroom scale does not measure gravity. It measures how hard it has to push up on you. Put the scale in a lift and change how the lift accelerates.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="wchips" role="group" aria-label="Situations"></div>
+        <div class="svgbox"><svg id="lift" viewBox="0 0 520 280" role="img" aria-label="Person on a scale in a lift, with the forces on them" style="min-width:360px;max-width:560px;margin:0 auto"></svg></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="wbig"></p>
+        <dl class="kv" id="wkv"></dl>
+        <p class="cap key">Newton’s second law for you: mg − N = ma (down positive). The scale reads N = m(g − a). In free fall a = g, so N = 0. An orbiting spacecraft and the astronaut inside are both in free fall round the Earth, with the same acceleration, so nothing presses on anything: weightlessness. At 400 km up, gravity is still about 89% of its surface value. It is not missing; it is what keeps them in orbit.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · quiz -->
+  <section class="stack">
+    <div>
+      <h2>7 · Predict, then check</h2>
+      <p class="lede">Choose first; the reasoning appears after.</p>
+    </div>
+    <div class="qgrid" id="quiz"></div>
+    <div><button class="btn" id="qreset">Reset answers</button></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> the Earth is a uniform sphere of mean radius 6371 km that does not move; the satellite’s own mass is negligible; no air resistance; the Earth’s rotation is ignored except in section 4. In section 1 the mountain is drawn far taller than any real one; speeds are for a launch just above the surface. Orbit pictures in sections 1 and 4 are not to scale; the small orbit picture in section 3 is to scale. Problems use g = 9.8 m s⁻² unless stated.</p>
+    <p><b>Based on:</b> NCERT Physics Class 11, “Gravitation”; H. C. Verma, <i>Concepts of Physics</i> Vol. 1, “Gravitation”; NASA Earth, Moon and Mars Fact Sheets (planetary data); CODATA value of G.</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+const GM_E=3.98600e14;          // m³ s⁻² (NASA Earth fact sheet)
+const R_E=6.371e6;              // m, volumetric mean radius (NASA)
+const R_EQ=6.378137e6;          // m, equatorial radius (NASA), for the height of a geostationary orbit
+const T_SID=23.9345*3600;       // s, sidereal rotation period (NASA)
+const MOON_A=3.844e8;           // m, Moon's semi-major axis (NASA Moon fact sheet)
+const MOON_T=27.3217*86400;     // s, Moon's sidereal orbit period (NASA)
+const MOON_RATIO=0.0123;        // Moon mass ÷ Earth mass (NASA)
+const g0=9.8;                   // m s⁻², value used in problems
+/* bodies for escape speed: GM (m³ s⁻²) and volumetric mean radius (m), NASA fact sheets */
+const BODIES=[
+ {k:'earth',n:'Earth',GM:3.98600e14,R:6.371e6},
+ {k:'moon', n:'Moon', GM:4.90e12,  R:1.7374e6},
+ {k:'mars', n:'Mars', GM:4.2828e13,R:3.3895e6}
+];
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+function set(e,attrs){for(const k in attrs)e.setAttribute(k,attrs[k]);}
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function mkArrow(parent,col,w){const g=el('g',{},parent);g._l=el('line',{stroke:col,'stroke-width':w||2.4,'stroke-linecap':'round'},g);g._h=el('polygon',{fill:col},g);return g;}
+function setArrow(g,x1,y1,x2,y2,head){
+  const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy);
+  if(L<1.5){g.setAttribute('visibility','hidden');return;} g.setAttribute('visibility','visible');
+  const h=Math.min(head||9,L*0.6),ux=dx/L,uy=dy/L,bx=x2-ux*h,by=y2-uy*h,px=-uy*h*0.5,py=ux*h*0.5;
+  set(g._l,{x1:x1.toFixed(1),y1:y1.toFixed(1),x2:bx.toFixed(1),y2:by.toFixed(1)});
+  g._h.setAttribute('points',`${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px).toFixed(1)},${(by+py).toFixed(1)} ${(bx-px).toFixed(1)},${(by-py).toFixed(1)}`);
+}
+function press(sel,k){document.querySelectorAll(sel+' .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===String(k)));}
+function sup(n){const m={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};return String(n).split('').map(c=>m[c]).join('');}
+function sci(x,d){if(x===0)return '0';const p=Math.floor(Math.log10(Math.abs(x))),m=x/Math.pow(10,p);return m.toFixed(d==null?2:d)+' × 10'+sup(p);}
+function onScreen(elm,cb){if(!('IntersectionObserver' in window)){cb(true);return;}new IntersectionObserver(es=>es.forEach(en=>cb(en.isIntersecting)),{threshold:0}).observe(elm);}
+function dur(s){ if(s<2*3600) return (s/60).toFixed(1)+' min'; if(s<3*86400) return (s/3600).toFixed(2)+' h'; return (s/86400).toFixed(2)+' days'; }
+function fmtKm(m){const k=m/1000;return k<100?k.toFixed(0)+' km':Math.round(k).toLocaleString('en-US')+' km';}
+const VO=Math.sqrt(GM_E/R_E); // circular speed at the surface, m/s
+
+/* =================== 1 · NEWTON'S CANNON =================== */
+/* units: GM = 1, launch radius r0 = 1, so circular speed at launch = 1. Ball fired horizontally at the top, moving right (clockwise). */
+const CS=$('can'), CCX=320, CCY=160, CR0=100, CRE=CR0/1.2; // mountain top at 1.2 R_E (hugely exaggerated)
+const CPRE=[{k:'0.6',l:'0.6 v₀ · falls back',v:0.6},{k:'0.9',l:'0.9 v₀',v:0.9},{k:'1',l:'v₀ · circle',v:1},{k:'1.2',l:'1.2 v₀ · ellipse',v:1.2},{k:'1.414',l:'√2 v₀ · escape',v:Math.SQRT2},{k:'1.55',l:'1.55 v₀',v:1.55}];
+$('cchips').innerHTML=CPRE.map(p=>`<button class="chip" data-k="${p.k}">${p.l.replace('v₀','v<sub>orb</sub>')}</button>`).join('');
+el('circle',{cx:CCX,cy:CCY,r:CR0,fill:'none',stroke:'var(--muted)','stroke-dasharray':'3 5','stroke-opacity':.6},CS);
+el('circle',{cx:CCX,cy:CCY,r:CRE,fill:'var(--earth)','fill-opacity':.18,stroke:'var(--earth)','stroke-width':1.6},CS);
+el('text',{x:CCX,y:CCY+5,'font-size':12,fill:'var(--earth)','text-anchor':'middle'},CS,'Earth');
+el('path',{d:`M${CCX-16} ${CCY-CRE+3}L${CCX} ${CCY-CR0}L${CCX+16} ${CCY-CRE+3}Z`,fill:'var(--muted)','fill-opacity':.5,stroke:'var(--muted)'},CS);
+el('rect',{x:CCX-6,y:CCY-CR0-6,width:12,height:6,rx:1.5,fill:'var(--ink)'},CS);
+const cGhost=el('g',{},CS), cPath=el('path',{fill:'none',stroke:'var(--disp)','stroke-width':2.4},CS);
+const cBall=el('circle',{r:5.5,fill:'var(--ink)'},CS); const cVel=mkArrow(CS,'var(--vel)',2.4);
+const cLab=el('text',{'font-size':11.5,fill:'var(--disp)'},CS);
+el('text',{x:632,y:432,'font-size':10.5,fill:'var(--muted)','text-anchor':'end'},CS,'not to scale: mountain hugely exaggerated');
+el('text',{x:CCX+CR0*0.72+8,y:CCY-CR0*0.72-6,'font-size':10.5,fill:'var(--muted)'},CS,'circular orbit');
+const C={v:0.8,th:0,run:false,vis:true,last:0,done:false};
+{const s=parseFloat(load('grav-cv'));if(!isNaN(s)&&s>=0.3&&s<=1.6)C.v=s;} $('cv').value=C.v;
+function conic(v){const p=v*v,e=Math.abs(v*v-1),sgn=v>=1?1:-1;return {p,e,r:th=>p/(1+sgn*e*Math.cos(th)),ok:th=>1+sgn*e*Math.cos(th)>1e-6};}
+function cXY(r,th){return [CCX+CR0*r*Math.sin(th),CCY-CR0*r*Math.cos(th)];}
+const RHIT=CRE/CR0;
+function pathD(v){
+  const c=conic(v);let d='',hit=null,th;
+  for(let i=0;i<=720;i++){th=i*2*Math.PI/720;if(!c.ok(th))break;const r=c.r(th);if(r<RHIT){hit=th;break;}const [x,y]=cXY(r,th);
+    if(x<-50||x>690||y<-50||y>490){d+=(d?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);break;} d+=(d?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);}
+  return {d,hit};
+}
+function canInfo(v){
+  const E=v*v/2-1; /* specific energy in units GM/r0 */
+  if(v<1-1e-3&&pathD(v).hit==null) return {n:'Just misses the ground',t:'Slightly below v<sub>orb</sub>: an ellipse whose nearest point dips below the launch height. It clears the ground here only because the mountain is drawn absurdly tall; from a real mountain, any speed below v<sub>orb</sub> lands.',E};
+  if(v<1-1e-3) return {n:'Falls back to the ground',t:'Below v<sub>orb</sub> the ball curves in faster than the ground curves away. Its path is part of an ellipse with the Earth’s centre at one focus and the launch point as its farthest point; the ground gets in the way. The faster you fire, the farther round it lands.',E};
+  if(Math.abs(v-1)<=1e-3) return {n:'Circular orbit',t:'Exactly v<sub>orb</sub>: the ball falls towards the centre at just the rate the ground curves away. Its height never changes. It comes back to the mountain after one period.',E};
+  if(v<Math.SQRT2-1e-3){const ra=v*v/(2-v*v);return {n:'Elliptical orbit',t:`Faster than v<sub>orb</sub>: gravity cannot bend the path round tightly enough, so the ball climbs, slows, and swings back. The launch point is the nearest point (perigee); the far point is ${ra.toFixed(2)} times as far from the centre. It returns to the mountain every orbit.`,E,ra};}
+  if(Math.abs(v-Math.SQRT2)<=1e-3) return {n:'Escape (parabola)',t:'At √2 v<sub>orb</sub> the total energy is exactly zero. The path opens into a parabola and the ball never returns, slowing towards zero speed far away.',E};
+  return {n:'Escape (hyperbola)',t:`Beyond √2 v<sub>orb</sub> the total energy is positive. The path is a hyperbola and the ball keeps a speed of ${(Math.sqrt(v*v-2)).toFixed(2)} v<sub>orb</sub> far away.`,E};
+}
+function drawCannon(){
+  const v=C.v,{d}=pathD(v); cPath.setAttribute('d',d);
+  press('#cchips',(CPRE.find(p=>Math.abs(p.v-v)<1e-6)||{}).k);
+  $('cvo').innerHTML=`${v.toFixed(3)} v<sub>orb</sub> = ${(v*VO/1000).toFixed(2)} km/s`;
+  const I=canInfo(v); $('cbig').textContent=I.n; $('cverd').innerHTML=I.t;
+  $('ckv').innerHTML=`<dt>launch speed</dt><dd>${v.toFixed(3)} v<sub>orb</sub> = ${(v*VO/1000).toFixed(2)} km s⁻¹</dd><dt>v<sub>orb</sub> = √(gR)</dt><dd>${(VO/1000).toFixed(2)} km s⁻¹</dd><dt>escape, √2 v<sub>orb</sub></dt><dd>${(Math.SQRT2*VO/1000).toFixed(2)} km s⁻¹</dd><dt>total energy E</dt><dd>${I.E>=0?'+':'−'}${Math.abs(I.E).toFixed(3)} GMm/r ${I.E<-1e-9?'(bound)':I.E>1e-9?'(unbound)':'(just unbound)'}</dd>`;
+  setBall(0);
+}
+function setBall(th){
+  const c=conic(C.v),r=c.r(th),[x,y]=cXY(r,th); set(cBall,{cx:x.toFixed(1),cy:y.toFixed(1)});
+  /* velocity direction: tangent of the path */
+  const dth=1e-3,[x2,y2]=cXY(c.r(th+dth),th+dth),L=Math.hypot(x2-x,y2-y),sp=Math.sqrt(Math.max(0,C.v*C.v+2*(1/r-1)));
+  setArrow(cVel,x,y,x+(x2-x)/L*34*sp,y+(y2-y)/L*34*sp,8);
+}
+function addGhost(){if(!$('cghost').checked)return;const d=cPath.getAttribute('d');el('path',{d,fill:'none',stroke:'var(--disp)','stroke-opacity':.28,'stroke-width':1.4},cGhost);while(cGhost.childNodes.length>6)cGhost.removeChild(cGhost.firstChild);}
+function loopC(ts){
+  if(!C.run||!C.vis){C.last=0;return;}
+  const dt=C.last?Math.min(0.05,(ts-C.last)/1000):0; C.last=ts;
+  const c=conic(C.v); let steps=20;
+  for(let i=0;i<steps;i++){const r=c.r(C.th); C.th+=C.v/(r*r)*dt*(2*Math.PI/6)/steps; /* dθ/dt = h/r², h = v·r0; circular orbit ≈ 6 s */}
+  const r=c.r(C.th),[x,y]=cXY(r,C.th);
+  if(!c.ok(C.th)||r<RHIT||C.th>=2*Math.PI||x<-20||x>660||y<-20||y>460){C.run=false;$('cfire').textContent='Fire';
+    if(C.th>=2*Math.PI){C.th=0;setBall(0);} else if(r<RHIT){const hh=pathD(C.v).hit;if(hh!=null)setBall(hh);} return;}
+  setBall(C.th); requestAnimationFrame(loopC);
+}
+$('cfire').addEventListener('click',()=>{
+  if(RM){ /* reduced motion: show the end state */ addGhost(); const h=pathD(C.v).hit; setBall(h!=null?h:(C.v<Math.SQRT2?Math.PI:1.2)); return; }
+  if(C.run){C.run=false;$('cfire').textContent='Fire';return;}
+  addGhost(); C.th=0;C.run=true;C.last=0;$('cfire').textContent='Stop';requestAnimationFrame(loopC);
+});
+$('cv').addEventListener('input',e=>{C.v=+e.target.value;C.run=false;$('cfire').textContent='Fire';store('grav-cv',C.v);drawCannon();});
+$('cchips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;C.v=CPRE.find(p=>p.k===c.dataset.k).v;$('cv').value=C.v;C.run=false;$('cfire').textContent='Fire';store('grav-cv',C.v);drawCannon();});
+$('cghost').addEventListener('change',()=>{if(!$('cghost').checked)while(cGhost.firstChild)cGhost.removeChild(cGhost.firstChild);});
+onScreen(CS,v=>{C.vis=v;if(v&&C.run){C.last=0;requestAnimationFrame(loopC);}});
+drawCannon();
+
+/* =================== 2 · ESCAPE SPEED: ENERGY WELL =================== */
+/* units: energies in GMm/R, distances in R; slider value s = v/v_e, so E = s² − 1 */
+const ES=$('well'), EXL=58, EXR=620, EYT=16, EYB=270, XMAX=10, YMIN=-1.1, YMAX=0.7;
+const ex=r=>EXL+(r)/XMAX*(EXR-EXL), ey=u=>EYT+(YMAX-u)/(YMAX-YMIN)*(EYB-EYT);
+el('rect',{x:EXL,y:EYT,width:ex(1)-EXL,height:EYB-EYT,fill:'var(--earth)','fill-opacity':.1},ES);
+el('text',{x:(EXL+ex(1))/2,y:EYB-8,'font-size':10.5,fill:'var(--earth)','text-anchor':'middle'},ES,'planet');
+[-1,-0.5,0.5].forEach(u=>{el('line',{x1:EXL,x2:EXR,y1:ey(u),y2:ey(u),stroke:'var(--line)'},ES);el('text',{x:EXL-6,y:ey(u)+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end',class:'mono'},ES,u);});
+el('line',{x1:EXL,x2:EXR,y1:ey(0),y2:ey(0),stroke:'var(--muted)'},ES); el('text',{x:EXL-6,y:ey(0)+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end',class:'mono'},ES,'0');
+[1,2,4,6,8,10].forEach(r=>el('text',{x:ex(r),y:EYB+15,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle',class:'mono'},ES,r+'R'));
+el('line',{x1:EXL,x2:EXR,y1:EYB,y2:EYB,stroke:'var(--muted)'},ES); el('line',{x1:EXL,x2:EXL,y1:EYT,y2:EYB,stroke:'var(--muted)'},ES);
+el('text',{x:EXR,y:EYB+32,'font-size':11.5,fill:'var(--ink)','text-anchor':'end'},ES,'distance from the centre');
+el('text',{transform:`translate(14 ${(EYT+EYB)/2}) rotate(-90)`,'font-size':11.5,fill:'var(--ink)','text-anchor':'middle'},ES,'energy ÷ (GMm/R)');
+{let d='';for(let i=0;i<=200;i++){const r=1+i*(XMAX-1)/200;d+=(i?'L':'M')+ex(r).toFixed(1)+' '+ey(-1/r).toFixed(1);}el('path',{d,fill:'none',stroke:'var(--pe)','stroke-width':2.6},ES);}
+const eFill=el('path',{fill:'var(--ke)','fill-opacity':.16},ES);
+const eLine=el('line',{stroke:'var(--ink)','stroke-width':2.2},ES), eKE=el('line',{stroke:'var(--ke)','stroke-width':5},ES);
+const eTP=el('circle',{r:6,fill:'var(--surface)',stroke:'var(--ink)','stroke-width':2},ES), eTPT=el('text',{'font-size':11.5,fill:'var(--ink)'},ES);
+const eET=el('text',{'font-size':11.5,fill:'var(--ink)','text-anchor':'end'},ES,'E'), eKT=el('text',{'font-size':11.5,'font-weight':600,fill:'var(--ke)','text-anchor':'end'},ES,'K');
+const EB={k:'earth',s:0.6};
+{const s=load('grav-body');if(BODIES.some(b=>b.k===s))EB.k=s;}
+$('echips').innerHTML=BODIES.map(b=>`<button class="chip" data-k="${b.k}">${b.n}</button>`).join('');
+function drawWell(){
+  const B=BODIES.find(b=>b.k===EB.k), ve=Math.sqrt(2*B.GM/B.R), s=EB.s, E=s*s-1;
+  press('#echips',EB.k);
+  $('evo').textContent=`${(s*ve/1000).toFixed(2)} km/s = ${s.toFixed(2)} vₑ`;
+  const yE=ey(Math.min(E,YMAX)); set(eLine,{x1:ex(1),x2:EXR,y1:yE,y2:yE}); set(eET,{x:EXR-4,y:yE-6});
+  set(eKE,{x1:ex(1)+4,x2:ex(1)+4,y1:ey(-1),y2:yE}); set(eKT,{x:ex(1)-4,y:(ey(-1)+yE)/2+4});
+  eKE.setAttribute('visibility',s>0.01?'visible':'hidden'); eKT.setAttribute('visibility',s>0.15?'visible':'hidden');
+  let rmax=E<0?1/(-E):Infinity;
+  /* K shading between E line and U curve from r = 1 to the turning point (or edge) */
+  const rEnd=Math.min(rmax,XMAX); let d=`M${ex(1)} ${yE}`;
+  for(let i=0;i<=80;i++){const r=1+i*(rEnd-1)/80;d+=`L${ex(r).toFixed(1)} ${ey(Math.max(-1/r,YMIN)).toFixed(1)}`;}
+  d+=`L${ex(rEnd)} ${yE}Z`; eFill.setAttribute('d',d);
+  if(rmax<=XMAX){set(eTP,{cx:ex(rmax),cy:yE});eTP.setAttribute('visibility','visible');set(eTPT,{x:ex(rmax)+10,y:yE+18});eTPT.textContent='turns back at '+rmax.toFixed(2)+'R';eTPT.setAttribute('visibility',s>0.05?'visible':'hidden');}
+  else {eTP.setAttribute('visibility','hidden');set(eTPT,{x:EXR-110,y:yE+(E>=0?-8:18)});eTPT.textContent=E>=-1e-9?'never turns back':'turns back beyond 10R';eTPT.setAttribute('visibility','visible');}
+  $('ebig').textContent=E<-1e-9?`Falls back from ${rmax<1e3?((rmax-1)*B.R/1000).toLocaleString('en-US',{maximumFractionDigits:0})+' km up':'very far'}`:E>1e-9?`Escapes, keeping ${(ve*Math.sqrt(E)/1000).toFixed(2)} km/s far away`:'Just escapes';
+  $('ekv').innerHTML=`<dt>${B.n}: escape speed v<sub>e</sub> = √(2GM/R)</dt><dd>${(ve/1000).toFixed(2)} km s⁻¹</dd><dt>launch speed</dt><dd>${(s*ve/1000).toFixed(2)} km s⁻¹ = ${s.toFixed(3)} v<sub>e</sub></dd><dt>total energy E</dt><dd>${E>=0?'+':'−'}${Math.abs(E).toFixed(3)} GMm/R</dd><dt>highest point (centre distance)</dt><dd>${E<0?(rmax).toFixed(3)+' R = R/(1 − v²/v<sub>e</sub>²)':'none: E ≥ 0'}</dd><dt>speed far away</dt><dd>${E>0?(ve*Math.sqrt(E)/1000).toFixed(2)+' km s⁻¹ = √(v² − v<sub>e</sub>²)':'—'}</dd>`;
+}
+$('ev').addEventListener('input',e=>{EB.s=+e.target.value;drawWell();});
+$('echips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;EB.k=c.dataset.k;store('grav-body',EB.k);drawWell();});
+drawWell();
+
+/* =================== 3 · SPEED AND PERIOD vs HEIGHT =================== */
+const HS=$('vt'), HXL=64, HXR=620, H1T=14, H1B=170, H2T=214, H2B=350, LH0=2, LH1=5.6; // log10(height in km)
+const hx=l=>HXL+(l-LH0)/(LH1-LH0)*(HXR-HXL);
+const vy=v=>H1B-v/8.5*(H1B-H1T); const TL0=Math.log10(1), TL1=Math.log10(1000); // period in hours, log
+const ty=Th=>H2B-(Math.log10(Th)-TL0)/(TL1-TL0)*(H2B-H2T);
+[100,1000,10000,100000].forEach(km=>{const x=hx(Math.log10(km));el('line',{x1:x,x2:x,y1:H1T,y2:H2B,stroke:'var(--line)'},HS);el('text',{x,y:H2B+16,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle',class:'mono'},HS,km.toLocaleString('en-US')+' km');});
+[0,2,4,6,8].forEach(v=>{el('line',{x1:HXL,x2:HXR,y1:vy(v),y2:vy(v),stroke:'var(--line)'},HS);el('text',{x:HXL-6,y:vy(v)+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end',class:'mono'},HS,v);});
+[1,10,100,1000].forEach(T=>{el('line',{x1:HXL,x2:HXR,y1:ty(T),y2:ty(T),stroke:'var(--line)'},HS);el('text',{x:HXL-6,y:ty(T)+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end',class:'mono'},HS,T+' h');});
+el('text',{x:HXR-10,y:vy(5)+4,'font-size':11.5,fill:'var(--vel)','text-anchor':'end'},HS,'orbital speed (km/s)');
+el('text',{x:HXR-4,y:H2B-8,'font-size':11.5,fill:'var(--b1)','text-anchor':'end'},HS,'period (log scale)');
+el('text',{x:HXR,y:H2B+34,'font-size':11.5,fill:'var(--ink)','text-anchor':'end'},HS,'height above the surface (log scale)');
+{let d1='',d2='';for(let i=0;i<=200;i++){const l=LH0+i*(LH1-LH0)/200,r=R_E+Math.pow(10,l)*1000,v=Math.sqrt(GM_E/r)/1000,T=2*Math.PI*Math.sqrt(r*r*r/GM_E)/3600;
+  d1+=(i?'L':'M')+hx(l).toFixed(1)+' '+vy(v).toFixed(1); d2+=(i?'L':'M')+hx(l).toFixed(1)+' '+ty(T).toFixed(1);}
+ el('path',{d:d1,fill:'none',stroke:'var(--vel)','stroke-width':2.4},HS); el('path',{d:d2,fill:'none',stroke:'var(--b1)','stroke-width':2.4},HS);}
+const GEO_R=Math.cbrt(GM_E*T_SID*T_SID/(4*Math.PI*Math.PI)), GEO_H=GEO_R-R_EQ;
+const HPRE=[{k:'low',l:'400 km',h:400e3},{k:'geo',l:'Geostationary',h:GEO_H},{k:'moon',l:'Moon’s distance',h:MOON_A-R_E}];
+$('hchips').innerHTML=HPRE.map(p=>`<button class="chip" data-k="${p.k}">${p.l}</button>`).join('');
+HPRE.forEach((p,i)=>{const x=hx(Math.log10(p.h/1000));el('line',{x1:x,x2:x,y1:H1T,y2:H2B,stroke:'var(--muted)','stroke-dasharray':'2 4','stroke-opacity':.7},HS);
+  el('text',{x:x+(i===2?-4:4),y:H2T-10,'font-size':10.5,fill:'var(--muted)','text-anchor':i===2?'end':'start'},HS,p.l);});
+const hMV=el('line',{stroke:'var(--accent)','stroke-width':1.4},HS), hM1=el('circle',{r:5.5,fill:'var(--vel)'},HS), hM2=el('circle',{r:5.5,fill:'var(--b1)'},HS);
+/* to-scale picture */
+const PS=$('pic'), PC=130; const pEarth=el('circle',{cx:PC,cy:PC,fill:'var(--earth)','fill-opacity':.25,stroke:'var(--earth)'},PS), pOrb=el('circle',{cx:PC,cy:PC,fill:'none',stroke:'var(--disp)','stroke-width':2},PS);
+const pSat=el('circle',{r:4,fill:'var(--ink)'},PS), pT=el('text',{x:PC,y:274,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'},PS);
+const HH={l:Math.log10(400)};
+function drawVT(){
+  const h=Math.pow(10,HH.l)*1000, r=R_E+h, v=Math.sqrt(GM_E/r), T=2*Math.PI*Math.sqrt(r*r*r/GM_E), x=hx(HH.l);
+  set(hMV,{x1:x,x2:x,y1:H1T,y2:H2B}); set(hM1,{cx:x,cy:vy(v/1000)}); set(hM2,{cx:x,cy:ty(T/3600)});
+  press('#hchips',(HPRE.find(p=>Math.abs(Math.log10(p.h/1000)-HH.l)<1e-6)||{}).k);
+  $('hho').textContent=fmtKm(h);
+  const sc=118/r; set(pEarth,{r:(R_E*sc).toFixed(2)}); set(pOrb,{r:118}); set(pSat,{cx:PC+118*Math.cos(-0.8),cy:PC+118*Math.sin(-0.8)});
+  pT.textContent=`to scale: orbit radius = ${(r/R_E).toFixed(2)} R`;
+  const T0=2*Math.PI*Math.sqrt(R_E/g0);
+  $('hkv').innerHTML=`<dt>height h</dt><dd>${fmtKm(h)}</dd><dt>orbit radius r = R + h</dt><dd>${(r/R_E).toFixed(3)} R</dd><dt>speed v<sub>orb</sub></dt><dd>${(v/1000).toFixed(2)} km s⁻¹</dd><dt>period T</dt><dd>${dur(T)}</dd><dt>near-surface T₀ = 2π√(R/g)</dt><dd>${(T0/60).toFixed(1)} min</dd>`;
+  const k=(HPRE.find(p=>Math.abs(Math.log10(p.h/1000)-HH.l)<1e-6)||{}).k;
+  const Tm=2*Math.PI*Math.sqrt(MOON_A**3/GM_E), Tm2=2*Math.PI*Math.sqrt(MOON_A**3/(GM_E*(1+MOON_RATIO)));
+  $('hcap').innerHTML= k==='geo'?`Period = one rotation of the Earth relative to the stars (${(T_SID/3600).toFixed(4)} h, a little less than 24 h). That fixes r = ${(GEO_R/1000).toLocaleString('en-US',{maximumFractionDigits:0})} km from the centre, about ${(GEO_R/R_E).toFixed(1)} Earth radii. See section 4.`
+    : k==='moon'?`The same formula with the Moon’s distance gives T = ${(Tm/86400).toFixed(2)} days; the measured value is ${(MOON_T/86400).toFixed(2)} days. The small gap is real physics: the Moon’s own mass (about 1.2% of the Earth’s) is not negligible. With G(M + m) in place of GM, T = ${(Tm2/86400).toFixed(2)} days.`
+    : k==='low'?`A low orbit like this goes round in ${dur(T)}, about ${(86400/T).toFixed(0)} times a day. It is still inside the thinnest wisps of the atmosphere, which slowly drag it down (section 5).`
+    : 'Close to the surface, T₀ = 2π√(R/g): the shortest possible orbit, about 84 minutes (ignoring air). Every higher orbit is slower and longer.';
+}
+$('hh').addEventListener('input',e=>{HH.l=+e.target.value;drawVT();});
+$('hchips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;HH.l=Math.log10(HPRE.find(p=>p.k===c.dataset.k).h/1000);$('hh').value=HH.l;drawVT();});
+$('hh').value=HH.l; drawVT();
+
+/* =================== 4 · GEOSTATIONARY (top view) + POLAR (ground tracks) =================== */
+const GS=$('geo'), GC=180, GER=24, GGR=GER*GEO_R/R_E; // to scale radii for Earth and geostationary orbit
+const LOW_H=20000e3, LOW_R=R_E+LOW_H, GLR=GER*LOW_R/R_E, LOW_T=2*Math.PI*Math.sqrt(LOW_R**3/GM_E);
+el('circle',{cx:GC,cy:GC,r:GGR,fill:'none',stroke:'var(--b2)','stroke-dasharray':'4 4','stroke-opacity':.7},GS);
+el('circle',{cx:GC,cy:GC,r:GLR,fill:'none',stroke:'var(--muted)','stroke-dasharray':'2 5','stroke-opacity':.7},GS);
+const gEarth=el('g',{},GS); el('circle',{cx:GC,cy:GC,r:GER,fill:'var(--earth)','fill-opacity':.3,stroke:'var(--earth)','stroke-width':1.5},gEarth);
+el('line',{x1:GC,y1:GC,x2:GC+GER,y2:GC,stroke:'var(--earth)','stroke-width':1},gEarth);
+const gDish=el('circle',{cx:GC+GER,cy:GC,r:4,fill:'var(--flag)'},gEarth);
+el('circle',{cx:GC,cy:GC,r:3,fill:'none',stroke:'var(--axis)','stroke-width':1.2},GS); el('circle',{cx:GC,cy:GC,r:1,fill:'var(--axis)'},GS);
+const gBeam=el('line',{stroke:'var(--flag)','stroke-dasharray':'3 3','stroke-width':1.2},GS), gBeam2=el('line',{stroke:'var(--muted)','stroke-dasharray':'3 3','stroke-width':1},GS);
+const gSat=el('rect',{width:10,height:10,rx:2,fill:'var(--b2)'},GS), gLow=el('rect',{width:8,height:8,rx:2,fill:'var(--muted)'},GS);
+el('text',{x:GC,y:GC-GGR-6,'font-size':10.5,fill:'var(--b2)','text-anchor':'middle'},GS,'geostationary, '+fmtKm(GEO_H)+' up');
+el('text',{x:GC,y:GC+GLR+14,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'},GS,'lower: '+fmtKm(LOW_H)+' up');
+el('text',{x:6,y:352,'font-size':10.5,fill:'var(--muted)'},GS,'radii to scale; view from above the North Pole');
+const GE={t:0.09,run:!RM,vis:true,last:0};
+function drawGeo(){
+  const a=2*Math.PI*GE.t; /* Earth's rotation angle (counter-clockwise from above the N pole) */
+  gEarth.setAttribute('transform',`rotate(${(-a*180/Math.PI).toFixed(2)} ${GC} ${GC})`);
+  const sx=GC+GGR*Math.cos(a), sy=GC-GGR*Math.sin(a); set(gSat,{x:sx-5,y:sy-5});
+  const dx=GC+GER*Math.cos(a), dy=GC-GER*Math.sin(a); set(gBeam,{x1:dx,y1:dy,x2:sx,y2:sy});
+  const al=2*Math.PI*GE.t*T_SID/LOW_T, lx=GC+GLR*Math.cos(al), ly=GC-GLR*Math.sin(al); set(gLow,{x:lx-4,y:ly-4}); set(gBeam2,{x1:dx,y1:dy,x2:lx,y2:ly});
+}
+function loopG(ts){if(!GE.run||!GE.vis){GE.last=0;return;}const dt=GE.last?Math.min(0.05,(ts-GE.last)/1000):0;GE.last=ts;GE.t=(GE.t+dt/8)%1;drawGeo();requestAnimationFrame(loopG);}
+$('gplay').textContent=GE.run?'Pause':'Play';
+$('gplay').addEventListener('click',()=>{if(RM){GE.t=(GE.t+0.125)%1;drawGeo();return;}GE.run=!GE.run;$('gplay').textContent=GE.run?'Pause':'Play';GE.last=0;if(GE.run)requestAnimationFrame(loopG);});
+if(RM)$('gplay').textContent='Step ⅛ day →';
+onScreen(GS,v=>{GE.vis=v;GE.last=0;if(v&&GE.run)requestAnimationFrame(loopG);});
+$('gcap').innerHTML=`The red dot is a dish on the equator. The green satellite goes round once per rotation (T = ${(T_SID/3600).toFixed(2)} h), the same way as the Earth, so the red line between them never moves. The grey satellite, lower down, has T = ${dur(LOW_T)}: it runs ahead and the dish would have to track it. A geostationary orbit must be over the equator: a tilted orbit would swing north and south of the dish every day.`;
+drawGeo(); if(GE.run)requestAnimationFrame(loopG);
+
+/* polar orbit: ground tracks on a flat longitude–latitude map, 3 successive orbits */
+const PO=$('pol'), MX0=30, MX1=350, MY0=14, MY1=194; const mx=l=>MX0+(l+180)/360*(MX1-MX0), my=f=>MY0+(90-f)/180*(MY1-MY0);
+el('rect',{x:MX0,y:MY0,width:MX1-MX0,height:MY1-MY0,fill:'var(--earth)','fill-opacity':.08,stroke:'var(--line)'},PO);
+[-60,-30,0,30,60].forEach(f=>el('line',{x1:MX0,x2:MX1,y1:my(f),y2:my(f),stroke:f===0?'var(--muted)':'var(--line)','stroke-dasharray':f===0?'4 3':''},PO));
+[-120,-60,0,60,120].forEach(l=>el('line',{x1:mx(l),x2:mx(l),y1:MY0,y2:MY1,stroke:'var(--line)'},PO));
+el('text',{x:MX0-4,y:my(0)+4,'font-size':10,fill:'var(--muted)','text-anchor':'end'},PO,'0°'); el('text',{x:MX0-4,y:my(90)+8,'font-size':10,fill:'var(--muted)','text-anchor':'end'},PO,'N'); el('text',{x:MX0-4,y:my(-90),'font-size':10,fill:'var(--muted)','text-anchor':'end'},PO,'S');
+el('text',{x:(MX0+MX1)/2,y:MY1+16,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'},PO,'longitude (flat map, no coastlines)');
+const polT=[0,1,2].map(i=>el('path',{fill:'none',stroke:'var(--b2)','stroke-width':2,'stroke-opacity':1-i*0.3},PO));
+const polL=[0,1,2].map(i=>el('text',{'font-size':11,'font-weight':600,fill:'var(--b2)','text-anchor':'middle'},PO,String(i+1)));
+function drawPolar(){
+  const h=+$('ph').value*1000, r=R_E+h, T=2*Math.PI*Math.sqrt(r*r*r/GM_E), shift=360*T/T_SID;
+  $('pho').textContent=fmtKm(h)+', T = '+dur(T);
+  polT.forEach((p,i)=>{
+    let d='',prev=null;
+    for(let j=0;j<=240;j++){const u=-Math.PI/2+2*Math.PI*j/240, t=T*(i+(u+Math.PI/2)/(2*Math.PI));
+      const lat=Math.asin(Math.sin(u))*180/Math.PI; let lon=(Math.cos(u)>=0?0:180)-360*t/T_SID; lon=((lon+180)%360+360)%360-180;
+      const x=mx(lon),y=my(lat); d+=(prev!==null&&Math.abs(x-prev)>100?'M':(d?'L':'M'))+x.toFixed(1)+' '+y.toFixed(1); prev=x;}
+    p.setAttribute('d',d);
+  });
+  /* stagger labels: put them near 30°N on the northbound pass */
+  polL.forEach((t,i)=>{const lon=((-360*T*(i+0.5)/T_SID+180)%360+360)%360-180;set(t,{x:mx(lon)+7,y:MY0-3});});
+  $('pcap').innerHTML=`A polar satellite crosses both poles. It goes round in ${dur(T)}, and in that time the Earth turns ${shift.toFixed(1)}° eastward underneath, so each pass (tracks 1, 2, 3) is ${shift.toFixed(1)}° farther west. In one day it makes ${(T_SID/T).toFixed(1)} orbits and its tracks cover the whole globe: ideal for mapping and weather pictures. Low orbit also means a close, detailed view.`;
+}
+$('ph').addEventListener('input',drawPolar); drawPolar();
+
+/* =================== 5 · ENERGY =================== */
+const NS5=$('en'), BX=40, BW=34, BY0=110, BS=180; // bars: y0 is zero line, 110 px per GMm/R
+const NXL=250, NXR=620, NYT=20, NYB=280, NR=6, NMIN=-1.05, NMAX=0.55;
+const nx=r=>NXL+(r-1)/(NR-1)*(NXR-NXL), ny=u=>NYT+(NMAX-u)/(NMAX-NMIN)*(NYB-NYT);
+el('line',{x1:BX-10,x2:BX+3*BW+40,y1:BY0,y2:BY0,stroke:'var(--muted)'},NS5);
+el('text',{x:BX-12,y:BY0+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end',class:'mono'},NS5,'0');
+const bars=[['var(--ke)','K'],['var(--pe)','U'],['var(--ink)','E']].map(([c,l],i)=>{const r=el('rect',{x:BX+i*(BW+14),width:BW,fill:c,'fill-opacity':.85},NS5);const t=el('text',{x:BX+i*(BW+14)+BW/2,'font-size':12,'font-weight':600,fill:c,'text-anchor':'middle'},NS5,l);return {r,t};});
+el('text',{x:BX+1.5*BW+14,y:308,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'},NS5,'units of GMm/R');
+/* curves */
+[-1,-0.5,0.5].forEach(u=>{el('line',{x1:NXL,x2:NXR,y1:ny(u),y2:ny(u),stroke:'var(--line)'},NS5);el('text',{x:NXL-6,y:ny(u)+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end',class:'mono'},NS5,u);});
+el('line',{x1:NXL,x2:NXR,y1:ny(0),y2:ny(0),stroke:'var(--muted)'},NS5);
+[1,2,3,4,5,6].forEach(r=>el('text',{x:nx(r),y:NYB+15,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle',class:'mono'},NS5,r+'R'));
+el('text',{x:NXR,y:NYB+32,'font-size':11.5,fill:'var(--ink)','text-anchor':'end'},NS5,'orbit radius r');
+[[r=>0.5/r,'var(--ke)'],[r=>-1/r,'var(--pe)'],[r=>-0.5/r,'var(--ink)']].forEach(([f,c])=>{let d='';for(let i=0;i<=150;i++){const r=1+i*(NR-1)/150;d+=(i?'L':'M')+nx(r).toFixed(1)+' '+ny(f(r)).toFixed(1);}el('path',{d,fill:'none',stroke:c,'stroke-width':2.2},NS5);});
+const nV=el('line',{stroke:'var(--accent)','stroke-dasharray':'3 3'},NS5), nPts=[0,1,2].map(i=>el('circle',{r:5,fill:['var(--ke)','var(--pe)','var(--ink)'][i]},NS5));
+function drawEn(){
+  const r=+$('er').value, K=0.5/r, U=-1/r, E=-0.5/r;
+  [K,U,E].forEach((v,i)=>{const h=Math.abs(v)*BS;set(bars[i].r,{y:v>=0?BY0-h:BY0,height:h.toFixed(1)});set(bars[i].t,{y:v>=0?BY0-h-6:BY0+h+15});});
+  set(nV,{x1:nx(r),x2:nx(r),y1:NYT,y2:NYB}); [K,U,E].forEach((v,i)=>set(nPts[i],{cx:nx(r),cy:ny(v)}));
+  const h=(r-1)*R_E; $('ero').textContent=`${r.toFixed(2)} R (h = ${fmtKm(h)})`;
+  const m=1000, J=GM_E*m/(r*R_E);
+  $('enkv').innerHTML=`<dt>K</dt><dd>+${K.toFixed(3)} GMm/R</dd><dt>U</dt><dd>−${(-U).toFixed(3)} GMm/R</dd><dt>total E</dt><dd>−${(-E).toFixed(3)} GMm/R</dd><dt>K : U : E</dt><dd>1 : −2 : −1</dd><dt>energy to escape, 1000 kg</dt><dd>${sci(J/2,2)} J</dd>`;
+}
+$('er').addEventListener('input',drawEn); drawEn();
+
+/* =================== 6 · WEIGHTLESSNESS =================== */
+const WPRE=[{k:'rest',l:'Lift at rest',a:0},{k:'up',l:'Accelerating up, 2 m/s²',a:-2},{k:'down',l:'Accelerating down, 2 m/s²',a:2},{k:'fall',l:'Cable snaps: free fall',a:g0},{k:'orbit',l:'Orbiting at 400 km',a:'orbit'}];
+$('wchips').innerHTML=WPRE.map(p=>`<button class="chip" data-k="${p.k}">${p.l}</button>`).join('');
+const LS=$('lift'), LX=160, LY=40;
+el('rect',{x:LX-80,y:LY,width:160,height:210,rx:6,fill:'none',stroke:'var(--ink)','stroke-opacity':.55,'stroke-width':2},LS);
+const lCable=el('line',{x1:LX,x2:LX,y1:0,y2:LY,stroke:'var(--ink)','stroke-opacity':.55,'stroke-width':2},LS);
+el('rect',{x:LX-36,y:LY+189,width:72,height:14,rx:2,fill:'var(--surface)',stroke:'var(--ink)','stroke-width':1.2},LS);
+const lRead=el('text',{x:LX,y:LY+200,'font-size':11,'font-weight':500,fill:'var(--ink)','text-anchor':'middle',class:'mono'},LS);
+/* stick figure */
+const pf=el('g',{stroke:'var(--ink)','stroke-width':3,'stroke-linecap':'round',fill:'none'},LS);
+el('circle',{cx:LX,cy:LY+82,r:13},pf); el('line',{x1:LX,y1:LY+95,x2:LX,y2:LY+150},pf);
+el('line',{x1:LX,y1:LY+108,x2:LX-22,y2:LY+130},pf); el('line',{x1:LX,y1:LY+108,x2:LX+22,y2:LY+130},pf);
+el('line',{x1:LX,y1:LY+150,x2:LX-14,y2:LY+188},pf); el('line',{x1:LX,y1:LY+150,x2:LX+14,y2:LY+188},pf);
+const wG=mkArrow(LS,'var(--force)',3), wN=mkArrow(LS,'var(--force)',3), wA=mkArrow(LS,'var(--acc)',3);
+const wGT=el('text',{'font-size':12,fill:'var(--force)'},LS), wNT=el('text',{'font-size':12,fill:'var(--force)'},LS), wAT=el('text',{'font-size':12,fill:'var(--acc)'},LS);
+const W={k:'rest'};
+function drawLift(){
+  const P=WPRE.find(p=>p.k===W.k), orbit=P.a==='orbit', gl=orbit?g0*(R_E/(R_E+400e3))**2:g0, a=orbit?gl:P.a, m=60, N=m*(gl-a);
+  press('#wchips',W.k);
+  lCable.setAttribute('visibility',(W.k==='fall'||orbit)?'hidden':'visible');
+  const S=6; // px per m/s² (per kg)
+  setArrow(wG,LX+55,LY+110,LX+55,LY+110+gl*S,10); set(wGT,{x:LX+90,y:LY+110+gl*S/2+4}); wGT.textContent='mg = '+(m*gl).toFixed(0)+' N';
+  setArrow(wN,LX-55,LY+188,LX-55,LY+188-(N/m)*S,10); set(wNT,{x:LX-90,y:LY+188-(N/m)*S/2+4,'text-anchor':'end'}); wNT.textContent=N>0.5?'N = '+N.toFixed(0)+' N':'';
+  setArrow(wA,LX+200,LY+105,LX+200,LY+105+a*S,10); set(wAT,{x:LX+210,y:LY+105+(a*S)/2+4}); wAT.textContent=Math.abs(a)>1e-9?'a = '+Math.abs(a).toFixed(1)+' m/s² '+(a>0?'down':'up'):'a = 0';
+  lRead.textContent=(N/g0).toFixed(1)+' kg';
+  $('wbig').textContent=`Scale reads ${(N/g0).toFixed(1)} kg`+(N<0.5?': weightless':'');
+  $('wkv').innerHTML=`<dt>your mass</dt><dd>60 kg</dd><dt>gravity here, g</dt><dd>${gl.toFixed(2)} m s⁻²${orbit?' ('+(100*gl/g0).toFixed(0)+'% of surface)':''}</dd><dt>your acceleration</dt><dd>${Math.abs(a).toFixed(2)} m s⁻² ${a>0?'down':a<0?'up':''}</dd><dt>scale force N = m(g − a)</dt><dd>${N.toFixed(0)} N</dd>`;
+}
+$('wchips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;W.k=c.dataset.k;drawLift();});
+drawLift();
+
+/* =================== 7 · QUIZ =================== */
+const nc={G:6.67e-11,M:6.0e24,R:6.4e6}; // NCERT exercise data
+const ve_nc=Math.sqrt(2*nc.G*nc.M/nc.R), rmax17=nc.R/(1-(5e3/ve_nc)**2), E19=nc.G*nc.M*200/(2*(nc.R+0.4e6));
+const QUIZ=[
+ {q:'Newton’s cannon fires at 1.2 v<sub>orb</sub>. The ball:',
+  o:['Falls to the ground, farther away','Goes round in a circle, higher up','Goes round on an ellipse and returns to the mountain','Escapes'],a:2,
+  why:'Between v<sub>orb</sub> and √2 v<sub>orb</sub> the orbit is an ellipse with the launch point as its nearest point. It comes back to the same point every orbit (if the mountain is still there!). Try 1.2 in section 1.'},
+ {q:'A planet has the Earth’s mass but half its radius. Its escape speed is:',
+  o:['half the Earth’s','the same','√2 times the Earth’s','twice the Earth’s'],a:2,
+  why:'v<sub>e</sub> = √(2GM/R). Halving R at fixed M multiplies v<sub>e</sub> by √2.'},
+ {q:`A rocket is fired straight up at 5 km s⁻¹ (take M = 6.0 × 10²⁴ kg, R = 6.4 × 10⁶ m, no air). How high does it rise?`,
+  o:['about 1300 km','about 1600 km','about 6400 km','it escapes'],a:1,
+  why:`v<sub>e</sub> = √(2GM/R) = ${(ve_nc/1000).toFixed(1)} km s⁻¹. Energy: r<sub>max</sub> = R/(1 − v²/v<sub>e</sub>²) = ${(rmax17/1e6).toFixed(2)} × 10⁶ m, so h = ${((rmax17-nc.R)/1e3).toFixed(0)} km, i.e. R/4. Using v²/2g would give ${((5e3)**2/(2*g0)/1e3).toFixed(0)} km, an underestimate: g weakens on the way up.`},
+ {q:'A body is launched at 3 times the escape speed (11.2 km s⁻¹). Far from the Earth its speed is:',
+  o:['22.4 km s⁻¹','about 31.7 km s⁻¹','33.6 km s⁻¹','zero'],a:1,
+  why:`½mv² − ½mv<sub>e</sub>² = ½mv<sub>∞</sub>², so v<sub>∞</sub> = √(9 − 1) v<sub>e</sub> = √8 × 11.2 = ${(Math.sqrt(8)*11.2).toFixed(1)} km s⁻¹. Energy, not speed, subtracts.`},
+ {q:'A satellite’s total energy is −5 MJ. Its kinetic energy is:',
+  o:['+5 MJ','+10 MJ','−5 MJ','+2.5 MJ'],a:0,
+  why:'K = −E = +5 MJ, and U = 2E = −10 MJ. Check: 5 + (−10) = −5.'},
+ {q:`How much energy is needed to send a 200 kg satellite orbiting 400 km up out of the Earth’s pull? (M = 6.0 × 10²⁴ kg, R = 6.4 × 10⁶ m)`,
+  o:['about 1.2 × 10¹⁰ J','about 5.9 × 10⁹ J','about 7.8 × 10⁸ J','about 3.0 × 10⁹ J'],a:1,
+  why:`It already has E = −GMm/2r. To reach E = 0, add GMm/2r with r = 6.8 × 10⁶ m: ${sci(E19,2)} J. (Escaping from rest on the ground would need GMm/R, about ${sci(nc.G*nc.M*200/nc.R,2)} J, the first option: being in orbit already counts for more than half of that.)`},
+ {q:'Satellite B orbits at 4 times the radius of satellite A. Compared with A, B’s period and speed are:',
+  o:['T × 4, v × 1/2','T × 8, v × 1/2','T × 8, v × 1/4','T × 16, v × 1/4'],a:1,
+  why:'T ∝ r^{3/2}: 4^{3/2} = 8. v ∝ 1/√r: 1/√4 = 1/2. (Check: distance per orbit × 4, speed × ½, so time × 8.)'.replace(/\^\{3\/2\}/g,'<sup>3/2</sup>')},
+ {q:'An astronaut floats inside the space station mainly because:',
+  o:['there is no gravity in space','gravity there is about 1% of the surface value','she and the station fall together with the same acceleration','the station’s spin cancels gravity'],a:2,
+  why:'At 400 km gravity is still about 89% of its surface value. Both are in free fall, so the floor does not need to push on her. Try the last chip in section 6.'},
+ {q:`T² = 4π²r³/GM with the Moon’s distance (3.844 × 10⁵ km) gives ${(2*Math.PI*Math.sqrt(MOON_A**3/GM_E)/86400).toFixed(2)} days, but the measured period is ${(MOON_T/86400).toFixed(2)} days. Why the gap?`,
+  o:['The Moon’s orbit is an ellipse','The Moon’s own mass is not negligible','The Earth’s rotation','Rounding in the data'],a:1,
+  why:`The formula assumes the Earth stays still. In fact the Earth and Moon both circle their common centre of mass, and the exact law is T² = 4π²a³/G(M + m). The Moon has about 1.2% of the Earth’s mass, which gives ${(2*Math.PI*Math.sqrt(MOON_A**3/(GM_E*(1+MOON_RATIO)))/86400).toFixed(2)} days. An ellipse is already covered by using the semi-major axis a. Try the “Moon’s distance” chip in section 3.`},
+ {q:'Air drag slowly takes energy from a satellite in a low circular orbit. Its speed:',
+  o:['decreases','increases','stays the same'],a:1,
+  why:'E = −GMm/2r falls (more negative), so r shrinks, and K = −E grows. Drag makes it faster. The lost energy and the extra K both come from U falling twice as much.'},
+ {q:'To escape from a circular orbit, a satellite must raise its speed (at that radius) by a factor of:',
+  o:['2','√2','1.5','it cannot escape'],a:1,
+  why:'Orbital speed √(GM/r), escape speed at the same r √(2GM/r). The ratio is √2 at every radius, like v<sub>e</sub> = √2 v<sub>orb</sub> at the surface.'}
+];
+function renderQuiz(){
+  $('quiz').innerHTML=QUIZ.map((q,i)=>`<div class="panel"><p class="qn">Q${i+1}</p><p>${q.q}</p>
+    <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');
+}
+$('quiz').addEventListener('click',e=>{
+  const b=e.target.closest('.opt'); if(!b||b.disabled) return;
+  const box=b.parentElement, q=QUIZ[+box.dataset.i], j=+b.dataset.j;
+  box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+  const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+});
+$('qreset').onclick=renderQuiz;
+renderQuiz();
+</script>
+</body>
+</html>

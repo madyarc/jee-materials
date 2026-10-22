@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Centre of Mass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&family=Noto+Sans+Symbols+2&text=%E2%86%90%E2%86%91%E2%86%92%E2%86%93%E2%86%94%E2%86%97%E2%87%8C%E2%87%92%E2%87%94%E2%88%82%E2%88%88%E2%88%92%E2%88%93%E2%88%9A%E2%88%9D%E2%88%9E%E2%88%AB%E2%89%88%E2%89%A0%E2%89%A1%E2%89%A4%E2%89%A5%E2%89%AA%E2%89%AB%E2%8A%95%E2%8A%97%E2%8A%99%E2%8A%A5%E2%96%B2%E2%96%B6%E2%97%80%E2%97%8B%E2%97%8F%E2%9C%93%E2%9C%97%E2%9D%9A%E2%9F%82%E2%9F%A8%E2%9F%A9&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) draggable point masses, CM as a weighted average  (2) CM of shapes: symmetry, strips, parts, negative mass, guess-then-reveal
+   (3) CM in flight: tumbling baton, exploding shell; momentum chain and K = K' + ½MV²  (4) person walking on a boat
+   (5) lab frame vs CM frame: binary star, decaying nucleus  (6) centre of gravity by hanging a card  (7) predict-then-check */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --acc:#b0377a; --disp:#1f8f87; --ke:#0f8a4f; --pe:#8a6d1f;
+  --b1:#7a52c7; --b2:#1f8f87; --b3:#b0377a; --b4:#8a6d1f;
+  --f-display:"Bricolage Grotesque","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","Noto Sans Math","Noto Sans Symbols 2",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a;
+  --b1:#a585f0; --b2:#3cb8ad; --b3:#e86fae; --b4:#d4b44a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a;
+  --b1:#a585f0; --b2:#3cb8ad; --b3:#e86fae; --b4:#d4b44a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.btn[disabled]{opacity:.45;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:7.5em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:7.5em;text-align:right}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+a{color:var(--accent)}
+
+/* page-specific */
+.drag{cursor:grab;touch-action:none}
+.drag:active{cursor:grabbing}
+.mrow{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:6px 10px;align-items:center;font-size:14px}
+.mrow .sw{width:12px;height:12px;border-radius:50%}
+.step{font:600 14px var(--f-mono);width:28px;height:28px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);cursor:pointer;padding:0}
+.mval{font:500 13px var(--f-mono);min-width:6.5em;text-align:center;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Centre of Mass</h1>
+    <p class="lede">A body made of many particles still has one special point that moves as simply as a single particle would: the centre of mass (CM). Find it by dragging masses around, by symmetry, by splitting a body into parts. Then watch it in action: a shell that explodes in mid-air, a person walking on a boat, two stars circling each other.</p>
+  </header>
+
+  <!-- 1 · point masses -->
+  <section class="stack">
+    <div>
+      <h2>1 · A weighted average of positions</h2>
+      <p class="lede">Drag the masses (and the origin O). Change a mass with − and +. The CM marker ⊕ moves at once. Watch the ticks on the axes: the CM’s x is an average of the masses’ x values in which a heavier mass counts more.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="pchips" role="group" aria-label="Presets"></div>
+        <div class="svgbox"><svg id="pm" viewBox="0 0 600 340" role="img" aria-label="Point masses and their centre of mass" style="min-width:460px"></svg></div>
+        <div class="row">
+          <button class="btn" id="padd">Add a mass</button><button class="btn" id="prem">Remove one</button>
+          <button class="btn" id="porg">Put O at the CM</button>
+          <label class="muted"><input type="checkbox" id="pvec"> position vectors</label>
+        </div>
+      </div>
+      <div class="panel stack">
+        <div class="stack" id="pmass"></div>
+        <dl class="kv" id="pkv"></dl>
+        <p class="cap key" id="pcap"></p>
+        <p class="cap">In symbols, X = Σm<sub>i</sub>x<sub>i</sub>/M and Y = Σm<sub>i</sub>y<sub>i</sub>/M, or in one line R = Σm<sub>i</sub>r<sub>i</sub>/M. Move O and the numbers change, but ⊕ stays on the same spot among the masses: the CM belongs to the body, not to the axes. Put O at the CM and Σm<sub>i</sub>r<sub>i</sub> becomes zero.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · shapes -->
+  <section class="stack">
+    <div>
+      <h2>2 · Bodies: symmetry first, then parts</h2>
+      <p class="lede">A solid body is a crowd of tiny masses, so R = (1/M)∫r dm. You rarely need the integral. If every bit of mass has a twin on the opposite side of a line, the CM lies on that line. Where a body has no full symmetry, slide the <b>?</b> marker to your guess, then reveal.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="schips" role="group" aria-label="Choose a body"></div>
+        <div class="svgbox"><svg id="shp" viewBox="0 0 600 320" role="img" aria-label="Body and its centre of mass" style="min-width:440px"></svg></div>
+        <div class="row" id="sguessrow"><button class="btn primary" id="sreveal">Reveal the CM</button><span class="muted" id="sguess"></span></div>
+        <div class="slider" id="sholerow"><label for="shole">hole radius a</label><input type="range" id="shole" min="0.1" max="0.9" step="0.05" value="0.5"><output id="sholeo"></output></div>
+        <div class="stack" id="slmass"></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="sname"></p>
+        <dl class="kv" id="skv"></dl>
+        <p class="cap key" id="scap"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · flight -->
+  <section class="stack">
+    <div>
+      <h2>3 · The CM ignores what happens inside</h2>
+      <p class="lede">Throw a baton so it tumbles, or fire a shell that explodes mid-air. The pieces do complicated things. The CM (⊕) does not care: the only external force is gravity, so it keeps to the same parabola it would have followed anyway (dashed). Scrub the time or press Play.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="fchips" role="group" aria-label="Choose a scene"></div>
+        <div class="svgbox"><svg id="fly" viewBox="0 0 640 300" role="img" aria-label="Trajectories of the pieces and of the centre of mass" style="min-width:500px">
+          <g id="faxes"></g>
+          <path id="fideal" fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="6 5" opacity=".55"/>
+          <g id="ftrails"></g>
+          <path id="fcmpath" fill="none" stroke="var(--ink)" stroke-width="2"/>
+          <g id="fbodies"></g>
+          <g id="fcm"><circle r="7" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><path d="M-7 0H7M0 -7V7" stroke="var(--ink)" stroke-width="1.6"/></g>
+          <text id="fnote" x="630" y="16" font-size="11.5" fill="var(--muted)" text-anchor="end"></text>
+        </svg></div>
+        <div class="legend"><span><i style="background:var(--ink)"></i>path of the CM</span><span><i style="background:var(--ink);opacity:.5"></i>parabola with no explosion (dashed)</span><span><i style="background:var(--b1)"></i><i style="background:var(--b2)"></i><i style="background:var(--b3)"></i>pieces</span></div>
+        <div class="slider"><label for="ft">time t</label><input type="range" id="ft" min="0" max="1" step="0.001" value="0"><output id="fto"></output></div>
+        <div class="row"><button class="btn primary" id="fplay">Play</button><button class="btn" id="freset">Back to t = 0</button></div>
+        <div class="slider"><label for="fu">launch speed u</label><input type="range" id="fu" min="12" max="30" step="1" value="20"><output id="fuo"></output></div>
+        <div class="slider"><label for="fth">launch angle</label><input type="range" id="fth" min="30" max="75" step="1" value="60"><output id="ftho"></output></div>
+        <div class="slider" id="ferow"><label for="fe">explodes at</label><input type="range" id="fe" min="0.2" max="0.85" step="0.01" value="0.45"><output id="feo"></output></div>
+      </div>
+      <div class="panel stack">
+        <div><h3>Momentum now</h3>
+          <svg id="fmom" viewBox="0 -18 280 222" role="img" aria-label="Momentum of each piece added head to tail" style="width:100%;max-width:340px;height:auto;display:block"></svg>
+          <p class="muted">Each piece’s momentum m<sub>i</sub>v<sub>i</sub>, added head to tail, ends exactly where M·v<sub>cm</sub> (black) ends.</p></div>
+        <div><h3>Kinetic energy now</h3>
+          <svg id="fke" viewBox="0 0 280 92" role="img" aria-label="Kinetic energy split" style="width:100%;max-width:340px;height:auto;display:block"></svg></div>
+        <p class="cap key" id="fcap"></p>
+      </div>
+    </div>
+    <p class="cap">The internal forces (the explosion, the rod holding the baton together) come in equal and opposite pairs, so they cancel in the sum: M·a<sub>cm</sub> = F<sub>ext</sub>. Summing m<sub>i</sub>v<sub>i</sub> the same way gives the total momentum P = M·v<sub>cm</sub>, and dP/dt = F<sub>ext</sub>. Kinetic energy splits too: K = ½Mv<sub>cm</sub>² + K′, where K′ is the energy of motion <i>relative to</i> the CM (spin of the baton, pieces flying apart). The explosion adds to K′ from its chemical energy; it cannot touch ½Mv<sub>cm</sub>².</p>
+  </section>
+
+  <!-- 4 · boat -->
+  <section class="stack">
+    <div>
+      <h2>4 · Walking on a boat</h2>
+      <p class="lede">A person stands at one end of a boat on still water. Drag them (or use the slider) to walk to the other end. Before you do: will the boat move, and how far?</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="boat" viewBox="0 0 600 220" role="img" aria-label="Person walking on a boat" style="min-width:500px"></svg></div>
+        <div class="slider"><label for="bs">walked along boat</label><input type="range" id="bs" min="0" max="4" step="0.05" value="0"><output id="bso"></output></div>
+        <div class="stack" id="bmass"></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="bkv"></dl>
+        <p class="cap key" id="bcap"></p>
+        <p class="cap">Feet push the boat back; the boat pushes the feet forward. Both forces are internal to the person + boat system, and still water gives no horizontal force (in this model). So the CM, at rest at the start, stays at rest: m·(person’s shift) = M·(boat’s shift), in opposite directions. Had the boat been drifting at a steady speed, the CM would keep that same speed, whatever the person did on board.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · frames -->
+  <section class="stack">
+    <div>
+      <h2>5 · Ride along with the CM</h2>
+      <p class="lede">With no external force, the CM moves in a straight line at steady speed. So watch from a frame that moves with it: tangled paths become simple.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row"><div class="chips" id="rchips" role="group" aria-label="Choose a system"></div><div class="chips" id="rframe" role="group" aria-label="Choose a frame"></div></div>
+        <div class="svgbox"><svg id="frm" viewBox="0 0 600 260" role="img" aria-label="Motion seen in the lab frame or the centre-of-mass frame" style="min-width:480px">
+          <path id="rtr1" fill="none" stroke="var(--b1)" stroke-width="1.5" opacity=".6"/><path id="rtr2" fill="none" stroke="var(--b4)" stroke-width="1.5" opacity=".6"/>
+          <line id="rcmline" stroke="var(--ink)" stroke-dasharray="4 4" opacity=".5"/>
+          <circle id="rb1" r="10" fill="var(--b1)"/><circle id="rb2" r="7" fill="var(--b4)"/>
+          <g id="rcm"><circle r="6" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><path d="M-6 0H6M0 -6V6" stroke="var(--ink)" stroke-width="1.4"/></g>
+          <text id="rl1" font-size="11.5" fill="var(--b1)"></text><text id="rl2" font-size="11.5" fill="var(--b4)"></text>
+          <text id="rnote" x="590" y="250" font-size="11" fill="var(--muted)" text-anchor="end"></text>
+        </svg></div>
+        <div class="row"><button class="btn primary" id="rplay">Pause</button></div>
+      </div>
+      <div class="panel stack">
+        <p class="cap key" id="rcap"></p>
+        <p class="cap">This is a standard trick in problems: describe the motion <i>of</i> the CM (simple, set by external forces) and the motion <i>about</i> the CM (set by internal forces) separately, then add them.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · centre of gravity -->
+  <section class="stack">
+    <div>
+      <h2>6 · Centre of gravity: hang it up</h2>
+      <p class="lede">Hang a flat card from a pin through one hole. It swings and settles. Hang it from another hole. The plumb lines (dashed) are drawn on the card itself. Predict: where do they meet?</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row"><span class="muted">Hang from:</span><div class="chips" id="gchips" role="group" aria-label="Choose a hole"></div></div>
+        <div class="svgbox"><svg id="cg" viewBox="0 0 600 340" role="img" aria-label="Card hanging from a pin" style="min-width:420px">
+          <defs><clipPath id="gclip"><polygon id="gclipp"/></clipPath></defs>
+          <line x1="230" x2="370" y1="20" y2="20" stroke="var(--muted)" stroke-width="3"/><line x1="300" x2="300" y1="20" y2="70" stroke="var(--muted)" stroke-width="1.5"/>
+          <line id="gplumb" x1="300" x2="300" y1="70" y2="336" stroke="var(--force)" stroke-width="1.2" stroke-dasharray="2 4"/>
+          <g id="gcard"></g>
+          <circle cx="300" cy="70" r="4" fill="var(--ink)"/>
+        </svg></div>
+        <div class="row"><button class="btn primary" id="gshow">Show the CG</button><button class="btn" id="gclear">Clear the lines</button></div>
+      </div>
+      <div class="panel stack">
+        <p class="cap key" id="gcap">Pick a hole to hang the card from.</p>
+        <p class="cap">Each bit of the card has weight m<sub>i</sub>g. The <b>centre of gravity</b> (CG) is the point about which all these weights give zero total torque, so the whole weight acts there. The card stops swinging only when that point is straight below the pin, because then the weight has no lever arm about the pin. Balance the card on a pencil tip at the CG and it stays level.</p>
+        <p class="cap">When g is the same at every bit of the body, the g cancels out of Σm<sub>i</sub>r<sub>i</sub> × g = 0, leaving Σm<sub>i</sub>r<sub>i</sub> = 0: the CG <i>is</i> the CM. For a body so large that g changes from one end to the other (a mountain, a very tall tower), the CG and CM are slightly apart. The CM depends only on how mass is spread; it would exist with no gravity at all.</p>
+        <p class="muted">Torque, lever arm and the conditions for balance are built up in <a href="torque-angular-momentum.html">Torque and Angular Momentum</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · quiz -->
+  <section class="stack">
+    <div>
+      <h2>7 · Predict, then check</h2>
+      <p class="lede">Classic exam questions. Choose first; the reasoning appears after.</p>
+    </div>
+    <div class="qgrid" id="quiz"></div>
+    <div><button class="btn" id="qreset">Reset answers</button></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> point masses; uniform (homogeneous) bodies; uniform gravity g = 9.8 m s⁻², no air resistance; explosions are instantaneous and act inside the system; the boat floats on still water that gives no horizontal force; pieces stop dead where they land. The decay and binary-star views are schematic, not to scale.</p>
+    <p><b>Based on:</b> NCERT Physics Class 11, "System of Particles and Rotational Motion"; H. C. Verma, <i>Concepts of Physics</i> Vol. 1, "Centre of Mass, Linear Momentum, Collision".</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+const G=9.8; // m s^-2
+/* Section 1 presets: positions in grid units (1 grid = sc units of length), masses in mu units */
+const PPRE=[
+ {id:'two', l:'Two masses',      sc:1,     ul:'m', mu:'kg', step:1,   max:10, O:[1,1],
+  m:[[1,1,3],[3,7,3]]},
+ {id:'tri', l:'Example: triangle (100, 150, 200 g)', sc:0.1, ul:'m', mu:'g', step:50, max:500, O:[2,1],
+  m:[[100,2,1],[150,7,1],[200,4.5,1+2.5*Math.sqrt(3)]]},
+ {id:'hcl', l:'HCl molecule',    sc:1.27/8, ul:'Å', mu:'u', step:0.5, max:40, O:[1,3],
+  m:[[1,1,3],[35.5,9,3]], names:['H','Cl']},
+ {id:'four', l:'Four masses',    sc:1,     ul:'m', mu:'kg', step:1,   max:10, O:[1,1],
+  m:[[2,2,1.5],[1,8,1.5],[4,7,4.5],[1,3,5]]}
+];
+/* Section 2: CM distances (fraction of R or h) for the standard shapes */
+const SHAPES=[
+ {id:'sym',   l:'Symmetric bodies'},
+ {id:'tri',   l:'Triangle'},
+ {id:'L',     l:'L-shape'},
+ {id:'hole',  l:'Disc with a hole'},
+ {id:'sring', l:'Semicircular ring', f:2/Math.PI,     ff:'2R/π',  name:'Semicircular ring (thin wire)'},
+ {id:'sdisc', l:'Semicircular disc', f:4/(3*Math.PI), ff:'4R/3π', name:'Semicircular disc (lamina)'},
+ {id:'hemi',  l:'Solid hemisphere',  f:3/8,           ff:'3R/8',  name:'Solid hemisphere'},
+ {id:'shell', l:'Hemispherical shell',f:1/2,          ff:'R/2',   name:'Hemispherical shell'},
+ {id:'cone',  l:'Solid cone',        f:1/4,           ff:'h/4',   name:'Solid cone', h:true}
+];
+/* Section 3 scenes. dv = velocity kick of each piece at the explosion (m/s); Σ m·dv = 0 */
+const FSC=[
+ {id:'flat',  l:'Baton, no spin', m:[1,3], rod:4, w:0, h0:3.2},
+ {id:'baton', l:'Tumbling baton', m:[1,3], rod:4, w:3.2, h0:3.2},
+ {id:'two',   l:'Shell → 2 equal pieces', m:[1,1], dv:[[5,4],[-5,-4]]},
+ {id:'three', l:'Shell → 3 pieces (1, 2, 3 kg)', m:[1,2,3], dv:[[9,6],[-6,3],[1,-4]]},
+ {id:'top',   l:'Splits at the top; one half drops straight down', m:[1,1], top:true}
+];
+/* Section 4: boat */
+const BOAT={L:4, M:120, m:60};
+/* Section 5: decay masses (mass numbers) */
+const DECAY={Ra:226, Rn:222, He:4};
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const f2=v=>(Math.abs(v)<5e-3?0:v).toFixed(2), f1=v=>(Math.abs(v)<5e-2?0:v).toFixed(1), f3=v=>(Math.abs(v)<5e-4?0:v).toFixed(3);
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function set(e,attrs){for(const k in attrs)e.setAttribute(k,attrs[k]);}
+function arrow(x1,y1,x2,y2,col,w,head){
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy); if(L<1.5) return '';
+  const h=Math.min(head||9,L*0.6), ux=dx/L, uy=dy/L, bx=x2-ux*h, by=y2-uy*h, px=-uy*h*0.5, py=ux*h*0.5;
+  return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="${w||2}" stroke-linecap="round"/><polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px).toFixed(1)},${(by+py).toFixed(1)} ${(bx-px).toFixed(1)},${(by-py).toFixed(1)}" fill="${col}"/>`;
+}
+const CMMARK=(x,y,r)=>`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><circle r="${r||7}" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><path d="M-${r||7} 0H${r||7}M0 -${r||7}V${r||7}" stroke="var(--ink)" stroke-width="1.6"/></g>`;
+function press(sel,k){document.querySelectorAll(sel+' .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===k));}
+function chips(id,list,onPick){$(id).innerHTML=list.map(x=>`<button class="chip" data-k="${x.id}">${x.l}</button>`).join('');
+  $(id).addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)onPick(c.dataset.k);});}
+function svgPt(svg,e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
+/* drag: on pointerdown on target, call move(pt) on every move until release */
+function draggable(svg,target,move){
+  target.addEventListener('pointerdown',e=>{
+    e.preventDefault();
+    const mv=ev=>move(svgPt(svg,ev)), up=()=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);window.removeEventListener('pointercancel',up);};
+    window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);
+    move(svgPt(svg,e));
+  });
+}
+const PALETTE=['var(--b1)','var(--b2)','var(--b3)','var(--b4)'];
+/* run an animation only while its svg is on screen */
+function onScreen(elm,cb){if(!('IntersectionObserver' in window)){cb(true);return;}new IntersectionObserver(es=>es.forEach(x=>cb(x.isIntersecting))).observe(elm);}
+function stepper(container,items){ /* items: {label,col,get,set,fmt,min,max,step} */
+  container.innerHTML='';
+  items.forEach((it,i)=>{
+    const r=document.createElement('div'); r.className='mrow';
+    r.innerHTML=`<span class="sw" style="background:${it.col}"></span><span>${it.label}</span><button class="step" aria-label="less">−</button><span class="mval"></span><button class="step" aria-label="more">+</button>`;
+    const [,,minus,val,plus]=r.children;
+    const show=()=>{val.textContent=it.fmt(it.get());};
+    minus.onclick=()=>{const v=Math.max(it.min,+(it.get()-it.step).toFixed(6));it.set(v);show();};
+    plus.onclick=()=>{const v=Math.min(it.max,+(it.get()+it.step).toFixed(6));it.set(v);show();};
+    show(); container.appendChild(r);
+  });
+}
+
+/* =================== 1 · POINT MASSES =================== */
+const PX0=50, PY0=300, PU=50; // grid origin in svg, px per grid unit
+const P={pre:null, m:[], O:[1,1], vec:false};
+const pX=gx=>PX0+gx*PU, pY=gy=>PY0-gy*PU;
+const pm=$('pm');
+/* static: grid */
+(function(){let g='';
+  for(let i=0;i<=10;i++) g+=`<line x1="${pX(i)}" x2="${pX(i)}" y1="${pY(5.6)}" y2="${PY0}" stroke="var(--line)"/>`;
+  for(let j=0;j<=5;j++) g+=`<line x1="${PX0}" x2="${pX(10)}" y1="${pY(j)}" y2="${pY(j)}" stroke="var(--line)"/>`;
+  pm.innerHTML=g+`<g id="pdyn"></g>`;})();
+function pBuild(){
+  const d=$('pdyn'); d.innerHTML='';
+  el('line',{id:'pxax',stroke:'var(--muted)','stroke-width':1.5},d); el('line',{id:'pyax',stroke:'var(--muted)','stroke-width':1.5},d);
+  P.m.forEach((m,i)=>{el('line',{id:'pl'+i,stroke:PALETTE[i],'stroke-dasharray':'3 4','stroke-width':1.3},d);
+    el('line',{id:'ptx'+i,stroke:PALETTE[i],'stroke-width':3},d); el('line',{id:'pty'+i,stroke:PALETTE[i],'stroke-width':3},d);});
+  el('line',{id:'ptxc',stroke:'var(--ink)','stroke-width':3},d); el('line',{id:'ptyc',stroke:'var(--ink)','stroke-width':3},d);
+  el('g',{id:'pvecs'},d);
+  P.m.forEach((m,i)=>{const c=el('circle',{id:'pc'+i,fill:PALETTE[i],'fill-opacity':.85,stroke:'var(--surface)','stroke-width':2,class:'drag'},d);
+    el('text',{id:'pt'+i,'font-size':12,'font-weight':600,fill:PALETTE[i]},d);
+    draggable(pm,c,pt=>{m.x=Math.max(0,Math.min(10,Math.round((pt.x-PX0)/PU*4)/4));m.y=Math.max(0,Math.min(5.5,Math.round((PY0-pt.y)/PU*4)/4));pRender();});});
+  const o=el('g',{id:'porig',class:'drag'},d); el('circle',{r:9,fill:'var(--surface)','fill-opacity':0.01},o); el('circle',{r:4.5,fill:'var(--ink)'},o); el('text',{x:-8,y:15,'font-size':12,'font-weight':600,fill:'var(--ink)','text-anchor':'end'},o).textContent='O';
+  draggable(pm,o,pt=>{P.O=[Math.max(0,Math.min(10,Math.round((pt.x-PX0)/PU))),Math.max(0,Math.min(5,Math.round((PY0-pt.y)/PU)))];pRender();});
+  const c=el('g',{id:'pcm'},d); c.innerHTML=CMMARK(0,0,8); el('text',{id:'pcmt',x:11,y:20,'font-size':12,'font-weight':600,fill:'var(--ink)'},c).textContent='CM';
+  el('g',{id:'pratio'},d);
+  pMass();
+}
+function pMass(){
+  const pr=P.pre;
+  stepper($('pmass'),P.m.map((m,i)=>({label:(pr.names?pr.names[i]+', ':'')+'m'+'₁₂₃₄'[i],col:PALETTE[i],get:()=>m.m,set:v=>{m.m=v;pRender();},
+    fmt:v=>(+v.toFixed(2))+' '+pr.mu,min:pr.step,max:pr.max,step:pr.step})));
+  $('padd').disabled=P.m.length>=4; $('prem').disabled=P.m.length<=2;
+}
+function pCM(){const M=P.m.reduce((s,m)=>s+m.m,0);return {M,x:P.m.reduce((s,m)=>s+m.m*m.x,0)/M,y:P.m.reduce((s,m)=>s+m.m*m.y,0)/M};}
+function pRender(){
+  const pr=P.pre, C=pCM(), sc=pr.sc, Ox=P.O[0], Oy=P.O[1];
+  set($('pxax'),{x1:PX0,x2:pX(10),y1:pY(Oy),y2:pY(Oy)}); set($('pyax'),{x1:pX(Ox),x2:pX(Ox),y1:pY(5.6),y2:PY0});
+  P.m.forEach((m,i)=>{
+    const r=Math.max(8,Math.min(26,6.5+4*Math.sqrt(m.m/pr.step)));
+    set($('pc'+i),{cx:pX(m.x),cy:pY(m.y),r});
+    const t=$('pt'+i); set(t,{x:pX(m.x)+r*0.75+3,y:pY(m.y)-r*0.75-3}); t.textContent=(pr.names?pr.names[i]+' ':'')+(+m.m.toFixed(2))+' '+pr.mu;
+    set($('pl'+i),{x1:pX(C.x),y1:pY(C.y),x2:pX(m.x),y2:pY(m.y)});
+    set($('ptx'+i),{x1:pX(m.x),x2:pX(m.x),y1:pY(Oy)-5,y2:pY(Oy)+5}); set($('pty'+i),{y1:pY(m.y),y2:pY(m.y),x1:pX(Ox)-5,x2:pX(Ox)+5});
+  });
+  set($('ptxc'),{x1:pX(C.x),x2:pX(C.x),y1:pY(Oy)-9,y2:pY(Oy)+9}); set($('ptyc'),{y1:pY(C.y),y2:pY(C.y),x1:pX(Ox)-9,x2:pX(Ox)+9});
+  $('porig').setAttribute('transform',`translate(${pX(Ox)} ${pY(Oy)})`);
+  $('pcm').setAttribute('transform',`translate(${pX(C.x).toFixed(1)} ${pY(C.y).toFixed(1)})`);
+  /* position vectors */
+  let v='';
+  if(P.vec){P.m.forEach((m,i)=>v+=arrow(pX(Ox),pY(Oy),pX(m.x),pY(m.y),'var(--disp)',1.4,7)); v+=arrow(pX(Ox),pY(Oy),pX(C.x),pY(C.y),'var(--disp)',3,10)+`<text x="${(pX(Ox)+pX(C.x))/2-6}" y="${(pY(Oy)+pY(C.y))/2-6}" font-size="12.5" font-weight="600" fill="var(--disp)" text-anchor="end">R</text>`;}
+  $('pvecs').innerHTML=v;
+  /* two masses: show the inverse ratio */
+  let rr='';
+  if(P.m.length===2){const [a,b]=P.m, d1=Math.hypot(C.x-a.x,C.y-a.y)*sc, d2=Math.hypot(C.x-b.x,C.y-b.y)*sc;
+    if(d1+d2>1e-9){const lab=(m,d)=>{const t=(m.x+C.x)/2,s=(m.y+C.y)/2;return `<text x="${pX(t)}" y="${pY(s)-9}" font-size="11.5" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono,monospace">${f2(d)} ${pr.ul}</text>`;};
+      rr=lab(a,d1)+lab(b,d2);}}
+  $('pratio').innerHTML=rr;
+  /* readouts relative to O */
+  const X=(C.x-Ox)*sc, Y=(C.y-Oy)*sc, unit=pr.ul, U=v=>(pr.ul==='Å'?f3(v):f3(v))+' '+unit;
+  $('pkv').innerHTML=`<dt>total mass M</dt><dd>${+C.M.toFixed(2)} ${pr.mu}</dd><dt>X (from O)</dt><dd>${U(X)}</dd><dt>Y (from O)</dt><dd>${U(Y)}</dd>`+
+    `<dt>Σm<sub>i</sub>r<sub>i</sub> from the CM</dt><dd>(${f3(P.m.reduce((s,m)=>s+m.m*(m.x-C.x)*sc,0))}, ${f3(P.m.reduce((s,m)=>s+m.m*(m.y-C.y)*sc,0))})</dd>`;
+  const nums=P.m.map(m=>`${+m.m.toFixed(2)}×${f2((m.x-Ox)*sc)}`).join(' + ');
+  let cap=`X = (${nums}) ÷ ${+C.M.toFixed(2)} = ${f3(X)} ${unit}.`;
+  if(P.m.length===2){const [a,b]=P.m;
+    cap+= Math.abs(a.m-b.m)<1e-9?' Equal masses: the CM is exactly halfway.':` The CM splits the gap in the ratio ${+b.m.toFixed(2)} : ${+a.m.toFixed(2)}, the masses the other way round, so it sits nearer the heavier one.`;
+    if(pr.id==='hcl') cap+=` Chlorine is 35.5 times heavier, so the CM is only ${f3(Math.hypot(C.x-b.x,C.y-b.y)*sc)} Å from the chlorine nucleus, almost on top of it.`;}
+  if(pr.id==='tri'){const eq=P.m.every(m=>Math.abs(m.m-P.m[0].m)<1e-9);cap+=eq?' Equal masses: the CM is the centroid of the triangle, where the medians meet.':' Unequal masses, so the CM is pulled off the centroid toward the 200 g corner. Make all three equal and it moves to the centroid.';}
+  $('pcap').innerHTML=cap;
+}
+function pLoad(id){const pr=PPRE.find(x=>x.id===id)||PPRE[0];P.pre=pr;P.m=pr.m.map(a=>({m:a[0],x:a[1],y:a[2]}));P.O=pr.O.slice();press('#pchips',pr.id);store('sys-cm-pre',pr.id);pBuild();pRender();}
+chips('pchips',PPRE,pLoad);
+$('padd').onclick=()=>{if(P.m.length>=4)return;const sp=[[5,4.5],[8.5,1],[2,4.5],[5,0.5]];const s=sp.find(q=>!P.m.some(m=>Math.hypot(m.x-q[0],m.y-q[1])<0.8))||[5,2.5];P.m.push({m:P.pre.step*2,x:s[0],y:s[1]});pBuild();pRender();};
+$('prem').onclick=()=>{if(P.m.length<=2)return;P.m.pop();pBuild();pRender();};
+$('porg').onclick=()=>{const C=pCM();P.O=[C.x,C.y];pRender();};
+$('pvec').onchange=e=>{P.vec=e.target.checked;pRender();};
+
+/* =================== 2 · SHAPES =================== */
+const S={id:'sym',guess:null,revealed:false,hole:0.5,Lm:[1,1,1],tri:[[300,40],[150,280],[470,270]]};
+const shp=$('shp');
+chips('schips',SHAPES,id=>{S.id=id;S.revealed=false;S.guess=null;store('sys-cm-shape',id);sBuild();});
+$('sreveal').onclick=()=>{S.revealed=true;sUpdate();};
+$('shole').oninput=e=>{S.hole=+e.target.value;S.revealed=false;sUpdate();};
+function guessMarker(parent){const g=el('g',{id:'sgm',class:'drag'},parent);
+  el('circle',{r:13,fill:'var(--accent)','fill-opacity':.15,stroke:'var(--accent)','stroke-width':2,'stroke-dasharray':'3 2'},g);
+  el('text',{y:5,'font-size':14,'font-weight':700,fill:'var(--accent)','text-anchor':'middle'},g).textContent='?';return g;}
+/* geometry for axis-type shapes: base centre (bx,by), size R px, axis vertical upward */
+const SB={bx:300,by:268,R:170};
+function sBuild(){
+  press('#schips',S.id);
+  const sh=SHAPES.find(x=>x.id===S.id); let g='';
+  const axisType=!!sh.f||S.id==='hole';
+  $('sguessrow').hidden=!axisType; $('sholerow').hidden=S.id!=='hole'; $('slmass').hidden=S.id!=='L';
+  shp.innerHTML='';
+  const root=el('g',{},shp);
+  const {bx,by,R}=SB;
+  if(S.id==='sym'){
+    const items=[
+      [`<line x1="40" x2="150" y1="110" y2="110" stroke="var(--b1)" stroke-width="9" stroke-linecap="round"/><line x1="95" x2="95" y1="70" y2="150" stroke="var(--muted)" stroke-dasharray="4 4"/>`,95,110,'rod'],
+      [`<circle cx="300" cy="110" r="52" fill="none" stroke="var(--b2)" stroke-width="7"/><line x1="235" x2="365" y1="110" y2="110" stroke="var(--muted)" stroke-dasharray="4 4"/><line x1="300" x2="300" y1="45" y2="175" stroke="var(--muted)" stroke-dasharray="4 4"/>`,300,110,'ring'],
+      [`<circle cx="490" cy="110" r="52" fill="var(--b3)" fill-opacity=".5"/><line x1="425" x2="555" y1="110" y2="110" stroke="var(--muted)" stroke-dasharray="4 4"/><line x1="490" x2="490" y1="45" y2="175" stroke="var(--muted)" stroke-dasharray="4 4"/><line x1="450" x2="530" y1="70" y2="150" stroke="var(--muted)" stroke-dasharray="4 4"/>`,490,110,'disc'],
+      [`<rect x="150" y="205" width="90" height="90" fill="var(--b4)" fill-opacity=".5"/><path d="M150 205L240 295M240 205L150 295M195 195V305M140 250H250" stroke="var(--muted)" stroke-dasharray="4 4" fill="none"/>`,195,250,'square / cube'],
+      [`<circle cx="410" cy="250" r="48" fill="var(--b1)" fill-opacity=".45"/><ellipse cx="410" cy="250" rx="48" ry="14" fill="none" stroke="var(--b1)" stroke-opacity=".7"/><line x1="350" x2="470" y1="250" y2="250" stroke="var(--muted)" stroke-dasharray="4 4"/>`,410,250,'sphere']];
+    items.forEach(it=>{g+=it[0]+CMMARK(it[1],it[2],6)+`<text x="${it[1]}" y="${it[2]+(it[3]==='rod'?28:it[3]==='sphere'||it[3].startsWith('square')?68:76)}" font-size="12" fill="var(--muted)" text-anchor="middle">${it[3]}</text>`;});
+    root.innerHTML=g;
+    $('sname').textContent='Bodies with a centre of symmetry';
+    $('skv').innerHTML=`<dt>rod, ring, disc</dt><dd>at the geometric centre</dd><dt>sphere, cylinder, cube</dt><dd>at the geometric centre</dd>`;
+    $('scap').innerHTML='Pick any bit of mass dm at position r from the centre. A uniform body of this kind has an equal bit at −r. Each pair adds nothing to ∫r dm, so the integral is zero and the CM is at the centre. Note the ring: its CM is at the centre, where there is no material at all. A CM need not lie inside the body.';
+    return;
+  }
+  if(S.id==='tri'){
+    el('g',{id:'tstrips'},root);
+    el('polygon',{id:'tpoly',fill:'var(--b2)','fill-opacity':.25,stroke:'var(--b2)','stroke-width':2},root);
+    for(let i=0;i<3;i++) el('line',{id:'tmed'+i,stroke:'var(--muted)','stroke-dasharray':'5 4'},root);
+    el('g',{id:'tmids'},root);
+    const cm=el('g',{id:'tcm'},root); cm.innerHTML=CMMARK(0,0,8);
+    for(let i=0;i<3;i++){const h=el('circle',{id:'tv'+i,r:9,fill:'var(--b2)',stroke:'var(--surface)','stroke-width':2,class:'drag'},root);
+      draggable(shp,h,pt=>{S.tri[i]=[Math.max(20,Math.min(580,pt.x)),Math.max(20,Math.min(300,pt.y))];sUpdate();});}
+    sUpdate(); return;
+  }
+  if(S.id==='L'){
+    const cs=[[0.5,0.5],[1.5,0.5],[0.5,1.5]], X0=200,Y0=290,U=120;
+    root.innerHTML=`<path d="M${X0} ${Y0}H${X0+2*U}V${Y0-U}H${X0+U}V${Y0-2*U}H${X0}Z" fill="none" stroke="var(--ink)" stroke-opacity=".5" stroke-width="1.5"/>`+
+      cs.map((c,i)=>`<rect id="lsq${i}" x="${X0+(c[0]-0.5)*U}" y="${Y0-(c[1]+0.5)*U}" width="${U}" height="${U}" fill="${PALETTE[i]}" fill-opacity=".3" stroke="var(--surface)" stroke-width="2"/>`).join('')+
+      `<line x1="${X0}" y1="${Y0}" x2="${X0+2*U}" y2="${Y0-2*U}" stroke="var(--muted)" stroke-dasharray="5 4"/><text x="${X0+2*U-4}" y="${Y0-2*U+16}" font-size="11.5" fill="var(--muted)" text-anchor="end">line of symmetry (equal masses)</text>`+
+      `<g id="llines"></g>`+cs.map((c,i)=>`<circle id="ldot${i}" cx="${X0+c[0]*U}" cy="${Y0-c[1]*U}" r="6" fill="${PALETTE[i]}"/>`).join('')+`<g id="lcm"></g>`+
+      `<text x="${X0-6}" y="${Y0+16}" font-size="11.5" fill="var(--muted)" text-anchor="end">O</text><text x="${X0+2*U}" y="${Y0+16}" font-size="11.5" fill="var(--muted)" text-anchor="middle">2 m</text><text x="${X0-8}" y="${Y0-2*U+4}" font-size="11.5" fill="var(--muted)" text-anchor="end">2 m</text>`;
+    S.L={X0,Y0,U,cs};
+    stepper($('slmass'),[0,1,2].map(i=>({label:['square 1 (bottom left)','square 2 (bottom right)','square 3 (top)'][i],col:PALETTE[i],get:()=>S.Lm[i],set:v=>{S.Lm[i]=v;sUpdate();},fmt:v=>v+' kg',min:1,max:4,step:1})));
+    sUpdate(); return;
+  }
+  /* axis-type shapes: draw the body */
+  let body='', label='';
+  if(S.id==='sring'){body=`<path d="M${bx-R} ${by}A${R} ${R} 0 0 1 ${bx+R} ${by}" fill="none" stroke="var(--b1)" stroke-width="8"/>`;}
+  else if(S.id==='sdisc'){body=`<path d="M${bx-R} ${by}A${R} ${R} 0 0 1 ${bx+R} ${by}Z" fill="var(--b3)" fill-opacity=".45" stroke="var(--b3)"/>`;}
+  else if(S.id==='hemi'){body=`<path d="M${bx-R} ${by}A${R} ${R} 0 0 1 ${bx+R} ${by}Z" fill="var(--b4)" fill-opacity=".45"/><ellipse cx="${bx}" cy="${by}" rx="${R}" ry="${R*0.18}" fill="var(--b4)" fill-opacity=".35" stroke="var(--b4)"/>`;}
+  else if(S.id==='shell'){body=`<path d="M${bx-R} ${by}A${R} ${R} 0 0 1 ${bx+R} ${by}" fill="none" stroke="var(--b2)" stroke-width="6"/><ellipse cx="${bx}" cy="${by}" rx="${R}" ry="${R*0.18}" fill="none" stroke="var(--b2)" stroke-dasharray="5 4"/>`;}
+  else if(S.id==='cone'){const h=230, r=110;SB.h=h;body=`<path d="M${bx-r} ${by}L${bx} ${by-h}L${bx+r} ${by}Z" fill="var(--b1)" fill-opacity=".4"/><ellipse cx="${bx}" cy="${by}" rx="${r}" ry="${r*0.2}" fill="var(--b1)" fill-opacity=".3" stroke="var(--b1)"/>`+
+      `<line x1="${bx+r+20}" x2="${bx+r+20}" y1="${by}" y2="${by-h}" stroke="var(--muted)"/><text x="${bx+r+26}" y="${by-h/2}" font-size="12" fill="var(--muted)">h</text>`;}
+  else if(S.id==='hole'){body=`<path id="hdisc" fill="var(--b3)" fill-opacity=".45" fill-rule="evenodd" stroke="var(--b3)"/><g id="hdots"></g>`;}
+  const top=S.id==='hole'?null:(sh.h?by-SB.h:by-R);
+  if(S.id==='hole') root.innerHTML=body+`<line x1="40" x2="560" y1="160" y2="160" stroke="var(--muted)" stroke-dasharray="5 4"/>`;
+  else root.innerHTML=`<line x1="${bx}" x2="${bx}" y1="${top-12}" y2="${by+20}" stroke="var(--muted)" stroke-dasharray="5 4"/>`+body+
+    (sh.h?'':`<line x1="${bx}" x2="${bx+R}" y1="${by+26}" y2="${by+26}" stroke="var(--muted)"/><text x="${bx+R/2}" y="${by+42}" font-size="12" fill="var(--muted)" text-anchor="middle">R</text>`)+
+    `<circle cx="${bx}" cy="${by}" r="3" fill="var(--muted)"/><text x="${bx-8}" y="${by+16}" font-size="11.5" fill="var(--muted)" text-anchor="end">O</text>`;
+  el('g',{id:'saxcm'},root);
+  const gm=guessMarker(root);
+  draggable(shp,gm,pt=>{if(S.id==='hole'){S.guess=Math.max(60,Math.min(540,pt.x));}else{S.guess=Math.max(top,Math.min(by,pt.y));}S.revealed=false;sUpdate();});
+  S.guess=null; sUpdate();
+}
+function sUpdate(){
+  const sh=SHAPES.find(x=>x.id===S.id), {bx,by,R}=SB;
+  if(S.id==='sym') return;
+  if(S.id==='tri'){
+    const [A,B,C]=S.tri, mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2], Gc=[(A[0]+B[0]+C[0])/3,(A[1]+B[1]+C[1])/3];
+    set($('tpoly'),{points:S.tri.map(p=>p.join(',')).join(' ')});
+    const meds=[[A,mid(B,C)],[B,mid(C,A)],[C,mid(A,B)]];
+    meds.forEach((m,i)=>set($('tmed'+i),{x1:m[0][0],y1:m[0][1],x2:m[1][0],y2:m[1][1]}));
+    let s='',d='';
+    for(let k=1;k<10;k++){const t=k/10, p=[A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t], q=[A[0]+(C[0]-A[0])*t,A[1]+(C[1]-A[1])*t];
+      s+=`<line x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${q[0].toFixed(1)}" y2="${q[1].toFixed(1)}" stroke="var(--b2)" stroke-opacity=".55"/>`;
+      d+=`<circle cx="${((p[0]+q[0])/2).toFixed(1)}" cy="${((p[1]+q[1])/2).toFixed(1)}" r="2.6" fill="var(--b2)"/>`;}
+    $('tstrips').innerHTML=s; $('tmids').innerHTML=d;
+    S.tri.forEach((p,i)=>set($('tv'+i),{cx:p[0],cy:p[1]}));
+    $('tcm').setAttribute('transform',`translate(${Gc[0].toFixed(1)} ${Gc[1].toFixed(1)})`);
+    $('sname').textContent='Triangular lamina';
+    $('skv').innerHTML=`<dt>CM</dt><dd>centroid G</dd><dt>along each median</dt><dd>⅔ from the vertex</dd><dt>coordinates</dt><dd>average of the 3 corners</dd>`;
+    $('scap').innerHTML='Slice the triangle into thin strips parallel to one side. Each strip is a thin rod, so its CM is at its midpoint (dots). All those midpoints lie on the median from the opposite corner, so the CM is on that median. Slice parallel to another side and it is on another median too. So it is where the medians meet. Drag the corners: it always is. The CM of a uniform triangle is the same point as three equal masses at its corners.';
+    return;
+  }
+  if(S.id==='L'){
+    const {X0,Y0,U,cs}=S.L, M=S.Lm.reduce((a,b)=>a+b,0), X=cs.reduce((s,c,i)=>s+S.Lm[i]*c[0],0)/M, Y=cs.reduce((s,c,i)=>s+S.Lm[i]*c[1],0)/M;
+    cs.forEach((c,i)=>{set($('lsq'+i),{'fill-opacity':0.15+0.12*S.Lm[i]});set($('ldot'+i),{r:4+2.5*S.Lm[i]});});
+    $('llines').innerHTML=cs.map((c,i)=>`<line x1="${X0+c[0]*U}" y1="${Y0-c[1]*U}" x2="${X0+X*U}" y2="${Y0-Y*U}" stroke="${PALETTE[i]}" stroke-dasharray="3 3"/>`).join('');
+    $('lcm').innerHTML=CMMARK(X0+X*U,Y0-Y*U,8);
+    const eq=S.Lm.every(v=>v===S.Lm[0]);
+    $('sname').textContent='L-shaped lamina, 3 squares of side 1 m';
+    $('skv').innerHTML=`<dt>total mass</dt><dd>${M} kg</dd><dt>X</dt><dd>${f3(X)} m</dd><dt>Y</dt><dd>${f3(Y)} m</dd>`;
+    $('scap').innerHTML='Replace each square by a point mass at its own centre (the dots, sized by mass), then find the CM of those three points. '+
+      (eq?`With equal squares, X = Y = (½ + 3/2 + ½)/3 = 5/6 m: the CM is on the diagonal line of symmetry, as it must be. Make the squares different (− / +) and it leaves that line.`:
+          `The squares are no longer equal, so the shape has lost its symmetry and the CM has left the diagonal, pulled toward the heavier square.`);
+    return;
+  }
+  /* axis-type shapes */
+  let trueY, trueX, txt='', nameS=sh.name||sh.l;
+  if(S.id==='hole'){
+    const a=S.hole, Rr=120, cx=300, cy=160, d=1-a; // hole tangent to the rim, centre d·R from O
+    const xc=-a*a*d/(1-a*a); trueX=cx+xc*Rr; trueY=cy;
+    $('sholeo').textContent=a.toFixed(2)+' R';
+    set($('hdisc'),{d:`M${cx-Rr} ${cy}a${Rr} ${Rr} 0 1 0 ${2*Rr} 0a${Rr} ${Rr} 0 1 0 ${-2*Rr} 0ZM${cx+d*Rr-a*Rr} ${cy}a${a*Rr} ${a*Rr} 0 1 0 ${2*a*Rr} 0a${a*Rr} ${a*Rr} 0 1 0 ${-2*a*Rr} 0Z`});
+    $('hdots').innerHTML=`<circle cx="${cx}" cy="${cy}" r="6" fill="var(--b3)"/><text x="${cx}" y="${cy-12}" font-size="12" fill="var(--ink)" text-anchor="middle">+M at O</text>`+
+      `<circle cx="${cx+d*Rr}" cy="${cy}" r="${3+3*a}" fill="none" stroke="var(--flag)" stroke-width="2"/><text x="${cx+d*Rr}" y="${cy+a*Rr+16}" font-size="12" fill="var(--flag)" text-anchor="middle">−${f2(a*a)}M (the hole)</text>`;
+    nameS='Disc with a hole (hole touches the rim)';
+    $('skv').innerHTML=`<dt>hole radius</dt><dd>${f2(a)} R</dd><dt>hole centre from O</dt><dd>${f2(d)} R</dd><dt>CM from O</dt><dd>${f3(-xc)} R, away from the hole</dd>`;
+    txt=`Treat the holed disc as a full disc (mass M, CM at O) plus a <b>negative</b> mass where the hole is. The hole has ${f2(a*a)} of the area, so “mass” −${f2(a*a)}M at ${f2(d)}R. Then X = (M·0 − ${f2(a*a)}M·${f2(d)}R)/(M − ${f2(a*a)}M) = −${f3(-xc)}R.`+(Math.abs(a-0.5)<1e-9?' With a = R/2 this is the textbook answer, R/6 from the centre, on the side away from the hole.':'');
+  } else {
+    const top=sh.h?by-SB.h:by-R, len=sh.h?SB.h:R; trueY=by-sh.f*len; trueX=bx;
+    const name=nameS;
+    $('skv').innerHTML=`<dt>CM above the flat base</dt><dd>${sh.ff} ≈ ${f3(sh.f)} ${sh.h?'h':'R'}</dd>`;
+    txt={sring:'Per centimetre of height there is much more wire near the top of the arch, where it runs almost flat, than at the sides, where it runs almost straight up. So the CM sits above half-height: 2R/π ≈ 0.64R. That is outside the wire, in the empty space under the arch.',
+         sdisc:'Same outline as the ring, but now the mass fills the inside too, and much of it is near the flat edge. So the CM is lower: 4R/3π ≈ 0.42R.',
+         hemi:'A solid hemisphere has lots of mass in wide slices near the flat face, so its CM is low: 3R/8 = 0.375R. Compare the shell, with all its mass on the curved surface.',
+         shell:'For a thin hemispherical shell, equal heights of shell carry equal amounts of mass (a nice property of spheres), so the CM is exactly halfway up: R/2.',
+         cone:'Most of a solid cone’s volume is near its base, so the CM is low: h/4 above the base. A flat triangle with the same outline has its centroid higher, at h/3: the cone has much more mass in its wide lower slices.'}[S.id];
+  }
+  $('sname').textContent=nameS;
+  /* guess marker */
+  const gm=$('sgm');
+  if(S.guess===null) S.guess=S.id==='hole'?440:(by-(sh.h?SB.h:R)*0.8);
+  if(S.id==='hole') gm.setAttribute('transform',`translate(${S.guess} 160)`); else gm.setAttribute('transform',`translate(${bx} ${S.guess})`);
+  /* reveal */
+  $('saxcm').innerHTML=S.revealed?CMMARK(trueX,trueY,8)+(S.id==='hole'?'':`<text x="${bx-14}" y="${trueY+4}" font-size="12.5" font-weight="600" fill="var(--ink)" text-anchor="end">${sh.ff}</text>`):'';
+  const unit=S.id==='hole'?120:(sh.h?SB.h:R), err=S.id==='hole'?(S.guess-trueX)/unit:(trueY-S.guess)/unit;
+  $('sguess').textContent=S.revealed?`Your guess was ${Math.abs(err)<0.02?'spot on':f2(Math.abs(err))+' '+(sh&&sh.h?'h':'R')+(S.id==='hole'?(err>0?' too far right':' too far left'):(err>0?' too high':' too low'))}.`:'Drag the ? to your guess first.';
+  $('scap').innerHTML=S.revealed?txt:'By symmetry the CM is somewhere on the dashed line. Where along it? Drag the ? marker to your guess, then reveal.';
+  if(!S.revealed) $('skv').innerHTML='<dt>CM</dt><dd>on the dashed line … guess first</dd>';
+}
+
+/* =================== 3 · FLIGHT =================== */
+const F={sc:'two',u:20,th:60,fe:0.45,t:0,play:false,last:0,vis:true};
+chips('fchips',FSC,id=>{F.sc=id;fSetup();});
+['fu','fth','fe'].forEach(id=>$(id).addEventListener('input',e=>{F[id==='fu'?'u':id==='fth'?'th':'fe']=+e.target.value;fSetup(true);}));
+$('ft').addEventListener('input',e=>{F.t=+e.target.value*F.tend;fDraw();});
+let FM=null;
+function fModel(){
+  const sc=FSC.find(x=>x.id===F.sc), th=F.th*Math.PI/180, ux=F.u*Math.cos(th), uy=F.u*Math.sin(th), h0=sc.h0||0;
+  const T=(uy+Math.sqrt(uy*uy+2*G*h0))/G; // ideal CM flight time
+  const M=sc.m.reduce((a,b)=>a+b,0);
+  const cm=t=>[ux*t, h0+uy*t-0.5*G*t*t], vcm=t=>[ux, uy-G*t];
+  const mdl={sc,T,M,cm,vcm,h0,ux,uy};
+  if(sc.rod){ /* baton: rod of length L, masses m1 m2 at the ends, spinning at w */
+    const [m1,m2]=sc.m, L=sc.rod, r1=L*m2/M, r2=L*m1/M;
+    const ang=t=>Math.PI/2+sc.w*t;
+    mdl.pos=(i,t)=>{const c=cm(t),a=ang(t),r=i?-r2:r1;return [c[0]+r*Math.cos(a),c[1]+r*Math.sin(a)];};
+    mdl.vel=(i,t)=>{const v=vcm(t),a=ang(t),r=i?-r2:r1;return [v[0]-r*sc.w*Math.sin(a),v[1]+r*sc.w*Math.cos(a)];};
+    /* stop when the lower end reaches the ground */
+    let tend=T; for(let t=0.05;t<=T;t+=0.002){if(Math.min(mdl.pos(0,t)[1],mdl.pos(1,t)[1])<=0){tend=t;break;}}
+    mdl.tend=tend; mdl.te=null; mdl.Krel=0.5*(m1*r1*r1+m2*r2*r2)*sc.w*sc.w; mdl.n=2;
+    mdl.landed=()=>false;
+    return mdl;
+  }
+  const te=sc.top?uy/G:F.fe*T, ce=cm(te), ve=vcm(te);
+  const dv=sc.top?[[-ve[0],-ve[1]],[ve[0],ve[1]]]:sc.dv;
+  const frag=sc.m.map((m,i)=>{const v=[ve[0]+dv[i][0],ve[1]+dv[i][1]];const tl=te+(v[1]+Math.sqrt(v[1]*v[1]+2*G*ce[1]))/G;return {m,v,tl};});
+  mdl.te=te; mdl.frag=frag; mdl.n=sc.m.length;
+  mdl.pos=(i,t)=>{if(t<te)return cm(t);const f=frag[i],tt=Math.min(t,f.tl)-te;return [ce[0]+f.v[0]*tt, Math.max(0,ce[1]+f.v[1]*tt-0.5*G*tt*tt)];};
+  mdl.vel=(i,t)=>{if(t<te)return vcm(t);const f=frag[i];if(t>=f.tl)return [0,0];return [f.v[0],f.v[1]-G*(t-te)];};
+  mdl.landed=(i,t)=>t>=frag[i].tl;
+  mdl.tend=Math.max(T,...frag.map(f=>f.tl));
+  mdl.Krel=frag.reduce((s,f,i)=>s+0.5*f.m*(dv[i][0]**2+dv[i][1]**2),0);
+  return mdl;
+}
+function fSetup(keepT){
+  press('#fchips',F.sc);
+  FM=fModel(); F.tend=FM.tend; if(!keepT) F.t=0; F.t=Math.min(F.t,F.tend);
+  const sc=FM.sc; $('ferow').hidden=!!(sc.rod||sc.top);
+  $('fuo').textContent=F.u+' m/s'; $('ftho').textContent=F.th+'°'; $('feo').textContent=Math.round(F.fe*100)+'% of flight';
+  /* scale: fit everything */
+  let xmax=FM.ux*FM.T, ymax=FM.h0+FM.uy*FM.uy/(2*G), xmin=0;
+  for(let k=0;k<=200;k++){const t=FM.tend*k/200;for(let i=0;i<FM.n;i++){const p=FM.pos(i,t);xmax=Math.max(xmax,p[0]);xmin=Math.min(xmin,p[0]);ymax=Math.max(ymax,p[1]);}}
+  const L=46,Rr=626,T=26,B=270, s=Math.min((Rr-L)/(xmax-xmin),(B-T)/ymax);
+  FM.X=x=>L+(x-xmin)*s; FM.Y=y=>B-y*s; FM.s=s;
+  /* axes */
+  let a=`<line x1="20" x2="636" y1="${B}" y2="${B}" stroke="var(--muted)" stroke-width="1.5"/>`;
+  const st=[5,10,20,25,50][[5,10,20,25,50].findIndex(v=>(xmax-xmin)/v<=8)]||50;
+  for(let x=Math.ceil(xmin/st)*st;x<=xmax;x+=st) a+=`<line x1="${FM.X(x)}" x2="${FM.X(x)}" y1="${B}" y2="${B+5}" stroke="var(--muted)"/><text x="${FM.X(x)}" y="${B+17}" font-size="10.5" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono,monospace">${x} m</text>`;
+  $('faxes').innerHTML=a;
+  /* ideal parabola */
+  let d=''; for(let k=0;k<=120;k++){const t=FM.T*k/120,c=FM.cm(t);d+=(k?'L':'M')+FM.X(c[0]).toFixed(1)+' '+FM.Y(c[1]).toFixed(1);}
+  $('fideal').setAttribute('d',d);
+  /* bodies and trails */
+  const cols=sc.rod?['var(--b1)','var(--b3)']:PALETTE;
+  $('ftrails').innerHTML=[...Array(FM.n)].map((_,i)=>`<path id="ftr${i}" fill="none" stroke="${cols[i]}" stroke-width="1.6" opacity=".7"/>`).join('');
+  $('fbodies').innerHTML=(sc.rod?`<line id="frod" stroke="var(--ink)" stroke-width="3" stroke-opacity=".6"/>`:'')+`<circle id="fwhole" r="8" fill="var(--muted)"/>`+
+    sc.m.map((m,i)=>`<circle id="fb${i}" r="${4+2.6*Math.sqrt(m)}" fill="${cols[i]}" stroke="var(--surface)" stroke-width="1.5"/>`).join('');
+  FM.cols=cols;
+  fDraw();
+}
+function fDraw(){
+  const t=F.t, sc=FM.sc, X=FM.X, Y=FM.Y;
+  $('ft').value=F.tend?t/F.tend:0; $('fto').textContent=t.toFixed(2)+' s';
+  const exploded=sc.rod||t>=FM.te;
+  /* trails */
+  for(let i=0;i<FM.n;i++){let d='';const N=Math.max(2,Math.ceil(160*t/F.tend));
+    if(sc.rod||t>=FM.te){const t0=sc.rod?0:FM.te;for(let k=0;k<=N;k++){const tt=t0+(t-t0)*k/N,p=FM.pos(i,tt);d+=(k?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1);}}
+    $('ftr'+i).setAttribute('d',d);}
+  /* actual CM path */
+  let d='';const N=Math.max(2,Math.ceil(200*t/F.tend));
+  for(let k=0;k<=N;k++){const tt=t*k/N;let x=0,y=0;for(let i=0;i<FM.n;i++){const p=FM.pos(i,tt);x+=sc.m[i]*p[0];y+=sc.m[i]*p[1];}d+=(k?'L':'M')+X(x/FM.M).toFixed(1)+' '+Y(y/FM.M).toFixed(1);}
+  $('fcmpath').setAttribute('d',d);
+  let cx=0,cy=0;const P=[];for(let i=0;i<FM.n;i++){const p=FM.pos(i,t);P.push(p);cx+=sc.m[i]*p[0];cy+=sc.m[i]*p[1];}cx/=FM.M;cy/=FM.M;
+  $('fcm').setAttribute('transform',`translate(${X(cx).toFixed(1)} ${Y(cy).toFixed(1)})`);
+  $('fwhole').setAttribute('visibility',exploded?'hidden':'visible'); $('fwhole').setAttribute('cx',X(cx));$('fwhole').setAttribute('cy',Y(cy));
+  for(let i=0;i<FM.n;i++){const b=$('fb'+i);b.setAttribute('visibility',exploded?'visible':'hidden');b.setAttribute('cx',X(P[i][0]).toFixed(1));b.setAttribute('cy',Y(P[i][1]).toFixed(1));}
+  if(sc.rod) set($('frod'),{x1:X(P[0][0]),y1:Y(P[0][1]),x2:X(P[1][0]),y2:Y(P[1][1])});
+  const anyLanded=!sc.rod&&exploded&&FM.frag.some((f,i)=>FM.landed(i,t)), allLanded=!sc.rod&&exploded&&FM.frag.every((f,i)=>FM.landed(i,t));
+  $('fnote').textContent=sc.rod?'':(t<FM.te?'before the explosion':anyLanded?'a piece has landed: the ground now pushes':'after the explosion');
+  /* momentum diagram */
+  let m='', S=[120,100], k=90/(FM.M*F.u);
+  const vc=FM.vcm(Math.min(t,FM.T));
+  m+=`<circle cx="${S[0]}" cy="${S[1]}" r="2.5" fill="var(--muted)"/>`;
+  let vx=0,vy=0;for(let i=0;i<FM.n;i++){const v=FM.vel(i,t);vx+=sc.m[i]*v[0];vy+=sc.m[i]*v[1];}
+  const Pend=[S[0]+vx*k,S[1]-vy*k];
+  if(exploded){let q=S.slice();for(let i=0;i<FM.n;i++){const v=FM.vel(i,t),p=[sc.m[i]*v[0]*k,-sc.m[i]*v[1]*k];if(Math.hypot(p[0],p[1])>1.5)m+=arrow(q[0],q[1],q[0]+p[0],q[1]+p[1],FM.cols[i],2.6,8);q=[q[0]+p[0],q[1]+p[1]];}}
+  m+=arrow(S[0],S[1],Pend[0],Pend[1],'var(--ink)',exploded?1.6:2.6,9);
+  if(anyLanded){const pi=[S[0]+FM.M*vc[0]*k,S[1]-FM.M*vc[1]*k];m+=`<line x1="${S[0]}" y1="${S[1]}" x2="${pi[0]}" y2="${pi[1]}" stroke="var(--ink)" stroke-dasharray="3 3" opacity=".6"/>`;}
+  m+=`<text x="276" y="-4" font-size="11" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono,monospace">P = (${f1(vx)}, ${f1(vy)}) kg m/s</text>`;
+  m+=`<text x="276" y="200" font-size="11" fill="var(--muted)" text-anchor="end">${anyLanded?'dashed: M·v of the ideal parabola':'black: M·v_cm'}</text>`;
+  $('fmom').innerHTML=m;
+  /* KE bars */
+  let Kt=0;for(let i=0;i<FM.n;i++){const v=FM.vel(i,t);Kt+=0.5*sc.m[i]*(v[0]**2+v[1]**2);}
+  const Vc=[vx/FM.M,vy/FM.M], Kc=0.5*FM.M*(Vc[0]**2+Vc[1]**2), Kr=Math.max(0,Kt-Kc);
+  const Kmax=0.5*FM.M*(F.u**2+2*G*FM.h0)+FM.Krel, W=150, sx=W/Kmax;
+  $('fke').innerHTML=`<text x="0" y="15" font-size="11.5" fill="var(--ink)">CM motion</text><rect x="70" y="4" width="${(Kc*sx).toFixed(1)}" height="14" fill="var(--ke)"/><text x="${74+Kc*sx}" y="15" font-size="10.5" fill="var(--ink)" font-family="IBM Plex Mono,monospace">${Kc.toFixed(0)} J</text>`+
+    `<text x="0" y="41" font-size="11.5" fill="var(--ink)">about CM</text><rect x="70" y="30" width="${(Kr*sx).toFixed(1)}" height="14" fill="var(--ke)" fill-opacity=".45"/><text x="${74+Kr*sx}" y="41" font-size="10.5" fill="var(--ink)" font-family="IBM Plex Mono,monospace">${Kr.toFixed(0)} J</text>`+
+    `<text x="0" y="67" font-size="11.5" fill="var(--ink)">total K</text><rect x="70" y="56" width="${(Kc*sx).toFixed(1)}" height="14" fill="var(--ke)"/><rect x="${(70+Kc*sx).toFixed(1)}" y="56" width="${(Kr*sx).toFixed(1)}" height="14" fill="var(--ke)" fill-opacity=".45"/><text x="${74+(Kc+Kr)*sx}" y="67" font-size="10.5" fill="var(--ink)" font-family="IBM Plex Mono,monospace">${Kt.toFixed(0)} J</text>`+
+    `<text x="0" y="88" font-size="10.5" fill="var(--muted)">CM motion = ½Mv²(cm) · about CM = K′ · masses in kg</text>`;
+  /* caption */
+  let c;
+  if(sc.rod&&!sc.w) c=`<b>Pure translation:</b> thrown without spin, the baton keeps the same orientation, and every point of it (both ends, the CM) has the same velocity at every instant. All three trace identical parabolas, shifted copies of one another. K′ = 0: there is no motion relative to the CM. Compare the tumbling baton.`;
+  else if(sc.rod) c=`The ends trace loops, but the CM (⊕, ¾ of the way toward the 3 kg end) follows a clean parabola. Every point except the CM both moves along and swings round: <b>translation of the CM + rotation about it</b>. K′ here is the spin energy, and it stays at ${FM.Krel.toFixed(0)} J: gravity cannot spin the baton up, because it acts as if at the CM.`;
+  else if(t<FM.te) c='One body so far. Its momentum is M·v, changing only because gravity acts.';
+  else if(!anyLanded) c=`Right after the explosion the pieces’ momenta still add up to the same M·v<sub>cm</sub>: the explosion is internal. K′ jumped from 0 to ${FM.Krel.toFixed(0)} J (energy released by the explosion) and stays there while all the pieces fly.`+(sc.top?' One half was left at rest, so it falls straight down; the other half got twice the speed.':'');
+  else c=`<b>Now the CM leaves the parabola.</b> A piece has hit the ground, and the ground pushes on it: a new <i>external</i> force. The rule “CM follows the parabola” holds only while gravity is the only external force.`+(sc.top&&allLanded?` Here both halves land together, so the CM lands exactly where the shell would have: ${f1(FM.ux*FM.T)} m. The moving half lands at ${f1(FM.pos(1,t)[0])} m, 1.5 times as far.`:'');
+  $('fcap').innerHTML=c;
+}
+function fLoop(ts){
+  if(!F.play) return;
+  if(!F.vis){F.last=0;requestAnimationFrame(fLoop);return;}
+  const dt=F.last?Math.min(0.05,(ts-F.last)/1000):0; F.last=ts;
+  F.t+=dt; if(F.t>=F.tend){F.t=F.tend;F.play=false;$('fplay').textContent='Play';}
+  fDraw(); if(F.play) requestAnimationFrame(fLoop);
+}
+$('fplay').onclick=()=>{
+  if(RM){F.t=Math.min(F.tend,F.t+F.tend/12);fDraw();return;}
+  if(F.t>=F.tend-1e-9) F.t=0;
+  F.play=!F.play; $('fplay').textContent=F.play?'Pause':'Play'; if(F.play){F.last=0;requestAnimationFrame(fLoop);}
+};
+if(RM) $('fplay').textContent='Step →';
+$('freset').onclick=()=>{F.t=0;fDraw();};
+onScreen($('fly'),v=>F.vis=v);
+
+/* =================== 4 · BOAT =================== */
+const BT={s:0};
+const boat=$('boat'), BS=60, WY=150, DOCK=40;
+function bInit(){
+  stepper($('bmass'),[{label:'person m',col:'var(--b3)',get:()=>BOAT.m,set:v=>{BOAT.m=v;BT.s=0;$('bs').value=0;bDraw();},fmt:v=>v+' kg',min:40,max:100,step:10},
+    {label:'boat M',col:'var(--b4)',get:()=>BOAT.M,set:v=>{BOAT.M=v;BT.s=0;$('bs').value=0;bDraw();},fmt:v=>v+' kg',min:20,max:300,step:20}]);
+  boat.innerHTML=`<rect x="0" y="${WY}" width="600" height="70" fill="var(--vel)" fill-opacity=".10"/><line x1="0" x2="600" y1="${WY}" y2="${WY}" stroke="var(--vel)" stroke-opacity=".5"/>
+    <rect x="0" y="${WY-30}" width="${DOCK}" height="100" fill="var(--muted)" fill-opacity=".35"/><text x="6" y="${WY-36}" font-size="11" fill="var(--muted)">shore</text>
+    <g id="bticks"></g>
+    <path id="bghost" fill="none" stroke="var(--muted)" stroke-dasharray="4 4"/>
+    <path id="bhull" fill="var(--b4)" fill-opacity=".55" stroke="var(--b4)" stroke-width="1.5"/>
+    <g id="bperson" class="drag"><rect x="-14" y="-78" width="28" height="80" fill="transparent"/><circle cx="0" cy="-66" r="8" fill="var(--b3)"/><path d="M0 -58V-28M0 -28L-9 0M0 -28L9 0M-11 -48H11" stroke="var(--b3)" stroke-width="4" stroke-linecap="round" fill="none"/></g>
+    <line id="bcmline" y1="20" y2="${WY+60}" stroke="var(--ink)" stroke-dasharray="5 4" opacity=".6"/><g id="bcm"></g>
+    <g id="barrows"></g>`;
+  let t='';for(let x=0;x<=8;x++)t+=`<line x1="${DOCK+x*BS}" x2="${DOCK+x*BS}" y1="${WY+52}" y2="${WY+60}" stroke="var(--muted)"/><text x="${DOCK+x*BS}" y="${WY+71}" font-size="10" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono,monospace">${x}</text>`;
+  $('bticks').innerHTML=t+`<text x="596" y="${WY+71}" font-size="10" fill="var(--muted)" text-anchor="end">metres</text>`;
+  draggable(boat,$('bperson'),pt=>{const xb=bLeft(BT.s);BT.s=Math.max(0,Math.min(BOAT.L-0.6,Math.round(((pt.x-DOCK)/BS-xb-0.3)*20)/20));$('bs').value=BT.s;bDraw();});
+}
+const B0=1.5; // boat's left end starts 1.5 m from the shore
+function bX0(){return B0+(BOAT.M*BOAT.L/2+BOAT.m*0.3)/(BOAT.M+BOAT.m);} // CM position (person starts 0.3 m from the left end)
+function bLeft(w){return bX0()-(BOAT.M*BOAT.L/2+BOAT.m*(0.3+w))/(BOAT.M+BOAT.m);} // w = distance walked along the boat
+function bDraw(){
+  const L=BOAT.L, s=BT.s, xb=bLeft(s), on=0.3+s, xp=xb+on, X=x=>DOCK+x*BS;
+  $('bso').textContent=f2(on-0.3)+' m';
+  const hull=x=>`M${X(x)} ${WY-12}H${X(x+L)}L${X(x+L)-16} ${WY+18}H${X(x)+12}Z`;
+  $('bhull').setAttribute('d',hull(xb)); $('bghost').setAttribute('d',hull(B0));
+  $('bperson').setAttribute('transform',`translate(${X(xp).toFixed(1)} ${WY-12})`);
+  const xc=bX0(); set($('bcmline'),{x1:X(xc),x2:X(xc)}); $('bcm').innerHTML=CMMARK(X(xc),WY-36,7)+`<text x="${X(xc)+10}" y="18" font-size="11.5" fill="var(--ink)">CM of person + boat</text>`;
+  const db=xb-B0, dp=xp-(B0+0.3);
+  let a='';
+  if(Math.abs(db)>0.01) a+=arrow(X(B0+L/2),WY+36,X(B0+L/2+db),WY+36,'var(--disp)',2.6,8);
+  if(Math.abs(dp)>0.01) a+=arrow(X(B0+0.3),WY-100,X(B0+0.3+dp),WY-100,'var(--disp)',2.6,8)+`<text x="${X(B0+0.3+dp/2)}" y="${WY-106}" font-size="11.5" fill="var(--disp)" text-anchor="middle">person: ${f2(dp)} m</text>`;
+  if(Math.abs(db)>0.01) a+=`<text x="${X(B0+L/2+db)+(db<0?-6:6)}" y="${WY+40}" font-size="11.5" fill="var(--disp)" text-anchor="${db<0?'end':'start'}">boat: ${f2(db)} m</text>`;
+  $('barrows').innerHTML=a;
+  const walked=on-0.3;
+  $('bkv').innerHTML=`<dt>walked along the boat</dt><dd>${f2(walked)} m</dd><dt>boat moved (from shore)</dt><dd>${f2(db)} m</dd><dt>person moved (from shore)</dt><dd>${f2(dp)} m</dd><dt>m × person’s shift</dt><dd>${f1(BOAT.m*dp)} kg m</dd><dt>M × boat’s shift</dt><dd>${f1(BOAT.M*db)} kg m</dd>`;
+  $('bcap').innerHTML=walked<0.01?'Drag the person toward the right end.':`The person walked ${f2(walked)} m along the boat, but the boat slid ${f2(-db)} m back, so the person got only ${f2(dp)} m nearer the far side. The split is m : M the other way round: the boat moves m/(m + M) = ${BOAT.m}/${BOAT.m+BOAT.M} of the walk. A light boat moves a lot; a ship hardly moves.`;
+}
+$('bs').max=BOAT.L-0.6; $('bs').addEventListener('input',e=>{BT.s=+e.target.value;bDraw();});
+bInit(); BT.s=0; bDraw();
+
+/* =================== 5 · FRAMES =================== */
+const R5={sys:'bin',frame:'lab',t:0,play:!RM,last:0,vis:true,tr1:[],tr2:[]};
+chips('rchips',[{id:'bin',l:'Binary star'},{id:'dec',l:'Nucleus decays'}],k=>{R5.sys=k;R5.t=0;R5.tr1=[];R5.tr2=[];r5Draw();});
+chips('rframe',[{id:'lab',l:'Lab frame'},{id:'cm',l:'CM frame'}],k=>{R5.frame=k;R5.tr1=[];R5.tr2=[];r5Draw();});
+const BIN={m1:2,m2:1,d:96,w:1.5,V:34}, DEC={V:40,tD:4,va:[70,-48]};
+function r5Pos(t){
+  if(R5.sys==='bin'){
+    const M=BIN.m1+BIN.m2, r1=BIN.d*BIN.m2/M, r2=BIN.d*BIN.m1/M, a=BIN.w*t, c=[110+BIN.V*t,130];
+    return {c,p1:[c[0]+r1*Math.cos(a),c[1]+r1*Math.sin(a)],p2:[c[0]-r2*Math.cos(a),c[1]-r2*Math.sin(a)],T:12.5};
+  }
+  const c=[50+DEC.V*t,150]; let p1=c.slice(),p2=c.slice();
+  if(t>DEC.tD){const tt=t-DEC.tD, k=DECAY.He/DECAY.Rn;p2=[c[0]+DEC.va[0]*tt,c[1]+DEC.va[1]*tt];p1=[c[0]-k*DEC.va[0]*tt,c[1]-k*DEC.va[1]*tt];}
+  return {c,p1,p2,T:11};
+}
+function r5Draw(){
+  press('#rchips',R5.sys); press('#rframe',R5.frame);
+  const P=r5Pos(R5.t), cm=R5.frame==='cm', off=cm?[300-P.c[0],130-P.c[1]]:[0,0];
+  const q=p=>[p[0]+off[0],p[1]+off[1]];
+  const a=q(P.p1),b=q(P.p2),c=q(P.c);
+  R5.tr1.push(a);R5.tr2.push(b); if(R5.tr1.length>900){R5.tr1.shift();R5.tr2.shift();}
+  const pd=tr=>tr.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join('');
+  $('rtr1').setAttribute('d',pd(R5.tr1)); $('rtr2').setAttribute('d',pd(R5.tr2));
+  const dec=R5.sys==='dec', split=!dec||R5.t>DEC.tD;
+  set($('rb1'),{cx:a[0].toFixed(1),cy:a[1].toFixed(1),r:dec?(split?11:12):10,fill:dec&&!split?'var(--muted)':'var(--b1)'});
+  set($('rb2'),{cx:b[0].toFixed(1),cy:b[1].toFixed(1),r:dec?4:7,visibility:split?'visible':'hidden'});
+  $('rcm').setAttribute('transform',`translate(${c[0].toFixed(1)} ${c[1].toFixed(1)})`);
+  set($('rcmline'),cm?{x1:300,x2:300,y1:130,y2:130}:{x1:0,x2:600,y1:P.c[1],y2:P.c[1]});
+  set($('rl1'),{x:a[0]+14,y:a[1]-12}); set($('rl2'),{x:b[0]+10,y:b[1]-10});
+  $('rl1').textContent=dec?(split?'radon':'radium'):'star, 2M'; $('rl2').textContent=split?(dec?'alpha':'star, M'):'';
+  $('rnote').textContent=dec?'schematic speeds, not to scale':'schematic';
+  $('rcap').innerHTML=dec?
+    (cm?'In the CM frame the radium nucleus sits still, then the two products fly apart <b>back to back</b>, momenta equal and opposite. Radon is 222/4 = 55.5 times heavier than the alpha particle, so it recoils 55.5 times slower.':'In the lab the radium nucleus was moving. After the decay the alpha and radon go off at an angle to each other, yet their CM carries on exactly as before, along the dashed line: the decay forces are internal.')
+   :(cm?'In the CM frame the CM is still, and the two stars go round it in circles, always on opposite sides of it. The heavier star (2M) is on the smaller circle, ½ the radius of the other: the CM splits their distance 1 : 2.':'In the lab frame the stars trace wavy loops. Their CM (⊕) drifts along the dashed line at a steady speed: no external force acts on the pair. Switch to the CM frame.');
+}
+function r5Loop(ts){
+  if(!R5.play) return;
+  if(R5.vis){const dt=R5.last?Math.min(0.05,(ts-R5.last)/1000):0;R5.last=ts;R5.t+=dt;
+    const P=r5Pos(R5.t);if(R5.t>P.T){R5.t=0;R5.tr1=[];R5.tr2=[];}r5Draw();}
+  else R5.last=0;
+  requestAnimationFrame(r5Loop);
+}
+$('rplay').textContent=R5.play?'Pause':'Play';
+$('rplay').onclick=()=>{R5.play=!R5.play;$('rplay').textContent=R5.play?'Pause':'Play';if(R5.play){R5.last=0;requestAnimationFrame(r5Loop);}};
+onScreen($('frm'),v=>R5.vis=v);
+if(RM){R5.t=6;} r5Draw(); if(R5.play) requestAnimationFrame(r5Loop);
+
+/* =================== 6 · CENTRE OF GRAVITY =================== */
+/* card outline in its own coordinates (px); holes near the edge */
+const CARD=[[0,30],[60,0],[150,10],[210,60],[200,130],[140,150],[110,210],[50,200],[20,130]];
+const HOLES=[{id:'A',p:[60,14]},{id:'B',p:[194,72]},{id:'C',p:[64,188]},{id:'D',p:[28,110]}];
+function centroid(poly){let A=0,cx=0,cy=0;for(let i=0;i<poly.length;i++){const [x0,y0]=poly[i],[x1,y1]=poly[(i+1)%poly.length],c=x0*y1-x1*y0;A+=c;cx+=(x0+x1)*c;cy+=(y0+y1)*c;}A/=2;return [cx/(6*A),cy/(6*A)];}
+const CGp=centroid(CARD);
+const GC={hole:null,rot:0,used:[],show:false,anim:null};
+$('gchips').innerHTML=HOLES.map(h=>`<button class="chip" data-k="${h.id}">${h.id}</button>`).join('');
+$('gchips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)gHang(c.dataset.k);});
+$('gclipp').setAttribute('points',CARD.map(p=>p.join(',')).join(' '));
+function gCard(){
+  const g=$('gcard'), h=GC.hole?HOLES.find(x=>x.id===GC.hole).p:[105,0];
+  let s=`<polygon points="${CARD.map(p=>p.join(',')).join(' ')}" fill="var(--b2)" fill-opacity=".3" stroke="var(--b2)" stroke-width="2"/>`;
+  s+=`<g clip-path="url(#gclip)">`+GC.used.map(id=>{const p=HOLES.find(x=>x.id===id).p,dx=CGp[0]-p[0],dy=CGp[1]-p[1],L=Math.hypot(dx,dy),k=400/L;
+    return `<line x1="${p[0]-dx*k}" y1="${p[1]-dy*k}" x2="${p[0]+dx*k}" y2="${p[1]+dy*k}" stroke="var(--force)" stroke-width="2" stroke-dasharray="6 4"/>`;}).join('')+`</g>`;
+  s+=HOLES.map(x=>`<circle cx="${x.p[0]}" cy="${x.p[1]}" r="5" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/><text x="${x.p[0]+(x.p[0]>150?-12:9)}" y="${x.p[1]+4}" font-size="11.5" font-weight="600" fill="var(--ink)" text-anchor="${x.p[0]>150?'end':'start'}">${x.id}</text>`).join('');
+  if(GC.show) s+=CMMARK(CGp[0],CGp[1],7)+`<text x="${CGp[0]+10}" y="${CGp[1]+18}" font-size="11.5" font-weight="600" fill="var(--ink)">CG</text>`;
+  g.innerHTML=s;
+  gPose();
+}
+function gPose(){const h=GC.hole?HOLES.find(x=>x.id===GC.hole).p:[105,-10];
+  $('gcard').setAttribute('transform',GC.hole?`translate(300 70) rotate(${GC.rot.toFixed(2)}) translate(${-h[0]} ${-h[1]})`:`translate(195 70)`);
+  $('gplumb').setAttribute('visibility',GC.hole?'visible':'hidden');}
+function gTarget(id){const h=HOLES.find(x=>x.id===id).p, phi=Math.atan2(CGp[1]-h[1],CGp[0]-h[0])*180/Math.PI;return 90-phi;}
+function gHang(id){
+  const prev=GC.hole; GC.hole=id; press('#gchips',id);
+  const tgt=gTarget(id);
+  /* start tilted 35° off the rest position and let it settle, as a released card would */
+  const start=tgt+(prev===null?35:35*(Math.sign(Math.random()-0.5)||1));
+  if(GC.anim) cancelAnimationFrame(GC.anim);
+  const done=()=>{GC.rot=tgt;if(!GC.used.includes(id))GC.used.push(id);gCard();gText();};
+  if(RM){done();return;}
+  GC.rot=start; gCard(); const t0=performance.now();
+  const step=now=>{const t=(now-t0)/1000; if(t>2.4){done();return;}
+    GC.rot=tgt+(start-tgt)*Math.exp(-1.6*t)*Math.cos(5.2*t); gPose(); GC.anim=requestAnimationFrame(step);};
+  GC.anim=requestAnimationFrame(step);
+}
+function gText(){const n=GC.used.length;
+  $('gcap').innerHTML=n===0?'Pick a hole to hang the card from.':n===1?'It settled with one line through the pin and straight down (dashed, drawn on the card). The CG is somewhere on this line. Hang it from another hole.':
+    `${n} lines, and they all cross at one point. That point is the centre of gravity. ${GC.show?'':'Press “Show the CG” to check.'}`;}
+$('gshow').onclick=()=>{GC.show=!GC.show;$('gshow').textContent=GC.show?'Hide the CG':'Show the CG';gCard();gText();};
+$('gclear').onclick=()=>{GC.used=[];GC.hole?GC.used.push(GC.hole):0;gCard();gText();};
+gCard();
+
+/* =================== 7 · QUIZ =================== */
+const q1=(()=>{const m1=1,m2=3,d=4;return {d1:d*m2/(m1+m2)};})();
+const qHCl=1.27*1/(1+35.5); // CM distance from Cl nucleus, Å
+const qBoat=(()=>{const m=60,M=140,L=4;return {db:m*L/(m+M)};})();
+const QUIZ=[
+ {q:'A 1 kg and a 3 kg mass are 4 m apart. How far is their CM from the 1 kg mass?',o:['1 m','2 m',`${q1.d1} m`,'4/3 m'],a:2,
+  why:`X = (1×0 + 3×4)/(1 + 3) = ${q1.d1} m. The CM splits the 4 m in the ratio 3 : 1, the masses the other way round, so it is ${q1.d1} m from the light mass and ${4-q1.d1} m from the heavy one.`},
+ {q:'In HCl the nuclei are 1.27 Å apart and Cl is 35.5 times as heavy as H. Where is the CM?',o:['Midway, 0.635 Å from each','About 1.24 Å from the H nucleus','About 1.24 Å from the Cl nucleus','At the Cl nucleus exactly'],a:1,
+  why:`From the H end: X = 35.5 × 1.27/(1 + 35.5) = ${(1.27-qHCl).toFixed(2)} Å. So it is only ${qHCl.toFixed(3)} Å from the Cl nucleus: very close to it, but not exactly on it.`},
+ {q:'A shell fired at range R splits at the top into two equal halves. One half is left at rest and falls straight down. Where does the other half land (from the gun)?',o:['R','1.5R','2R','R/2'],a:1,
+  why:'The first half drops straight down from the top, landing at R/2. Both halves start at the same height with zero vertical speed, so they land together; at that moment the CM is at R (the ground has not yet pushed). So (R/2 + x)/2 = R, giving x = 1.5R.'},
+ {q:'A 60 kg person walks 4 m from one end of a 140 kg boat to the other, on still water. How far does the boat move?',o:['4 m','1.71 m','1.2 m','0 m'],a:2,
+  why:`No external horizontal force, so the CM stays put. The boat moves m/(m + M) of the walk, backwards: 60 × 4/200 = ${qBoat.db} m. The person moves ${4-qBoat.db} m relative to the shore.`},
+ {q:'A child sits on a trolley moving at speed V on a smooth floor, then gets up and runs about on it. What is the speed of the CM of child + trolley?',o:['More than V','Less than V','Still V','It depends on how the child runs'],a:2,
+  why:'The child and trolley push on each other: internal forces. The smooth floor gives no horizontal external force, so the total momentum, and with it v<sub>cm</sub> = P/M, stays exactly V.'},
+ {q:'A bomb at rest explodes into two pieces with masses in the ratio 1 : 2. Ratio of their kinetic energies (light : heavy)?',o:['1 : 2','2 : 1','1 : 4','1 : 1'],a:1,
+  why:'Momentum stays zero, so both pieces have the same size of momentum p. K = p²/2m, so the light piece gets the larger share: K ∝ 1/m gives 2 : 1.'},
+ {q:'From a uniform disc of radius R, a hole of radius R/2 is cut, its centre R/2 from the disc’s centre. Where is the CM now?',o:['R/2 from the centre, on the hole’s side','R/6 from the centre, away from the hole','R/4 from the centre, away from the hole','At the centre'],a:1,
+  why:'Full disc M at O, plus “negative mass” −M/4 at R/2. X = (0 − (M/4)(R/2))/(3M/4) = −R/6: R/6 on the side away from the hole.'},
+ {q:'Must the CM of a body lie inside the material of the body?',o:['Yes, always','No: a ring’s CM is at its empty centre','Only for solid bodies'],a:1,
+  why:'The CM is a weighted average position, not a piece of the body. For a ring, a horseshoe, a boomerang or a semicircular wire, it is in empty space.'}
+];
+function renderQuiz(){
+  $('quiz').innerHTML=QUIZ.map((q,i)=>`<div class="panel"><p class="qn">Q${i+1}</p><p>${q.q}</p>
+    <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');
+}
+$('quiz').addEventListener('click',e=>{
+  const b=e.target.closest('.opt'); if(!b||b.disabled) return;
+  const box=b.parentElement, q=QUIZ[+box.dataset.i], j=+b.dataset.j;
+  box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+  const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+});
+$('qreset').onclick=renderQuiz;
+
+/* =================== INIT =================== */
+pLoad(load('sys-cm-pre')||'two');
+{const s=load('sys-cm-shape'); if(SHAPES.some(x=>x.id===s)) S.id=s;} sBuild();
+fSetup();
+renderQuiz();
+</script>
+</body>
+</html>

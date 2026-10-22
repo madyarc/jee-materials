@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Friction and Circular Motion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&family=Noto+Sans+Symbols+2&text=%E2%86%90%E2%86%91%E2%86%92%E2%86%93%E2%86%94%E2%86%97%E2%87%8C%E2%87%92%E2%87%94%E2%88%82%E2%88%88%E2%88%92%E2%88%93%E2%88%9A%E2%88%9D%E2%88%9E%E2%88%AB%E2%89%88%E2%89%A0%E2%89%A1%E2%89%A4%E2%89%A5%E2%89%AA%E2%89%AB%E2%8A%95%E2%8A%97%E2%8A%99%E2%8A%A5%E2%96%B2%E2%96%B6%E2%97%80%E2%97%8B%E2%97%8F%E2%9C%93%E2%9C%97%E2%9D%9A%E2%9F%82%E2%9F%A8%E2%9F%A9&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) static friction self-adjusting: push slider + f vs F graph  (2) block on a rough incline, angle of repose
+   (3) rolling friction (schematic)  (4) centripetal force is a role, not a force: circle + cut the string
+   (5) car on a level road  (6) banked road: f/N vs speed with v_min, v_opt, v_max */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --acc:#b0377a; --disp:#1f8f87; --ke:#0f8a4f; --pe:#8a6d1f;
+  --b1:#7a52c7; --b2:#1f8f87; --b3:#b0377a; --b4:#8a6d1f;
+  --f-display:"Bricolage Grotesque","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","Noto Sans Math","Noto Sans Symbols 2",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a;
+  --b1:#a585f0; --b2:#3cb8ad; --b3:#e86fae; --b4:#d4b44a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a;
+  --b1:#a585f0; --b2:#3cb8ad; --b3:#e86fae; --b4:#d4b44a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:8.5em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:13ch;text-align:right;white-space:nowrap}
+@media (max-width:480px){.slider label{min-width:0;flex:1 1 100%}.slider input{min-width:0}}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Friction and Circular Motion</h1>
+    <p class="lede">Friction is the part of the contact force that lies along the surface. It has no fixed size: static friction is exactly as large as it needs to be, up to a limit. That one idea explains why a pushed block stays put, why a parked car stays on a slope, and why a car can turn a corner at all. For a turn, something has to pull the car toward the centre, and on a flat road friction is the only candidate.</p>
+  </header>
+
+  <!-- 1 · static friction -->
+  <section class="stack" id="static">
+    <div>
+      <h2>1 · Static friction adjusts itself, up to a limit</h2>
+      <p class="lede">Push a block resting on the floor. Slide the push up slowly and watch the friction arrow. Predict first: what happens at the moment the push passes the limit?</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="fr" viewBox="0 0 560 190" role="img" aria-label="Block pushed on a floor with friction" style="min-width:400px"></svg></div>
+        <div class="svgbox"><svg id="frg" viewBox="0 0 420 240" role="img" aria-label="Friction against applied force" style="min-width:380px"></svg></div>
+        <div class="slider"><label for="fF">your push F</label><input type="range" id="fF" min="0" max="40" step="0.2" value="8"><output id="fFo"></output></div>
+        <div class="slider"><label for="fm">block mass m</label><input type="range" id="fm" min="1" max="5" step="0.5" value="4"><output id="fmo"></output></div>
+        <div class="slider"><label for="fs">µ<sub>s</sub> (static)</label><input type="range" id="fs" min="0.1" max="0.8" step="0.01" value="0.5"><output id="fso"></output></div>
+        <div class="slider"><label for="fk">µ<sub>k</sub> (kinetic)</label><input type="range" id="fk" min="0.05" max="0.8" step="0.01" value="0.4"><output id="fko"></output></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="fstate"></p>
+        <dl class="kv" id="fkv"></dl>
+        <p class="cap key">While the block is still, friction f<sub>s</sub> exactly cancels your push, so it is equal to F, however small F is. It can grow only up to a limit, f<sub>s</sub> ≤ µ<sub>s</sub>N. Push past that and the block breaks free; friction then drops to the kinetic value f<sub>k</sub> = µ<sub>k</sub>N (µ<sub>k</sub> &lt; µ<sub>s</sub>), and the block accelerates at (F − f<sub>k</sub>)/m.</p>
+        <p class="cap">Friction opposes <b>relative</b> motion (or, while still, the motion that would happen without it). The laws f<sub>s</sub> ≤ µ<sub>s</sub>N and f<sub>k</sub> = µ<sub>k</sub>N are <span class="hw">empirical, approximate</span>: not fundamental laws like gravity. To a good approximation both are independent of the contact area, and f<sub>k</sub> barely depends on speed. At the atomic level, contact forces are electrical attractions and repulsions.</p>
+        <p class="muted">Once sliding, you can ease off to F = µ<sub>k</sub>N and it keeps sliding at constant speed; this graph shows a block that starts from rest each time.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q1"></div>
+  </section>
+
+  <!-- 2 · incline -->
+  <section class="stack" id="incline">
+    <div>
+      <h2>2 · A block on a rough slope; the angle of repose</h2>
+      <p class="lede">Tilt the slope. Gravity's pull along the slope, mg sin θ, grows; the most that static friction can give, µ<sub>s</sub>mg cos θ, shrinks. Where they cross, the block starts to slide. Add a push along the slope and friction may even flip direction.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="inc" viewBox="0 0 420 260" role="img" aria-label="Block on a rough incline with forces" style="min-width:380px"></svg></div>
+        <div class="svgbox"><svg id="incg" viewBox="0 0 420 230" role="img" aria-label="Friction needed and friction available against angle" style="min-width:380px"></svg></div>
+        <div class="legend"><span><i style="background:var(--force)"></i>friction needed to hold it</span><span><i style="background:var(--muted)"></i>most static friction can give, µ<sub>s</sub>N</span><span><i style="background:var(--flag);opacity:.25;height:10px"></i>slides</span></div>
+        <div class="slider"><label for="ith">slope angle θ</label><input type="range" id="ith" min="0" max="60" step="0.5" value="20"><output id="itho"></output></div>
+        <div class="slider"><label for="iF">push along slope</label><input type="range" id="iF" min="-20" max="30" step="0.5" value="0"><output id="iFo"></output></div>
+        <div class="slider"><label for="imu">µ<sub>s</sub> (static)</label><input type="range" id="imu" min="0.1" max="1" step="0.01" value="0.5"><output id="imuo"></output></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="istate"></p>
+        <dl class="kv" id="ikv"></dl>
+        <p class="cap key" id="icap"></p>
+        <p class="cap">With no push the block slips when mg sin θ = µ<sub>s</sub>mg cos θ, i.e. at the <b>angle of repose</b> θ<sub>r</sub> = tan⁻¹ µ<sub>s</sub>. The mass cancels: a heavy and a light block of the same material slip together. Tilting a plank until a block slides is a simple way to measure µ<sub>s</sub>.</p>
+        <p class="muted">Model: block 2 kg (it does not change the angle), µ<sub>k</sub> = 0.8 µ<sub>s</sub> chosen for illustration only, g = 9.8 m s⁻². Push: + up the slope, − down it.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q2"></div>
+  </section>
+
+  <!-- 3 · rolling friction -->
+  <section class="stack" id="rolling">
+    <div>
+      <h2>3 · Rolling friction, and friction as friend and foe</h2>
+      <p class="lede">An ideal hard wheel rolling on a hard floor touches it at one point, which is momentarily at rest, so nothing slides and no friction is needed to keep it rolling. Real wheels and floors squash a little.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="roll" viewBox="0 0 560 200" role="img" aria-label="Ideal and real rolling contact" style="min-width:420px"></svg></div>
+        <p class="muted">Schematic, deformation hugely exaggerated.</p>
+      </div>
+      <div class="panel stack">
+        <p class="cap key">In real rolling the contact is a small patch, not a point. The ground pushes harder on the front of the patch than on the back, so the total contact force leans slightly backward. Its backward part is <b>rolling friction</b>. For the same weight it is far smaller than sliding friction, in good cases by two or three orders of magnitude (100 to 1000 times). That is why the wheel, and ball bearings, matter so much.</p>
+        <p class="cap"><b>Foe:</b> friction wastes energy as heat in machines; lubricants, ball bearings and air cushions reduce it. <b>Friend:</b> brakes rely on kinetic friction; walking and driving need static friction (the road pushes the tyre forward); a car cannot move on a perfectly slippery road. More on rolling: <a href="rolling-motion.html">Rolling Motion</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · centripetal -->
+  <section class="stack" id="centripetal">
+    <div>
+      <h2>4 · "Centripetal force" is a job, not a new force</h2>
+      <p class="lede">Moving in a circle at steady speed, a body's velocity keeps turning, so it accelerates toward the centre at v²/R. By the second law something must pull it inward with f<sub>c</sub> = mv²/R. That something is always a real force you can name. Remove it and the body flies off along the tangent.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="cpick" role="group" aria-label="Choose a situation"></div>
+        <div class="two">
+          <div class="svgbox"><svg id="circ" viewBox="0 0 320 300" role="img" aria-label="Top view: body moving in a circle" style="min-width:260px"></svg></div>
+          <div class="svgbox"><svg id="cside" viewBox="0 0 300 260" role="img" aria-label="Where the inward force comes from" style="min-width:240px"></svg></div>
+        </div>
+        <div class="row"><button class="btn primary" id="cplay">Pause</button><button class="btn" id="ccut">Remove the inward force</button><button class="btn" id="creset">Back on the circle</button></div>
+        <div class="legend"><span><i style="background:var(--vel)"></i>velocity (along the tangent)</span><span><i style="background:var(--force)"></i>the real inward force</span></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="cname"></p>
+        <p class="cap key" id="ccap"></p>
+        <p class="cap">Don't add "centripetal force" as an extra arrow in a free-body diagram. Draw the real forces; their component toward the centre <b>is</b> mv²/R. The outward push you <i>feel</i> on a merry-go-round is not a force on you: it is your body's tendency to go straight on (inertia), while the seat or wall pulls you inward.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q4"></div>
+  </section>
+
+  <!-- 5 · flat road -->
+  <section class="stack" id="flat">
+    <div>
+      <h2>5 · A car turning on a level road</h2>
+      <p class="lede">On a flat road the only horizontal force on the car is friction from the road on the tyres, so friction must supply all of mv²/R. The tyres are not sliding sideways, so it is <b>static</b> friction, and it has a ceiling.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="road" viewBox="0 0 420 300" role="img" aria-label="Top view of a car on a curve" style="min-width:380px"></svg></div>
+        <div class="slider"><label for="rv">speed v</label><input type="range" id="rv" min="1" max="40" step="0.5" value="15"><output id="rvo" style="min-width:20ch"></output></div>
+        <div class="slider"><label for="rR">radius of the turn R</label><input type="range" id="rR" min="5" max="100" step="1" value="40"><output id="rRo"></output></div>
+        <div class="slider"><label for="rmu">µ<sub>s</sub> (tyre on road)</label><input type="range" id="rmu" min="0.05" max="1" step="0.01" value="0.6"><output id="rmuo"></output></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="rstate"></p>
+        <svg id="rbars" viewBox="0 0 300 150" role="img" aria-label="Needed and available friction per kilogram" style="width:100%;max-width:360px;height:auto;display:block"></svg>
+        <dl class="kv" id="rkv"></dl>
+        <p class="cap key">Needed: mv²/R. Available: at most µ<sub>s</sub>N = µ<sub>s</sub>mg. So the turn is safe while v² ≤ µ<sub>s</sub>Rg, giving v<sub>max</sub> = √(µ<sub>s</sub>Rg). The mass cancels, so a loaded truck and a small car share the same limit (bars are per kilogram). Too fast or too tight, and the car slides outward onto a wider curve.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q5"></div>
+  </section>
+
+  <!-- 6 · banked road -->
+  <section class="stack" id="banked">
+    <div>
+      <h2>6 · Banked roads: let the normal force help</h2>
+      <p class="lede">Tilt the road toward the centre of the turn. Now the normal force leans inward too, and its horizontal part supplies some or all of mv²/R. At one speed, the optimum v<sub>opt</sub>, no friction is needed at all. Slower than that, friction must act up the slope; faster, down the slope.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="bpre" role="group" aria-label="Presets"></div>
+        <div class="svgbox"><svg id="bank" viewBox="0 0 420 250" role="img" aria-label="Rear view of a car on a banked road with forces" style="min-width:380px"></svg></div>
+        <div class="svgbox"><svg id="bankg" viewBox="0 0 420 240" role="img" aria-label="Friction needed per unit normal force against speed" style="min-width:380px"></svg></div>
+        <div class="slider"><label for="bv">speed v</label><input type="range" id="bv" min="0" max="60" step="0.5" value="28"><output id="bvo" style="min-width:20ch"></output></div>
+        <div class="slider"><label for="bth">banking angle θ</label><input type="range" id="bth" min="0" max="45" step="0.5" value="15"><output id="btho"></output></div>
+        <div class="slider"><label for="bR">radius R</label><input type="range" id="bR" min="20" max="500" step="5" value="300"><output id="bRo"></output></div>
+        <div class="slider"><label for="bmu">µ<sub>s</sub></label><input type="range" id="bmu" min="0" max="1" step="0.01" value="0.2"><output id="bmuo"></output></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="bstate"></p>
+        <dl class="kv" id="bkv"></dl>
+        <p class="cap key">Vertical: N cos θ = mg + f sin θ. Toward the centre: N sin θ + f cos θ = mv²/R (f taken down the slope). With f = 0: v<sub>opt</sub> = √(Rg tan θ). With f at its limit µ<sub>s</sub>N, down the slope: v<sub>max</sub> = √(Rg(µ<sub>s</sub> + tan θ)/(1 − µ<sub>s</sub> tan θ)), larger than on a flat road. Up the slope: v<sub>min</sub> = √(Rg(tan θ − µ<sub>s</sub>)/(1 + µ<sub>s</sub> tan θ)).</p>
+        <p class="cap">The graph plots the friction the car needs as a fraction of N. Inside the band ±µ<sub>s</sub>, static friction can supply it. If tan θ ≤ µ<sub>s</sub> there is no lower limit: the car can even be parked on the bank. Driving near v<sub>opt</sub> means little sideways force on the tyres, so less wear.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q6"></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> cars and blocks as particles; f<sub>s</sub> ≤ µ<sub>s</sub>N and f<sub>k</sub> = µ<sub>k</sub>N (empirical, approximate laws; µ values here are illustrative, not measured); no air drag; steady speed on a circle of fixed radius; in section 5 a skidding car is drawn on the widest circle static friction allows (a simplification). Section 3 is schematic. Section 4 runs in slow motion. g = 9.8 m s⁻² unless a question states 10.</p>
+    <p><b>Based on:</b> NCERT Physics Class 11, "Laws of Motion"; H. C. Verma, <i>Concepts of Physics</i> Vol. 1, "Friction" and "Circular Motion".</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+const G=9.8; // m s^-2
+const INC={m:2, kRatio:0.8};   // incline block mass (kg); µk = 0.8 µs (illustrative assumption)
+/* circular-motion situations: name of the real inward force and a short explanation */
+const CIRC=[
+ {id:'string', l:'Stone on a string', centre:'hand', force:'tension T',
+  cap:'The string pulls the stone toward your hand. T = mv²/R: whirl faster or on a shorter string and you feel a bigger pull. Let go and the stone leaves along the tangent, not outward along the string.'},
+ {id:'planet', l:'Planet round the Sun', centre:'Sun', force:'gravity',
+  cap:'Here the inward force is the Sun\'s gravitational pull. No contact is needed. Without it the planet would carry on in a straight line.'},
+ {id:'flat', l:'Car on a level road', centre:'centre of turn', force:'static friction',
+  cap:'Only the road can push the car sideways, and the sideways part of the contact force is friction by definition. On ice there is almost none, so the car goes straight on.'},
+ {id:'bank', l:'Car on a banked road', centre:'centre of turn', force:'N sin θ (+ friction)',
+  cap:'The tilted road\'s normal force leans inward; its horizontal part N sin θ supplies the pull. Friction makes up any difference (section 6).'}
+];
+const BPRE=[{id:'ncert',l:'Racetrack: R = 300 m, 15°, µs = 0.2',R:300,th:15,mu:0.2,v:28},{id:'ice',l:'Icy bank: µs = 0',R:300,th:15,mu:0,v:20},{id:'flat',l:'Flat road: θ = 0',R:300,th:0,mu:0.2,v:20}];
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const deg=Math.PI/180;
+function fmt(v,d){if(!isFinite(v))return '∞';const a=Math.abs(v);if(d==null)d=a>=100?0:a>=10?1:2;return (a<Math.pow(10,-d)/2?0:v).toFixed(d);}
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);if(attrs)for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function setA(e,attrs){for(const k in attrs)e.setAttribute(k,attrs[k]);}
+function arrowPool(g){
+  const it=[];
+  return list=>{
+    list.forEach((a,i)=>{
+      let o=it[i];
+      if(!o){const gg=el('g',{},g);o={g:gg,l:el('line',{'stroke-linecap':'round'},gg),p:el('polygon',{},gg),t:el('text',{'font-size':12},gg)};it.push(o);}
+      o.g.style.display='';
+      const dx=a.x2-a.x1, dy=a.y2-a.y1, L=Math.hypot(dx,dy), w=a.w||2.4;
+      if(L<1.5){o.l.style.display='none';o.p.style.display='none';}
+      else{
+        const h=Math.min(a.head||10,L*0.6), ux=dx/L, uy=dy/L, bx=a.x2-ux*h, by=a.y2-uy*h, px=-uy*h*0.5, py=ux*h*0.5;
+        o.l.style.display='';o.p.style.display='';
+        setA(o.l,{x1:a.x1,y1:a.y1,x2:bx,y2:by,stroke:a.col,'stroke-width':w,'stroke-dasharray':a.dash||'none',opacity:a.op==null?1:a.op});
+        setA(o.p,{points:`${a.x2},${a.y2} ${bx+px},${by+py} ${bx-px},${by-py}`,fill:a.col,opacity:a.op==null?1:a.op});
+      }
+      if(a.label){
+        let lx=a.lx, ly=a.ly, an=a.anchor;
+        if(lx==null){const ux=L>0?dx/L:0, uy=L>0?dy/L:-1; lx=a.x2+ux*12; ly=a.y2+uy*12+4; an=an||(ux>0.35?'start':ux<-0.35?'end':'middle');}
+        o.t.style.display='';o.t.textContent=a.label;
+        setA(o.t,{x:lx,y:ly,fill:a.tcol||a.col,'text-anchor':an||'middle','font-weight':a.bold?600:500,'font-size':a.fs||12});
+      } else o.t.style.display='none';
+    });
+    for(let i=list.length;i<it.length;i++) it[i].g.style.display='none';
+  };
+}
+function press(sel,k){document.querySelectorAll(sel+' .chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.k===String(k))));}
+function chips(id,list,onPick){$(id).innerHTML=list.map(x=>`<button class="chip" data-k="${x.id}">${x.l}</button>`).join('');$(id).onclick=e=>{const c=e.target.closest('.chip');if(c)onPick(c.dataset.k);};}
+function onScreen(elm,cb){if(!('IntersectionObserver' in window))return;new IntersectionObserver(es=>es.forEach(en=>cb(en.isIntersecting)),{threshold:0}).observe(elm);}
+function quiz(id,items){
+  $(id).innerHTML=items.map((q,i)=>`<div class="panel"><p class="qn">Check ${i+1}</p><p>${q.q}</p>
+    <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');
+  $(id).addEventListener('click',e=>{
+    const b=e.target.closest('.opt'); if(!b||b.disabled) return;
+    const box=b.parentElement, q=items[+box.dataset.i], j=+b.dataset.j;
+    box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+    const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+  });
+}
+/* simple axes helper (built once) */
+function axes(svg,o){
+  let g=`<line x1="${o.L}" x2="${o.R}" y1="${o.B}" y2="${o.B}" stroke="var(--muted)"/><line x1="${o.L}" x2="${o.L}" y1="${o.T}" y2="${o.B}" stroke="var(--muted)"/>`;
+  o.xt.forEach(v=>{const x=o.X(v);g+=`<line x1="${x}" x2="${x}" y1="${o.B}" y2="${o.B+4}" stroke="var(--muted)"/><text x="${x}" y="${o.B+16}" font-size="10.5" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono,monospace">${v}</text>`;});
+  o.yt.forEach(v=>{const y=o.Y(v);g+=`<line x1="${o.L}" x2="${o.R}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${o.L-6}" y="${y+4}" font-size="10.5" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono,monospace">${v}</text>`;});
+  g+=`<text x="${(o.L+o.R)/2}" y="${o.B+32}" font-size="12" fill="var(--ink)" text-anchor="middle">${o.xl}</text><text transform="translate(13 ${(o.T+o.B)/2}) rotate(-90)" font-size="12" fill="var(--ink)" text-anchor="middle">${o.yl}</text>`;
+  svg.insertAdjacentHTML('beforeend',g);
+}
+
+/* =================== 1 · STATIC FRICTION =================== */
+const FS={F:8,m:4,mus:0.5,muk:0.4,off:0,v:0,last:0,run:false,vis:true};
+const frs=$('fr'), FY=140, BX=250, BW=96, BH=60;
+const frHatch=el('g',{},frs);
+for(let i=0;i<34;i++) el('line',{x1:i*20-6,x2:i*20-16,y1:FY+1,y2:FY+11,stroke:'var(--line)'},frHatch);
+el('line',{x1:0,x2:560,y1:FY,y2:FY,stroke:'var(--muted)','stroke-width':1.5},frs);
+el('rect',{x:BX,y:FY-BH,width:BW,height:BH,rx:3,fill:'var(--b1)','fill-opacity':.35,stroke:'var(--b1)'},frs);
+const frM=el('text',{x:BX+BW/2,y:FY-BH/2+4,'font-size':12,fill:'var(--ink)','text-anchor':'middle'},frs);
+const frStreaks=el('path',{stroke:'var(--muted)','stroke-width':1.5,'stroke-linecap':'round',fill:'none'},frs);
+const frArr=arrowPool(el('g',{},frs));
+/* graph */
+const fg=$('frg'), FG={L:50,R:404,T:14,B:196,xmax:40,ymax:40};
+FG.X=v=>FG.L+v/FG.xmax*(FG.R-FG.L); FG.Y=v=>FG.B-v/FG.ymax*(FG.B-FG.T);
+axes(fg,{...FG,xt:[0,10,20,30,40],yt:[10,20,30,40],xl:'your push F (N)',yl:'friction f (N)'});
+const fgStatic=el('rect',{y:FG.T,height:FG.B-FG.T,fill:'var(--ok)','fill-opacity':.08},fg);
+const fgCurve=el('path',{fill:'none',stroke:'var(--force)','stroke-width':2.6},fg);
+const fgDrop=el('line',{stroke:'var(--force)','stroke-width':1.6,'stroke-dasharray':'4 3'},fg);
+const fgDiag=el('line',{stroke:'var(--muted)','stroke-dasharray':'2 4'},fg);
+const fgT1=el('text',{'font-size':11,fill:'var(--ok)'},fg), fgT2=el('text',{'font-size':11,fill:'var(--force)','text-anchor':'end'},fg), fgT3=el('text',{'font-size':11,fill:'var(--force)','text-anchor':'end'},fg);
+const fgMk=el('circle',{r:6,fill:'var(--surface)',stroke:'var(--ink)','stroke-width':2.4},fg);
+function frModel(){const N=FS.m*G, lim=FS.mus*N, fk=FS.muk*N, slide=FS.F>lim+1e-9;return {N,lim,fk,slide,f:slide?fk:FS.F,a:slide?(FS.F-fk)/FS.m:0};}
+function drawFr(){
+  const M=frModel();
+  $('fFo').textContent=fmt(FS.F,1)+' N'; $('fmo').textContent=fmt(FS.m,1)+' kg'; $('fso').textContent=fmt(FS.mus); $('fko').textContent=fmt(FS.muk);
+  frM.textContent=fmt(FS.m,1)+' kg';
+  const k=3.6; // px per N
+  const arr=[];
+  if(FS.F>0) arr.push({x1:BX-6-FS.F*k,y1:FY-BH/2,x2:BX-6,y2:FY-BH/2,col:'var(--force)',w:3,label:'F = '+fmt(FS.F,1)+' N',lx:BX-10-FS.F*k/2,ly:FY-BH/2-10,anchor:'middle',bold:true});
+  if(M.f>0) arr.push({x1:BX+BW/2,y1:FY+18,x2:BX+BW/2-M.f*k,y2:FY+18,col:'var(--force)',w:3,label:(M.slide?'kinetic f = ':'static f = ')+fmt(M.f,1)+' N',lx:BX+BW/2+8,ly:FY+22,anchor:'start',bold:true});
+  if(M.slide) arr.push({x1:BX+BW+14,y1:FY-BH/2,x2:BX+BW+14+Math.min(M.a*9,120),y2:FY-BH/2,col:'var(--acc)',w:2.6,label:'a = '+fmt(M.a)+' m/s²',lx:BX+BW+14,ly:FY-BH/2-12,anchor:'start'});
+  frArr(arr);
+  frStreaks.setAttribute('d',M.slide?`M${BX-14} ${FY-6}h-26M${BX-20} ${FY-15}h-16`:'');
+  /* graph */
+  const lim=Math.min(M.lim,FG.xmax);
+  setA(fgStatic,{x:FG.L,width:FG.X(lim)-FG.L});
+  fgCurve.setAttribute('d',`M${FG.X(0)} ${FG.Y(0)}L${FG.X(lim)} ${FG.Y(lim)}`+(M.lim<FG.xmax?`M${FG.X(M.lim)} ${FG.Y(M.fk)}L${FG.X(FG.xmax)} ${FG.Y(M.fk)}`:''));
+  setA(fgDrop,{x1:FG.X(lim),x2:FG.X(lim),y1:FG.Y(lim),y2:FG.Y(Math.min(M.fk,lim))});
+  setA(fgDiag,{x1:FG.X(lim),y1:FG.Y(lim),x2:FG.X(FG.xmax),y2:FG.Y(FG.xmax)});
+  setA(fgT1,{x:FG.L+6,y:FG.T+12}); fgT1.textContent='at rest';
+  setA(fgT2,{x:FG.X(lim)-8,y:FG.Y(lim)-4}); fgT2.textContent='limit µsN = '+fmt(M.lim,1)+' N';
+  setA(fgT3,{x:FG.R-2,y:FG.Y(M.fk)+15}); fgT3.textContent=M.lim<FG.xmax?'sliding: µkN = '+fmt(M.fk,1)+' N':'';
+  setA(fgMk,{cx:FG.X(FS.F),cy:FG.Y(M.f)});
+  $('fstate').textContent=M.slide?'Sliding: kinetic friction':FS.F===0?'No push, no friction':'At rest: static friction = your push';
+  $('fkv').innerHTML=`<dt>normal force N = mg</dt><dd>${fmt(M.N,1)} N</dd><dt>limit µ<sub>s</sub>N</dt><dd>${fmt(M.lim,1)} N</dd><dt>kinetic µ<sub>k</sub>N</dt><dd>${fmt(M.fk,1)} N</dd><dt>friction now</dt><dd>${fmt(M.f,1)} N</dd><dt>acceleration</dt><dd>${fmt(M.a)} m/s²</dd>`;
+  if(M.slide&&!FS.run&&!RM){FS.run=true;FS.v=0;FS.last=0;requestAnimationFrame(frLoop);}
+  if(!M.slide){FS.run=false;FS.off=0;FS.v=0;frHatch.setAttribute('transform','');}
+}
+function frLoop(ts){
+  if(!FS.run) return;
+  if(FS.vis){const dt=FS.last?Math.min(0.05,(ts-FS.last)/1000):0;FS.last=ts;
+    const M=frModel(); FS.v=Math.min(FS.v+M.a*dt*12,260); FS.off=(FS.off+FS.v*dt)%20; frHatch.setAttribute('transform',`translate(${-FS.off} 0)`);}
+  else FS.last=0;
+  requestAnimationFrame(frLoop);
+}
+onScreen(frs,v=>{FS.vis=v;});
+$('fF').addEventListener('input',e=>{FS.F=+e.target.value;drawFr();});
+$('fm').addEventListener('input',e=>{FS.m=+e.target.value;drawFr();});
+$('fs').addEventListener('input',e=>{FS.mus=+e.target.value;if(FS.muk>FS.mus){FS.muk=FS.mus;$('fk').value=FS.muk;}drawFr();});
+$('fk').addEventListener('input',e=>{FS.muk=Math.min(+e.target.value,FS.mus);e.target.value=FS.muk;drawFr();});
+{const mu=0.15,gq=10;
+quiz('q1',[
+ {q:'A 4 kg block rests on a floor with limiting static friction 19.6 N. You push it horizontally with 5 N. The friction on it is:',
+  o:['19.6 N','5 N','0, because it is not moving'],a:1,
+  why:'Static friction is only as large as it needs to be. The block stays still, so the net force is zero: friction = your push = 5 N. 19.6 N is just the ceiling.'},
+ {q:`A box sits on the floor of a train; µs between box and floor is ${mu}. The largest acceleration the train can have without the box slipping (g = ${gq} m s⁻²)?`,
+  o:[`${fmt(mu*gq)} m s⁻²`,`${fmt(gq/mu)} m s⁻²`,'any: the box moves with the train'],a:0,
+  why:`Static friction is the only horizontal force on the box, and it must give the box the train's acceleration: ma ≤ µsmg, so a ≤ µsg = ${fmt(mu*gq)} m s⁻². Friction here points <b>forward</b>, in the direction of motion: it opposes slipping relative to the floor, not motion itself.`},
+ {q:'Once a crate is sliding, the push needed to keep it moving at constant speed is:',
+  o:['more than the push needed to start it','less than the push needed to start it','zero'],a:1,
+  why:'Moving at constant speed, F = fk = µkN, and µk < µs. Starting it needs F just above µsN. That is why a heavy crate "gives" suddenly once it starts.'}
+]);}
+
+/* =================== 2 · INCLINE =================== */
+const IS={th:20,F:0,mus:0.5};
+const isv=$('inc'), IX0=30, IY0=232;
+const iRamp=el('polygon',{fill:'var(--ink)','fill-opacity':.07,stroke:'var(--ink)','stroke-opacity':.5},isv);
+const iArc=el('path',{fill:'none',stroke:'var(--muted)'},isv), iArcT=el('text',{'font-size':12,fill:'var(--muted)'},isv);
+const iBlk=el('g',{},isv);
+el('rect',{x:-30,y:-40,width:60,height:40,rx:3,fill:'var(--b1)','fill-opacity':.35,stroke:'var(--b1)'},iBlk);
+const iArr=arrowPool(el('g',{},isv));
+const ig=$('incg'), IG={L:50,R:404,T:14,B:186,xmax:60,ymax:40};
+IG.X=v=>IG.L+v/IG.xmax*(IG.R-IG.L); IG.Y=v=>IG.B-Math.min(v,IG.ymax)/IG.ymax*(IG.B-IG.T);
+const igSlide=el('path',{fill:'var(--flag)','fill-opacity':.14},ig);
+axes(ig,{...IG,xt:[0,10,20,30,40,50,60],yt:[10,20,30,40],xl:'slope angle θ (°)',yl:'force (N)'});
+const igNeed=el('path',{fill:'none',stroke:'var(--force)','stroke-width':2.6},ig);
+const igMax=el('path',{fill:'none',stroke:'var(--muted)','stroke-width':2,'stroke-dasharray':'6 4'},ig);
+const igRep=el('line',{stroke:'var(--ink)','stroke-dasharray':'2 3'},ig), igRepT=el('text',{'font-size':11,fill:'var(--ink)','text-anchor':'start'},ig);
+const igMk=el('circle',{r:6,fill:'var(--surface)',stroke:'var(--ink)','stroke-width':2.4},ig);
+function incModel(th){
+  const t=th*deg, mg=INC.m*G, N=mg*Math.cos(t), along=mg*Math.sin(t)-IS.F; // along > 0: tends to slide down
+  const lim=IS.mus*N, need=Math.abs(along), holds=need<=lim+1e-9, muk=INC.kRatio*IS.mus;
+  const a=holds?0:(need-muk*N)/INC.m;
+  return {t,mg,N,along,lim,need,holds,a,dir:along>0?'down':'up',fk:muk*N};
+}
+function drawInc(){
+  const M=incModel(IS.th), t=M.t, c=Math.cos(t), s=Math.sin(t);
+  $('itho').textContent=fmt(IS.th,1)+'°'; $('iFo').textContent=(IS.F>0?'+':'')+fmt(IS.F,1)+' N'; $('imuo').textContent=fmt(IS.mus);
+  const L=Math.min(360,190/Math.max(s,1e-6)), xt=IX0+L*c, yt=IY0-L*s;
+  iRamp.setAttribute('points',`${IX0},${IY0} ${xt},${yt} ${xt},${IY0}`);
+  iArc.setAttribute('d',`M${IX0+40} ${IY0} A40 40 0 0 0 ${IX0+40*c} ${IY0-40*s}`); setA(iArcT,{x:IX0+46,y:IY0-6}); iArcT.textContent='θ';
+  const bx=IX0+0.55*L*c, by=IY0-0.55*L*s; iBlk.setAttribute('transform',`translate(${bx} ${by}) rotate(${-IS.th})`);
+  const u=[c,-s], n=[-s,-c], C=[bx+n[0]*20,by+n[1]*20], k=3.2;
+  const arr=[{x1:C[0],y1:C[1],x2:C[0],y2:C[1]+M.mg*k,col:'var(--force)',label:'mg',bold:true},
+    {x1:C[0],y1:C[1],x2:C[0]+n[0]*M.N*k,y2:C[1]+n[1]*M.N*k,col:'var(--force)',label:'N',bold:true}];
+  /* friction along the contact surface; + = up the slope */
+  const fUp=M.holds?M.along:(M.dir==='down'?M.fk:-M.fk);
+  const S=[bx-u[0]*0,by-u[1]*0];
+  if(Math.abs(fUp)>0.05) arr.push({x1:S[0],y1:S[1],x2:S[0]+u[0]*fUp*k,y2:S[1]+u[1]*fUp*k,col:'var(--force)',w:3,label:'f',bold:true});
+  if(Math.abs(IS.F)>0.05){const P=[C[0]+n[0]*14-u[0]*(IS.F>0?30:-30),C[1]+n[1]*14-u[1]*(IS.F>0?30:-30)];
+    const st=[P[0]-u[0]*IS.F*k,P[1]-u[1]*IS.F*k];
+    arr.push({x1:st[0],y1:st[1],x2:P[0],y2:P[1],col:'var(--force)',w:2.4,label:'push',bold:true,lx:st[0]+n[0]*12,ly:st[1]+n[1]*12+4,anchor:'middle'});}
+  if(!M.holds){const d=M.dir==='down'?-1:1;arr.push({x1:C[0]+n[0]*46,y1:C[1]+n[1]*46,x2:C[0]+n[0]*46+u[0]*d*Math.min(M.a*8,70),y2:C[1]+n[1]*46+u[1]*d*Math.min(M.a*8,70),col:'var(--acc)',w:2.4,label:'a',bold:true});}
+  iArr(arr);
+  /* graph */
+  let dn='', dm='', sl='', inS=false;
+  for(let i=0;i<=120;i++){const th=i*0.5, m=incModel(th);dn+=(i?'L':'M')+IG.X(th).toFixed(1)+' '+IG.Y(m.need).toFixed(1);dm+=(i?'L':'M')+IG.X(th).toFixed(1)+' '+IG.Y(m.lim).toFixed(1);}
+  /* shade sliding ranges */
+  let start=null;
+  for(let i=0;i<=121;i++){const th=Math.min(i*0.5,60), sld=i<=120&&!incModel(th).holds;
+    if(sld&&start===null) start=th; if(!sld&&start!==null){sl+=`M${IG.X(start)} ${IG.T}H${IG.X(Math.min(th,60))}V${IG.B}H${IG.X(start)}Z`;start=null;}}
+  igNeed.setAttribute('d',dn); igMax.setAttribute('d',dm); igSlide.setAttribute('d',sl);
+  const rep=Math.atan(IS.mus)/deg;
+  const showRep=Math.abs(IS.F)<0.05&&rep<=60;
+  igRep.style.display=showRep?'':'none'; igRepT.style.display=showRep?'':'none';
+  if(showRep){setA(igRep,{x1:IG.X(rep),x2:IG.X(rep),y1:IG.T,y2:IG.B});setA(igRepT,{x:IG.X(rep)+5,y:IG.T+12});igRepT.textContent='θr = '+fmt(rep,1)+'°';}
+  setA(igMk,{cx:IG.X(IS.th),cy:IG.Y(M.need)});
+  $('istate').textContent=M.holds?'Holds: static friction is enough':'Slides '+M.dir+' the slope';
+  $('ikv').innerHTML=`<dt>mg sin θ (down the slope)</dt><dd>${fmt(M.mg*Math.sin(t),1)} N</dd><dt>push (up +)</dt><dd>${fmt(IS.F,1)} N</dd><dt>friction needed</dt><dd>${fmt(M.need,1)} N ${M.need<0.05?'':M.along>0?'up the slope':'down the slope'}</dd><dt>static limit µ<sub>s</sub>N</dt><dd>${fmt(M.lim,1)} N</dd><dt>acceleration</dt><dd>${M.holds?'0':fmt(M.a)+' m/s² '+M.dir}</dd>`;
+  let c2;
+  if(M.holds) c2=Math.abs(IS.F)<0.05?`Friction supplies exactly mg sin θ = ${fmt(M.need,1)} N up the slope. It has ${fmt(M.lim-M.need,1)} N to spare.`:(M.along>0?`The push helps hold it, so friction only supplies the remaining ${fmt(M.need,1)} N, up the slope.`:`Now the push is bigger than mg sin θ: the block would move up, so friction acts <b>down</b> the slope (${fmt(M.need,1)} N).`);
+  else c2=`Needed ${fmt(M.need,1)} N but static friction can give only ${fmt(M.lim,1)} N. It slides ${M.dir}, kinetic friction (${fmt(M.fk,1)} N) acts ${M.dir==='down'?'up':'down'} the slope, and a = ${fmt(M.a)} m/s².`;
+  $('icap').innerHTML=c2+' The block stays put whenever mg sin θ − µ<sub>s</sub>N ≤ push ≤ mg sin θ + µ<sub>s</sub>N.';
+}
+$('ith').addEventListener('input',e=>{IS.th=+e.target.value;drawInc();});
+$('iF').addEventListener('input',e=>{IS.F=+e.target.value;drawInc();});
+$('imu').addEventListener('input',e=>{IS.mus=+e.target.value;drawInc();});
+{const th=15, mu=Math.tan(th*deg);
+quiz('q2',[
+ {q:`A 4 kg block on a plank just starts to slide when the plank is tilted to ${th}°. µs between them is about:`,
+  o:[fmt(mu),fmt(Math.sin(th*deg)),fmt(Math.cos(th*deg))],a:0,
+  why:`At the angle of repose mg sin θ = µs mg cos θ, so µs = tan ${th}° ≈ ${fmt(mu)}. The 4 kg is a distractor: mass cancels.`},
+ {q:'A second, heavier block of the same material is placed beside the first on the same tilting plank. It starts to slide:',
+  o:['at a smaller angle','at the same angle','at a larger angle'],a:1,
+  why:'Both mg sin θ and µs mg cos θ are proportional to m. The angle of repose depends only on µs.'}
+]);}
+
+/* =================== 3 · ROLLING (static schematic) =================== */
+$('roll').innerHTML=(()=>{
+  let g='';
+  /* ideal */
+  g+=`<text x="140" y="18" font-size="12.5" font-weight="600" fill="var(--ink)" text-anchor="middle">Ideal: rigid wheel, rigid floor</text>`;
+  g+=`<line x1="20" x2="260" y1="150" y2="150" stroke="var(--muted)" stroke-width="1.5"/><circle cx="140" cy="90" r="60" fill="var(--b2)" fill-opacity=".25" stroke="var(--b2)" stroke-width="2"/><circle cx="140" cy="150" r="4" fill="var(--axis)"/>`;
+  g+=arrowS(140,150,140,100,'var(--force)')+`<text x="146" y="112" font-size="11.5" fill="var(--force)" font-weight="600">N, straight up</text><text x="140" y="172" font-size="11" fill="var(--muted)" text-anchor="middle">one contact point, at rest: no friction needed</text>`;
+  /* real */
+  g+=`<text x="420" y="18" font-size="12.5" font-weight="600" fill="var(--ink)" text-anchor="middle">Real: both squash a little</text>`;
+  g+=`<path d="M300 150 H392 Q398 150 400 156 H440 Q442 150 448 150 H540" fill="none" stroke="var(--muted)" stroke-width="1.5"/>`;
+  g+=`<path d="M398.5 156 A60 60 0 1 1 441.5 156 Z" fill="var(--b2)" fill-opacity=".25" stroke="var(--b2)" stroke-width="2"/>`;
+  g+=arrowS(380,100,430,100,'var(--vel)')+`<text x="380" y="92" font-size="11" fill="var(--vel)">rolling →</text>`;
+  g+=arrowS(430,156,418,104,'var(--force)')+`<text x="438" y="116" font-size="11.5" fill="var(--force)" font-weight="600">contact force</text><text x="438" y="131" font-size="11.5" fill="var(--force)" font-weight="600">leans back</text>`;
+  g+=arrowS(430,176,404,176,'var(--force)')+`<text x="440" y="180" font-size="11" fill="var(--force)">rolling friction</text>`;
+  g+=`<text x="420" y="197" font-size="11" fill="var(--muted)" text-anchor="middle">a contact patch, pushed harder at the front</text>`;
+  return g;
+})();
+function arrowS(x1,y1,x2,y2,col){const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy),h=9,ux=dx/L,uy=dy/L,bx=x2-ux*h,by=y2-uy*h,px=-uy*h*.5,py=ux*h*.5;
+  return `<line x1="${x1}" y1="${y1}" x2="${bx}" y2="${by}" stroke="${col}" stroke-width="2.4" stroke-linecap="round"/><polygon points="${x2},${y2} ${bx+px},${by+py} ${bx-px},${by-py}" fill="${col}"/>`;}
+
+/* =================== 4 · CENTRIPETAL =================== */
+const CS={id:'string',ang:0,cut:false,cutAng:0,s:0,play:!RM,vis:true,last:0};
+{const s=load('lom-circ'); if(CIRC.find(c=>c.id===s)) CS.id=s;}
+const csv=$('circ'), CC=[160,150], CR=95;
+el('circle',{cx:CC[0],cy:CC[1],r:CR,fill:'none',stroke:'var(--line)','stroke-width':1.5,'stroke-dasharray':'4 4'},csv);
+const cCentre=el('circle',{cx:CC[0],cy:CC[1],r:7},csv), cCentreT=el('text',{x:CC[0],y:CC[1]+22,'font-size':11.5,fill:'var(--muted)','text-anchor':'middle'},csv);
+const cString=el('line',{stroke:'var(--ink)','stroke-width':1.6},csv);
+const cPath=el('path',{fill:'none',stroke:'var(--vel)','stroke-dasharray':'3 4',opacity:.7},csv);
+const cBody=el('circle',{r:9},csv);
+const cArr=arrowPool(el('g',{},csv));
+const cMsg=el('text',{x:160,y:292,'font-size':12,fill:'var(--ink)','text-anchor':'middle'},csv);
+function circPos(){
+  if(!CS.cut){const a=CS.ang;return {x:CC[0]+CR*Math.cos(a),y:CC[1]-CR*Math.sin(a),tx:-Math.sin(a),ty:-Math.cos(a)};}
+  const a=CS.cutAng, x0=CC[0]+CR*Math.cos(a), y0=CC[1]-CR*Math.sin(a), tx=-Math.sin(a), ty=-Math.cos(a);
+  return {x:x0+tx*CS.s,y:y0+ty*CS.s,tx,ty,x0,y0};
+}
+function drawCirc(){
+  const C=CIRC.find(c=>c.id===CS.id); press('#cpick',CS.id);
+  const P=circPos();
+  const centreCol=CS.id==='planet'?'var(--pe)':CS.id==='string'?'var(--ink)':'var(--muted)';
+  const above=P.y<CC[1]; /* centre label and force label on opposite sides of the centre line, so they never overlap */
+  setA(cCentre,{fill:centreCol,r:CS.id==='planet'?14:5}); cCentreT.textContent=C.centre; setA(cCentreT,{y:CC[1]+(CS.id==='planet'?(above?30:-20):(above?20:-12))});
+  setA(cBody,{cx:P.x,cy:P.y,fill:CS.id==='planet'?'var(--b2)':CS.id==='string'?'var(--muted)':'var(--b3)'});
+  cString.style.display=(CS.id==='string'&&!CS.cut)?'':'none'; setA(cString,{x1:CC[0],y1:CC[1],x2:P.x,y2:P.y});
+  cPath.setAttribute('d',CS.cut?`M${P.x0} ${P.y0}L${P.x} ${P.y}`:'');
+  const arr=[{x1:P.x,y1:P.y,x2:P.x+P.tx*46,y2:P.y+P.ty*46,col:'var(--vel)',label:'v'}];
+  if(!CS.cut){const ux=(CC[0]-P.x)/CR, uy=(CC[1]-P.y)/CR;arr.push({x1:P.x,y1:P.y,x2:P.x+ux*44,y2:P.y+uy*44,col:'var(--force)',w:3,label:C.force,bold:true,lx:P.x+ux*44+(ux>0?6:-6),ly:P.y+uy*44+(above?-8:16),anchor:ux>0?'start':'end'});}
+  cArr(arr);
+  cMsg.textContent=CS.cut?'No inward force: straight line along the tangent':'';
+  $('cname').textContent='Inward force: '+C.force; $('ccap').innerHTML=C.cap;
+}
+function drawSide(){
+  const id=CS.id; let g='';
+  if(id==='string'){
+    g=`<text x="150" y="18" font-size="12" fill="var(--muted)" text-anchor="middle">side view: string from hand to stone</text><circle cx="60" cy="120" r="10" fill="var(--ink)" fill-opacity=".5"/><text x="60" y="146" font-size="11" fill="var(--muted)" text-anchor="middle">hand</text>
+      <line x1="60" y1="120" x2="240" y2="120" stroke="var(--ink)" stroke-width="1.6"/><circle cx="240" cy="120" r="10" fill="var(--muted)"/>`+arrowS(230,120,170,120,'var(--force)')+`<text x="200" y="110" font-size="12" font-weight="600" fill="var(--force)" text-anchor="middle">T</text><text x="150" y="200" font-size="11.5" fill="var(--ink)" text-anchor="middle">T = mv²/R (string on a smooth table)</text>`;
+  } else if(id==='planet'){
+    g=`<text x="150" y="18" font-size="12" fill="var(--muted)" text-anchor="middle">gravity acts at a distance</text><circle cx="80" cy="120" r="26" fill="var(--pe)" fill-opacity=".8"/><text x="80" y="164" font-size="11" fill="var(--muted)" text-anchor="middle">Sun</text><circle cx="240" cy="120" r="9" fill="var(--b2)"/>`+arrowS(230,120,160,120,'var(--force)')+`<text x="195" y="108" font-size="12" font-weight="600" fill="var(--force)" text-anchor="middle">gravity</text><text x="150" y="200" font-size="11.5" fill="var(--ink)" text-anchor="middle">no contact, still a real force</text><text x="150" y="220" font-size="11" fill="var(--muted)" text-anchor="middle">schematic, not to scale</text>`;
+  } else if(id==='flat'){
+    g=`<text x="150" y="18" font-size="12" fill="var(--muted)" text-anchor="middle">rear view, turning left</text><line x1="20" x2="280" y1="170" y2="170" stroke="var(--muted)" stroke-width="2"/><rect x="110" y="110" width="80" height="50" rx="6" fill="var(--b3)" fill-opacity=".35" stroke="var(--b3)"/><circle cx="125" cy="163" r="7" fill="var(--ink)"/><circle cx="175" cy="163" r="7" fill="var(--ink)"/>`
+      +arrowS(150,135,150,205,'var(--force)')+`<text x="156" y="210" font-size="12" font-weight="600" fill="var(--force)">mg</text>`+arrowS(150,135,150,70,'var(--force)')+`<text x="156" y="76" font-size="12" font-weight="600" fill="var(--force)">N</text>`+arrowS(150,182,90,182,'var(--force)')+`<text x="86" y="186" font-size="12" font-weight="600" fill="var(--force)" text-anchor="end">f</text><text x="20" y="240" font-size="11.5" fill="var(--ink)">← centre of the turn</text>`;
+  } else {
+    const t=18*deg, c=Math.cos(t), s=Math.sin(t), P=[150,150];
+    g=`<text x="150" y="18" font-size="12" fill="var(--muted)" text-anchor="middle">rear view, road banked at θ</text><line x1="${P[0]-140*c}" y1="${P[1]+140*s}" x2="${P[0]+140*c}" y2="${P[1]-140*s}" stroke="var(--muted)" stroke-width="2"/>
+      <g transform="translate(${P[0]} ${P[1]}) rotate(-18)"><rect x="-40" y="-50" width="80" height="44" rx="6" fill="var(--b3)" fill-opacity=".35" stroke="var(--b3)"/><circle cx="-25" cy="-6" r="6" fill="var(--ink)"/><circle cx="25" cy="-6" r="6" fill="var(--ink)"/></g>`;
+    const C=[P[0]-s*28,P[1]-c*28], Nx=C[0]-s*80, Ny=C[1]-c*80;
+    g+=arrowS(C[0],C[1],C[0],C[1]+62,'var(--force)')+`<text x="${C[0]+6}" y="${C[1]+62}" font-size="12" font-weight="600" fill="var(--force)">mg</text>`;
+    g+=arrowS(C[0],C[1],Nx,Ny,'var(--force)')+`<text x="${Nx-6}" y="${Ny}" font-size="12" font-weight="600" fill="var(--force)" text-anchor="end">N</text>`;
+    g+=`<line x1="${Nx}" y1="${Ny}" x2="${Nx}" y2="${C[1]}" stroke="var(--force)" stroke-dasharray="3 3" opacity=".7"/>`+arrowS(C[0],C[1]+0.1,Nx,C[1],'var(--force)').replace(/stroke-width="2.4"/,'stroke-width="1.6" stroke-dasharray="4 3"')+`<text x="${(C[0]+Nx)/2}" y="${C[1]+16}" font-size="11.5" fill="var(--force)" text-anchor="middle">N sin θ</text><text x="20" y="240" font-size="11.5" fill="var(--ink)">← centre of the turn</text>`;
+  }
+  $('cside').innerHTML=g;
+}
+function circLoop(ts){
+  if(!CS.play) return;
+  if(CS.vis){const dt=CS.last?Math.min(0.05,(ts-CS.last)/1000):0;CS.last=ts;circStep(dt);}else CS.last=0;
+  requestAnimationFrame(circLoop);
+}
+function circStep(dt){const w=1.1; // rad per second (slow motion)
+  if(!CS.cut) CS.ang=(CS.ang+w*dt)%(2*Math.PI); else {CS.s+=w*CR*dt; if(CS.s>260){CS.cut=false;CS.s=0;CS.ang=CS.cutAng;}}
+  drawCirc();}
+chips('cpick',CIRC,k=>{CS.id=k;store('lom-circ',k);CS.cut=false;CS.s=0;drawSide();drawCirc();});
+$('cplay').textContent=CS.play?'Pause':'Play';
+$('cplay').addEventListener('click',()=>{CS.play=!CS.play;$('cplay').textContent=CS.play?'Pause':'Play';if(CS.play){CS.last=0;requestAnimationFrame(circLoop);}});
+$('ccut').addEventListener('click',()=>{if(!CS.cut){CS.cut=true;CS.cutAng=CS.ang;CS.s=0;} if(!CS.play){CS.s+=60;} drawCirc();});
+$('creset').addEventListener('click',()=>{CS.cut=false;CS.s=0;drawCirc();});
+onScreen(csv,v=>{CS.vis=v;});
+{const m=0.25,R=1.5,rpm=40,w=rpm*2*Math.PI/60,T=m*w*w*R,Tmax=200,vmax=Math.sqrt(Tmax*R/m);
+quiz('q4',[
+ {q:'A particle on a smooth table moves in a circle, held by a string to a peg. The net force on it (toward the centre) is:',
+  o:['T','T − mv²/R','T + mv²/R','0'],a:0,
+  why:'Tension is the only horizontal force, so it is the net force, and it equals mv²/R. Subtracting mv²/R would count the same thing twice: mv²/R is not a separate force.'},
+ {q:`A ${m} kg stone on a ${R} m string is whirled in a horizontal circle at ${rpm} rev/min. Tension in the string?`,
+  o:[`${fmt(T,1)} N`,`${fmt(m*G,1)} N`,`${fmt(T*2*Math.PI,0)} N`],a:0,
+  why:`ω = ${rpm} × 2π/60 = ${fmt(w)} rad s⁻¹, T = mω²R = ${m} × ${fmt(w*w)} × ${R} ≈ ${fmt(T,1)} N (ignoring the string's slight tilt from gravity). If it can bear ${Tmax} N, v<sub>max</sub> = √(TR/m) ≈ ${fmt(vmax,1)} m s⁻¹.`},
+ {q:'The string breaks while the stone is whirling. The stone then moves:',
+  o:['radially outward','along the tangent at the point where it broke','at an angle to the tangent that depends on its speed'],a:1,
+  why:'With no horizontal force, the first law says it keeps the velocity it had at that instant, which points along the tangent. Try "Remove the inward force" above.'}
+]);}
+
+/* =================== 5 · FLAT ROAD =================== */
+const RS={v:15,R:40,mu:0.6};
+const rsv=$('road'), RO=[40,280], RRpx=222; // centre of the turn (bottom-left), drawn radius
+rsv.insertAdjacentHTML('beforeend',`<path d="M${RO[0]+RRpx-22} ${RO[1]} A${RRpx-22} ${RRpx-22} 0 0 0 ${RO[0]} ${RO[1]-RRpx+22}" fill="none" stroke="var(--line)" stroke-width="1.2"/>
+ <path d="M${RO[0]+RRpx+22} ${RO[1]} A${RRpx+22} ${RRpx+22} 0 0 0 ${RO[0]} ${RO[1]-RRpx-22}" fill="none" stroke="var(--line)" stroke-width="1.2"/>
+ <path d="M${RO[0]+RRpx} ${RO[1]} A${RRpx} ${RRpx} 0 0 0 ${RO[0]} ${RO[1]-RRpx}" fill="none" stroke="var(--muted)" stroke-dasharray="8 6"/>
+ <circle cx="${RO[0]}" cy="${RO[1]}" r="4" fill="var(--ink)"/><text x="${RO[0]+8}" y="${RO[1]+14}" font-size="11.5" fill="var(--muted)">centre of the turn</text>`);
+const rRad=el('line',{stroke:'var(--muted)','stroke-dasharray':'2 4'},rsv), rRadT=el('text',{'font-size':11.5,fill:'var(--muted)'},rsv);
+const rSkid=el('path',{fill:'none',stroke:'var(--flag)','stroke-width':2,'stroke-dasharray':'6 4'},rsv), rSkidT=el('text',{'font-size':11.5,fill:'var(--flag)'},rsv);
+const rCar=el('rect',{width:30,height:16,rx:4,fill:'var(--b3)','fill-opacity':.55,stroke:'var(--b3)'},rsv);
+const rArr=arrowPool(el('g',{},rsv));
+const rbs=$('rbars');
+const rBarN=el('rect',{x:110,y:20,height:18,rx:2,fill:'var(--force)'},rbs), rBarA=el('rect',{x:110,y:62,height:18,rx:2,fill:'var(--muted)','fill-opacity':.6},rbs);
+el('text',{x:104,y:33,'font-size':12,fill:'var(--ink)','text-anchor':'end'},rbs).textContent='needed v²/R'; el('text',{x:104,y:75,'font-size':12,fill:'var(--ink)','text-anchor':'end'},rbs).textContent='available µsg';
+const rBarNT=el('text',{y:33,'font-size':11,fill:'var(--ink)','font-family':'IBM Plex Mono,monospace'},rbs), rBarAT=el('text',{y:75,'font-size':11,fill:'var(--ink)','font-family':'IBM Plex Mono,monospace'},rbs);
+/* speed scale */
+const rScale=el('rect',{x:20,y:112,width:270,height:10,rx:3,fill:'var(--flag)','fill-opacity':.2},rbs), rSafe=el('rect',{x:20,y:112,height:10,rx:3,fill:'var(--ok)','fill-opacity':.45},rbs);
+const rMk=el('path',{fill:'var(--ink)'},rbs), rScaleT=el('text',{x:20,y:142,'font-size':11,fill:'var(--muted)'},rbs);
+el('text',{x:290,y:142,'font-size':11,fill:'var(--muted)','text-anchor':'end'},rbs).textContent='40 m/s';
+function drawRoad(){
+  const need=RS.v*RS.v/RS.R, avail=RS.mu*G, vmax=Math.sqrt(RS.mu*RS.R*G), skid=need>avail+1e-9;
+  $('rvo').textContent=fmt(RS.v,1)+' m/s ('+Math.round(RS.v*3.6)+' km/h)'; $('rRo').textContent=RS.R+' m'; $('rmuo').textContent=fmt(RS.mu);
+  /* car at angle 55° on the drawn arc */
+  const a=55*deg, cx=RO[0]+RRpx*Math.cos(a), cy=RO[1]-RRpx*Math.sin(a), tx=-Math.sin(a), ty=-Math.cos(a), ux=-Math.cos(a), uy=Math.sin(a);
+  setA(rCar,{x:cx-15,y:cy-8,transform:`rotate(${Math.atan2(ty,tx)/deg} ${cx} ${cy})`});
+  setA(rRad,{x1:RO[0],y1:RO[1],x2:cx,y2:cy}); setA(rRadT,{x:(RO[0]+cx)/2+8,y:(RO[1]+cy)/2+14}); rRadT.textContent='R = '+RS.R+' m';
+  const k=5; const f=Math.min(need,avail);
+  const arr=[{x1:cx,y1:cy,x2:cx+tx*(20+RS.v*1.6),y2:cy+ty*(20+RS.v*1.6),col:'var(--vel)',label:'v',bold:true},
+    {x1:cx,y1:cy,x2:cx+ux*f*k,y2:cy+uy*f*k,col:'var(--force)',w:3,label:'friction',bold:true,lx:cx+ux*f*k-4,ly:cy+uy*f*k+16,anchor:'end'}];
+  rArr(arr);
+  /* skid path: circle of radius v²/(µg) (in drawn px, scaled by drawn R/real R), tangent at the car */
+  if(skid){const Rs=RRpx*need/avail, ox=cx+ux*Rs, oy=cy+uy*Rs; // new centre further away along the same inward line
+    const a2=50*deg; // sweep
+    const sx=cx, sy=cy; const ang0=Math.atan2(-(sy-oy),sx-ox), ang1=ang0+Math.min(a2,180/Rs);
+    const ex=ox+Rs*Math.cos(ang1), ey=oy-Rs*Math.sin(ang1);
+    rSkid.setAttribute('d',`M${sx} ${sy} A${Rs} ${Rs} 0 0 0 ${ex} ${ey}`); setA(rSkidT,{x:Math.min(ex+6,330),y:Math.max(ey-6,14)}); rSkidT.textContent='skids wide';}
+  else {rSkid.setAttribute('d','');rSkidT.textContent='';}
+  /* bars (per kg) */
+  const bmax=Math.max(need,avail,1), W=120;
+  setA(rBarN,{width:W*need/bmax,fill:skid?'var(--flag)':'var(--force)'}); setA(rBarA,{width:W*avail/bmax});
+  setA(rBarNT,{x:114+W*need/bmax}); rBarNT.textContent=fmt(need,1)+' N/kg'; setA(rBarAT,{x:114+W*avail/bmax}); rBarAT.textContent=fmt(avail,1)+' N/kg';
+  const SX=v=>20+Math.min(v,40)/40*270;
+  setA(rSafe,{width:SX(vmax)-20}); rMk.setAttribute('d',`M${SX(RS.v)} 110 l-6 -9 h12 z`);
+  rScaleT.textContent='safe up to '+fmt(vmax,1)+' m/s';
+  $('rstate').textContent=skid?'Too fast: friction cannot hold the turn':'Holds the turn';
+  $('rkv').innerHTML=`<dt>v<sub>max</sub> = √(µ<sub>s</sub>Rg)</dt><dd>${fmt(vmax,1)} m/s (${Math.round(vmax*3.6)} km/h)</dd><dt>friction used</dt><dd>${fmt(Math.min(1,need/avail)*100,0)}% of the limit</dd>`;
+}
+$('rv').addEventListener('input',e=>{RS.v=+e.target.value;drawRoad();});
+$('rR').addEventListener('input',e=>{RS.R=+e.target.value;drawRoad();});
+$('rmu').addEventListener('input',e=>{RS.mu=+e.target.value;drawRoad();});
+{const v=5,R=3,mu=0.1,lim=mu*R*G;
+quiz('q5',[
+ {q:`A cyclist at 18 km/h (${v} m s⁻¹) takes a level turn of radius ${R} m; µs = ${mu}. Does she slip?`,
+  o:['No: friction is enough','Yes: friction is not enough','It depends on her mass'],a:1,
+  why:`Safe needs v² ≤ µsRg = ${mu} × ${R} × 9.8 = ${fmt(lim)} m² s⁻². Here v² = ${v*v} m² s⁻², far more. She slips. Mass cancels.`},
+ {q:'Doubling the speed on the same flat curve multiplies the friction needed by:',
+  o:['2','4','√2'],a:1,
+  why:'Needed friction = mv²/R, so it grows with the square of v. Speed is the most dangerous variable on a curve.'}
+]);}
+
+/* =================== 6 · BANKED ROAD =================== */
+const BS={v:28,th:15,R:300,mu:0.2,pre:'ncert'};
+const bsv=$('bank'), BP=[220,170];
+const bRoad=el('line',{stroke:'var(--muted)','stroke-width':2.5},bsv), bRoadFill=el('polygon',{fill:'var(--ink)','fill-opacity':.06},bsv);
+const bCar=el('g',{},bsv);
+bCar.innerHTML=`<rect x="-44" y="-52" width="88" height="44" rx="6" fill="var(--b3)" fill-opacity=".3" stroke="var(--b3)"/><circle cx="-28" cy="-7" r="7" fill="var(--ink)"/><circle cx="28" cy="-7" r="7" fill="var(--ink)"/>`;
+const bArr=arrowPool(el('g',{},bsv));
+el('text',{x:14,y:240,'font-size':11.5,fill:'var(--ink)'},bsv).textContent='← centre of the turn';
+const bThT=el('text',{'font-size':12,fill:'var(--muted)'},bsv), bArc=el('path',{fill:'none',stroke:'var(--muted)','stroke-width':1.4},bsv), bHor=el('line',{stroke:'var(--muted)','stroke-dasharray':'3 4'},bsv);
+const bgs=$('bankg'), BG={L:50,R:404,T:14,B:190,xmax:60};
+BG.X=v=>BG.L+v/BG.xmax*(BG.R-BG.L); BG.Y=v=>BG.B-(Math.max(-1.2,Math.min(1.2,v))+1.2)/2.4*(BG.B-BG.T);
+const bgBand=el('rect',{x:BG.L,width:BG.R-BG.L,fill:'var(--ok)','fill-opacity':.12},bgs);
+axes(bgs,{...BG,xt:[0,10,20,30,40,50,60],yt:[],xl:'speed v (m/s)',yl:'friction ÷ N (+ = up the slope)'});
+[-1,-0.5,0,0.5,1].forEach(v=>{const y=BG.Y(v);bgs.insertAdjacentHTML('beforeend',`<line x1="${BG.L}" x2="${BG.R}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${BG.L-6}" y="${y+4}" font-size="10.5" fill="var(--muted)" text-anchor="end" font-family="IBM Plex Mono,monospace">${v}</text>`);});
+const bgCurve=el('path',{fill:'none',stroke:'var(--force)','stroke-width':2.6},bgs);
+const bgV=[0,1,2].map(()=>({l:el('line',{stroke:'var(--ink)','stroke-dasharray':'3 3'},bgs),t:el('text',{'font-size':11,fill:'var(--ink)','text-anchor':'middle'},bgs)}));
+const bgMk=el('circle',{r:6,fill:'var(--surface)',stroke:'var(--ink)','stroke-width':2.4},bgs);
+function bankRatio(v){const t=BS.th*deg, c=v*v/BS.R;return (G*Math.sin(t)-c*Math.cos(t))/(G*Math.cos(t)+c*Math.sin(t));} // f/N, + up the slope
+function bankLimits(){
+  const t=Math.tan(BS.th*deg), mu=BS.mu, Rg=BS.R*G;
+  const v0=Math.sqrt(Rg*t);
+  const vmax=mu*t>=1?Infinity:Math.sqrt(Rg*(mu+t)/(1-mu*t));
+  const vmin=t<=mu?0:Math.sqrt(Rg*(t-mu)/(1+mu*t));
+  return {v0,vmax,vmin};
+}
+function drawBank(){
+  press('#bpre',BS.pre);
+  $('bvo').textContent=fmt(BS.v,1)+' m/s ('+Math.round(BS.v*3.6)+' km/h)'; $('btho').textContent=fmt(BS.th,1)+'°'; $('bRo').textContent=BS.R+' m'; $('bmuo').textContent=fmt(BS.mu);
+  const t=BS.th*deg, c=Math.cos(t), s=Math.sin(t), P=BP;
+  /* road rises to the right (outside of the turn) */
+  setA(bRoad,{x1:P[0]-200*c,y1:P[1]+200*s,x2:P[0]+190*c,y2:P[1]-190*s});
+  bRoadFill.setAttribute('points',`${P[0]-200*c},${P[1]+200*s} ${P[0]+190*c},${P[1]-190*s} ${P[0]+190*c},260 ${P[0]-200*c},260`);
+  bCar.setAttribute('transform',`translate(${P[0]} ${P[1]}) rotate(${-BS.th})`);
+  { const O=[P[0]+54*c,P[1]-54*s], r=40; // vertex on the road surface, right of the car
+    setA(bHor,{x1:O[0],y1:O[1],x2:O[0]+r+12,y2:O[1]});
+    bArc.setAttribute('d',BS.th>0.2?`M${O[0]+r} ${O[1]} A${r} ${r} 0 0 0 ${O[0]+r*c} ${O[1]-r*s}`:'');
+    setA(bThT,{x:O[0]+r+6,y:O[1]-r*Math.sin(t/2)+2}); bThT.textContent='θ'; }
+  /* forces per unit mass, px per (m/s²) */
+  const k=6.5, ac=BS.v*BS.v/BS.R, N=G*c+ac*s, f=G*s-ac*c; // f + up the slope (per unit mass)
+  const C=[P[0]-s*30,P[1]-c*30], n=[-s,-c], u=[c,-s];
+  const L=bankLimits(), holds=BS.v>=L.vmin-1e-9&&BS.v<=L.vmax+1e-9;
+  const arr=[{x1:C[0],y1:C[1],x2:C[0],y2:C[1]+G*k,col:'var(--force)',label:'mg',bold:true},
+    {x1:C[0],y1:C[1],x2:C[0]+n[0]*N*k,y2:C[1]+n[1]*N*k,col:'var(--force)',label:'N',bold:true}];
+  const fC=[P[0]+u[0]*0,P[1]+u[1]*0];
+  if(Math.abs(f)>0.02) arr.push({x1:fC[0],y1:fC[1]+4,x2:fC[0]+u[0]*f*k,y2:fC[1]+4+u[1]*f*k,col:holds?'var(--force)':'var(--flag)',w:3,label:'f'+(holds?'':' (too big!)'),bold:true});
+  /* net force: horizontal, toward the centre (left) */
+  arr.push({x1:C[0],y1:34,x2:C[0]-ac*k,y2:34,col:'var(--acc)',w:2.4,dash:'5 4',label:'net force mv²/R, inward',lx:C[0]+8,ly:38,anchor:'start'});
+  bArr(arr);
+  /* graph */
+  let d='';for(let i=0;i<=240;i++){const v=i*0.25;d+=(i?'L':'M')+BG.X(v).toFixed(1)+' '+BG.Y(bankRatio(v)).toFixed(1);}
+  bgCurve.setAttribute('d',d);
+  setA(bgBand,{y:BG.Y(BS.mu),height:Math.max(0,BG.Y(-BS.mu)-BG.Y(BS.mu))});
+  const marks=[[L.vmin,'v<tspan font-size="9" dy="3">min</tspan>'],[L.v0,'v<tspan font-size="9" dy="3">opt</tspan>'],[L.vmax,'v<tspan font-size="9" dy="3">max</tspan>']];
+  marks.forEach((m,i)=>{const ok=isFinite(m[0])&&m[0]>0&&m[0]<=BG.xmax&&!(i===0&&BS.mu===0&&false);const o=bgV[i];
+    o.l.style.display=ok?'':'none';o.t.style.display=ok?'':'none';
+    if(ok){const x=BG.X(m[0]);setA(o.l,{x1:x,x2:x,y1:BG.T,y2:BG.B});setA(o.t,{x:x+4,y:BG.T+12+(i%2)*14,'text-anchor':'start'});o.t.innerHTML=m[1];}});
+  setA(bgMk,{cx:BG.X(BS.v),cy:BG.Y(bankRatio(BS.v))});
+  const r=bankRatio(BS.v);
+  $('bstate').textContent=!holds?(BS.v>L.vmax?'Too fast: slides up and out':'Too slow: slides down the bank'):Math.abs(r)<0.01?'Optimum speed: no friction needed':r>0?'Friction acts up the slope':'Friction acts down the slope';
+  $('bkv').innerHTML=`<dt>optimum v<sub>opt</sub></dt><dd>${fmt(L.v0,1)} m/s</dd><dt>minimum v<sub>min</sub></dt><dd>${L.vmin===0?'none (can park)':fmt(L.vmin,1)+' m/s'}</dd><dt>maximum v<sub>max</sub></dt><dd>${isFinite(L.vmax)?fmt(L.vmax,1)+' m/s':'no limit (µs tan θ ≥ 1)'}</dd><dt>flat road, same µ<sub>s</sub></dt><dd>${fmt(Math.sqrt(BS.mu*BS.R*G),1)} m/s</dd><dt>friction needed / N</dt><dd>${fmt(r)}</dd>`;
+}
+chips('bpre',BPRE,k=>{const p=BPRE.find(x=>x.id===k);Object.assign(BS,{pre:k,v:p.v,th:p.th,R:p.R,mu:p.mu});['v','th','R','mu'].forEach((q,i)=>{$(['bv','bth','bR','bmu'][i]).value=BS[q];});drawBank();});
+[['bv','v'],['bth','th'],['bR','R'],['bmu','mu']].forEach(([id,k])=>$(id).addEventListener('input',e=>{BS[k]=+e.target.value;BS.pre='';drawBank();}));
+{const R=300,th=15,mu=0.2,t=Math.tan(th*deg),v0=Math.sqrt(R*G*t),vmax=Math.sqrt(R*G*(mu+t)/(1-mu*t));
+quiz('q6',[
+ {q:`A racetrack of radius ${R} m is banked at ${th}°. Optimum speed (no friction needed)?`,
+  o:[`${fmt(v0,1)} m s⁻¹`,`${fmt(vmax,1)} m s⁻¹`,`${fmt(Math.sqrt(R*G),1)} m s⁻¹`],a:0,
+  why:`v<sub>opt</sub> = √(Rg tan θ) = √(${R} × 9.8 × tan ${th}°) ≈ ${fmt(v0,1)} m s⁻¹. With µs = ${mu} the most it can do is v<sub>max</sub> = √(Rg(µs + tan θ)/(1 − µs tan θ)) ≈ ${fmt(vmax,1)} m s⁻¹.`},
+ {q:'A car goes round a banked curve slower than the optimum speed. Friction on its tyres acts:',
+  o:['down the slope','up the slope','zero'],a:1,
+  why:'Too slow, the inward part of N is more than mv²/R needs, so the car tends to slide down the bank. Friction opposes that by acting up the slope.'}
+]);}
+
+drawFr(); drawInc(); drawSide(); drawCirc(); drawRoad(); drawBank();
+if(CS.play) requestAnimationFrame(circLoop);
+</script>
+</body>
+</html>

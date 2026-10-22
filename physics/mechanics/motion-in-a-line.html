@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Motion in a Straight Line</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&family=Noto+Sans+Symbols+2&text=%E2%86%90%E2%86%91%E2%86%92%E2%86%93%E2%86%94%E2%86%97%E2%87%8C%E2%87%92%E2%87%94%E2%88%82%E2%88%88%E2%88%92%E2%88%93%E2%88%9A%E2%88%9D%E2%88%9E%E2%88%AB%E2%89%88%E2%89%A0%E2%89%A1%E2%89%A4%E2%89%A5%E2%89%AA%E2%89%AB%E2%8A%95%E2%8A%97%E2%8A%99%E2%8A%A5%E2%96%B2%E2%96%B6%E2%97%80%E2%97%8B%E2%97%8F%E2%9C%93%E2%9C%97%E2%9D%9A%E2%9F%82%E2%9F%A8%E2%9F%A9&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) car on a track + stacked x–t, v–t, a–t with one time cursor; drag v–t knots
+   (2) secant → tangent on x = 0.08 t³  (3) kinematic equations read off the v–t trapezium
+   (4) vertical throw / free fall  (5) reaction time (ruler drop) and stopping distance
+   (6) relative velocity of two cars. Each section ends with predict-then-check items. */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --acc:#b0377a; --disp:#1f8f87; --ke:#0f8a4f; --pe:#8a6d1f;
+  --ca:#5f7f1a; --cb:#8b5e3c;
+  --f-display:"Bricolage Grotesque","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","Noto Sans Math","Noto Sans Symbols 2",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a;
+  --ca:#9cc45a; --cb:#d19a6e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a;
+  --ca:#9cc45a; --cb:#d19a6e; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip.mono{font-family:var(--f-mono);font-size:12px}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.btn[disabled]{opacity:.45;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:7.5em}
+.slider input{flex:1 1 110px;min-width:100px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:7.5em;text-align:right}
+.slider output.wide{min-width:12em}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.legend i.sw{height:10px;width:10px;vertical-align:0}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+svg .mono{font-family:var(--f-mono)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opts.thumbs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.opts.thumbs .opt{padding:4px;display:flex;flex-direction:column;align-items:center}
+.opts.thumbs .opt svg{width:100%;max-width:150px;height:auto}
+.qthumb{display:block;margin:6px 0 0;max-width:170px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+.hit{cursor:ew-resize;touch-action:pan-y}
+.knot{cursor:ns-resize;touch-action:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Motion in a Straight Line</h1>
+    <p class="lede">Before asking <i>why</i> things move (that is Newton’s laws), we need a precise way to say <i>how</i> they move. Along a straight line that takes one number, the position x, and how it changes with time. Velocity is how fast x changes; acceleration is how fast velocity changes. Three graphs, x–t, v–t and a–t, carry the whole story. Each one is the slope of the one above it, and the area under the one below it. The object is treated as a <b>point</b>, which is fine whenever its size is small next to the distance it moves.</p>
+  </header>
+
+  <!-- 1 · three graphs -->
+  <section class="stack" id="lab-sec">
+    <div>
+      <h2>1 · One motion, three graphs</h2>
+      <p class="lede">Shape the motion yourself: drag the blue dots on the v–t graph up and down (or pick a preset). The car, the x–t graph and the a–t graph follow. Drag across the graphs to move the time cursor, or press Play.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="lpre" role="group" aria-label="Motion presets"></div>
+        <div class="svgbox"><svg id="lab" viewBox="0 0 640 512" role="img" aria-label="Car on a track above stacked position, velocity and acceleration graphs" style="min-width:540px"></svg></div>
+        <div class="slider"><label for="lt">time t</label><input type="range" id="lt" min="0" max="10" step="0.01" value="0"><output id="lto"></output></div>
+        <div class="row"><button class="btn primary" id="lplay">Play</button><span class="legend"><span><i style="background:var(--disp)"></i>position x</span><span><i style="background:var(--vel)"></i>velocity v</span><span><i style="background:var(--acc)"></i>acceleration a</span><span><i class="sw" style="background:var(--disp);opacity:.45"></i>area counted +</span><span><i class="sw" style="background:var(--flag);opacity:.4"></i>area counted −</span></span></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="lstate"></p>
+        <dl class="kv" id="lkv"></dl>
+        <p class="cap key" id="lcap"></p>
+        <p class="cap"><b>Distance vs displacement.</b> Displacement is the <i>signed</i> area under v–t: area below the axis counts negative, because the car is then moving backwards. Distance (path length) adds every bit of area as positive. They are equal only if the car never turns back; otherwise distance is larger. The same goes for average speed (distance ÷ time) and the size of the average velocity (displacement ÷ time).</p>
+        <p class="cap">Sharp corners on these graphs are a <span class="hw">simplified model</span>: here a jumps suddenly at each blue dot. In a real car, v and a change smoothly, so the corners are rounded.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q1"></div>
+  </section>
+
+  <!-- 2 · secant to tangent -->
+  <section class="stack">
+    <div>
+      <h2>2 · Average velocity → instantaneous velocity</h2>
+      <p class="lede">The car’s position is x = 0.08 t³ (x in m, t in s). The average velocity over an interval is the slope of the chord P₁P₂. Shrink the interval Δt round the instant t and watch the chord swing into the tangent at P.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="sec" viewBox="0 0 600 320" role="img" aria-label="Position-time curve with a chord and a tangent" style="min-width:440px"></svg></div>
+        <div class="slider"><label for="st0">instant t</label><input type="range" id="st0" min="1" max="5" step="0.1" value="4"><output id="st0o"></output></div>
+        <div class="slider"><label for="sdt">interval Δt</label><input type="range" id="sdt" min="0" max="100" step="1" value="0"><output id="sdto"></output></div>
+        <div class="legend"><span><i style="background:var(--disp)"></i>x–t curve</span><span><i style="background:var(--ink)"></i>chord: average velocity</span><span><i style="background:var(--vel)"></i>tangent: velocity at t</span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="skv"></dl>
+        <div><p class="muted" style="margin-bottom:6px">Average velocity Δx/Δt for Δt centred on t. Tap one to show it:</p><div class="chips" id="sladder"></div></div>
+        <p class="cap key" id="scap"></p>
+        <p class="cap">Speed is the size of velocity, so +3.8 m s⁻¹ and −3.8 m s⁻¹ both mean 3.8 m s⁻¹. At a single instant the two can never disagree: over a vanishing interval there is no time to turn back, so path length and the size of the displacement become the same.</p>
+        <p class="cap">The same limit on a v–t graph gives the acceleration: chord slope Δv/Δt is the average acceleration, tangent slope dv/dt is the acceleration at that instant.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q2"></div>
+  </section>
+
+  <!-- 3 · trapezium -->
+  <section class="stack">
+    <div>
+      <h2>3 · The equations of motion, read off one picture</h2>
+      <p class="lede">With constant acceleration the v–t graph is a straight line. Everything else is geometry: its slope, its end height and the area under it. Change u, a and t and read each equation off the shape.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="tpre" role="group" aria-label="Presets"></div>
+        <div class="svgbox"><svg id="trap" viewBox="0 0 600 300" role="img" aria-label="Velocity-time line with the area under it split into a rectangle and a triangle" style="min-width:440px"></svg></div>
+        <div class="slider"><label for="tu">initial velocity u</label><input type="range" id="tu" min="-10" max="10" step="0.5" value="2"><output id="tuo"></output></div>
+        <div class="slider"><label for="ta">acceleration a</label><input type="range" id="ta" min="-3" max="3" step="0.25" value="1.5"><output id="tao"></output></div>
+        <div class="slider"><label for="tt">time t</label><input type="range" id="tt" min="0.5" max="8" step="0.5" value="6"><output id="tto"></output></div>
+        <label class="muted"><input type="checkbox" id="tstrip" checked> 1-second strips (distance in each second)</label>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="tkv"></dl>
+        <p class="cap key"><b>Slope</b> of the line is a, so after time t its height is <b>v = u + at</b>.</p>
+        <p class="cap key"><b>Area</b> = rectangle u·t (blue) + triangle ½·t·(at) (pink), so <b>s = ut + ½at²</b>.</p>
+        <p class="cap key">The dashed line at the <b>mean height</b> ½(u + v) makes a rectangle of the same area, so <b>s = ½(u + v)t</b>: average velocity is the mean of the two ends. This holds only because the line is straight (constant a).</p>
+        <p class="cap key">Use t = (v − u)/a in that last one to remove t: s = (v + u)(v − u)/2a, so <b>v² = u² + 2as</b>.</p>
+        <p class="cap" id="tcap"></p>
+        <p class="cap">All the quantities are signed: choose a positive direction first. These four only hold for <b>constant</b> a. The definitions v = dx/dt and a = dv/dt always hold, and so does a = v·dv/dx, which handles an acceleration that depends on position.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q3"></div>
+  </section>
+
+  <!-- 4 · vertical throw -->
+  <section class="stack" id="throw-sec">
+    <div>
+      <h2>4 · Thrown up, falling down</h2>
+      <p class="lede">A ball thrown straight up slows, stops for an instant, and falls back. Throughout, its acceleration is the same: g, downward. At the top v = 0, but a is not zero; otherwise the ball would hang there for ever. Set the throw and play it; the strobe dots are its positions at equal time steps.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="fpre" role="group" aria-label="Presets"></div>
+        <div class="two" style="gap:8px;grid-template-columns:minmax(0,0.75fr) minmax(0,1.25fr)">
+          <svg id="tower" viewBox="0 0 240 380" role="img" aria-label="Building and ball moving vertically" style="width:100%;height:auto;display:block;max-width:300px;margin:0 auto"></svg>
+          <div class="svgbox"><svg id="fgr" viewBox="0 0 440 380" role="img" aria-label="y-t, v-t and a-t graphs of the throw" style="min-width:300px"></svg></div>
+        </div>
+        <div class="slider"><label for="ft">time t</label><input type="range" id="ft" min="0" max="1000" step="1" value="0"><output id="fto"></output></div>
+        <div class="row"><button class="btn primary" id="fplay">Play</button><span class="legend"><span><i style="background:var(--disp)"></i>y</span><span><i style="background:var(--vel)"></i>v</span><span><i style="background:var(--acc)"></i>a</span></span></div>
+      </div>
+      <div class="panel stack">
+        <div class="slider"><label for="fu">launch velocity</label><input type="range" id="fu" min="-20" max="35" step="0.1" value="20"><output id="fuo"></output></div>
+        <div class="slider"><label for="fh">launch height h₀</label><input type="range" id="fh" min="0" max="60" step="1" value="25"><output id="fho"></output></div>
+        <div class="row"><span class="muted">g =</span><div class="chips" id="fg" role="group" aria-label="Value of g"><button class="chip" data-k="9.8">9.8 m s⁻²</button><button class="chip" data-k="10">10 m s⁻²</button></div></div>
+        <div class="row"><span class="muted">positive direction</span><div class="chips" id="fdir" role="group" aria-label="Positive direction"><button class="chip" data-k="up">up</button><button class="chip" data-k="down">down</button></div></div>
+        <dl class="kv" id="fkv"></dl>
+        <p class="cap key" id="fcap"></p>
+        <p class="cap">Symmetry: on the way up and on the way down the ball passes each height at the same speed, and rising to the top takes as long as falling back to the launch level (no air resistance). Origin here: the launch point. Move it or flip the axis and the numbers change sign, but the motion does not.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q4"></div>
+  </section>
+
+  <!-- 5 · reaction and stopping -->
+  <section class="stack" id="stop-sec">
+    <div>
+      <h2>5 · Reaction time and stopping distance</h2>
+      <p class="lede">A driver sees danger, takes a moment to react, then brakes. The car covers ground at full speed during the reaction, then slows to rest. First measure your own reaction time with a falling ruler.</p>
+    </div>
+    <div class="two">
+      <div class="panel stack">
+        <h3>The ruler drop</h3>
+        <p class="muted">Press <b>Drop</b>. After a random wait the friend lets go of the ruler. Press <b>Catch</b> (or tap the picture) the moment you see it move. The ruler falls freely, so the distance it falls tells your reaction time.</p>
+        <div class="row" style="align-items:flex-start;gap:14px;flex-wrap:nowrap">
+          <svg id="ruler" viewBox="0 0 200 420" role="img" aria-label="Ruler falling between your fingers" style="width:42%;max-width:190px;height:auto;flex:0 0 auto;touch-action:manipulation"></svg>
+          <div class="stack" style="flex:1;min-width:0">
+            <div class="row"><button class="btn primary" id="rdrop">Drop</button><button class="btn" id="rcatch" disabled>Catch!</button></div>
+            <p class="verdict" id="rmsg">Ready when you are.</p>
+            <dl class="kv" id="rkv"></dl>
+          </div>
+        </div>
+        <div class="slider"><label for="rd">or set fall d</label><input type="range" id="rd" min="1" max="30" step="0.5" value="21"><output id="rdo" class="wide"></output></div>
+        <p class="cap key">From rest, d = ½gt², so t = √(2d/g). The ruler measures time with distance.</p>
+      </div>
+      <div class="panel stack">
+        <h3>Stopping the car</h3>
+        <div class="slider"><label for="sv">speed u</label><input type="range" id="sv" min="5" max="35" step="0.5" value="20"><output id="svo" class="wide"></output></div>
+        <div class="slider"><label for="str">reaction time</label><input type="range" id="str" min="0" max="1.5" step="0.01" value="0.21"><output id="stro"></output></div>
+        <div class="slider"><label for="sb">braking decel.</label><input type="range" id="sb" min="2" max="10" step="0.1" value="6"><output id="sbo"></output></div>
+        <div class="row"><button class="btn" id="suse">Use my ruler time</button></div>
+        <div class="svgbox"><svg id="stopv" viewBox="0 0 600 220" role="img" aria-label="Velocity-time graph of reacting then braking" style="min-width:380px"></svg></div>
+        <div class="svgbox"><svg id="sroad" viewBox="0 0 600 80" role="img" aria-label="Road with reaction and braking distances to scale" style="min-width:380px"></svg></div>
+        <div class="legend"><span><i class="sw" style="background:var(--disp);opacity:.55"></i>reaction distance ut<sub>r</sub></span><span><i class="sw" style="background:var(--disp);opacity:.2"></i>braking distance u²/2b</span></div>
+      </div>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <h3>Braking distance against speed</h3>
+        <div class="svgbox"><svg id="sdv" viewBox="0 0 600 250" role="img" aria-label="Braking distance against initial speed with measured points" style="min-width:420px"></svg></div>
+        <div class="legend"><span><i style="background:var(--disp)"></i>braking only, u²/2b</span><span><i style="background:var(--ink)"></i>with reaction distance</span><span><i class="sw" style="border:2px solid var(--ink);border-radius:50%;box-sizing:border-box"></i>measured braking distances for one car</span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="stkv"></dl>
+        <p class="cap key">Braking from u to rest: 0 = u² − 2b·s, so s = u²/2b. Double the speed and the braking distance becomes <b>four</b> times as long, while the reaction distance only doubles.</p>
+        <p class="cap" id="stcap"></p>
+        <p class="cap">Steady braking (constant deceleration) is a <span class="hw">simplified model</span>; it is why the measured points sit near, not exactly on, one v² curve.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q5"></div>
+  </section>
+
+  <!-- 6 · relative velocity -->
+  <section class="stack" id="rel-sec">
+    <div>
+      <h2>6 · Relative velocity: two cars</h2>
+      <p class="lede">Car A and car B drive along the same straight road. Watch from the roadside, then ride in car A. From A, the road slides backwards at −v<sub>A</sub> and B moves at v<sub>B</sub> − v<sub>A</sub>. For motion in a plane, see <a href="vectors-relative-motion.html">Vectors and relative motion</a>.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="vpre" role="group" aria-label="Presets"></div>
+        <div class="row"><span class="muted">watch from</span><div class="chips" id="vframe" role="group" aria-label="Frame of reference"><button class="chip" data-k="g">the roadside</button><button class="chip" data-k="A">inside car A</button></div></div>
+        <div class="svgbox"><svg id="vroad" viewBox="0 0 600 112" role="img" aria-label="Two cars on a road" style="min-width:420px"></svg></div>
+        <div class="svgbox"><svg id="vxt" viewBox="0 0 600 260" role="img" aria-label="Position-time lines of the two cars" style="min-width:420px"></svg></div>
+        <div class="slider"><label for="vt">time t</label><input type="range" id="vt" min="0" max="20" step="0.05" value="0"><output id="vto"></output></div>
+        <div class="row"><button class="btn primary" id="vplay">Play</button><span class="legend"><span><i style="background:var(--ca)"></i>car A</span><span><i style="background:var(--cb)"></i>car B</span><span><i style="background:var(--muted)"></i>gap x<sub>B</sub> − x<sub>A</sub></span></span></div>
+      </div>
+      <div class="panel stack">
+        <div class="slider"><label for="vva">velocity of A</label><input type="range" id="vva" min="-20" max="20" step="1" value="20"><output id="vvao"></output></div>
+        <div class="slider"><label for="vvb">velocity of B</label><input type="range" id="vvb" min="-20" max="20" step="1" value="10"><output id="vvbo"></output></div>
+        <div class="slider"><label for="vd">B starts ahead by</label><input type="range" id="vd" min="-150" max="150" step="5" value="50"><output id="vdo"></output></div>
+        <dl class="kv" id="vkv"></dl>
+        <p class="cap key" id="vcap"></p>
+        <p class="cap">On the x–t graph, each car’s velocity is the slope of its line. The gap x<sub>B</sub> − x<sub>A</sub> changes at the <b>difference</b> of the slopes, v<sub>BA</sub> = v<sub>B</sub> − v<sub>A</sub>. Parallel lines: same velocity, the gap never changes. Lines crossing: one car passes the other at that instant.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q6"></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> point objects moving along one straight line; piecewise-constant acceleration in section 1 (real graphs have rounded corners); constant acceleration in sections 3–5; free fall with no air resistance and constant g near the ground (g = 9.8 m s⁻² unless a problem says 10); steady braking at constant deceleration; the ruler drop assumes it falls freely from rest. Pictures are schematic, not to scale, except where a scale is marked.</p>
+    <p><b>Based on:</b> NCERT Physics Class 11, "Motion in a Straight Line"; H. C. Verma, <i>Concepts of Physics</i> Vol. 1, "Rest and Motion: Kinematics"; Halliday, Resnick &amp; Walker, <i>Fundamentals of Physics</i>.</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+const G=9.8; // m s^-2
+/* Section 1 presets: v (m/s) at t = 0, 2, 4, 6, 8, 10 s */
+const LPRE=[
+ {id:'uni',  l:'Uniform velocity',      v:[3,3,3,3,3,3]},
+ {id:'acc',  l:'Speeding up from rest', v:[0,1.2,2.4,3.6,4.8,6]},
+ {id:'brake',l:'Braking to rest',       v:[6,4.8,3.6,2.4,1.2,0]},
+ {id:'turn', l:'Slows, turns back',     v:[5,3,1,-1,-3,-5]},
+ {id:'trip', l:'Start, cruise, stop',   v:[0,4,4,4,4,0]},
+ {id:'light',l:'Stops at a light',      v:[4,4,0,0,4,4]}
+];
+/* Section 2: NCERT Fig 2.1 / Table 2.1, x = 0.08 t^3 (m), interval ladder centred on t */
+const SEC_K=0.08, SEC_LADDER=[2,1,0.5,0.1,0.01];
+/* Section 3 presets */
+const TPRE=[
+ {l:'From rest (Galileo)', u:0,  a:2,  t:5},
+ {l:'Braking',             u:10, a:-2, t:5},
+ {l:'Turns back',          u:6,  a:-2, t:6}
+];
+/* Section 4 presets: u up-positive (m/s), h0 (m), g */
+const FPRE=[
+ {l:'NCERT Ex. 2.3: up from a 25 m roof', u:20,  h:25, g:10},
+ {l:'Up from the ground (Ex. 2.6)',      u:29.4, h:0, g:9.8},
+ {l:'Dropped from rest',                 u:0,   h:45, g:9.8},
+ {l:'Thrown down',                       u:-10, h:40, g:9.8}
+];
+/* Section 5: NCERT Example 2.6, braking distances of one car (speed m/s, distance m) */
+const BRAKE_DATA=[[11,10],[15,20],[20,34],[25,50]];
+const RULER_CM=30;
+/* Section 6 presets: vA, vB (m/s), B ahead of A by d0 (m) */
+const VPRE=[
+ {l:'A overtakes B',   va:20, vb:10, d:50},
+ {l:'Same velocity',   va:15, vb:15, d:40},
+ {l:'Head-on',         va:15, vb:-10, d:150},
+ {l:'B pulls away',    va:10, vb:18, d:20}
+];
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function mk(tag,at,parent){const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);if(parent)parent.appendChild(e);return e;}
+function setA(e,at){for(const k in at)e.setAttribute(k,at[k]);}
+const fmt=(v,d=1)=>{const r=Math.abs(v)<0.5*Math.pow(10,-d)?0:v;return r.toFixed(d).replace('-','−');};
+const sfmt=(v,d=1)=>(v>=0.5*Math.pow(10,-d)?'+':'')+fmt(v,d);
+function store(k,v){try{localStorage.setItem('kin1-'+k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem('kin1-'+k);}catch(e){return null;}}
+function niceStep(x){if(!(x>0))return 1;const p=Math.pow(10,Math.floor(Math.log10(x))),m=x/p;return (m<1.5?1:m<3.5?2:m<7.5?5:10)*p;}
+function niceRange(lo,hi,n){if(hi-lo<1e-9){lo-=1;hi+=1;}const s=niceStep((hi-lo)/n);return {lo:Math.floor(lo/s+1e-9)*s,hi:Math.ceil(hi/s-1e-9)*s,s};}
+function press(sel,k){document.querySelectorAll(sel+' .chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.k===String(k))));}
+function svgPt(svg,e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
+/* arrow made of a line and a head polygon, updated by attributes */
+function arrowEl(parent,col,w){const l=mk('line',{stroke:col,'stroke-width':w||2.2,'stroke-linecap':'round'},parent),h=mk('polygon',{fill:col},parent);
+  return {set(x1,y1,x2,y2,hd){const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy);if(L<2){l.setAttribute('visibility','hidden');h.setAttribute('visibility','hidden');return;}
+    l.removeAttribute('visibility');h.removeAttribute('visibility');const hh=Math.min(hd||8,L*0.6),ux=dx/L,uy=dy/L,bx=x2-ux*hh,by=y2-uy*hh,px=-uy*hh*.5,py=ux*hh*.5;
+    setA(l,{x1:x1.toFixed(1),y1:y1.toFixed(1),x2:bx.toFixed(1),y2:by.toFixed(1)});
+    h.setAttribute('points',`${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px).toFixed(1)},${(by+py).toFixed(1)} ${(bx-px).toFixed(1)},${(by-py).toFixed(1)}`);},
+    hide(){l.setAttribute('visibility','hidden');h.setAttribute('visibility','hidden');}};}
+/* draw a panel grid into group g; returns scale functions */
+function grid(g,o){
+  const {L,R,T,B,x0,x1,y0,y1}=o, X=v=>L+(v-x0)/(x1-x0)*(R-L), Y=v=>B-(v-y0)/(y1-y0)*(B-T);
+  let s='';
+  if(o.ys){for(let v=Math.ceil(y0/o.ys-1e-9)*o.ys;v<=y1+1e-9;v+=o.ys){const yy=Y(v).toFixed(1);
+    s+=`<line x1="${L}" x2="${R}" y1="${yy}" y2="${yy}" stroke="var(--line)"/><text x="${L-6}" y="${(+yy+3.5).toFixed(1)}" font-size="10.5" fill="var(--muted)" text-anchor="end" class="mono">${fmt(v,o.yd||0)}</text>`;}}
+  if(o.xs&&o.xlab!==false){for(let v=Math.ceil(x0/o.xs-1e-9)*o.xs;v<=x1+1e-9;v+=o.xs){const xx=X(v).toFixed(1);
+    s+=`<line x1="${xx}" x2="${xx}" y1="${T}" y2="${B}" stroke="var(--line)" stroke-dasharray="2 4"/>`;
+    if(o.xticks!==false) s+=`<text x="${xx}" y="${B+14}" font-size="10.5" fill="var(--muted)" text-anchor="middle" class="mono">${fmt(v,o.xd||0)}</text>`;}}
+  if(y0<0&&y1>0) s+=`<line x1="${L}" x2="${R}" y1="${Y(0).toFixed(1)}" y2="${Y(0).toFixed(1)}" stroke="var(--muted)" stroke-width="1.2"/>`;
+  s+=`<line x1="${L}" x2="${L}" y1="${T}" y2="${B}" stroke="var(--muted)"/>`;
+  if(o.ylab) s+=`<text transform="translate(${L-38} ${(T+B)/2}) rotate(-90)" font-size="12" fill="${o.ycol||'var(--ink)'}" text-anchor="middle" font-weight="600">${o.ylab}</text>`;
+  if(o.xtitle) s+=`<text x="${(L+R)/2}" y="${B+30}" font-size="12" fill="var(--ink)" text-anchor="middle">${o.xtitle}</text>`;
+  g.innerHTML=s; return {X,Y};
+}
+/* off-screen pause */
+const VIS={};
+if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>es.forEach(e=>{VIS[e.target.id]=e.isIntersecting;}));['lab-sec','throw-sec','rel-sec','stop-sec'].forEach(id=>{VIS[id]=true;io.observe($(id));});}
+const vis=id=>VIS[id]!==false;
+/* little graph thumbnails for quizzes */
+function samp(fn,t1,n){const a=[];for(let i=0;i<=(n||60);i++){const t=t1*i/(n||60);a.push([t,fn(t)]);}return a;}
+function thumb(curves,o){
+  const L=10,R=144,T=16,B=64,X=t=>L+t/o.t1*(R-L),Y=y=>B-(y-o.y0)/(o.y1-o.y0)*(B-T),y0=(o.y0<0&&o.y1>0)?Y(0):B;
+  let s=`<svg viewBox="0 0 150 74" width="150" height="74" aria-hidden="true" class="${o.cls||''}"><line x1="${L}" x2="${R+2}" y1="${y0}" y2="${y0}" stroke="var(--muted)"/><line x1="${L}" x2="${L}" y1="${T-4}" y2="${B}" stroke="var(--muted)"/>`;
+  s+=`<text x="${L+4}" y="10" font-size="11" fill="var(--muted)">${o.yl}</text><text x="${R+2}" y="${Math.min(72,y0+11)}" font-size="11" fill="var(--muted)" text-anchor="end">t</text>`;
+  curves.forEach(c=>{s+=`<path d="${c.map((p,i)=>(i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)).join('')}" fill="none" stroke="${o.col}" stroke-width="2.2" stroke-linejoin="round"/>`;});
+  return s+'</svg>';
+}
+/* quiz engine: QZ[id] = list of {q, o, a, why, thumbs?} */
+const QZ={};
+function renderQuiz(id){
+  $(id).innerHTML=QZ[id].map((q,i)=>`<div class="panel"><p class="qn">Q${id.slice(1)}.${i+1}</p><div>${q.q}</div>
+    <div class="opts${q.thumbs?' thumbs':''}" data-q="${id}" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.opt'); if(!b||b.disabled) return;
+  const box=b.parentElement, q=QZ[box.dataset.q][+box.dataset.i], j=+b.dataset.j;
+  box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+  const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+});
+
+/* =================== 1 · THREE GRAPHS =================== */
+const LAB={n:6,T:10,v:LPRE[1].v.slice(),tc:4,play:false,last:0,xkey:'',akey:''};
+const DT=LAB.T/(LAB.n-1), VMAX=7;
+const LP={L:58,R:624,carY:42,roadY:54,x:{T:112,B:222},v:{T:250,B:360},a:{T:388,B:468}};
+{const s=load('preset');const p=LPRE.find(x=>x.id===s);if(p)LAB.v=p.v.slice();}
+const segI=t=>Math.min(LAB.n-2,Math.max(0,Math.floor(t/DT+1e-9)));
+const vAt=t=>{const i=segI(t);return LAB.v[i]+(LAB.v[i+1]-LAB.v[i])*(t-i*DT)/DT;};
+const aAt=t=>{const i=segI(t);return (LAB.v[i+1]-LAB.v[i])/DT;};
+function xAt(t){const i=segI(t);let x=0;for(let k=0;k<i;k++)x+=(LAB.v[k]+LAB.v[k+1])/2*DT;const tau=t-i*DT;return x+LAB.v[i]*tau+0.5*aAt(t)*tau*tau;}
+function distTo(t){let d=0,p=0;const N=Math.max(1,Math.ceil(t/0.005));for(let k=1;k<=N;k++){const x=xAt(t*k/N);d+=Math.abs(x-p);p=x;}return d;}
+/* static SVG skeleton */
+const lab=$('lab'), LG={};
+{
+  const s=lab;
+  const defs=mk('defs',{},s);
+  const cp=mk('clipPath',{id:'lclipx'},defs); mk('rect',{x:LP.L,y:LP.x.T,width:LP.R-LP.L,height:LP.x.B-LP.x.T},cp);
+  LG.track=mk('g',{},s);
+  LG.gx=mk('g',{},s); LG.gv=mk('g',{},s); LG.ga=mk('g',{},s);
+  LG.posA=mk('path',{fill:'var(--disp)','fill-opacity':.32},s);
+  LG.negA=mk('path',{fill:'var(--flag)','fill-opacity':.28},s);
+  LG.aA=mk('path',{fill:'var(--acc)','fill-opacity':.16},s);
+  LG.xP=mk('path',{fill:'none',stroke:'var(--disp)','stroke-width':2.6,'stroke-linejoin':'round'},s);
+  LG.vP=mk('path',{fill:'none',stroke:'var(--vel)','stroke-width':2.6,'stroke-linejoin':'round'},s);
+  LG.aP=mk('path',{fill:'none',stroke:'var(--acc)','stroke-width':2.6,'stroke-linejoin':'round'},s);
+  LG.tan=mk('line',{stroke:'var(--vel)','stroke-width':2,'clip-path':'url(#lclipx)','stroke-dasharray':'6 3'},s);
+  LG.cur=mk('line',{y1:LP.carY-14,y2:LP.a.B,stroke:'var(--muted)','stroke-width':1.2,'stroke-dasharray':'3 3'},s);
+  LG.hit=mk('rect',{x:LP.L,y:LP.x.T-6,width:LP.R-LP.L,height:LP.a.B-LP.x.T+12,fill:'transparent',class:'hit'},s);
+  LG.dx=mk('circle',{r:5,fill:'var(--disp)'},s); LG.dv=mk('circle',{r:5,fill:'var(--vel)'},s); LG.da=mk('circle',{r:5,fill:'var(--acc)'},s);
+  LG.knots=[];
+  for(let i=0;i<LAB.n;i++){const g=mk('g',{class:'knot'},s);mk('circle',{r:14,fill:'transparent'},g);mk('circle',{r:6.5,fill:'var(--surface)',stroke:'var(--vel)','stroke-width':2.6},g);g.dataset.i=i;LG.knots.push(g);}
+  LG.tline=mk('text',{x:LP.R,y:LP.x.T-6,'font-size':11,fill:'var(--vel)','text-anchor':'end'},s);
+  /* car and its arrows */
+  LG.disp=arrowEl(s,'var(--disp)',2.4); LG.va=arrowEl(s,'var(--vel)',2.6); LG.aa=arrowEl(s,'var(--acc)',2.6);
+  LG.car=mk('g',{},s);
+  mk('rect',{x:-16,y:-8,width:32,height:13,rx:4,fill:'var(--ink)','fill-opacity':.82},LG.car);
+  mk('rect',{x:-8,y:-14,width:15,height:7,rx:2,fill:'var(--ink)','fill-opacity':.55},LG.car);
+  mk('circle',{cx:-9,cy:6,r:4,fill:'var(--surface)',stroke:'var(--ink)','stroke-width':2},LG.car);
+  mk('circle',{cx:9,cy:6,r:4,fill:'var(--surface)',stroke:'var(--ink)','stroke-width':2},LG.car);
+  LG.vlab=mk('text',{'font-size':11,fill:'var(--vel)'},s); LG.alab=mk('text',{'font-size':11,fill:'var(--acc)'},s);
+}
+let LX=null,LV=null,LA=null,LTR=null;
+function labShape(){
+  /* x grid (rescale only when the range changes) */
+  let xmn=0,xmx=0;for(let i=0;i<=200;i++){const x=xAt(LAB.T*i/200);xmn=Math.min(xmn,x);xmx=Math.max(xmx,x);}
+  const xr=niceRange(xmn,xmx,4), key=xr.lo+'|'+xr.hi;
+  if(key!==LAB.xkey){LAB.xkey=key;
+    LX=grid(LG.gx,{L:LP.L,R:LP.R,T:LP.x.T,B:LP.x.B,x0:0,x1:LAB.T,y0:xr.lo,y1:xr.hi,ys:xr.s,xs:1,xticks:false,ylab:'x (m)',ycol:'var(--disp)'});
+    /* track uses the same x range, laid out horizontally */
+    const TX=v=>LP.L+(v-xr.lo)/(xr.hi-xr.lo)*(LP.R-LP.L); LTR=TX;
+    let t=`<line x1="${LP.L-10}" x2="${LP.R+10}" y1="${LP.roadY}" y2="${LP.roadY}" stroke="var(--muted)" stroke-width="2"/>`;
+    for(let v=xr.lo;v<=xr.hi+1e-9;v+=xr.s){t+=`<line x1="${TX(v)}" x2="${TX(v)}" y1="${LP.roadY}" y2="${LP.roadY+5}" stroke="var(--muted)"/><text x="${TX(v)}" y="${LP.roadY+30}" font-size="10.5" fill="var(--muted)" text-anchor="middle" class="mono">${fmt(v,0)}</text>`;}
+    t+=`<line x1="${TX(0)}" x2="${TX(0)}" y1="${LP.roadY-6}" y2="${LP.roadY+8}" stroke="var(--ink)" stroke-width="2"/><text x="${LP.L-14}" y="${LP.roadY+30}" font-size="10.5" fill="var(--muted)" text-anchor="end">x (m)</text>`;
+    LG.track.innerHTML=t;
+  }
+  if(!LV){LV=grid(LG.gv,{L:LP.L,R:LP.R,T:LP.v.T,B:LP.v.B,x0:0,x1:LAB.T,y0:-VMAX,y1:VMAX,ys:2,xs:1,xticks:false,ylab:'v (m/s)',ycol:'var(--vel)'});}
+  let amx=2;for(let i=0;i<LAB.n-1;i++)amx=Math.max(amx,Math.abs(LAB.v[i+1]-LAB.v[i])/DT);
+  const ar=niceRange(-amx,amx,4), ak=ar.lo+'|'+ar.hi;
+  if(ak!==LAB.akey){LAB.akey=ak;LA=grid(LG.ga,{L:LP.L,R:LP.R,T:LP.a.T,B:LP.a.B,x0:0,x1:LAB.T,y0:ar.lo,y1:ar.hi,ys:ar.s,yd:ar.s<1?1:0,xs:1,ylab:'a (m/s²)',ycol:'var(--acc)',xtitle:'time t (s)'});}
+  let d='';for(let i=0;i<=200;i++){const t=LAB.T*i/200;d+=(i?'L':'M')+LX.X(t).toFixed(1)+' '+LX.Y(xAt(t)).toFixed(1);}
+  LG.xP.setAttribute('d',d);
+  LG.vP.setAttribute('d',LAB.v.map((v,i)=>(i?'L':'M')+LV.X(i*DT).toFixed(1)+' '+LV.Y(v).toFixed(1)).join(''));
+  let ad='';for(let i=0;i<LAB.n-1;i++){const a=(LAB.v[i+1]-LAB.v[i])/DT;ad+=(i?'L':'M')+LA.X(i*DT).toFixed(1)+' '+LA.Y(a).toFixed(1)+'L'+LA.X((i+1)*DT).toFixed(1)+' '+LA.Y(a).toFixed(1);}
+  LG.aP.setAttribute('d',ad);
+  LG.knots.forEach((g,i)=>g.setAttribute('transform',`translate(${LV.X(i*DT).toFixed(1)} ${LV.Y(LAB.v[i]).toFixed(1)})`));
+  press('#lpre',(LPRE.find(p=>p.v.every((v,i)=>Math.abs(v-LAB.v[i])<1e-9))||{}).id||'');
+  labCursor();
+}
+function labCursor(){
+  const tc=LAB.tc, x=xAt(tc), v=vAt(Math.min(tc,LAB.T-1e-9)), a=aAt(Math.min(tc,LAB.T-1e-9)), X=LV.X(tc);
+  $('lt').value=tc; $('lto').textContent=fmt(tc,2)+' s';
+  setA(LG.cur,{x1:X,x2:X});
+  setA(LG.dx,{cx:X,cy:LX.Y(x)}); setA(LG.dv,{cx:X,cy:LV.Y(v)}); setA(LG.da,{cx:X,cy:LA.Y(a)});
+  const w=1.4; setA(LG.tan,{x1:LX.X(tc-w),y1:LX.Y(x-v*w),x2:LX.X(tc+w),y2:LX.Y(x+v*w)});
+  LG.tline.textContent='dashed tangent: slope = v = '+sfmt(v,2)+' m/s';
+  /* signed area under v–t from 0 to tc, split at zero crossings */
+  const br=[0];for(let i=1;i<LAB.n;i++){const t=i*DT;if(t<tc)br.push(t);}
+  const pts=[];for(let k=0;k<br.length;k++){pts.push(br[k]);const t2=k+1<br.length?br[k+1]:tc,v1=vAt(br[k]),v2=vAt(Math.min(t2,LAB.T-1e-9)>t2?t2:t2);if(v1*v2<0){pts.push(br[k]+(t2-br[k])*v1/(v1-v2));}}
+  pts.push(tc);
+  const vv=t=>t>=LAB.T?LAB.v[LAB.n-1]:vAt(t);
+  const poly=f=>{let s='M'+LV.X(0).toFixed(1)+' '+LV.Y(0).toFixed(1);pts.forEach(t=>{s+='L'+LV.X(t).toFixed(1)+' '+LV.Y(f(vv(t))).toFixed(1);});return s+'L'+LV.X(tc).toFixed(1)+' '+LV.Y(0).toFixed(1)+'Z';};
+  LG.posA.setAttribute('d',tc>0?poly(z=>Math.max(z,0)):'');
+  LG.negA.setAttribute('d',tc>0?poly(z=>Math.min(z,0)):'');
+  let as='M'+LA.X(0).toFixed(1)+' '+LA.Y(0).toFixed(1);
+  for(let i=0;i<LAB.n-1&&i*DT<tc;i++){const ai=(LAB.v[i+1]-LAB.v[i])/DT,te=Math.min((i+1)*DT,tc);as+='L'+LA.X(i*DT).toFixed(1)+' '+LA.Y(ai).toFixed(1)+'L'+LA.X(te).toFixed(1)+' '+LA.Y(ai).toFixed(1);}
+  LG.aA.setAttribute('d',tc>0?as+'L'+LA.X(tc).toFixed(1)+' '+LA.Y(0).toFixed(1)+'Z':'');
+  /* car on the track */
+  const cx=LTR(x); LG.car.setAttribute('transform',`translate(${cx.toFixed(1)} ${LP.carY})`);
+  LG.disp.set(LTR(0),LP.roadY+14,cx,LP.roadY+14,7);
+  LG.va.set(cx,12,cx+v*9,12,8); LG.aa.set(cx,24,cx+a*14,24,8);
+  setA(LG.vlab,{x:cx+(v>=0?v*9+5:v*9-5),y:16,'text-anchor':v>=0?'start':'end'}); LG.vlab.textContent=Math.abs(v)>0.05?'v':'';
+  setA(LG.alab,{x:cx+(a>=0?a*14+5:a*14-5),y:28,'text-anchor':a>=0?'start':'end'}); LG.alab.textContent=Math.abs(a)>0.05?'a':'';
+  /* readouts */
+  const dist=distTo(tc), disp=x;
+  let st;
+  if(Math.abs(v)<0.05&&Math.abs(a)<1e-9) st='At rest';
+  else if(Math.abs(v)<0.05) st='Momentarily at rest, but a ≠ 0';
+  else if(Math.abs(a)<1e-9) st='Steady velocity: a = 0';
+  else st=(v*a>0?'Speeding up':'Slowing down')+(v<0?', moving backwards':'');
+  $('lstate').textContent=st;
+  $('lkv').innerHTML=`<dt>position x</dt><dd>${sfmt(x,2)} m</dd><dt>velocity v</dt><dd>${sfmt(v,2)} m/s</dd><dt>acceleration a</dt><dd>${sfmt(a,2)} m/s²</dd>
+   <dt>displacement, 0 → t</dt><dd>${sfmt(disp,2)} m</dd><dt>distance, 0 → t</dt><dd>${fmt(dist,2)} m</dd>
+   <dt>average velocity</dt><dd>${tc>0.005?sfmt(disp/tc,2)+' m/s':'—'}</dd><dt>average speed</dt><dd>${tc>0.005?fmt(dist/tc,2)+' m/s':'—'}</dd>`;
+  $('lcap').innerHTML=`Read down the cursor: the x–t tangent’s slope (${sfmt(v,2)} m/s) is the height of v–t; the slope of v–t (${sfmt(a,2)} m/s²) is the height of a–t. Read up: the shaded area under v–t (${sfmt(disp,2)} m) is how far x has moved from 0, and the shaded area under a–t (${sfmt(v-LAB.v[0],2)} m/s) is how much v has changed. `+
+    (Math.abs(v)<0.05?'':v*a>0?'v and a have the same sign, so the speed grows.':Math.abs(a)>1e-9?'v and a have opposite signs, so the speed falls, whichever sign a has.':'');
+}
+$('lpre').innerHTML=LPRE.map(p=>`<button class="chip" data-k="${p.id}">${p.l}</button>`).join('');
+$('lpre').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;const p=LPRE.find(x=>x.id===c.dataset.k);LAB.v=p.v.slice();store('preset',p.id);labShape();});
+$('lt').addEventListener('input',e=>{LAB.tc=+e.target.value;labCursor();});
+/* drags */
+let drag=null;
+LG.knots.forEach(g=>g.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();drag={k:+g.dataset.i};try{lab.setPointerCapture(e.pointerId);}catch(_){}}));
+LG.hit.addEventListener('pointerdown',e=>{drag={cur:true};try{lab.setPointerCapture(e.pointerId);}catch(_){}moveLab(e);});
+function moveLab(e){
+  if(!drag) return; const p=svgPt(lab,e);
+  if(drag.cur){LAB.tc=Math.max(0,Math.min(LAB.T,(p.x-LP.L)/(LP.R-LP.L)*LAB.T));labCursor();}
+  else{const v=VMAX-(p.y-LP.v.T)/(LP.v.B-LP.v.T)*2*VMAX;const s=Math.max(-6,Math.min(6,Math.round(v*2)/2));if(s!==LAB.v[drag.k]){LAB.v[drag.k]=s;labShape();}}
+}
+lab.addEventListener('pointermove',moveLab);
+lab.addEventListener('pointerup',()=>{drag=null;}); lab.addEventListener('pointercancel',()=>{drag=null;});
+function loopLab(ts){
+  if(!LAB.play) return;
+  if(!vis('lab-sec')){LAB.last=0;requestAnimationFrame(loopLab);return;}
+  const dt=LAB.last?Math.min(0.05,(ts-LAB.last)/1000):0;LAB.last=ts;LAB.tc+=dt;
+  if(LAB.tc>=LAB.T){LAB.tc=LAB.T;LAB.play=false;$('lplay').textContent='Play';labCursor();return;}
+  labCursor();requestAnimationFrame(loopLab);
+}
+$('lplay').addEventListener('click',()=>{LAB.play=!LAB.play;$('lplay').textContent=LAB.play?'Pause':'Play';if(LAB.play){if(LAB.tc>=LAB.T-1e-6)LAB.tc=0;LAB.last=0;requestAnimationFrame(loopLab);}});
+
+/* quiz 1: sketch matching */
+{
+  const X=c=>({col:'var(--disp)',yl:'x',...c}), V=c=>({col:'var(--vel)',yl:'v',...c}), A=c=>({col:'var(--acc)',yl:'a',...c});
+  const q1v=thumb([samp(t=>4-t,8)],V({t1:8,y0:-4.5,y1:4.5,cls:'qthumb'}));
+  const q2x=thumb([[[0,0],[3,3],[5,3],[8,0]]],X({t1:8,y0:-0.5,y1:3.5,cls:'qthumb'}));
+  const q3x=thumb([samp(t=>t*t,4)],X({t1:4,y0:0,y1:17,cls:'qthumb'}));
+  QZ.q1=[
+   {q:'<p>Sketch-matching. Here is a v–t graph. Which x–t graph goes with it (starting at x = 0)?</p>'+q1v, thumbs:true,
+    o:[thumb([samp(t=>0.5*t,8)],X({t1:8,y0:0,y1:4.5})),thumb([samp(t=>t*t/2,8)],X({t1:8,y0:0,y1:33})),thumb([samp(t=>4*t-t*t/2,8)],X({t1:8,y0:0,y1:9})),thumb([[[0,0],[4,8],[8,0]]],X({t1:8,y0:0,y1:9}))],a:2,
+    why:'v starts positive and falls steadily, so the x–t slope starts steep and shrinks (curving down), is flat where v = 0 (at the middle), then turns negative: x comes back. That is the hump-shaped parabola. The straight-line “tent” would need v to jump from + to − at once.'},
+   {q:'<p>Here is an x–t graph. Which v–t graph matches it?</p>'+q2x, thumbs:true,
+    o:[thumb([samp(t=>3-t*0.75,8)],V({t1:8,y0:-3.5,y1:3.5})),thumb([[[0,1],[3,1]],[[3,0],[5,0]],[[5,-1],[8,-1]]],V({t1:8,y0:-1.5,y1:1.5})),thumb([samp(t=>1,8)],V({t1:8,y0:-1.5,y1:1.5})),thumb([[[0,0],[3,1],[5,1],[8,0]]],V({t1:8,y0:-0.5,y1:1.5}))],a:1,
+    why:'Each straight piece of x–t has a constant slope: positive, then zero (standing still), then negative (walking back). So v is a positive constant, then 0, then a negative constant. The last option copies the shape of x–t, a common trap.'},
+   {q:'<p>A car’s x–t graph is the right half of an upward parabola, flat at t = 0. Its a–t graph is…</p>'+q3x, thumbs:true,
+    o:[thumb([samp(t=>0,4)],A({t1:4,y0:-1.5,y1:1.5})),thumb([samp(t=>1,4)],A({t1:4,y0:-1.5,y1:1.5})),thumb([samp(t=>t/4,4)],A({t1:4,y0:-1.5,y1:1.5})),thumb([samp(t=>-1,4)],A({t1:4,y0:-1.5,y1:1.5}))],a:1,
+    why:'x = kt² gives v = 2kt (a straight line from 0) and a = 2k, a positive constant. An x–t graph curving upward means a &gt; 0; a straight x–t means a = 0.'}
+  ];
+}
+
+/* =================== 2 · SECANT → TANGENT =================== */
+const SC={t0:4,s:0}, SP={L:52,R:584,T:14,B:280};
+const secX=t=>SEC_K*t*t*t, secV=t=>3*SEC_K*t*t;
+const dtOf=s=>2*Math.pow(0.005,s/100), sOf=dt=>100*Math.log(dt/2)/Math.log(0.005);
+const sec=$('sec'), SG={};
+{
+  const defs=mk('defs',{},sec),cp=mk('clipPath',{id:'sclip'},defs);mk('rect',{x:SP.L,y:SP.T,width:SP.R-SP.L,height:SP.B-SP.T},cp);
+  const g=mk('g',{},sec); SG.S=grid(g,{L:SP.L,R:SP.R,T:SP.T,B:SP.B,x0:0,x1:6,y0:0,y1:18,xs:1,ys:3,ylab:'x (m)',ycol:'var(--disp)',xtitle:'time t (s)'});
+  let d='';for(let i=0;i<=120;i++){const t=6*i/120;d+=(i?'L':'M')+SG.S.X(t).toFixed(1)+' '+SG.S.Y(secX(t)).toFixed(1);}
+  mk('path',{d,fill:'none',stroke:'var(--disp)','stroke-width':2.6},sec);
+  SG.tan=mk('line',{stroke:'var(--vel)','stroke-width':2.2,'clip-path':'url(#sclip)'},sec);
+  SG.sec=mk('line',{stroke:'var(--ink)','stroke-width':1.6,'stroke-dasharray':'6 4','clip-path':'url(#sclip)'},sec);
+  SG.run=mk('line',{stroke:'var(--muted)','stroke-width':1.2},sec); SG.rise=mk('line',{stroke:'var(--muted)','stroke-width':1.2},sec);
+  SG.tdt=mk('text',{'font-size':11,fill:'var(--muted)','text-anchor':'middle'},sec); SG.tdx=mk('text',{'font-size':11,fill:'var(--muted)'},sec);
+  SG.p1=mk('circle',{r:4.5,fill:'var(--ink)'},sec); SG.p2=mk('circle',{r:4.5,fill:'var(--ink)'},sec); SG.p=mk('circle',{r:5,fill:'var(--vel)'},sec);
+  SG.l1=mk('text',{'font-size':12,fill:'var(--ink)','text-anchor':'end'},sec); SG.l2=mk('text',{'font-size':12,fill:'var(--ink)'},sec); SG.lp=mk('text',{'font-size':12,fill:'var(--vel)','font-weight':600},sec);
+  SG.l1.textContent='P₁';SG.l2.textContent='P₂';SG.lp.textContent='P';
+}
+function drawSec(){
+  const {X,Y}=SG.S, t0=SC.t0, dt=dtOf(SC.s), t1=t0-dt/2, t2=t0+dt/2, x1=secX(t1), x2=secX(t2), m=(x2-x1)/dt, v=secV(t0), x0=secX(t0);
+  $('st0o').textContent='t = '+fmt(t0,1)+' s'; $('sdto').textContent='Δt = '+(dt<0.1?dt.toFixed(3):dt.toFixed(2))+' s';
+  const ext=3; setA(SG.sec,{x1:X(t1-ext),y1:Y(x1-m*ext),x2:X(t2+ext),y2:Y(x2+m*ext)});
+  setA(SG.tan,{x1:X(t0-ext),y1:Y(x0-v*ext),x2:X(t0+ext),y2:Y(x0+v*ext)});
+  setA(SG.p1,{cx:X(t1),cy:Y(x1)}); setA(SG.p2,{cx:X(t2),cy:Y(x2)}); setA(SG.p,{cx:X(t0),cy:Y(x0)});
+  const big=X(t2)-X(t1)>34;
+  setA(SG.run,{x1:X(t1),y1:Y(x1),x2:X(t2),y2:Y(x1),visibility:big?'visible':'hidden'}); setA(SG.rise,{x1:X(t2),y1:Y(x1),x2:X(t2),y2:Y(x2),visibility:big?'visible':'hidden'});
+  setA(SG.tdt,{x:(X(t1)+X(t2))/2,y:Y(x1)+14,visibility:big?'visible':'hidden'}); SG.tdt.textContent='Δt';
+  setA(SG.tdx,{x:X(t2)+5,y:(Y(x1)+Y(x2))/2+4,visibility:big?'visible':'hidden'}); SG.tdx.textContent='Δx';
+  setA(SG.l1,{x:X(t1)-7,y:Y(x1)+4,visibility:big?'visible':'hidden'}); setA(SG.l2,{x:X(t2)+7,y:Y(x2)-4,visibility:big?'visible':'hidden'});
+  setA(SG.lp,{x:X(t0)-16,y:Y(x0)-8});
+  $('skv').innerHTML=`<dt>interval</dt><dd>${fmt(t1,3)} s → ${fmt(t2,3)} s</dd><dt>Δx</dt><dd>${(x2-x1).toFixed(4)} m</dd><dt>chord slope Δx/Δt</dt><dd>${m.toFixed(4)} m/s</dd><dt>tangent slope dx/dt</dt><dd>${v.toFixed(4)} m/s</dd><dt>difference</dt><dd>${sfmt(m-v,6)} m/s</dd>`;
+  $('sladder').innerHTML=SEC_LADDER.map(d=>{const h=d/2,a=(secX(t0+h)-secX(t0-h))/d;return `<button class="chip mono" data-k="${d}" aria-pressed="${Math.abs(dtOf(SC.s)-d)<1e-6}">${d} s → ${a.toFixed(d<0.1?6:d<0.5?4:2)}</button>`;}).join('');
+  $('scap').innerHTML=`As Δt shrinks, the chord’s slope closes in on ${v.toFixed(2)} m/s, the slope of the tangent at P. That limit is the velocity at the instant t = ${fmt(t0,1)} s: <b>v = lim<sub>Δt→0</sub> Δx/Δt = dx/dt</b>. For x = 0.08t³ the limit is 0.24t².`;
+}
+$('st0').addEventListener('input',e=>{SC.t0=+e.target.value;drawSec();});
+$('sdt').addEventListener('input',e=>{SC.s=+e.target.value;drawSec();});
+$('sladder').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;SC.s=Math.round(sOf(+c.dataset.k)*1e6)/1e6;$('sdt').value=SC.s;drawSec();});
+{
+  /* NCERT Ex 2.1: x = a + b t^2 */
+  const a=8.5,b=2.5, v2=2*b*2, avg=((a+b*16)-(a+b*4))/2;
+  /* NCERT Ex 2.10: 2.5 km at 5 km/h out, back at 7.5 km/h; interval 0–40 min */
+  const D=2.5,v1=5,vb=7.5,tout=D/v1,tq=40/60,back=vb*(tq-tout),pos=D-back,path=D+back;
+  const avel=pos/tq, aspd=path/tq;
+  const ok=thumb([samp(t=>Math.sin(t*1.2)*1.5+t*0.3,6)],{col:'var(--disp)',yl:'x',t1:6,y0:-2,y1:4});
+  let loopP='';{const pts=[];for(let i=0;i<=60;i++){const th=2*Math.PI*i/60;pts.push([3+1.6*Math.cos(th),1.6+1.3*Math.sin(th)]);}loopP=thumb([pts],{col:'var(--disp)',yl:'x',t1:6,y0:0,y1:3.5});}
+  const negS=thumb([samp(t=>1.6*Math.cos(t*1.1)+0.4,6)],{col:'var(--vel)',yl:'speed',t1:6,y0:-1.6,y1:2.4});
+  const decP=thumb([samp(t=>t<3?t:3-(t-3)*0.8,6)],{col:'var(--disp)',yl:'path',t1:6,y0:0,y1:3.5});
+  QZ.q2=[
+   {q:`<p>x = a + bt² with a = ${a} m and b = ${b} m s⁻² (NCERT Example 2.1). What is the average velocity between t = 2 s and t = 4 s?</p>`,
+    o:[`${fmt(v2,1)} m s⁻¹`,`${fmt(avg,1)} m s⁻¹`,`${fmt(2*b*4,1)} m s⁻¹`,`${fmt((a+b*16)/4,1)} m s⁻¹`],a:1,
+    why:`Δx/Δt = (x(4) − x(2))/2 = ${fmt(b*12,0)}/2 = ${fmt(avg,1)} m s⁻¹. Here v = 2bt = ${fmt(2*b,0)}t grows steadily, so the average over 2–4 s equals v at the middle instant, t = 3 s. That works only for constant a. ${fmt(v2,1)} m s⁻¹ is v at t = 2 s, and dividing x(4) by 4 s ignores where it started.`},
+   {q:`<p>A man walks ${D} km to a market at ${v1} km/h, finds it shut, and walks straight back at ${vb} km/h. Over the first 40 min, what are the size of his average velocity and his average speed?</p>`,
+    o:[`${avel.toFixed(3)} and ${aspd.toFixed(3)} km/h`,`${aspd.toFixed(3)} and ${aspd.toFixed(3)} km/h`,`${avel.toFixed(3)} and ${avel.toFixed(3)} km/h`,`0 and ${(2*D/(tout+D/vb)).toFixed(0)} km/h`],a:0,
+    why:`He reaches the market at ${fmt(tout*60,0)} min, then walks back for ${fmt((tq-tout)*60,0)} min, covering ${back.toFixed(2)} km. Displacement = ${pos.toFixed(2)} km, path length = ${path.toFixed(2)} km, in ${fmt(tq,3).replace(/0+$/,'')} h. Average speed is bigger as soon as he turns back. (0 and ${(2*D/(tout+D/vb)).toFixed(0)} km/h are the answers for the full round trip.)`},
+   {q:'<p>Only one of these graphs could describe a real object moving on a line. Which one?</p>', thumbs:true,
+    o:[loopP,negS,ok,decP],a:2,
+    why:'The loop gives two positions at the same instant. Speed is a size and can never be negative. Path length can only grow, never shrink. The wiggly x–t curve is fine: the object moves forward and back, with one position at each instant.'}
+  ];
+}
+
+/* =================== 3 · TRAPEZIUM =================== */
+const TR={u:2,a:1.5,t:6,strips:true}, TP={L:52,R:584,T:46,B:262,tmax:8};
+const trap=$('trap'), TG={};
+{
+  TG.grid=mk('g',{},trap);
+  TG.rect=mk('polygon',{fill:'var(--vel)','fill-opacity':.2,stroke:'var(--vel)','stroke-opacity':.4},trap);
+  TG.tri=mk('polygon',{fill:'var(--acc)','fill-opacity':.2,stroke:'var(--acc)','stroke-opacity':.4},trap);
+  TG.strips=mk('g',{},trap);
+  TG.mean=mk('line',{stroke:'var(--ink)','stroke-width':1.6,'stroke-dasharray':'6 4'},trap);
+  TG.meanL=mk('text',{'font-size':11,fill:'var(--ink)'},trap);
+  TG.line=mk('line',{stroke:'var(--vel)','stroke-width':2.8,'stroke-linecap':'round'},trap);
+  TG.d0=mk('circle',{r:4.5,fill:'var(--vel)'},trap); TG.d1=mk('circle',{r:4.5,fill:'var(--vel)'},trap);
+  TG.uL=mk('text',{'font-size':12,fill:'var(--vel)','font-weight':600},trap); TG.vL=mk('text',{'font-size':12,fill:'var(--vel)','font-weight':600},trap);
+  TG.rL=mk('text',{'font-size':11.5,fill:'var(--vel)','text-anchor':'middle'},trap); TG.tL=mk('text',{'font-size':11.5,fill:'var(--acc)','text-anchor':'middle'},trap);
+}
+function drawTrap(){
+  const {u,a,t}=TR, v=u+a*t, s=u*t+0.5*a*t*t;
+  $('tuo').textContent='u = '+sfmt(u,1)+' m/s'; $('tao').textContent='a = '+sfmt(a,2)+' m/s²'; $('tto').textContent='t = '+fmt(t,1)+' s';
+  press('#tpre',String(TPRE.findIndex(p=>p.u===u&&p.a===a&&p.t===t)));
+  const r=niceRange(Math.min(0,u,v),Math.max(0,u,v),5);
+  const {X,Y}=grid(TG.grid,{L:TP.L,R:TP.R,T:TP.T,B:TP.B,x0:0,x1:TP.tmax,y0:r.lo,y1:r.hi,ys:r.s,xs:1,ylab:'v (m/s)',ycol:'var(--vel)',xtitle:'time (s)'});
+  const pt=(a,b)=>X(a).toFixed(1)+','+Y(b).toFixed(1);
+  TG.rect.setAttribute('points',[pt(0,0),pt(0,u),pt(t,u),pt(t,0)].join(' '));
+  TG.tri.setAttribute('points',[pt(0,u),pt(t,v),pt(t,u)].join(' '));
+  setA(TG.line,{x1:X(0),y1:Y(u),x2:X(t),y2:Y(v)}); setA(TG.d0,{cx:X(0),cy:Y(u)}); setA(TG.d1,{cx:X(t),cy:Y(v)});
+  setA(TG.uL,{x:X(0)+7,y:Y(u)+(a>=0?14:-7)}); TG.uL.textContent='u';
+  setA(TG.vL,{x:X(t)+8,y:Y(v)+4}); TG.vL.textContent='v';
+  const m=(u+v)/2; setA(TG.mean,{x1:X(0),x2:X(t),y1:Y(m),y2:Y(m)});
+  /* labels inside the regions only when there is room */
+  const rh=Math.abs(Y(u)-Y(0)), tw=X(t)-X(0), th=Math.abs(Y(v)-Y(u));
+  setA(TG.rL,{x:X(t/2),y:(Y(u)+Y(0))/2+4,visibility:rh>20&&tw>70?'visible':'hidden'}); TG.rL.textContent='ut = '+fmt(u*t,1);
+  setA(TG.tL,{x:X(t*2/3),y:(Y(u)*2+Y(v))/3+(a>=0?5:-1),visibility:th>34&&tw>90?'visible':'hidden'}); TG.tL.textContent='½at² = '+fmt(0.5*a*t*t,1);
+  setA(TG.meanL,{x:X(t)+8,y:Y(m)+(Math.abs(Y(m)-Y(v))<14?(m>v?14:-6):4)}); TG.meanL.textContent='½(u+v)';
+  if(Math.abs(Y(m)-Y(v))<14){TG.vL.setAttribute('y',Y(v)+(m>v?-6:14));}
+  /* 1-second strips */
+  let g='';const S=tt=>u*tt+0.5*a*tt*tt, strips=[];
+  if(TR.strips){for(let n=1;n<=Math.ceil(t-1e-9);n++){const t1=n-1,t2=Math.min(n,t),ar=S(t2)-S(t1);strips.push({n,ar,full:t2-t1>0.999});
+    if(n<Math.ceil(t-1e-9)) g+=`<line x1="${X(n)}" x2="${X(n)}" y1="${Y(0)}" y2="${Y(u+a*n)}" stroke="var(--surface)" stroke-width="2"/>`;
+    g+=`<text x="${X((t1+t2)/2)}" y="${TP.T-10}" font-size="10.5" text-anchor="middle" fill="var(--ink)" class="mono">${fmt(ar,1)}</text>`;}
+    g+=`<text x="${TP.L}" y="${TP.T-26}" font-size="10.5" fill="var(--muted)">distance covered in each second (m):</text>`;}
+  TG.strips.innerHTML=g;
+  /* readouts */
+  const cross=(u*v<0), tz=cross?-u/a:null, dist=cross?Math.abs(S(tz))+Math.abs(s-S(tz)):Math.abs(s);
+  $('tkv').innerHTML=`<dt>final velocity v = u + at</dt><dd>${sfmt(v,2)} m/s</dd><dt>rectangle ut</dt><dd>${sfmt(u*t,2)} m</dd><dt>triangle ½at²</dt><dd>${sfmt(0.5*a*t*t,2)} m</dd><dt>displacement s</dt><dd>${sfmt(s,2)} m</dd><dt>½(u + v)t</dt><dd>${sfmt(m*t,2)} m</dd><dt>u² + 2as</dt><dd>${fmt(u*u+2*a*s,2)} = v² = ${fmt(v*v,2)}</dd><dt>distance travelled</dt><dd>${fmt(dist,2)} m</dd>`;
+  let c='';
+  if(u===0&&a!==0&&strips.filter(x=>x.full).length>=2){const f=strips.filter(x=>x.full);c=`<b>Galileo’s odd numbers.</b> From rest, the distances in successive equal seconds go ${f.map(x=>fmt(x.ar/f[0].ar,0)).join(' : ')}. The strips are trapezia whose heights grow by the same step each second.`;}
+  else if(TR.strips) c='Each strip’s number is the distance covered in that second, its area: in the n-th second, s<sub>n</sub> = u + a(n − ½), the velocity at the middle of that second.';
+  if(cross) c+=` <b>The line crosses zero at t = ${fmt(tz,2)} s:</b> the object stops and turns back. Area below the axis counts as negative displacement, so distance (${fmt(dist,2)} m) is bigger than |s| (${fmt(Math.abs(s),2)} m).`;
+  $('tcap').innerHTML=c;
+}
+$('tpre').innerHTML=TPRE.map((p,i)=>`<button class="chip" data-k="${i}">${p.l}</button>`).join('');
+$('tpre').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;const p=TPRE[+c.dataset.k];Object.assign(TR,{u:p.u,a:p.a,t:p.t});$('tu').value=p.u;$('ta').value=p.a;$('tt').value=p.t;drawTrap();});
+['tu','ta','tt'].forEach(id=>$(id).addEventListener('input',e=>{TR[id.slice(1)]=+e.target.value;drawTrap();}));
+$('tstrip').addEventListener('change',e=>{TR.strips=e.target.checked;drawTrap();});
+{
+  /* NCERT Ex 2.5: 126 km/h to rest in 200 m */
+  const v0=126/3.6, s=200, a=v0*v0/(2*s), tt=2*s/v0;
+  const r=((3-0.5)/(1-0.5)); // s_n ∝ (n − ½) from rest
+  QZ.q3=[
+   {q:`<p>A car at 126 km/h is brought to rest, with steady braking, in ${s} m (NCERT Exercise 2.5). Its retardation?</p>`,
+    o:[`${(v0/s).toFixed(3)} m s⁻²`,`${a.toFixed(2)} m s⁻²`,`${(2*a).toFixed(2)} m s⁻²`,`${(v0*v0/s/10).toFixed(2)} m s⁻²`],a:1,
+    why:`126 km/h = ${fmt(v0,0)} m/s. v² = u² + 2as with v = 0: a = −u²/2s = −${fmt(v0*v0,0)}/${2*s} = −${a.toFixed(2)} m s⁻². Time to stop: the average velocity is ${fmt(v0/2,1)} m/s, so t = ${s}/${fmt(v0/2,1)} = ${tt.toFixed(1)} s.`},
+   {q:'<p>A body starts from rest with constant acceleration. Distance covered in the 3rd second ÷ distance covered in the 1st second?</p>',
+    o:['3','9','5','4'],a:2,
+    why:`s<sub>n</sub> = a(n − ½) from rest, so s₃/s₁ = 2.5/0.5 = ${fmt(r,0)}. Total distance after 3 s is 9 times that after 1 s; the 3rd second on its own is 5 parts (1 : 3 : 5). Try “From rest” above.`},
+   {q:'<p>True or false: a particle with a <i>positive</i> acceleration must be speeding up.</p>',
+    o:['True','False'],a:1,
+    why:'The sign of a depends on which way you call positive. If v is negative and a positive, the particle slows down. Speeding up means v and a have the same sign; slowing down, opposite signs. Try u = −8, a = +2 above.'}
+  ];
+}
+
+/* =================== 4 · VERTICAL THROW =================== */
+const FT={u:20,h:25,g:9.8,dir:'up',tc:0,play:false,last:0};
+const tower=$('tower'), fgr=$('fgr'), FG={};
+const FGP={L:50,R:430,y:{T:12,B:108},v:{T:136,B:232},a:{T:260,B:340}};
+{
+  FG.tgrid=mk('g',{},tower);
+  FG.ghU=mk('g',{},tower); FG.ghD=mk('g',{},tower);
+  FG.topL=mk('line',{stroke:'var(--muted)','stroke-dasharray':'3 3'},tower);
+  FG.topT=mk('text',{'font-size':11,fill:'var(--ink)','text-anchor':'end'},tower);
+  FG.ball=mk('circle',{r:8,fill:'var(--ink)'},tower);
+  FG.va=arrowEl(tower,'var(--vel)',2.6); FG.aa=arrowEl(tower,'var(--acc)',2.6);
+  FG.vT=mk('text',{'font-size':11,fill:'var(--vel)'},tower); FG.aT=mk('text',{'font-size':11,fill:'var(--acc)'},tower);
+  FG.gy=mk('g',{},fgr); FG.gv=mk('g',{},fgr); FG.ga=mk('g',{},fgr);
+  FG.yP=mk('path',{fill:'none',stroke:'var(--disp)','stroke-width':2.4},fgr);
+  FG.vP=mk('line',{stroke:'var(--vel)','stroke-width':2.4},fgr);
+  FG.aP=mk('line',{stroke:'var(--acc)','stroke-width':2.4},fgr);
+  FG.top=mk('line',{y1:FGP.y.T,y2:FGP.a.B,stroke:'var(--ink)','stroke-dasharray':'2 3',opacity:.6},fgr);
+  FG.topG=mk('text',{y:FGP.y.T+10,'font-size':10.5,fill:'var(--ink)'},fgr);
+  FG.cur=mk('line',{y1:FGP.y.T,y2:FGP.a.B,stroke:'var(--muted)','stroke-dasharray':'3 3'},fgr);
+  FG.dy=mk('circle',{r:4.5,fill:'var(--disp)'},fgr); FG.dv=mk('circle',{r:4.5,fill:'var(--vel)'},fgr); FG.da=mk('circle',{r:4.5,fill:'var(--acc)'},fgr);
+}
+function fModel(){const {u,h,g}=FT;const disc=u*u+2*g*h;let tg=disc>=0?(u+Math.sqrt(disc))/g:0;if(tg<1e-9)tg=0;
+  const yUp=t=>u*t-0.5*g*t*t, vUp=t=>u-g*t, ttop=u>0?u/g:null, hmax=h+(u>0?u*u/(2*g):0);return {tg,yUp,vUp,ttop,hmax};}
+let FS=null;
+function fShape(){
+  const M=fModel(), {u,h,g}=FT, sg=FT.dir==='up'?1:-1;
+  $('fuo').textContent=(u>0?'↑ ':u<0?'↓ ':'')+fmt(Math.abs(u),1)+' m/s'; $('fho').textContent=fmt(h,0)+' m';
+  press('#fg',String(g)); press('#fdir',FT.dir);
+  press('#fpre',String(FPRE.findIndex(p=>p.u===u&&p.h===h&&p.g===g)));
+  /* tower view */
+  const GY=352, TOPY=24, Hm=Math.max(M.hmax,5)*1.08, K=(GY-TOPY)/Hm, Yh=H=>GY-H*K, step=niceStep(Hm/5);
+  let s=`<line x1="0" x2="240" y1="${GY}" y2="${GY}" stroke="var(--muted)" stroke-width="2"/>`;
+  for(let H=step;H<=Hm+1e-9;H+=step) s+=`<line x1="4" x2="12" y1="${Yh(H)}" y2="${Yh(H)}" stroke="var(--muted)"/><text x="15" y="${Yh(H)+4}" font-size="10" fill="var(--muted)" class="mono">${fmt(H,0)}</text>`;
+  s+=`<text x="4" y="${GY+18}" font-size="10" fill="var(--muted)">height (m)</text>`;
+  if(h>0) s+=`<rect x="44" y="${Yh(h)}" width="58" height="${GY-Yh(h)}" fill="var(--ink)" fill-opacity=".08" stroke="var(--ink)" stroke-opacity=".4"/><line x1="102" x2="150" y1="${Yh(h)}" y2="${Yh(h)}" stroke="var(--ink)" stroke-opacity=".4"/>`;
+  s+=`<line x1="146" x2="146" y1="${Yh(M.hmax)}" y2="${GY}" stroke="var(--line)" stroke-dasharray="2 3"/>`;
+  s+=`<text x="118" y="${GY+18}" font-size="10" fill="var(--muted)" text-anchor="middle">rising</text><text x="174" y="${GY+18}" font-size="10" fill="var(--muted)" text-anchor="middle">falling</text>`;
+  FG.tgrid.innerHTML=s;
+  const dtS=M.tg>0?niceStep(M.tg/12):1; let gu='',gd='';
+  if(M.tg>0)for(let t=0;t<=M.tg+1e-9;t+=dtS){const H=h+M.yUp(t),up=M.vUp(t)>0;(up?(gu+=`<circle cx="128" cy="${Yh(H).toFixed(1)}" r="3.5" fill="var(--ink)" opacity=".3"/>`):(gd+=`<circle cx="164" cy="${Yh(H).toFixed(1)}" r="3.5" fill="var(--ink)" opacity=".3"/>`));}
+  FG.ghU.innerHTML=gu; FG.ghD.innerHTML=gd;
+  if(M.ttop!==null&&M.ttop<=M.tg){setA(FG.topL,{x1:110,x2:236,y1:Yh(M.hmax),y2:Yh(M.hmax),visibility:'visible'});setA(FG.topT,{x:236,y:Yh(M.hmax)-5,visibility:'visible'});FG.topT.textContent='top: v = 0';}
+  else{FG.topL.setAttribute('visibility','hidden');FG.topT.setAttribute('visibility','hidden');}
+  /* graphs */
+  const tmax=M.tg>0?M.tg:1, ts=niceStep(tmax/6);
+  const yv=[0,sg*M.yUp(tmax),M.ttop!==null?sg*M.yUp(M.ttop):0], yr=niceRange(Math.min(...yv),Math.max(...yv),3);
+  const vv=[sg*M.vUp(0),sg*M.vUp(tmax),0], vr=niceRange(Math.min(...vv),Math.max(...vv),3);
+  const GY_=grid(FG.gy,{L:FGP.L,R:FGP.R,T:FGP.y.T,B:FGP.y.B,x0:0,x1:tmax,y0:yr.lo,y1:yr.hi,ys:yr.s,xs:ts,xticks:false,ylab:'y (m)',ycol:'var(--disp)'});
+  const GV_=grid(FG.gv,{L:FGP.L,R:FGP.R,T:FGP.v.T,B:FGP.v.B,x0:0,x1:tmax,y0:vr.lo,y1:vr.hi,ys:vr.s,xs:ts,xticks:false,ylab:'v (m/s)',ycol:'var(--vel)'});
+  const GA_=grid(FG.ga,{L:FGP.L,R:FGP.R,T:FGP.a.T,B:FGP.a.B,x0:0,x1:tmax,y0:-12,y1:12,ys:6,xs:ts,xd:ts<1?1:0,ylab:'a (m/s²)',ycol:'var(--acc)',xtitle:'time (s)'});
+  let d='';for(let i=0;i<=100;i++){const t=tmax*i/100;d+=(i?'L':'M')+GY_.X(t).toFixed(1)+' '+GY_.Y(sg*M.yUp(Math.min(t,M.tg||0))).toFixed(1);}
+  FG.yP.setAttribute('d',M.tg>0?d:'');
+  setA(FG.vP,{x1:GV_.X(0),y1:GV_.Y(sg*M.vUp(0)),x2:GV_.X(tmax),y2:GV_.Y(sg*M.vUp(tmax)),visibility:M.tg>0?'visible':'hidden'});
+  setA(FG.aP,{x1:GA_.X(0),y1:GA_.Y(-sg*g),x2:GA_.X(tmax),y2:GA_.Y(-sg*g),visibility:M.tg>0?'visible':'hidden'});
+  if(M.ttop!==null&&M.ttop<=M.tg){const x=GY_.X(M.ttop);setA(FG.top,{x1:x,x2:x,visibility:'visible'});setA(FG.topG,{x:x+4,visibility:'visible'});FG.topG.textContent='top';}
+  else{FG.top.setAttribute('visibility','hidden');FG.topG.setAttribute('visibility','hidden');}
+  FS={M,sg,Yh,GY_,GV_,GA_,tmax};
+  /* readouts */
+  if(M.tg<=0){$('fkv').innerHTML='<dt>note</dt><dd>already on the ground</dd>';}
+  else $('fkv').innerHTML=`<dt>acceleration (whole flight)</dt><dd>${sfmt(-sg*g,1)} m/s²</dd>`+(M.ttop!==null?`<dt>time to the top</dt><dd>${fmt(M.ttop,2)} s</dd><dt>rises above launch</dt><dd>${fmt(M.hmax-h,2)} m</dd>`:'')+
+    `<dt>highest point above ground</dt><dd>${fmt(M.hmax,2)} m</dd><dt>time to reach the ground</dt><dd>${fmt(M.tg,2)} s</dd><dt>speed on hitting ground</dt><dd>${fmt(Math.abs(M.vUp(M.tg)),2)} m/s</dd><dt>y, v, a now</dt><dd id="fnow"></dd>`;
+  fCursor();
+}
+function fCursor(){
+  if(!FS) return; const {M,sg,Yh,GY_,GV_,GA_,tmax}=FS, t=Math.min(FT.tc,M.tg||0), H=FT.h+M.yUp(t), v=M.vUp(t);
+  $('ft').value=Math.round(FT.tc/(tmax)*1000); $('fto').textContent=fmt(t,2)+' s';
+  setA(FG.ball,{cx:146,cy:Yh(H).toFixed(1)});
+  const by=Yh(H); FG.va.set(146,by,146,by-v*2.6,8); FG.aa.set(178,by-14,178,by+22,8);
+  setA(FG.vT,{x:146,y:v>=0?Math.min(by-v*2.6,by-9)-5:Math.max(by-v*2.6,by+9)+13,'text-anchor':'middle'}); FG.vT.textContent=Math.abs(v)>0.3?'v':'';
+  setA(FG.aT,{x:184,y:by+20}); FG.aT.textContent='a';
+  const X=GY_.X(Math.min(FT.tc,tmax)); setA(FG.cur,{x1:X,x2:X});
+  setA(FG.dy,{cx:X,cy:GY_.Y(sg*M.yUp(t))}); setA(FG.dv,{cx:X,cy:GV_.Y(sg*v)}); setA(FG.da,{cx:X,cy:GA_.Y(-sg*FT.g)});
+  const n=$('fnow'); if(n) n.textContent=`${sfmt(sg*M.yUp(t),1)} m, ${sfmt(sg*v,1)} m/s, ${sfmt(-sg*FT.g,1)} m/s²`;
+  const up=FT.dir==='up';
+  let c;
+  if(M.tg<=0) c='Give it some height or an upward throw.';
+  else if(Math.abs(v)<0.25&&M.ttop!==null) c='At the top: v = 0 for an instant, yet a is still g downward. That is exactly why the ball does not stay up there: its velocity keeps changing, from up to down.';
+  else if(v>0) c=`Rising: v points up, a points down, so the ball slows. With ${up?'up':'down'} as positive, v is ${up?'+':'−'} and a is ${up?'−':'+'}: opposite signs mean slowing.`;
+  else c=`Falling: v and a both point down, so the ball speeds up. With ${up?'up':'down'} as positive, both are ${up?'negative':'positive'}: same signs mean speeding up.`;
+  $('fcap').innerHTML=c+' The v–t line keeps one slope from launch to landing: −g if up is positive, +g if down is positive.';
+}
+$('fpre').innerHTML=FPRE.map((p,i)=>`<button class="chip" data-k="${i}">${p.l}</button>`).join('');
+$('fpre').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;const p=FPRE[+c.dataset.k];Object.assign(FT,{u:p.u,h:p.h,g:p.g,tc:0});$('fu').value=p.u;$('fh').value=p.h;fShape();});
+$('fu').addEventListener('input',e=>{FT.u=+e.target.value;FT.tc=0;fShape();});
+$('fh').addEventListener('input',e=>{FT.h=+e.target.value;FT.tc=0;fShape();});
+$('fg').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c){FT.g=+c.dataset.k;FT.tc=Math.min(FT.tc,fModel().tg);fShape();}});
+$('fdir').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c){FT.dir=c.dataset.k;store('dir',FT.dir);fShape();}});
+{const d=load('dir');if(d==='up'||d==='down')FT.dir=d;}
+$('ft').addEventListener('input',e=>{FT.tc=+e.target.value/1000*FS.tmax;fCursor();});
+function loopF(ts){
+  if(!FT.play) return;
+  if(!vis('throw-sec')){FT.last=0;requestAnimationFrame(loopF);return;}
+  const dt=FT.last?Math.min(0.05,(ts-FT.last)/1000):0;FT.last=ts;FT.tc+=dt;
+  if(FT.tc>=FS.M.tg){FT.tc=FS.M.tg;FT.play=false;$('fplay').textContent='Play';fCursor();return;}
+  fCursor();requestAnimationFrame(loopF);
+}
+$('fplay').addEventListener('click',()=>{FT.play=!FT.play;$('fplay').textContent=FT.play?'Pause':'Play';if(FT.play){if(FT.tc>=FS.M.tg-1e-6)FT.tc=0;FT.last=0;requestAnimationFrame(loopF);}});
+{
+  /* NCERT Ex 2.3 (g = 10) and Exercise 2.6 (g = 9.8) */
+  const g1=10,u1=20,h1=25, t1=(u1+Math.sqrt(u1*u1+2*g1*h1))/g1, hr=u1*u1/(2*g1);
+  const g2=9.8,u2=29.4, H2=u2*u2/(2*g2), T2=2*u2/g2;
+  QZ.q4=[
+   {q:`<p>A ball is thrown up at ${u1} m s⁻¹ from a roof ${h1} m high (g = ${g1} m s⁻²; NCERT Example 2.3). How long until it hits the ground?</p>`,
+    o:[`${fmt(u1/g1,0)} s`,`${fmt(Math.sqrt(2*h1/g1),2)} s`,`${fmt(2*u1/g1,0)} s`,`${fmt(t1,0)} s`],a:3,
+    why:`One equation for the whole flight, with up positive and the ground at y = −${h1} m from the launch: −${h1} = ${u1}t − ½·${g1}t², so 5t² − 20t − 25 = 0, t = ${fmt(t1,0)} s. No need to split at the top: a is −g throughout. (It rises ${fmt(hr,0)} m first; ${fmt(2*u1/g1,0)} s only brings it back to roof level.)`},
+   {q:`<p>A ball is thrown straight up at ${u2} m s⁻¹ (g = ${g2} m s⁻²; NCERT Exercise 2.6). How high does it rise, and when does it come back to the hand?</p>`,
+    o:[`${fmt(H2,1)} m, ${fmt(T2,0)} s`,`${fmt(H2*2,1)} m, ${fmt(T2/2,0)} s`,`${fmt(H2,1)} m, ${fmt(T2/2,0)} s`,`${fmt(u2*u2/g2,1)} m, ${fmt(T2,0)} s`],a:0,
+    why:`At the top v = 0: 0 = ${u2}² − 2·${g2}·H gives H = ${fmt(H2,1)} m. Up takes u/g = ${fmt(T2/2,0)} s and, by symmetry, down takes the same, so ${fmt(T2,0)} s in all.`},
+   {q:'<p>At the highest point of a vertical throw, what are the velocity and the acceleration?</p>',
+    o:['v = 0, a = 0','v = 0, a = g downward','v = 0, a = g upward','v is greatest, a = 0'],a:1,
+    why:'Gravity does not switch off at the top. v is zero for an instant only because it is passing from upward to downward, and that change is the acceleration, g downward. If a were 0 too, the ball would stay up.'}
+  ];
+}
+
+/* =================== 5 · REACTION AND STOPPING =================== */
+const RU={state:'idle',t0:0,d:0,timer:null,my:null}, RPX=6, RTOP=24, FING=204;
+const ruler=$('ruler'), RG={};
+{
+  RG.friend=mk('rect',{x:70,y:4,width:60,height:16,rx:7,fill:'var(--muted)','fill-opacity':.35},ruler);
+  mk('text',{x:100,y:15,'font-size':9.5,fill:'var(--ink)','text-anchor':'middle'},ruler).textContent='friend';
+  RG.r=mk('g',{},ruler);
+  mk('rect',{x:86,y:RTOP,width:28,height:RULER_CM*RPX,fill:'var(--pe)','fill-opacity':.22,stroke:'var(--pe)'},RG.r);
+  for(let c=0;c<=RULER_CM;c++){const y=RTOP+(RULER_CM-c)*RPX;mk('line',{x1:86,x2:c%5?92:98,y1:y,y2:y,stroke:'var(--ink)','stroke-width':c%5?0.7:1.2},RG.r);
+    if(c%5===0&&c>0) mk('text',{x:101,y:y+3.5,'font-size':9.5,fill:'var(--ink)',class:'mono'},RG.r).textContent=c;}
+  mk('rect',{x:58,y:FING-6,width:28,height:12,rx:6,fill:'var(--cb)','fill-opacity':.75},ruler);
+  mk('rect',{x:114,y:FING-6,width:28,height:12,rx:6,fill:'var(--cb)','fill-opacity':.75},ruler);
+  mk('text',{x:100,y:FING+24,'font-size':10,fill:'var(--muted)','text-anchor':'middle'},ruler).textContent='your fingers';
+  RG.read=mk('text',{x:146,y:FING+4,'font-size':11,fill:'var(--ink)',class:'mono'},ruler);
+}
+const rT=d_cm=>Math.sqrt(2*d_cm/100/G);
+function rDraw(){RG.r.setAttribute('transform',`translate(0 ${(RU.d*RPX).toFixed(1)})`);RG.read.textContent=RU.d>0?fmt(RU.d,1)+' cm':'';}
+function rKV(d){ $('rkv').innerHTML=`<dt>fall d</dt><dd>${fmt(d,1)} cm</dd><dt>reaction time</dt><dd>${fmt(rT(d),3)} s</dd>`; }
+function rFall(ts){
+  if(RU.state!=='fall') return;
+  const t=(ts-RU.t0)/1000; RU.d=Math.max(0,0.5*G*t*t*100);
+  if(RU.d>=RULER_CM){RU.d=RULER_CM+12;RU.state='idle';rDraw();$('rmsg').textContent='Missed: the whole ruler fell through. Your time was longer than '+fmt(rT(RULER_CM),2)+' s. Try again.';$('rcatch').disabled=true;$('rdrop').disabled=false;return;}
+  rDraw(); requestAnimationFrame(rFall);
+}
+function rCatch(){
+  if(RU.state==='wait'){clearTimeout(RU.timer);RU.state='idle';$('rmsg').textContent='Too early: the ruler had not moved yet. Wait until you see it fall.';$('rcatch').disabled=true;$('rdrop').disabled=false;return;}
+  if(RU.state!=='fall') return;
+  RU.state='idle'; const t=(performance.now()-RU.t0)/1000; RU.d=Math.min(RULER_CM,0.5*G*t*t*100); rDraw();
+  RU.my=rT(RU.d); store('rt',RU.my.toFixed(3)); $('rd').value=Math.max(1,Math.min(30,Math.round(RU.d*2)/2)); $('rdo').textContent=fmt(+$('rd').value,1)+' cm → '+fmt(rT(+$('rd').value),3)+' s';
+  $('rmsg').innerHTML=`Caught after ${fmt(RU.d,1)} cm. Your reaction time: <b>${fmt(RU.my,3)} s</b>.`; rKV(RU.d);
+  $('rcatch').disabled=true;$('rdrop').disabled=false;
+}
+$('rdrop').addEventListener('click',()=>{RU.d=0;rDraw();RU.state='wait';$('rmsg').textContent='Get ready… watch the ruler.';$('rcatch').disabled=false;$('rdrop').disabled=true;
+  RU.timer=setTimeout(()=>{RU.state='fall';RU.t0=performance.now();requestAnimationFrame(rFall);},1000+Math.random()*2000);});
+$('rcatch').addEventListener('click',rCatch);
+ruler.addEventListener('pointerdown',e=>{if(RU.state!=='idle'){e.preventDefault();rCatch();}});
+$('rd').addEventListener('input',e=>{const d=+e.target.value;$('rdo').textContent=fmt(d,1)+' cm → '+fmt(rT(d),3)+' s';rKV(d);RU.d=d;rDraw();});
+/* stopping */
+const BFIT=(()=>{let n=0,m=0;BRAKE_DATA.forEach(([v,d])=>{n+=d*v*v;m+=v**4;});return m/(2*n);})(); // least squares d = v²/(2b)
+const STP={v:20,tr:0.21,b:Math.round(BFIT*10)/10};
+$('sb').value=STP.b;
+const stopv=$('stopv'), sroad=$('sroad'), sdv=$('sdv'), SG2={};
+{
+  SG2.grid=mk('g',{},stopv);
+  SG2.rr=mk('polygon',{fill:'var(--disp)','fill-opacity':.5},stopv); SG2.bb=mk('polygon',{fill:'var(--disp)','fill-opacity':.2},stopv);
+  SG2.line=mk('path',{fill:'none',stroke:'var(--vel)','stroke-width':2.6,'stroke-linejoin':'round'},stopv);
+  SG2.rT=mk('text',{'font-size':11,fill:'var(--ink)','text-anchor':'middle'},stopv); SG2.bT=mk('text',{'font-size':11,fill:'var(--ink)','text-anchor':'middle'},stopv);
+  SG2.road=mk('g',{},sroad);
+  SG2.dg=mk('g',{},sdv);
+  SG2.cB=mk('path',{fill:'none',stroke:'var(--disp)','stroke-width':2.4},sdv); SG2.cT=mk('path',{fill:'none',stroke:'var(--ink)','stroke-width':1.6,'stroke-dasharray':'6 4'},sdv);
+  SG2.pts=mk('g',{},sdv); SG2.mk=mk('line',{stroke:'var(--muted)','stroke-dasharray':'3 3'},sdv);
+  SG2.m1=mk('circle',{r:5,fill:'var(--disp)'},sdv); SG2.m2=mk('circle',{r:4,fill:'var(--ink)'},sdv);
+}
+function drawStop(){
+  const {v,tr,b}=STP, tb=v/b, dr=v*tr, db=v*v/(2*b), tot=dr+db;
+  $('svo').textContent=fmt(v,1)+' m/s = '+fmt(v*3.6,0)+' km/h'; $('stro').textContent=fmt(tr,2)+' s'; $('sbo').textContent=fmt(b,1)+' m/s²';
+  const tm=(tr+tb)*1.12, r=niceRange(0,v*1.1,4);
+  const {X,Y}=grid(SG2.grid,{L:50,R:584,T:14,B:180,x0:0,x1:tm,y0:0,y1:r.hi,ys:r.s,xs:niceStep(tm/7),xd:niceStep(tm/7)<1?1:0,ylab:'v (m/s)',ycol:'var(--vel)',xtitle:'time since the danger appears (s)'});
+  SG2.rr.setAttribute('points',`${X(0)},${Y(0)} ${X(0)},${Y(v)} ${X(tr)},${Y(v)} ${X(tr)},${Y(0)}`);
+  SG2.bb.setAttribute('points',`${X(tr)},${Y(0)} ${X(tr)},${Y(v)} ${X(tr+tb)},${Y(0)}`);
+  SG2.line.setAttribute('d',`M${X(0)} ${Y(v)}L${X(tr)} ${Y(v)}L${X(tr+tb)} ${Y(0)}L${X(tm)} ${Y(0)}`);
+  const rw=X(tr)-X(0); setA(SG2.rT,{x:X(tr/2),y:Y(v/2)+4,visibility:rw>78?'visible':'hidden'}); SG2.rT.textContent='reaction';
+  setA(SG2.bT,{x:X(tr+tb/3),y:Y(v/3)+4}); SG2.bT.textContent='braking';
+  /* road to scale */
+  const D=Math.max(tot*1.08,10), RX=d=>20+d/D*560;
+  let s=`<line x1="10" x2="590" y1="40" y2="40" stroke="var(--muted)" stroke-width="2"/>`;
+  s+=`<rect x="${RX(0)}" y="32" width="${RX(dr)-RX(0)}" height="8" fill="var(--disp)" fill-opacity=".55"/><rect x="${RX(dr)}" y="32" width="${RX(tot)-RX(dr)}" height="8" fill="var(--disp)" fill-opacity=".2" stroke="var(--disp)" stroke-opacity=".5"/>`;
+  s+=`<text x="${RX(0)}" y="22" font-size="13" fill="var(--ink)">reaction ${fmt(dr,1)} m</text><text x="${Math.min(RX(dr),560)}" y="60" font-size="13" fill="var(--ink)">braking ${fmt(db,1)} m</text>`;
+  s+=`<line x1="${RX(tot)}" x2="${RX(tot)}" y1="24" y2="46" stroke="var(--ink)" stroke-width="2"/><text x="${RX(tot)}" y="74" font-size="13" fill="var(--ink)" text-anchor="end" font-weight="600">stops at ${fmt(tot,1)} m</text>`;
+  SG2.road.innerHTML=s;
+  /* d vs v */
+  const VM=36, dmax=niceRange(0,Math.max(VM*tr+VM*VM/(2*b),60),4);
+  const P=grid(SG2.dg,{L:52,R:584,T:12,B:206,x0:0,x1:VM,y0:0,y1:dmax.hi,ys:dmax.s,xs:5,ylab:'distance (m)',xtitle:'speed u (m/s)'});
+  let c1='',c2='';for(let i=0;i<=72;i++){const w=VM*i/72;c1+=(i?'L':'M')+P.X(w).toFixed(1)+' '+P.Y(w*w/(2*b)).toFixed(1);c2+=(i?'L':'M')+P.X(w).toFixed(1)+' '+P.Y(w*tr+w*w/(2*b)).toFixed(1);}
+  SG2.cB.setAttribute('d',c1); SG2.cT.setAttribute('d',c2);
+  SG2.pts.innerHTML=BRAKE_DATA.map(([w,d])=>`<circle cx="${P.X(w)}" cy="${P.Y(d)}" r="4.5" fill="none" stroke="var(--ink)" stroke-width="2"/>`).join('');
+  setA(SG2.mk,{x1:P.X(v),x2:P.X(v),y1:12,y2:206}); setA(SG2.m1,{cx:P.X(v),cy:P.Y(db)}); setA(SG2.m2,{cx:P.X(v),cy:P.Y(tot)});
+  $('stkv').innerHTML=`<dt>reaction distance ut<sub>r</sub></dt><dd>${fmt(dr,1)} m</dd><dt>braking distance u²/2b</dt><dd>${fmt(db,1)} m</dd><dt>total stopping distance</dt><dd>${fmt(tot,1)} m</dd><dt>time to stop</dt><dd>${fmt(tr+tb,2)} s</dd>`;
+  $('stcap').innerHTML=`The open circles are measured braking distances for one car: ${BRAKE_DATA.map(([w,d])=>d+' m at '+w+' m/s').join(', ')}. The single deceleration that fits them best is about ${fmt(BFIT,1)} m/s² (the starting value of the slider), and they lie close to its v² curve.`;
+}
+$('sv').addEventListener('input',e=>{STP.v=+e.target.value;drawStop();});
+$('str').addEventListener('input',e=>{STP.tr=+e.target.value;drawStop();});
+$('sb').addEventListener('input',e=>{STP.b=+e.target.value;drawStop();});
+$('suse').addEventListener('click',()=>{const t=RU.my!=null?RU.my:rT(+$('rd').value);STP.tr=Math.min(1.5,Math.round(t*100)/100);$('str').value=STP.tr;drawStop();});
+{const s=parseFloat(load('rt'));if(s>0&&s<2)RU.my=s;}
+{
+  const d=21, t=rT(d);
+  const v=20,tr=0.5,b=5, tot=v*tr+v*v/(2*b);
+  QZ.q5=[
+   {q:`<p>In the ruler test the ruler falls ${d} cm before it is caught (g = 9.8 m s⁻²; NCERT Example 2.7). Reaction time?</p>`,
+    o:[`${fmt(t,2)} s`,`${fmt(2*d/100/G,3)} s`,`${fmt(Math.sqrt(d/100/G),2)} s`,`${fmt(d/100/G,3)} s`],a:0,
+    why:`Released from rest: d = ½gt², so t = √(2d/g) = √(2 × 0.${d} / 9.8) = ${fmt(t,2)} s.`},
+   {q:'<p>With the same brakes, a car goes twice as fast. Its braking distance (not counting reaction) becomes…</p>',
+    o:['the same','2 times','4 times','8 times'],a:2,
+    why:'s = u²/2b. Doubling u quadruples u². On the v–t picture: twice as tall and, with the same slope, twice as long, so the triangle has 4 times the area.'},
+   {q:`<p>A car at ${v} m/s; the driver’s reaction time is ${tr} s; the brakes give ${b} m/s². Total stopping distance?</p>`,
+    o:[`${fmt(v*v/(2*b),0)} m`,`${fmt(tot,0)} m`,`${fmt(v*tr,0)} m`,`${fmt(v*v/b+v*tr,0)} m`],a:1,
+    why:`During the reaction the car still moves at full speed: ${v} × ${tr} = ${fmt(v*tr,0)} m. Then braking: ${v}²/(2 × ${b}) = ${fmt(v*v/(2*b),0)} m. Total ${fmt(tot,0)} m: the rectangle plus the triangle on the v–t graph.`}
+  ];
+}
+
+/* =================== 6 · RELATIVE VELOCITY =================== */
+const RV={va:20,vb:10,d:50,tc:0,frame:'g',play:false,last:0,T:20};
+const vroad=$('vroad'), vxt=$('vxt'), VG={};
+{
+  VG.ticks=mk('g',{},vroad);
+  const car=(col,lab)=>{const g=mk('g',{},vroad);mk('rect',{x:-17,y:-9,width:34,height:15,rx:4,fill:col},g);mk('circle',{cx:-9,cy:7,r:4,fill:'var(--surface)',stroke:col,'stroke-width':2},g);mk('circle',{cx:9,cy:7,r:4,fill:'var(--surface)',stroke:col,'stroke-width':2},g);
+    mk('text',{x:0,y:2,'font-size':11,'font-weight':700,fill:'var(--surface)','text-anchor':'middle'},g).textContent=lab;return g;};
+  VG.A=car('var(--ca)','A'); VG.B=car('var(--cb)','B');
+  VG.vA=arrowEl(vroad,'var(--vel)',2.4); VG.vB=arrowEl(vroad,'var(--vel)',2.4);
+  VG.tA=mk('text',{'font-size':10.5,fill:'var(--vel)',class:'mono'},vroad); VG.tB=mk('text',{'font-size':10.5,fill:'var(--vel)',class:'mono'},vroad);
+  VG.grid=mk('g',{},vxt);
+  VG.lA=mk('line',{stroke:'var(--ca)','stroke-width':2.6},vxt); VG.lB=mk('line',{stroke:'var(--cb)','stroke-width':2.6},vxt);
+  VG.gap=mk('line',{stroke:'var(--muted)','stroke-width':3,opacity:.7},vxt);
+  VG.gapL=mk('line',{stroke:'var(--muted)','stroke-width':1},vxt);
+  VG.gapT=mk('text',{'font-size':11,fill:'var(--muted)'},vxt);
+  VG.meet=mk('circle',{r:6,fill:'none',stroke:'var(--ink)','stroke-width':2},vxt);
+  VG.cur=mk('line',{y1:12,y2:216,stroke:'var(--muted)','stroke-dasharray':'3 3'},vxt);
+  VG.dA=mk('circle',{r:4.5,fill:'var(--ca)'},vxt); VG.dB=mk('circle',{r:4.5,fill:'var(--cb)'},vxt);
+}
+let VS=null;
+function vShape(){
+  const {va,vb,d,T}=RV, A=RV.frame==='A';
+  $('vvao').textContent=sfmt(va,0)+' m/s'; $('vvbo').textContent=sfmt(vb,0)+' m/s'; $('vdo').textContent=sfmt(d,0)+' m';
+  press('#vframe',RV.frame); press('#vpre',String(VPRE.findIndex(p=>p.va===va&&p.vb===vb&&p.d===d)));
+  const xa=t=>A?0:va*t, xb=t=>A?d+(vb-va)*t:d+vb*t;
+  const vals=[xa(0),xa(T),xb(0),xb(T)], r=niceRange(Math.min(...vals),Math.max(...vals),5);
+  const P=grid(VG.grid,{L:58,R:584,T:12,B:216,x0:0,x1:T,y0:r.lo,y1:r.hi,ys:r.s,xs:2,ylab:A?'x seen from A (m)':'x (m)',xtitle:'time (s)'});
+  setA(VG.lA,{x1:P.X(0),y1:P.Y(xa(0)),x2:P.X(T),y2:P.Y(xa(T))}); setA(VG.lB,{x1:P.X(0),y1:P.Y(xb(0)),x2:P.X(T),y2:P.Y(xb(T))});
+  const tm=(va!==vb)?d/(va-vb):null;
+  if(tm!==null&&tm>0&&tm<=T){setA(VG.meet,{cx:P.X(tm),cy:P.Y(xa(tm)),visibility:'visible'});}else VG.meet.setAttribute('visibility','hidden');
+  /* road range: use the same position range (ground) or a window round A */
+  VS={P,xa,xb,r,tm};
+  vCursor();
+}
+function vCursor(){
+  const {P,xa,xb,r,tm}=VS, t=RV.tc, A=RV.frame==='A', XA=xa(t), XB=xb(t);
+  $('vt').value=t; $('vto').textContent=fmt(t,2)+' s';
+  const X=P.X(t); setA(VG.cur,{x1:X,x2:X}); setA(VG.dA,{cx:X,cy:P.Y(XA)}); setA(VG.dB,{cx:X,cy:P.Y(XB)});
+  setA(VG.gap,{x1:X,x2:X,y1:P.Y(XA),y2:P.Y(XB)});
+  /* gap label: beside the gap bar where no line passes; otherwise above both lines with a leader */
+  const gp=XB-XA, my=(P.Y(XA)+P.Y(XB))/2, TW=66, x2t=x=>RV.T*(x-P.X(0))/(P.X(RV.T)-P.X(0));
+  const clear=(x0,x1,y)=>{for(let k=0;k<=8;k++){const xx=x0+(x1-x0)*k/8,tt=x2t(xx);if(tt<0||tt>RV.T||xx<58||xx>584)return false;if(Math.abs(P.Y(xa(tt))-y)<10||Math.abs(P.Y(xb(tt))-y)<10)return false;}return true;};
+  let gx,gy=my,anc='start',lead=false;
+  if(clear(X+6,X+6+TW,my)){gx=X+6;}
+  else if(clear(X-6-TW,X-6,my)){gx=X-6;anc='end';}
+  else{gy=Math.max(24,Math.min(P.Y(XA),P.Y(XB))-18);lead=true;if(X+6+TW>584){gx=X-6;anc='end';}else gx=X+6;}
+  setA(VG.gapT,{x:gx,y:gy+4,'text-anchor':anc}); VG.gapT.textContent='gap '+sfmt(gp,0)+' m';
+  if(lead) setA(VG.gapL,{x1:X,y1:Math.min(P.Y(XA),P.Y(XB)),x2:X,y2:gy+6,visibility:'visible','stroke-dasharray':'2 2'}); else VG.gapL.setAttribute('visibility','hidden');
+  /* road */
+  const RX=x=>20+(x-r.lo)/(r.hi-r.lo)*560, shift=A?RV.va*t:0, st=niceStep((r.hi-r.lo)/6);
+  let s=`<line x1="0" x2="600" y1="56" y2="56" stroke="var(--line)" stroke-dasharray="10 8"/><line x1="0" x2="600" y1="96" y2="96" stroke="var(--muted)" stroke-width="2"/>`;
+  /* ground marks: in A's frame they slide backwards */
+  const g0=r.lo-shift, k0=Math.floor((r.lo+shift)/st)-1;
+  for(let k=k0;k<=k0+Math.ceil((r.hi-r.lo)/st)+2;k++){const gx=k*st, sx=RX(gx-shift);if(sx<10||sx>590)continue;
+    s+=`<line x1="${sx.toFixed(1)}" x2="${sx.toFixed(1)}" y1="96" y2="102" stroke="var(--muted)"/><text x="${sx.toFixed(1)}" y="111" font-size="9.5" fill="var(--muted)" text-anchor="middle" class="mono">${fmt(gx,0)}</text>`;
+    s+=`<rect x="${(sx-2).toFixed(1)}" y="12" width="4" height="10" fill="var(--muted)" opacity=".35"/>`;}
+  VG.ticks.innerHTML=s;
+  const ax=RX(XA), bx=RX(XB);
+  VG.A.setAttribute('transform',`translate(${ax.toFixed(1)} 44)`); VG.B.setAttribute('transform',`translate(${bx.toFixed(1)} 82)`);
+  const sa=A?0:RV.va, sb=A?RV.vb-RV.va:RV.vb;
+  VG.vA.set(ax,28,ax+sa*3,28,7); VG.vB.set(bx,66,bx+sb*3,66,7);
+  setA(VG.tA,{x:ax+(sa>=0?sa*3+5:sa*3-5),y:31,'text-anchor':sa>=0?'start':'end'}); VG.tA.textContent=sfmt(sa,0);
+  setA(VG.tB,{x:bx+(sb>=0?sb*3+5:sb*3-5),y:69,'text-anchor':sb>=0?'start':'end'}); VG.tB.textContent=sfmt(sb,0);
+  const vba=RV.vb-RV.va, gap=RV.d+vba*t;
+  $('vkv').innerHTML=`<dt>v<sub>BA</sub> = v<sub>B</sub> − v<sub>A</sub></dt><dd>${sfmt(vba,0)} m/s</dd><dt>v<sub>AB</sub> = v<sub>A</sub> − v<sub>B</sub></dt><dd>${sfmt(-vba,0)} m/s</dd><dt>gap now, x<sub>B</sub> − x<sub>A</sub></dt><dd>${sfmt(gap,1)} m</dd><dt>they are level at</dt><dd>${tm!==null&&tm>0?fmt(tm,2)+' s':'never (after t = 0)'}</dd>`;
+  let c;
+  if(vba===0) c='Same velocity: from A, car B just sits there and the gap never changes. The two x–t lines are parallel.';
+  else if(RV.va===0||RV.vb===0) c=`One car is at rest, so |v<sub>BA</sub>| is just the other car’s speed, ${Math.abs(vba)} m/s.`;
+  else if(RV.va*RV.vb<0) c=`${RV.d*vba<0?'Moving towards each other':'Moving apart, in opposite directions'}: their speeds add, |v<sub>BA</sub>| = ${Math.abs(RV.va)} + ${Math.abs(RV.vb)} = ${Math.abs(vba)} m/s.`;
+  else c=`Same direction: the speeds subtract, |v<sub>BA</sub>| = ${Math.abs(vba)} m/s. That is why overtaking on a highway is slow.`;
+  if(A) c+=' Riding in A: A is still, the roadside marks slide backwards at '+sfmt(-RV.va,0)+' m/s, and B moves at v<sub>BA</sub>.';
+  $('vcap').innerHTML=c;
+}
+$('vpre').innerHTML=VPRE.map((p,i)=>`<button class="chip" data-k="${i}">${p.l}</button>`).join('');
+$('vpre').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;const p=VPRE[+c.dataset.k];Object.assign(RV,{va:p.va,vb:p.vb,d:p.d});$('vva').value=p.va;$('vvb').value=p.vb;$('vd').value=p.d;vShape();});
+$('vframe').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c){RV.frame=c.dataset.k;vShape();}});
+$('vva').addEventListener('input',e=>{RV.va=+e.target.value;vShape();});
+$('vvb').addEventListener('input',e=>{RV.vb=+e.target.value;vShape();});
+$('vd').addEventListener('input',e=>{RV.d=+e.target.value;vShape();});
+$('vt').addEventListener('input',e=>{RV.tc=+e.target.value;vCursor();});
+function loopV(ts){
+  if(!RV.play) return;
+  if(!vis('rel-sec')){RV.last=0;requestAnimationFrame(loopV);return;}
+  const dt=RV.last?Math.min(0.05,(ts-RV.last)/1000):0;RV.last=ts;RV.tc+=dt*2; // 2× speed
+  if(RV.tc>=RV.T){RV.tc=RV.T;RV.play=false;$('vplay').textContent='Play';vCursor();return;}
+  vCursor();requestAnimationFrame(loopV);
+}
+$('vplay').addEventListener('click',()=>{RV.play=!RV.play;$('vplay').textContent=RV.play?'Pause':'Play';if(RV.play){if(RV.tc>=RV.T-1e-6)RV.tc=0;RV.last=0;requestAnimationFrame(loopV);}});
+{
+  /* NCERT Exercise 2.14 */
+  const van=30/3.6, thief=192/3.6, muzzle=150, ground=muzzle+van, rel=ground-thief;
+  const va=20,vb=-15,D=70, tm=D/(va-vb);
+  QZ.q6=[
+   {q:`<p>A police van at 30 km/h fires a bullet (muzzle speed ${muzzle} m/s, relative to the van) at a thief’s car speeding away in the same direction at 192 km/h (NCERT Exercise 2.14). With what speed does the bullet hit the car?</p>`,
+    o:[`${fmt(muzzle,0)} m/s`,`${fmt(rel,0)} m/s`,`${fmt(muzzle-thief,1)} m/s`,`${fmt(muzzle+thief,1)} m/s`],a:1,
+    why:`Bullet relative to the ground: ${muzzle} + ${fmt(van,2)} = ${fmt(ground,2)} m/s (30 km/h = ${fmt(van,2)} m/s). Thief: 192 km/h = ${fmt(thief,2)} m/s. What damages the car is the bullet’s velocity relative to it: ${fmt(ground,2)} − ${fmt(thief,2)} = ${fmt(rel,0)} m/s.`},
+   {q:`<p>Cars A and B are ${D} m apart and drive towards each other at ${va} m/s and ${-vb} m/s. When do they meet?</p>`,
+    o:[`${fmt(D/(va+vb),0)} s`,`${fmt(tm,0)} s`,`${fmt(D/va,1)} s`,`${fmt(D/-vb,2)} s`],a:1,
+    why:`From A, B approaches at |v<sub>BA</sub>| = ${-vb} + ${va} = ${va-vb} m/s, so the ${D} m gap closes in ${D}/${va-vb} = ${fmt(tm,0)} s. Try “Head-on” above and watch the lines cross.`}
+  ];
+}
+
+/* =================== INIT =================== */
+labShape(); drawSec(); drawTrap(); fShape(); rKV(21); rDraw(); $('rdo').textContent='21.0 cm → '+fmt(rT(21),3)+' s'; drawStop(); vShape();
+['q1','q2','q3','q4','q5','q6'].forEach(renderQuiz);
+</script>
+</body>
+</html>

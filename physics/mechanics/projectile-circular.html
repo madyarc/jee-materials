@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Projectiles and Circular Motion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&family=Noto+Sans+Symbols+2&text=%E2%86%90%E2%86%91%E2%86%92%E2%86%93%E2%86%94%E2%86%97%E2%87%8C%E2%87%92%E2%87%94%E2%88%82%E2%88%88%E2%88%92%E2%88%93%E2%88%9A%E2%88%9D%E2%88%9E%E2%88%AB%E2%89%88%E2%89%A0%E2%89%A1%E2%89%A4%E2%89%A5%E2%89%AA%E2%89%AB%E2%8A%95%E2%8A%97%E2%8A%99%E2%8A%A5%E2%96%B2%E2%96%B6%E2%97%80%E2%97%8B%E2%97%8F%E2%9C%93%E2%9C%97%E2%9D%9A%E2%9F%82%E2%9F%A8%E2%9F%A9&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) projectile launcher: path, velocity components at equal time steps, shadows on the axes, range-vs-angle plot
+   (2) projectile on an incline: tilted axes, g sin α and g cos α, range-vs-β plot
+   (3) two projectiles: ground frame vs A's frame (straight-line relative motion), collide-or-miss prediction
+   (4) uniform circular motion: tangent velocity, Δv construction, centripetal acceleration; tangential part when speed changes */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --acc:#b0377a; --disp:#1f8f87; --ke:#0f8a4f; --pe:#8a6d1f; --va:#2f7d4a; --vb:#8b5a2b;
+  --f-display:"Bricolage Grotesque","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","Noto Sans Math","Noto Sans Symbols 2",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a; --va:#6fcf8f; --vb:#d29a62; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a; --va:#6fcf8f; --vb:#d29a62; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:8.5em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:8ch;text-align:right;white-space:nowrap}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+a{color:var(--accent)}
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+.drag{cursor:pointer;touch-action:none}
+.eq{font:500 13.5px var(--f-mono);overflow-x:auto;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Projectiles and Circular Motion</h1>
+    <p class="lede">Two curved paths, each built from straight-line ideas. A thrown ball is a steady sideways drift and a free fall happening at the same time. A ball whirled on a string keeps its speed, yet it is accelerating all the time, because the direction of its velocity keeps turning toward the centre. For the vector tools used here, see <a href="vectors-relative-motion.html">Vectors and Relative Motion</a>.</p>
+  </header>
+
+  <!-- 1 · projectile -->
+  <section class="stack">
+    <div>
+      <h2>1 · Launch a projectile <span class="hw">no air resistance</span></h2>
+      <p class="lede">Set the launch speed, angle and height, then launch. Dots mark the ball at equal time steps. At each one, the short blue arrows are the two parts of its velocity: the horizontal part never changes, the vertical part shrinks, flips, and grows.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="ppre" role="group" aria-label="Presets"></div>
+        <div class="svgbox"><svg id="proj" viewBox="0 0 640 420" role="img" aria-label="Projectile path with velocity components" style="min-width:440px"></svg></div>
+        <div class="legend"><span><i style="background:var(--vel)"></i>velocity v (at the ball) and its parts v<sub>x</sub>, v<sub>y</sub></span><span><i style="background:var(--muted)"></i>path</span><span><i style="background:var(--acc)"></i>acceleration g</span></div>
+        <div class="slider"><label for="pv">launch speed u</label><input type="range" id="pv" min="5" max="30" step="0.5" value="20"><output id="pvo"></output></div>
+        <div class="slider"><label for="pa">angle θ</label><input type="range" id="pa" min="0" max="90" step="1" value="50"><output id="pao"></output></div>
+        <div class="slider"><label for="ph">launch height h</label><input type="range" id="ph" min="0" max="20" step="1" value="0"><output id="pho"></output></div>
+        <div class="slider"><label for="pt">time t</label><input type="range" id="pt" min="0" max="1" step="0.001" value="0"><output id="pto"></output></div>
+        <div class="row"><button class="btn primary" id="plaunch">Launch</button>
+          <label class="muted"><input type="checkbox" id="pshadow"> shadows on the axes</label>
+          <label class="muted"><input type="checkbox" id="pghost" checked> path at 90° − θ</label></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="pkv"></dl>
+        <div><h3>Range for every angle (this u and h)</h3>
+          <svg id="rplot" viewBox="0 0 380 210" role="img" aria-label="Range against launch angle" style="width:100%;max-width:440px;height:auto;display:block"></svg>
+          <p class="muted">Tap or drag on the plot to choose the angle.</p></div>
+        <p class="cap key" id="pcap"></p>
+      </div>
+    </div>
+    <div class="panel stack">
+      <p class="cap">Horizontal: no force, so v<sub>x</sub> = u cos θ stays fixed and x = (u cos θ) t. Vertical: free fall, v<sub>y</sub> = u sin θ − gt and y = (u sin θ) t − ½gt². Eliminate t and the path is</p>
+      <p class="eq" id="peq"></p>
+      <p class="cap">y = (a number) × x − (a number) × x²: a <b>parabola</b>. At the top v<sub>y</sub> = 0, after t<sub>m</sub> = u sin θ/g; from level ground the flight lasts T = 2t<sub>m</sub>, the top is H = (u sin θ)²/2g high, and the range is R = u² sin 2θ/g. Since sin 2θ = sin(180° − 2θ), the angles θ and 90° − θ give the same range, and the largest, u²/g, comes at 45°. Launch from a height and the ball has extra time to travel, so a flatter angle (below 45°) goes furthest.</p>
+    </div>
+    <div class="qgrid" id="q1"></div>
+  </section>
+
+  <!-- 2 · incline -->
+  <section class="stack">
+    <div>
+      <h2>2 · Throwing up a slope <span class="hw">no air resistance</span></h2>
+      <p class="lede">Now the ground is an incline at angle α, and the throw is measured from the slope: β above it. The trick is to tilt the axes so x′ runs along the slope and y′ straight out of it. Gravity then has two parts, and each direction becomes a simple straight-line motion again.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="incl" viewBox="0 0 640 400" role="img" aria-label="Projectile on an incline with tilted axes" style="min-width:440px"></svg></div>
+        <div class="legend"><span><i style="background:var(--muted)"></i>path; dots at equal time steps</span><span><i style="background:var(--disp)"></i>dots’ shadows on the slope</span><span><i style="background:var(--acc)"></i>g and its two parts</span></div>
+        <div class="slider"><label for="iu">launch speed u</label><input type="range" id="iu" min="5" max="30" step="0.5" value="20"><output id="iuo"></output></div>
+        <div class="slider"><label for="ia">slope angle α</label><input type="range" id="ia" min="0" max="40" step="1" value="30"><output id="iao"></output></div>
+        <div class="slider"><label for="ib">angle above slope β</label><input type="range" id="ib" min="1" max="89" step="0.5" value="20"><output id="ibo"></output></div>
+        <div class="row"><button class="btn primary" id="ilaunch">Launch</button><button class="btn" id="ibest">Farthest up the slope</button></div>
+      </div>
+      <div class="panel stack">
+        <div class="row" style="align-items:flex-start;gap:14px"><dl class="kv" id="ikv" style="flex:1 1 220px"></dl><svg id="igkey" viewBox="0 0 220 150" role="img" aria-label="Gravity split along and across the slope" style="width:200px;height:auto;display:block;flex:0 0 auto"></svg></div>
+        <div><h3>Distance up the slope for every β</h3>
+          <svg id="iplot" viewBox="0 0 380 200" role="img" aria-label="Range along the incline against launch angle" style="width:100%;max-width:440px;height:auto;display:block"></svg></div>
+        <p class="cap key" id="icap"></p>
+      </div>
+    </div>
+    <div class="panel stack">
+      <p class="cap">Perpendicular to the slope (y′): starts at u sin β, pulled back by g cos α. It returns to the slope after T = 2u sin β/(g cos α), longer than on level ground, because g cos α is weaker than g. Along the slope (x′): starts at u cos β, slowed by g sin α, so the shadows bunch up. Distance up the slope: R = u²[sin(2β + α) − sin α]/(g cos²α). It is greatest when 2β + α = 90°, that is β = 45° − α/2: the throw <b>bisects the angle between the slope and the vertical</b>, and then R<sub>max</sub> = u²/[g(1 + sin α)]. Set α = 0 and all of this turns back into level ground.</p>
+    </div>
+    <div class="qgrid" id="q3"></div>
+  </section>
+
+  <!-- 3 · two projectiles -->
+  <section class="stack">
+    <div>
+      <h2>3 · Two projectiles at once: watch from one of them <span class="hw">no air resistance</span></h2>
+      <p class="lede">Throw A and B at the same instant. From the ground both paths curve. Now ride along with A: both balls fall with the same g, so the falling cancels, and B moves in a <b>straight line at constant velocity</b>, v<sub>B</sub> − v<sub>A</sub>. Whether they hit is just whether that straight line passes through A.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="tpre" role="group" aria-label="Presets"></div>
+        <div class="row"><span class="muted">View:</span><div class="chips" id="tview" role="group" aria-label="Frame of reference"></div></div>
+        <div class="svgbox"><svg id="two" viewBox="0 0 640 340" role="img" aria-label="Two projectiles, seen from the ground or from A" style="min-width:440px"></svg></div>
+        <div class="legend"><span><i style="background:var(--va)"></i>ball A</span><span><i style="background:var(--vb)"></i>ball B</span><span><i style="background:var(--vel)"></i>velocity (from A: B’s relative velocity)</span></div>
+        <div class="row"><span class="muted">Predict: do they collide?</span><div class="chips" id="tpick" role="group" aria-label="Your prediction"></div><button class="btn primary" id="tlaunch">Launch both</button></div>
+        <p class="verdict" id="tverdict">Pick a set-up, predict, then launch.</p>
+      </div>
+      <div class="panel stack">
+        <div class="slider"><label for="tua">A: speed</label><input type="range" id="tua" min="5" max="30" step="0.5" value="25"><output id="tuao"></output></div>
+        <div class="slider"><label for="taa">A: angle</label><input type="range" id="taa" min="5" max="90" step="1" value="45"><output id="taao"></output></div>
+        <div class="slider"><label for="tub">B: speed</label><input type="range" id="tub" min="0" max="30" step="0.5" value="0"><output id="tubo"></output></div>
+        <div class="slider"><label for="tab">B: angle</label><input type="range" id="tab" min="0" max="180" step="1" value="90"><output id="tabo"></output></div>
+        <div class="slider"><label for="td">B starts: across</label><input type="range" id="td" min="10" max="60" step="1" value="30"><output id="tdo"></output></div>
+        <div class="slider"><label for="th">B starts: height</label><input type="range" id="th" min="0" max="30" step="1" value="30"><output id="tho"></output></div>
+        <dl class="kv" id="tkv"></dl>
+      </div>
+    </div>
+    <div class="qgrid" id="q4"></div>
+  </section>
+
+  <!-- 2 · circular -->
+  <section class="stack">
+    <div>
+      <h2>4 · Uniform circular motion: constant speed, turning velocity</h2>
+      <p class="lede">The ball goes round at constant speed v. Its velocity is always along the tangent, so its <i>direction</i> keeps changing, and a change in velocity is an acceleration. Open the angle Δθ between two moments and see where the change Δv points.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="circ" viewBox="0 0 570 360" role="img" aria-label="Circular motion with velocity, position and change in velocity" style="min-width:400px"></svg></div>
+        <div class="legend"><span><i style="background:var(--disp)"></i>position r, r′</span><span><i style="background:var(--vel)"></i>velocity v, v′</span><span><i style="background:var(--acc)"></i>Δv and acceleration</span></div>
+        <div class="slider"><label for="cv">speed v</label><input type="range" id="cv" min="1" max="4" step="0.1" value="3"><output id="cvo"></output></div>
+        <div class="slider"><label for="cr">radius r</label><input type="range" id="cr" min="1" max="3" step="0.1" value="2.5"><output id="cro"></output></div>
+        <div class="slider"><label for="cd">angle gap Δθ</label><input type="range" id="cd" min="2" max="120" step="1" value="60"><output id="cdo"></output></div>
+        <div class="slider"><label for="ct">speeding up at</label><input type="range" id="ct" min="-3" max="3" step="0.5" value="0"><output id="cto"></output></div>
+        <div class="row"><button class="btn primary" id="cplay">Play</button><span class="muted">Shown 3× slower than real time.</span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="ckv"></dl>
+        <p class="cap key" id="ccap"></p>
+        <p class="cap">Why v²/r: the radius turns through Δθ and so does the velocity, which stays at right angles to it. The triangle of r, r′, Δr and the triangle of v, v′, Δv have the same shape, so Δv/v = Δr/r. For small Δθ the chord Δr is the arc, v Δt. So |Δv|/Δt → v²/r. With v = ωr this is also ω²r = 4π²ν²r.</p>
+        <p class="cap">The size of this acceleration is constant but its direction keeps turning, so it is <b>not</b> a constant vector, and v = u + at and the other constant-acceleration equations do not apply to circular motion.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q2"></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> point particle; no air resistance (a real ball falls short of these paths, more so at high speed); g = 9.8 m s⁻² everywhere, uniform and vertical, over ground taken as flat (or, in section 2, a flat slope). In section 3 the balls count as colliding if their centres come within 0.5 m. In section 4 the radius is fixed and the speed is constant unless you set the “speeding up” slider (then the picture is a single snapshot); the arrows are to scale within each picture (acceleration arrows are capped at the centre).</p>
+    <p><b>Based on:</b> NCERT Physics Class 11, "Motion in a Plane"; H. C. Verma, <i>Concepts of Physics</i> Vol. 1, "Rest and Motion: Kinematics" and "Circular Motion".</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+const G=9.8; // m s^-2
+/* launcher presets: speed (m/s), angle (deg), height (m) */
+const PPRE=[
+ {l:'Cricket ball: 28 m/s at 30°', v:28, a:30, h:0},
+ {l:'Best angle: 45°',              v:20, a:45, h:0},
+ {l:'Thrown sideways off a 20 m cliff', v:15, a:0, h:20},
+ {l:'Straight up',                  v:20, a:90, h:0}
+];
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const D2R=Math.PI/180, R2D=180/Math.PI;
+const f1=v=>(Math.abs(v)<0.05?0:v).toFixed(1), f2=v=>(Math.abs(v)<0.005?0:v).toFixed(2);
+const sg1=v=>{const s=f1(v);return s.startsWith('-')?'−'+s.slice(1):s;};
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function el(parent,tag,attrs,txt){const e=document.createElementNS(NS,tag);if(attrs)for(const k in attrs)e.setAttribute(k,attrs[k]);if(txt!=null)e.textContent=txt;parent.appendChild(e);return e;}
+function at(e,attrs){for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+function show(e,b){e.style.display=b?'':'none';}
+function mkArrow(parent,col,w,opt){
+  opt=opt||{};
+  const g=el(parent,'g',{}), l=el(g,'line',{stroke:col,'stroke-width':w,'stroke-linecap':'round'}), p=el(g,'polygon',{fill:col});
+  if(opt.dash) l.setAttribute('stroke-dasharray',opt.dash);
+  if(opt.op) g.setAttribute('opacity',opt.op);
+  const head=opt.head||9;
+  return {g,set(x1,y1,x2,y2){
+    const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy);
+    if(L<1.5){g.style.display='none';return;} g.style.display='';
+    const h=Math.min(head,L*0.6),ux=dx/L,uy=dy/L,bx=x2-ux*h,by=y2-uy*h,px=-uy*h*0.5,py=ux*h*0.5;
+    at(l,{x1:x1.toFixed(1),y1:y1.toFixed(1),x2:bx.toFixed(1),y2:by.toFixed(1)});
+    p.setAttribute('points',`${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px).toFixed(1)},${(by+py).toFixed(1)} ${(bx-px).toFixed(1)},${(by-py).toFixed(1)}`);
+  },hide(){g.style.display='none';}};
+}
+function press(box,k){box.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===String(k)));}
+function svgPt(svg,e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const m=svg.getScreenCTM();return m?p.matrixTransform(m.inverse()):{x:0,y:0};}
+function quiz(box,items){
+  box.innerHTML=items.map((q,i)=>`<div class="panel"><p class="qn">Predict</p><p>${q.q}</p>
+    <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');
+  box.addEventListener('click',e=>{
+    const b=e.target.closest('.opt'); if(!b||b.disabled) return;
+    const o=b.parentElement, q=items[+o.dataset.i], j=+b.dataset.j;
+    o.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+    const w=o.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+  });
+}
+function visWatch(elm,cb){
+  if(!('IntersectionObserver' in window)){cb(true);return;}
+  new IntersectionObserver(es=>es.forEach(en=>cb(en.isIntersecting)),{threshold:0.05}).observe(elm);
+}
+function niceStep(x){const p=Math.pow(10,Math.floor(Math.log10(x))), m=x/p;return (m<1.5?1:m<3.5?2:m<7.5?5:10)*p;}
+
+/* =================== PROJECTILE PHYSICS =================== */
+/* launched from (0, h) at speed v, angle a (deg) above horizontal; lands on y = 0 */
+function proj(v,a,h){
+  const th=a*D2R, vx=v*Math.cos(th), vy=v*Math.sin(th);
+  const T=(vy+Math.sqrt(vy*vy+2*G*h))/G;          /* time of flight */
+  const tm=Math.max(0,vy/G);                        /* time to the top */
+  const H=h+vy*vy/(2*G)*(vy>0?1:0);                 /* top, above the ground */
+  return {th,vx,vy,T,tm,H,R:vx*T,
+    x:t=>vx*t, y:t=>h+vy*t-0.5*G*t*t, vyt:t=>vy-G*t};
+}
+/* angle of greatest range from height h: tan θ* = v/√(v² + 2gh) */
+const bestAngle=(v,h)=>Math.atan(v/Math.sqrt(v*v+2*G*h))*R2D;
+
+/* =================== 1 · LAUNCHER =================== */
+const P={v:20,a:50,h:0,f:0,play:false,vis:false,last:0,shadow:false,ghost:true};
+{
+  /* scale: fitted to everything this u and h can reach (any angle), equal on both axes; changes only with u and h */
+  const svg=$('proj'), L=74, Rr=626, B=380, TOP=50;
+  let k=5, KV=1.25, XM=100, YM=60, skey='';
+  const X=x=>L+x*k, Y=y=>B-y*k;
+  const gG=el(svg,'g',{});
+  el(svg,'line',{x1:L-60,x2:Rr,y1:B,y2:B,stroke:'var(--muted)','stroke-width':1.5});
+  el(svg,'text',{x:L-22,y:B+16,'font-size':11.5,fill:'var(--muted)','text-anchor':'end'},'x (m)');
+  const ylab=el(svg,'text',{x:L-22,'font-size':11.5,fill:'var(--muted)','text-anchor':'end'},'y (m)');
+  function rescale(){
+    const key=P.v+'|'+P.h; if(key===skey) return; skey=key;
+    const Rall=P.v/G*Math.sqrt(P.v*P.v+2*G*P.h), Hall=P.h+P.v*P.v/(2*G);
+    k=Math.min((Rr-L)/(Rall*1.04),(B-TOP)/(Hall*1.08)); XM=(Rr-L)/k; YM=(B-TOP)/k; KV=0.25*k; /* arrows: velocity × 0.25 s */
+    const st=niceStep(Math.max(XM,YM)/7); gG.textContent='';
+    for(let x=0;x<=XM+1e-9;x+=st){el(gG,'line',{x1:X(x),x2:X(x),y1:Y(0),y2:Y(YM),stroke:'var(--line)'});el(gG,'text',{x:X(x),y:B+16,'font-size':11,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},+x.toFixed(1));}
+    for(let y=st;y<=YM+1e-9;y+=st){el(gG,'line',{x1:X(0),x2:X(XM),y1:Y(y),y2:Y(y),stroke:'var(--line)'});el(gG,'text',{x:L-22,y:Y(y)+4,'font-size':11,fill:'var(--muted)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'},+y.toFixed(1));}
+    at(ylab,{y:TOP-8});
+  }
+  const tower=el(svg,'rect',{x:L-16,width:16,fill:'var(--ink)','fill-opacity':.12,stroke:'var(--ink)','stroke-opacity':.4});
+  const ghost=el(svg,'polyline',{fill:'none',stroke:'var(--muted)','stroke-width':1.6,'stroke-dasharray':'5 5'});
+  const gtxt=el(svg,'text',{'font-size':11,fill:'var(--muted)'});
+  const path=el(svg,'polyline',{fill:'none',stroke:'var(--muted)','stroke-width':2.2});
+  const apex=el(svg,'line',{stroke:'var(--muted)','stroke-dasharray':'2 4'});
+  /* shadows */
+  const gS=el(svg,'g',{}), xsh=[], ysh=[];
+  /* strobe points: N equal time steps */
+  const N=8, gP=el(svg,'g',{}), pts=[];
+  for(let i=0;i<=N;i++){pts.push({c:el(gP,'circle',{r:3.5,fill:'var(--ink)','fill-opacity':.55}),ax:mkArrow(gP,'var(--vel)',1.8,{head:6,op:.8}),ay:mkArrow(gP,'var(--vel)',1.8,{head:6,op:.8})});
+    xsh.push(el(gS,'circle',{r:3.5,fill:'none',stroke:'var(--ink)','stroke-opacity':.6}));ysh.push(el(gS,'circle',{r:3.5,fill:'none',stroke:'var(--ink)','stroke-opacity':.6}));}
+  const shx=el(gS,'text',{x:Rr,y:B-8,'font-size':10.5,fill:'var(--muted)','text-anchor':'end'},'shadow on the ground: equal steps');
+  const shy=el(svg,'text',{'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'});
+  gS.appendChild(shy);
+  /* the ball */
+  const bx=mkArrow(svg,'var(--vel)',1.8,{head:7,dash:'4 3'}), by=mkArrow(svg,'var(--vel)',1.8,{head:7,dash:'4 3'}), bv=mkArrow(svg,'var(--vel)',3.2,{head:11});
+  const ga=mkArrow(svg,'var(--acc)',2.4,{head:9}); ga.set(Rr-14,TOP+6,Rr-14,TOP+40);
+  el(svg,'text',{x:Rr-22,y:TOP+28,'font-size':11.5,fill:'var(--acc)','text-anchor':'end'},'g, the same everywhere');
+  const ball=el(svg,'circle',{r:7,fill:'var(--force)',stroke:'var(--ink)','stroke-width':1});
+  const bsx=el(svg,'circle',{r:5,fill:'var(--force)','fill-opacity':.6}), bsy=el(svg,'circle',{r:5,fill:'var(--force)','fill-opacity':.6});
+  const vt=el(svg,'text',{'font-size':12,'font-weight':600,fill:'var(--vel)'},'v');
+
+  $('ppre').innerHTML=PPRE.map((p,i)=>`<button class="chip" data-k="${i}">${p.l}</button>`).join('');
+  $('ppre').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;const p=PPRE[+c.dataset.k];P.v=p.v;P.a=p.a;P.h=p.h;P.f=0;sync();drawP();store('kin2-proj',c.dataset.k);});
+  const sync=()=>{$('pv').value=P.v;$('pa').value=P.a;$('ph').value=P.h;$('pt').value=P.f;};
+  {const s=load('kin2-proj'); if(s!=null&&PPRE[+s]){const p=PPRE[+s];P.v=p.v;P.a=p.a;P.h=p.h;sync();}}
+  $('pv').addEventListener('input',e=>{P.v=+e.target.value;drawP();});
+  $('pa').addEventListener('input',e=>{P.a=+e.target.value;drawP();});
+  $('ph').addEventListener('input',e=>{P.h=+e.target.value;drawP();});
+  $('pt').addEventListener('input',e=>{P.f=+e.target.value;P.play=false;$('plaunch').textContent='Launch';drawP();});
+  $('pshadow').addEventListener('change',e=>{P.shadow=e.target.checked;drawP();});
+  $('pghost').addEventListener('change',e=>{P.ghost=e.target.checked;drawP();});
+
+  /* range-vs-angle plot */
+  const rp=$('rplot'), RL=46, RR=364, RT=22, RB=172, RX=a=>RL+a/90*(RR-RL);
+  for(let a=0;a<=90;a+=15){el(rp,'line',{x1:RX(a),x2:RX(a),y1:RT,y2:RB,stroke:'var(--line)'});el(rp,'text',{x:RX(a),y:RB+14,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},a+'°');}
+  el(rp,'text',{x:(RL+RR)/2,y:RB+32,'font-size':11.5,fill:'var(--ink)','text-anchor':'middle'},'launch angle θ');
+  el(rp,'text',{transform:`translate(12 ${(RT+RB)/2}) rotate(-90)`,'font-size':11.5,fill:'var(--ink)','text-anchor':'middle'},'range (m)');
+  const rgrid=el(rp,'g',{}), rcurve=el(rp,'polyline',{fill:'none',stroke:'var(--ink)','stroke-width':2});
+  const rm1=el(rp,'line',{stroke:'var(--vel)','stroke-width':2}), rd1=el(rp,'circle',{r:5,fill:'var(--vel)'});
+  const rm2=el(rp,'line',{stroke:'var(--muted)','stroke-dasharray':'3 3'}), rd2=el(rp,'circle',{r:4.5,fill:'var(--surface)',stroke:'var(--muted)','stroke-width':2});
+  const rpk=el(rp,'path',{fill:'var(--ink)'}), rpt=el(rp,'text',{'font-size':10.5,fill:'var(--ink)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'});
+  const rhit=el(rp,'rect',{x:RL,y:RT,width:RR-RL,height:RB-RT,fill:'transparent',class:'drag'});
+  let rdrag=false;
+  const rpick=e=>{const p=svgPt(rp,e);P.a=Math.max(0,Math.min(90,Math.round((p.x-RL)/(RR-RL)*90)));$('pa').value=P.a;drawP();};
+  rhit.addEventListener('pointerdown',e=>{rdrag=true;try{rhit.setPointerCapture(e.pointerId);}catch(_){}rpick(e);});
+  rhit.addEventListener('pointermove',e=>{if(rdrag)rpick(e);});
+  const rend=e=>{rdrag=false;try{rhit.releasePointerCapture(e.pointerId);}catch(_){}};
+  rhit.addEventListener('pointerup',rend);rhit.addEventListener('pointercancel',rend);
+  let rkey='';
+  function drawRange(M){
+    const key=P.v+'|'+P.h;
+    const Rof=a=>proj(P.v,a,P.h).R;
+    const best=bestAngle(P.v,P.h), Rmax=Rof(best), st=niceStep(Rmax/4), top=Math.ceil(Rmax*1.12/st)*st, RY=r=>RB-r/top*(RB-RT);
+    if(key!==rkey){ /* curve and grid only change with v and h */
+      rkey=key; rgrid.textContent='';
+      for(let r=0;r<=top+1e-9;r+=st){el(rgrid,'line',{x1:RL,x2:RR,y1:RY(r),y2:RY(r),stroke:'var(--line)'});el(rgrid,'text',{x:RL-5,y:RY(r)+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'},+r.toFixed(1));}
+      let pts='';for(let a=0;a<=90;a+=1)pts+=RX(a).toFixed(1)+','+RY(Rof(a)).toFixed(1)+' ';
+      rcurve.setAttribute('points',pts);
+      const bx=RX(best), byy=RY(Rmax);
+      rpk.setAttribute('d',`M${bx-5} ${byy-12}L${bx+5} ${byy-12}L${bx} ${byy-5}Z`);
+      at(rpt,{x:bx,y:byy-15}); rpt.textContent=`max ${Rmax.toFixed(1)} m at ${best.toFixed(1)}°`;
+    }
+    at(rm1,{x1:RX(P.a),x2:RX(P.a),y1:RB,y2:RY(Rof(P.a))}); at(rd1,{cx:RX(P.a),cy:RY(Rof(P.a))});
+    const c=90-P.a; at(rm2,{x1:RX(c),x2:RX(c),y1:RB,y2:RY(Rof(c))}); at(rd2,{cx:RX(c),cy:RY(Rof(c))});
+    const sh=Math.abs(c-P.a)>0.5; show(rm2,sh); show(rd2,sh);
+  }
+
+  window.drawP=function(){
+    rescale(); const M=proj(P.v,P.a,P.h), t=P.f*M.T;
+    press($('ppre'),PPRE.findIndex(p=>p.v===P.v&&p.a===P.a&&p.h===P.h));
+    $('pvo').textContent=P.v.toFixed(1)+' m/s'; $('pao').textContent=P.a+'°'; $('pho').textContent=P.h+' m'; $('pto').textContent=t.toFixed(2)+' s';
+    at(tower,{y:Y(P.h),height:Math.max(0,B-Y(P.h))}); show(tower,P.h>0);
+    let s=''; for(let i=0;i<=100;i++){const tt=M.T*i/100;s+=X(M.x(tt)).toFixed(1)+','+Y(Math.max(0,M.y(tt))).toFixed(1)+' ';}
+    path.setAttribute('points',s);
+    /* complementary path */
+    const c=90-P.a, MC=proj(P.v,c,P.h), gon=P.ghost&&Math.abs(c-P.a)>0.5;
+    show(ghost,gon); show(gtxt,gon);
+    if(gon){let g='';for(let i=0;i<=100;i++){const tt=MC.T*i/100;g+=X(MC.x(tt)).toFixed(1)+','+Y(Math.max(0,MC.y(tt))).toFixed(1)+' ';}ghost.setAttribute('points',g);
+      const up=c>P.a, ta=MC.vy>0?MC.tm:0; at(gtxt,{x:X(MC.x(ta))+6,y:Y(MC.y(ta))+(up?-8:16),'text-anchor':'start'}); gtxt.textContent=c+'°';}
+    /* apex */
+    show(apex,M.vy>0.01); if(M.vy>0.01) at(apex,{x1:X(M.x(M.tm)),x2:X(M.x(M.tm)),y1:Y(M.H),y2:B});
+    /* strobe */
+    pts.forEach((p,i)=>{const tt=M.T*i/N, x=X(M.x(tt)), y=Y(Math.max(0,M.y(tt)));
+      at(p.c,{cx:x,cy:y}); p.ax.set(x,y,x+M.vx*KV,y); p.ay.set(x,y,x,y-M.vyt(tt)*KV);
+      at(xsh[i],{cx:x,cy:B}); at(ysh[i],{cx:L-46,cy:y});});
+    show(gS,P.shadow); show(bsx,P.shadow); show(bsy,P.shadow);
+    at(shy,{x:L-46,y:Y(Math.max(M.H,P.h))-10}); shy.textContent='free fall';
+    /* ball */
+    const x=X(M.x(t)), y=Y(Math.max(0,M.y(t))), vy=M.vyt(t);
+    at(ball,{cx:x,cy:y}); at(bsx,{cx:x,cy:B}); at(bsy,{cx:L-46,cy:y});
+    bx.set(x,y,x+M.vx*KV,y); by.set(x,y,x,y-vy*KV); bv.set(x,y,x+M.vx*KV,y-vy*KV);
+    const vl=Math.hypot(M.vx,vy)||1; at(vt,{x:x+M.vx*KV+6*M.vx/vl+4,y:y-vy*KV-6*vy/vl+4});
+    drawRange(M);
+    /* readouts */
+    const sp=Math.hypot(M.vx,vy), dir=Math.atan2(vy,M.vx)*R2D, vland=Math.hypot(M.vx,M.vyt(M.T)), aland=Math.atan2(-M.vyt(M.T),M.vx)*R2D;
+    $('pkv').innerHTML=`<dt>v<sub>x</sub> = u cos θ (fixed)</dt><dd>${f2(M.vx)} m/s</dd><dt>v<sub>y</sub> at launch = u sin θ</dt><dd>${f2(M.vy)} m/s</dd>
+      <dt>time to the top</dt><dd>${M.vy>0?f2(M.tm)+' s':'—'}</dd><dt>time of flight</dt><dd>${f2(M.T)} s</dd>
+      <dt>highest point</dt><dd>${f2(M.H)} m${P.h>0?' above ground':''}</dd><dt>range</dt><dd>${f2(M.R)} m</dd>
+      <dt>at t = ${t.toFixed(2)} s</dt><dd>v = ${f2(sp)} m/s, ${sg1(dir)}°</dd><dt>landing</dt><dd>${f2(vland)} m/s, ${aland.toFixed(1)}° down</dd>`;
+    const tanT=Math.tan(M.th), cc=G/(2*M.vx*M.vx);
+    $('peq').innerHTML=P.a===90?'x = 0 at every instant: straight up and down, a straight line, not a parabola.'
+      :`y = ${P.h?P.h+' + ':''}${tanT.toFixed(3)} x − ${cc.toFixed(4)} x²    (x, y in metres)`;
+    let cap;
+    if(P.a===90) cap='Straight up: v<sub>x</sub> = 0, so the path is a vertical line. The same gravity gives a parabola or a line depending only on how the ball starts.';
+    else if(P.h===0&&Math.abs(c-P.a)>0.5) cap=`Same speed at ${c}° lands at the same spot (dashed), because sin 2θ = sin(180° − 2θ). The steeper throw goes higher and stays up longer.`;
+    else if(P.h===0) cap='At 45° the two complementary angles coincide: this is the angle of greatest range on level ground.';
+    else cap=`From ${P.h} m up, ${c}° and ${P.a}° no longer tie (dashed path), and the best angle is ${bestAngle(P.v,P.h).toFixed(1)}°, below 45°. ${P.a===0?'Thrown sideways, it falls exactly as fast as a dropped ball: same height, same time, '+f2(M.T)+' s.':''}`;
+    $('pcap').innerHTML=cap;
+  };
+  function loop(ts){
+    if(!P.play||!P.vis){P.last=0;return;}
+    const M=proj(P.v,P.a,P.h), dt=P.last?Math.min(0.05,(ts-P.last)/1000):0; P.last=ts;
+    P.f=Math.min(1,P.f+dt/M.T); $('pt').value=P.f; drawP();
+    if(P.f>=1){P.play=false;$('plaunch').textContent='Launch';return;}
+    requestAnimationFrame(loop);
+  }
+  $('plaunch').addEventListener('click',()=>{
+    if(RM){P.f=1;$('pt').value=1;drawP();return;}
+    if(P.play){P.play=false;$('plaunch').textContent='Launch';return;}
+    P.f=0;P.play=true;P.last=0;$('plaunch').textContent='Stop';requestAnimationFrame(loop);
+  });
+  visWatch($('proj'),v=>{P.vis=v;if(v&&P.play){P.last=0;requestAnimationFrame(loop);}});
+  drawP();
+}
+{
+  const v=28,a=30, M=proj(v,a,0);
+  const Rm=100, vmax=Math.sqrt(Rm*G), Hup=vmax*vmax/(2*G);
+  const v2=20, M45=proj(v2,45,0);
+  quiz($('q1'),[
+   {q:`A cricket ball is thrown at ${v} m/s, ${a}° above the horizontal. How far away does it come back to the same level? (g = 9.8 m s⁻²)`,o:[`${(M.R/2).toFixed(0)} m`,`${M.R.toFixed(0)} m`,`${(v*v/G).toFixed(0)} m`,`${(M.R*1.5).toFixed(0)} m`],a:1,
+    why:`R = u² sin 2θ/g = ${v}² × sin ${2*a}°/9.8 = ${M.R.toFixed(1)} m. It rises ${M.H.toFixed(1)} m and is in the air ${M.T.toFixed(2)} s. ${(v*v/G).toFixed(0)} m would need 45°. Try the first preset.`},
+   {q:'At the highest point of its path, a projectile’s velocity and acceleration are:',o:['both zero','velocity zero, acceleration g down','velocity u cos θ sideways, acceleration g down','velocity u cos θ sideways, acceleration zero'],a:2,
+    why:'Only v<sub>y</sub> is zero at the top; v<sub>x</sub> = u cos θ never changes. Gravity never switches off, so the acceleration is g downward the whole time, at right angles to the velocity at that instant.'},
+   {q:`A cricketer can throw a ball at most ${Rm} m along level ground. How high can he throw it straight up (same speed)?`,o:[`${Rm} m`,`${Hup.toFixed(0)} m`,`${(Rm/4).toFixed(0)} m`,`${(Rm*2).toFixed(0)} m`],a:1,
+    why:`Greatest range is u²/g = ${Rm} m (at 45°). Straight up he reaches u²/2g = half of that, ${Hup.toFixed(0)} m. Set 90° to see the straight-line path.`},
+   {q:'From a table top, ball A is dropped and ball B is flicked off sideways at the same instant. Which reaches the floor first?',o:['A','B','Both together'],a:2,
+    why:'Both start with zero vertical velocity and fall with the same g, so their vertical motions are identical. B’s sideways speed changes where it lands, not when. Turn on the shadows: the shadow on the left is a plain free fall.'}
+  ]);
+}
+
+/* =================== 2 · CIRCULAR =================== */
+const C={v:3,r:2.5,d:60,at:0,phi:0.4,play:!RM,vis:false,last:0};
+{
+  const svg=$('circ'), CX=178, CY=180, KR=50, KV=24, KA=12, GX=462, GY=180; /* px per m, per m/s, per m/s² */
+  const ring=el(svg,'circle',{cx:CX,cy:CY,fill:'none',stroke:'var(--ink)','stroke-opacity':.35,'stroke-width':1.5});
+  el(svg,'circle',{cx:CX,cy:CY,r:3.5,fill:'var(--ink)'}); el(svg,'text',{x:CX-8,y:CY+16,'font-size':12,fill:'var(--ink)','text-anchor':'end'},'C');
+  const arc=el(svg,'path',{fill:'none',stroke:'var(--muted)','stroke-width':4,opacity:.35});
+  const r1=mkArrow(svg,'var(--disp)',2,{op:.85,head:8}), r2=mkArrow(svg,'var(--disp)',2,{op:.55,head:8,dash:'5 4'});
+  const chord=el(svg,'line',{stroke:'var(--disp)','stroke-width':1.5,'stroke-dasharray':'2 3'});
+  const v1=mkArrow(svg,'var(--vel)',3,{head:10}), v2=mkArrow(svg,'var(--vel)',2.4,{head:10,op:.55});
+  const dvm=mkArrow(svg,'var(--acc)',2.4,{head:9,dash:'5 3'});
+  const ac=mkArrow(svg,'var(--acc)',3.4,{head:11}), atg=mkArrow(svg,'var(--acc)',2.2,{head:9,dash:'4 3'}), anet=mkArrow(svg,'var(--acc)',3.4,{head:11});
+  const ball=el(svg,'circle',{r:7,fill:'var(--force)',stroke:'var(--ink)','stroke-width':1});
+  const ball2=el(svg,'circle',{r:5,fill:'none',stroke:'var(--ink)','stroke-width':1.5});
+  const tP=el(svg,'text',{'font-size':12.5,'font-weight':600,fill:'var(--ink)','text-anchor':'middle'},'P'), tQ=el(svg,'text',{'font-size':12.5,'font-weight':600,fill:'var(--ink)','text-anchor':'middle'},'P′');
+  const tv=el(svg,'text',{'font-size':12,'font-weight':600,fill:'var(--vel)'},'v'), ta=el(svg,'text',{'font-size':12,'font-weight':600,fill:'var(--acc)'});
+  /* velocity triangle */
+  el(svg,'rect',{x:GX-104,y:GY-128,width:208,height:240,rx:8,fill:'var(--bg)',stroke:'var(--line)'});
+  el(svg,'text',{x:GX,y:GY-112,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'v and v′, tail to tail');
+  const gv1=mkArrow(svg,'var(--vel)',3,{head:10}), gv2=mkArrow(svg,'var(--vel)',2.4,{head:10,op:.55}), gdv=mkArrow(svg,'var(--acc)',3,{head:10});
+  el(svg,'circle',{cx:GX,cy:GY,r:3,fill:'var(--ink)'});
+  const gt1=el(svg,'text',{'font-size':11.5,fill:'var(--vel)','font-weight':600,'text-anchor':'middle'},'v'), gt2=el(svg,'text',{'font-size':11.5,fill:'var(--vel)','text-anchor':'middle'},'v′'), gtd=el(svg,'text',{'font-size':11.5,fill:'var(--acc)','font-weight':600,'text-anchor':'middle'},'Δv');
+  const snap=el(svg,'text',{x:8,y:350,'font-size':11.5,fill:'var(--muted)'});
+  [['cv','v'],['cr','r'],['cd','d'],['ct','at']].forEach(([id,k])=>$(id).addEventListener('input',e=>{C[k]=+e.target.value;drawC();}));
+  /* place a label beyond the tip of an arrow from (x,y) toward (dx,dy) */
+  const tipLab=(t,x,y,dx,dy,o)=>{const L=Math.hypot(dx,dy)||1;at(t,{x:(x+dx+dx/L*o).toFixed(1),y:(y+dy+dy/L*o+4).toFixed(1),'text-anchor':'middle'});};
+  window.drawC=function(){
+    const {v,r}=C, Rp=r*KR, w=v/r, d=C.d*D2R, ac0=v*v/r;
+    $('cvo').textContent=v.toFixed(1)+' m/s'; $('cro').textContent=r.toFixed(1)+' m'; $('cdo').textContent=C.d+'°';
+    $('cto').textContent=(C.at>0?'+':C.at<0?'−':'')+Math.abs(C.at).toFixed(1)+' m/s²';
+    ring.setAttribute('r',Rp);
+    /* P at angle phi (counter-clockwise, y up), P′ ahead by Δθ */
+    const a1=C.phi, a2=C.phi+d;
+    const p1=[CX+Rp*Math.cos(a1),CY-Rp*Math.sin(a1)], p2=[CX+Rp*Math.cos(a2),CY-Rp*Math.sin(a2)];
+    const u1=[-Math.sin(a1),-Math.cos(a1)], u2=[-Math.sin(a2),-Math.cos(a2)]; /* screen tangent (ccw) */
+    const large=d>Math.PI?1:0;
+    arc.setAttribute('d',`M${p1[0].toFixed(1)} ${p1[1].toFixed(1)} A${Rp} ${Rp} 0 ${large} 0 ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`);
+    r1.set(CX,CY,p1[0],p1[1]); r2.set(CX,CY,p2[0],p2[1]); at(chord,{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1]});
+    v1.set(p1[0],p1[1],p1[0]+u1[0]*v*KV,p1[1]+u1[1]*v*KV); v2.set(p2[0],p2[1],p2[0]+u2[0]*v*KV,p2[1]+u2[1]*v*KV);
+    tipLab(tv,p1[0],p1[1],u1[0]*v*KV,u1[1]*v*KV,9);
+    at(ball,{cx:p1[0],cy:p1[1]}); at(ball2,{cx:p2[0],cy:p2[1]});
+    tipLab(tP,CX,CY,p1[0]-CX,p1[1]-CY,16); tipLab(tQ,CX,CY,p2[0]-CX,p2[1]-CY,16);
+    /* Δv = v′ − v, drawn at the middle of the arc */
+    const dvx=(u2[0]-u1[0])*v, dvy=(u2[1]-u1[1])*v, am=(a1+a2)/2, pm=[CX+Rp*Math.cos(am),CY-Rp*Math.sin(am)];
+    dvm.set(pm[0],pm[1],pm[0]+dvx*KV,pm[1]+dvy*KV);
+    /* triangle inset */
+    gv1.set(GX,GY,GX+u1[0]*v*KV,GY+u1[1]*v*KV); gv2.set(GX,GY,GX+u2[0]*v*KV,GY+u2[1]*v*KV);
+    gdv.set(GX+u1[0]*v*KV,GY+u1[1]*v*KV,GX+u2[0]*v*KV,GY+u2[1]*v*KV);
+    tipLab(gt1,GX,GY,u1[0]*v*KV,u1[1]*v*KV,10); tipLab(gt2,GX,GY,u2[0]*v*KV,u2[1]*v*KV,10);
+    {const mx=GX+(u1[0]+u2[0])*v*KV/2, my=GY+(u1[1]+u2[1])*v*KV/2, L=Math.hypot(mx-GX,my-GY)||1; at(gtd,{x:mx+(mx-GX)/L*14,y:my+(my-GY)/L*14+4}); show(gtd,C.d>=12);}
+    /* acceleration at P: centripetal toward C (capped at the centre), tangential along v */
+    /* one scale for both parts, shrunk if the centripetal arrow would pass the centre */
+    const sA=Math.min(KA,(Rp-6)/ac0), inw=[(CX-p1[0])/Rp,(CY-p1[1])/Rp], La=ac0*sA, Lt=C.at*sA;
+    ac.set(p1[0],p1[1],p1[0]+inw[0]*La,p1[1]+inw[1]*La);
+    const lx=p1[0]+inw[0]*La*0.5-u1[0]*16, ly=p1[1]+inw[1]*La*0.5-u1[1]*16+4;
+    at(ta,{x:lx.toFixed(1),y:ly.toFixed(1),'text-anchor':'middle'});
+    if(C.at!==0){
+      atg.set(p1[0],p1[1],p1[0]+u1[0]*Lt,p1[1]+u1[1]*Lt);
+      anet.set(p1[0],p1[1],p1[0]+inw[0]*La+u1[0]*Lt,p1[1]+inw[1]*La+u1[1]*Lt);
+      ta.textContent='v²/r';
+    } else {atg.hide();anet.hide(); ta.textContent='a = v²/r';}
+    snap.textContent=C.at!==0?'Snapshot: speed changing, so the animation is paused.':'';
+    /* readouts */
+    const T=2*Math.PI*r/v, nu=1/T, dt=d/w, dv=2*v*Math.sin(d/2), avg=dv/dt;
+    let kv=`<dt>angular speed ω = v/r</dt><dd>${f2(w)} rad/s</dd><dt>period T = 2πr/v</dt><dd>${f2(T)} s</dd><dt>frequency ν = 1/T</dt><dd>${f2(nu)} rev/s</dd>
+      <dt>time for Δθ</dt><dd>Δt = Δθ/ω = ${f2(dt)} s</dd><dt>|Δv| = 2v sin(Δθ/2)</dt><dd>${f2(dv)} m/s</dd><dt>average |Δv|/Δt</dt><dd>${f2(avg)} m/s²</dd>
+      <dt>v²/r = ω²r</dt><dd>${f2(ac0)} m/s²</dd>`;
+    if(C.at!==0) kv+=`<dt>tangential a<sub>t</sub></dt><dd>${sg1(C.at)} m/s²</dd><dt>total |a|</dt><dd>${f2(Math.hypot(ac0,C.at))} m/s², ${(Math.atan2(Math.abs(C.at),ac0)*R2D).toFixed(1)}° off the radius</dd>`;
+    $('ckv').innerHTML=kv;
+    let cap;
+    if(C.at!==0) cap=`Speed ${C.at>0?'increasing':'decreasing'}: now there are two parts, v²/r toward the centre (turning the velocity) and a<sub>t</sub> along the ${C.at>0?'velocity':'opposite of the velocity'} (changing its size). Their sum points ${C.at>0?'ahead of':'behind'} the centre. Only in <i>uniform</i> circular motion does the acceleration point exactly at the centre.`;
+    else cap=`Δv (dashed, drawn at the middle of the arc) points toward the centre. Its average rate |Δv|/Δt = ${f2(avg)} m/s² is ${(avg/ac0*100).toFixed(1)}% of v²/r. Shrink Δθ: the two agree, and the acceleration at each instant is v²/r = ${f2(ac0)} m/s², toward the centre.`;
+    $('ccap').innerHTML=cap;
+  };
+  function loop(ts){
+    if(!C.play||!C.vis||C.at!==0){C.last=0;if(C.at!==0)drawC();return;}
+    const dt=C.last?Math.min(0.05,(ts-C.last)/1000):0;C.last=ts;
+    C.phi=(C.phi+(C.v/C.r)/3*dt)%(2*Math.PI); drawC(); requestAnimationFrame(loop);
+  }
+  const kick=()=>{if(C.play&&C.vis&&!C.last)requestAnimationFrame(t=>{C.last=0;loop(t);});};
+  $('cplay').textContent=C.play?'Pause':'Play';
+  $('cplay').addEventListener('click',()=>{C.play=!C.play;$('cplay').textContent=C.play?'Pause':'Play';C.last=0;kick();});
+  $('ct').addEventListener('input',()=>{if(C.at===0){C.last=0;kick();}});
+  visWatch(svg,v=>{C.vis=v;kick();});
+  drawC();
+}
+{
+  /* insect in a groove: 7 revolutions in 100 s, radius 12 cm */
+  const n=7, ts=100, r=0.12, w=2*Math.PI*n/ts, v=w*r, a=w*w*r;
+  /* stone on a string: 80 cm, 14 revolutions in 25 s */
+  const n2=14, t2=25, r2=0.8, w2=2*Math.PI*n2/t2, a2=w2*w2*r2;
+  quiz($('q2'),[
+   {q:`An insect in a circular groove of radius 12 cm goes round steadily, 7 times in 100 s. Its acceleration is about:`,o:['zero, since its speed is constant',`${(a*100).toFixed(1)} cm/s², toward the centre`,`${(v*100).toFixed(1)} cm/s², along the groove`,`${(w*w*100).toFixed(1)} cm/s², toward the centre`],a:1,
+    why:`ω = 2π × 7/100 = ${w.toFixed(2)} rad/s, v = ωr = ${(v*100).toFixed(1)} cm/s, and a = ω²r = ${(a*100).toFixed(1)} cm/s², always pointing to the centre. Constant speed is not constant velocity.`},
+   {q:`A stone on an 80 cm string is whirled in a horizontal circle, 14 turns in 25 s. Its acceleration is closest to:`,o:['2.8 m/s²',`${a2.toFixed(1)} m/s²`,'35 m/s²','0'],a:1,
+    why:`ω = 2π × 14/25 = ${w2.toFixed(2)} rad/s, so a = ω²r = ${w2.toFixed(2)}² × 0.8 = ${a2.toFixed(1)} m/s², toward the centre (about the size of g).`},
+   {q:'Keep the speed the same and halve the radius. The centripetal acceleration:',o:['halves','stays the same','doubles','becomes four times'],a:2,
+    why:'a = v²/r: with v fixed, halving r doubles a. (At fixed ω instead, a = ω²r would halve. Which formula to use depends on what is held fixed.) Try it with the sliders.'}
+  ]);
+}
+
+/* =================== 2 · INCLINE =================== */
+/* slope at α; launch at β above the slope (θ = α + β above horizontal); lands back on the slope */
+function incl(u,al,be){
+  const a=al*D2R, b=be*D2R, ca=Math.cos(a), sa=Math.sin(a);
+  const T=2*u*Math.sin(b)/(G*ca);
+  const R=u*u*(Math.sin(2*b+a)-sa)/(G*ca*ca);   /* distance along the slope */
+  const hmax=Math.pow(u*Math.sin(b),2)/(2*G*ca); /* greatest distance out from the slope */
+  const th=a+b, ux=u*Math.cos(th), uy=u*Math.sin(th);
+  return {a,b,ca,sa,T,R,hmax,th,ux,uy,x:t=>ux*t,y:t=>uy*t-0.5*G*t*t,
+    along:t=>u*Math.cos(b)*t-0.5*G*sa*t*t, perp:t=>u*Math.sin(b)*t-0.5*G*ca*t*t};
+}
+const IN={u:20,al:30,be:20,f:1,play:false,vis:false,last:0};
+{
+  const svg=$('incl'), L=44, Rr=624, B=370, TOP=24, N=8, OX=L+50;
+  let k=5, skey='';
+  const X=x=>OX+x*k, Y=y=>B-y*k;
+  const gG=el(svg,'g',{});
+  const wedge=el(svg,'polygon',{fill:'var(--ink)','fill-opacity':.07,stroke:'var(--ink)','stroke-opacity':.5,'stroke-width':1.5});
+  const yax=el(svg,'line',{stroke:'var(--muted)','stroke-dasharray':'6 5'});
+  const xlab=el(svg,'text',{'font-size':12,fill:'var(--muted)','font-weight':600},'x′'), ylab=el(svg,'text',{'font-size':12,fill:'var(--muted)','font-weight':600},'y′');
+  const aarc=el(svg,'path',{fill:'none',stroke:'var(--muted)'}), aT=el(svg,'text',{'font-size':12,fill:'var(--muted)'},'α');
+  const barc=el(svg,'path',{fill:'none',stroke:'var(--vel)'}), bT=el(svg,'text',{'font-size':12,fill:'var(--vel)'},'β');
+  const path=el(svg,'polyline',{fill:'none',stroke:'var(--muted)','stroke-width':2.2});
+  const hline=el(svg,'line',{stroke:'var(--disp)','stroke-dasharray':'3 3'}), hT=el(svg,'text',{'font-size':11,fill:'var(--disp)'});
+  const gP=el(svg,'g',{}), dots=[];
+  for(let i=0;i<=N;i++) dots.push({c:el(gP,'circle',{r:3.5,fill:'var(--ink)','fill-opacity':.55}),s:el(gP,'circle',{r:3,fill:'var(--disp)'}),l:el(gP,'line',{stroke:'var(--disp)','stroke-opacity':.4})});
+  const uA=mkArrow(svg,'var(--vel)',3,{head:10});
+  const ball=el(svg,'circle',{r:7,fill:'var(--force)',stroke:'var(--ink)','stroke-width':1});
+  const land=el(svg,'circle',{r:5,fill:'none',stroke:'var(--ink)','stroke-width':2});
+  /* g and its parts, in a small key beside the readouts */
+  const gk=$('igkey'), GX=110, GY=14, GL=70;
+  {const gs=el(gk,'line',{x1:10,x2:210,stroke:'var(--ink)','stroke-opacity':.5,'stroke-width':1.5}); gk.slope=gs;}
+  const gA=mkArrow(gk,'var(--acc)',3,{head:10}), gS=mkArrow(gk,'var(--acc)',2.2,{head:8,dash:'5 3'}), gC=mkArrow(gk,'var(--acc)',2.2,{head:8,dash:'5 3'});
+  const gp1=el(gk,'line',{stroke:'var(--acc)','stroke-opacity':.35,'stroke-dasharray':'2 3'}), gp2=el(gk,'line',{stroke:'var(--acc)','stroke-opacity':.35,'stroke-dasharray':'2 3'});
+  const gT=el(gk,'text',{'font-size':12,fill:'var(--acc)','font-weight':600},'g'), gsT=el(gk,'text',{'font-size':11.5,fill:'var(--acc)','text-anchor':'end'},'g sin α'), gcT=el(gk,'text',{'font-size':11.5,fill:'var(--acc)'},'g cos α');
+  function rescale(){
+    const key=IN.u+'|'+IN.al; if(key===skey) return; skey=key;
+    const a=IN.al*D2R, Rm=IN.u*IN.u/(G*(1+Math.sin(a))), Xm=Math.max(Rm*Math.cos(a),IN.u*IN.u/(2*G)*0.6), Ym=Math.max(IN.u*IN.u/(2*G),Rm*Math.sin(a));
+    k=Math.min((Rr-OX)/(Xm*1.06),(B-TOP)/(Ym*1.06));
+    const st=niceStep(Math.max((Rr-OX),(B-TOP))/k/7); gG.textContent='';
+    for(let x=0;x<=(Rr-OX)/k+1e-9;x+=st){el(gG,'line',{x1:X(x),x2:X(x),y1:B,y2:TOP-10,stroke:'var(--line)'});el(gG,'text',{x:X(x),y:B+15,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},+x.toFixed(1));}
+    for(let y=st;y<=(B-TOP+10)/k;y+=st){el(gG,'line',{x1:L,x2:Rr,y1:Y(y),y2:Y(y),stroke:'var(--line)'});}
+    el(gG,'text',{x:Rr,y:B+15+14,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'metres');
+    el(gG,'line',{x1:L,x2:Rr,y1:B,y2:B,stroke:'var(--muted)'});
+  }
+  ['iu','ia','ib'].forEach(id=>$(id).addEventListener('input',e=>{IN[{iu:'u',ia:'al',ib:'be'}[id]]=+e.target.value;
+    if(IN.be>90-IN.al){IN.be=90-IN.al;$('ib').value=IN.be;} IN.f=1; IN.play=false; $('ilaunch').textContent='Launch'; drawIN();}));
+  $('ibest').addEventListener('click',()=>{IN.be=45-IN.al/2; /* α is a whole degree, so this is a multiple of 0.5, which the slider step shows exactly */$('ib').value=IN.be;IN.f=1;drawIN();});
+  /* range-vs-β plot */
+  const rp=$('iplot'), RL=46, RR=364, RT=22, RB=164;
+  const rgrid=el(rp,'g',{}), rcurve=el(rp,'polyline',{fill:'none',stroke:'var(--ink)','stroke-width':2});
+  const rm=el(rp,'line',{stroke:'var(--vel)','stroke-width':2}), rd=el(rp,'circle',{r:5,fill:'var(--vel)'});
+  const rpk=el(rp,'path',{fill:'var(--ink)'}), rpt=el(rp,'text',{'font-size':10.5,fill:'var(--ink)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'});
+  el(rp,'text',{x:(RL+RR)/2,y:RB+32,'font-size':11.5,fill:'var(--ink)','text-anchor':'middle'},'angle above the slope β');
+  el(rp,'text',{transform:`translate(12 ${(RT+RB)/2}) rotate(-90)`,'font-size':11.5,fill:'var(--ink)','text-anchor':'middle'},'R (m)');
+  let pkey='', RX=b=>RL+b/90*(RR-RL), RY=r=>RB;
+  function drawPlot(M){
+    const key=IN.u+'|'+IN.al, bmax=90-IN.al;
+    if(key!==pkey){pkey=key; rgrid.textContent='';
+      RX=b=>RL+b/bmax*(RR-RL);
+      const Rm=IN.u*IN.u/(G*(1+Math.sin(IN.al*D2R))), st=niceStep(Rm/4), top=Math.ceil(Rm*1.15/st)*st; RY=r=>RB-r/top*(RB-RT);
+      for(let r=0;r<=top+1e-9;r+=st){el(rgrid,'line',{x1:RL,x2:RR,y1:RY(r),y2:RY(r),stroke:'var(--line)'});el(rgrid,'text',{x:RL-5,y:RY(r)+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'},+r.toFixed(1));}
+      const bs=niceStep(bmax/5)>=10?(bmax>60?15:10):5;
+      for(let b=0;b<=bmax+1e-9;b+=bs){el(rgrid,'line',{x1:RX(b),x2:RX(b),y1:RT,y2:RB,stroke:'var(--line)'});el(rgrid,'text',{x:RX(b),y:RB+14,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},b+'°');}
+      let p='';for(let i=0;i<=90;i++){const b=bmax*i/90;p+=RX(b).toFixed(1)+','+RY(incl(IN.u,IN.al,b).R).toFixed(1)+' ';}
+      rcurve.setAttribute('points',p);
+      const bb=45-IN.al/2, x=RX(bb), y=RY(Rm);
+      rpk.setAttribute('d',`M${x-5} ${y-12}L${x+5} ${y-12}L${x} ${y-5}Z`); at(rpt,{x:Math.max(RL+60,Math.min(RR-60,x)),y:y-15}); rpt.textContent=`max ${Rm.toFixed(1)} m at β = ${bb.toFixed(1)}°`;
+    }
+    at(rm,{x1:RX(IN.be),x2:RX(IN.be),y1:RB,y2:RY(M.R)}); at(rd,{cx:RX(IN.be),cy:RY(M.R)});
+  }
+  window.drawIN=function(){
+    rescale();
+    $('iuo').textContent=IN.u.toFixed(1)+' m/s'; $('iao').textContent=IN.al+'°'; $('ibo').textContent=IN.be.toFixed(1)+'°';
+    $('ib').max=90-IN.al;
+    const M=incl(IN.u,IN.al,IN.be), ca=M.ca, sa=M.sa;
+    /* slope to the right edge of the plot */
+    const xe=(Rr-OX)/k, ye=xe*Math.tan(M.a), yeC=Math.min(ye,(B-TOP+10)/k), xeC=M.a>0?Math.min(xe,yeC/Math.tan(M.a)):xe;
+    wedge.setAttribute('points',`${X(0)},${Y(0)} ${X(xeC)},${Y(xeC*Math.tan(M.a))} ${X(xeC)},${B}`);
+    at(xlab,{x:X(xeC)-14,y:Y(xeC*Math.tan(M.a))+16}); 
+    const yl=Math.min(1.1*IN.u*IN.u/(2*G),(B-TOP)/k*0.9,sa>0?(OX-L-6)/k/sa:1e9); at(yax,{x1:X(0),y1:Y(0),x2:X(-sa*yl),y2:Y(ca*yl)}); at(ylab,{x:X(-sa*yl)+6,y:Y(ca*yl)+4});
+    const r1=34; at(aarc,{d:`M${X(0)+r1} ${Y(0)} A${r1} ${r1} 0 0 0 ${X(0)+r1*ca} ${Y(0)-r1*sa}`}); at(aT,{x:X(0)+r1+6,y:Y(0)-r1*Math.sin(M.a/2)+4}); show(aT,IN.al>=6); show(aarc,IN.al>0);
+    const r2=52; at(barc,{d:`M${X(0)+r2*ca} ${Y(0)-r2*sa} A${r2} ${r2} 0 0 0 ${X(0)+r2*Math.cos(M.th)} ${Y(0)-r2*Math.sin(M.th)}`});
+    const bm=M.a+M.b/2; at(bT,{x:X(0)+(r2+8)*Math.cos(bm),y:Y(0)-(r2+8)*Math.sin(bm)+4}); show(bT,IN.be>=8);
+    let s='';for(let i=0;i<=80;i++){const t=M.T*i/80;s+=X(M.x(t)).toFixed(1)+','+Y(M.y(t)).toFixed(1)+' ';}
+    path.setAttribute('points',s);
+    dots.forEach((d,i)=>{const t=M.T*i/N, x=M.x(t), y=M.y(t), al=M.along(t);
+      at(d.c,{cx:X(x),cy:Y(y)}); at(d.s,{cx:X(al*ca),cy:Y(al*sa)}); at(d.l,{x1:X(x),y1:Y(y),x2:X(al*ca),y2:Y(al*sa)});});
+    /* greatest distance from the slope, at T/2 */
+    const tm=M.T/2, xm=M.x(tm), ym=M.y(tm), am=M.along(tm);
+    at(hline,{x1:X(xm),y1:Y(ym),x2:X(am*ca),y2:Y(am*sa)}); at(hT,{x:X(am*ca)+6,y:Y(am*sa)+16}); hT.textContent='farthest from the slope, at T/2';
+    const t=M.T*IN.f; at(ball,{cx:X(M.x(t)),cy:Y(M.y(t))}); at(land,{cx:X(M.R*ca),cy:Y(M.R*sa)});
+    const KU=0.25*k; uA.set(X(0),Y(0),X(0)+M.ux*KU,Y(0)-M.uy*KU);
+    /* g key */
+    gA.set(GX,GY,GX,GY+GL);
+    {const sy0=GY+GL+26, t=Math.tan(M.a); at(gk.slope,{x1:10,x2:210,y1:sy0+100*t,y2:sy0-100*t});}
+    const sx=GX-GL*sa*ca, sy=GY+GL*sa*sa, cx=GX+GL*ca*sa, cy=GY+GL*ca*ca;
+    gS.set(GX,GY,sx,sy); gC.set(GX,GY,cx,cy);
+    at(gp1,{x1:sx,y1:sy,x2:GX,y2:GY+GL}); at(gp2,{x1:cx,y1:cy,x2:GX,y2:GY+GL});
+    at(gT,{x:GX+5,y:GY+GL+14}); at(gsT,{x:sx-4,y:sy+4}); at(gcT,{x:cx+5,y:cy+4}); show(gsT,IN.al>=5); show(gS.g,IN.al>=1);
+    drawPlot(M);
+    const best=45-IN.al/2, Rm=IN.u*IN.u/(G*(1+sa));
+    $('ikv').innerHTML=`<dt>angle to the horizontal</dt><dd>α + β = ${IN.al+IN.be}°</dd><dt>time of flight</dt><dd>${f2(M.T)} s</dd>
+      <dt>on level ground (same β)</dt><dd>${f2(2*IN.u*Math.sin(M.b)/G)} s</dd><dt>distance up the slope</dt><dd>${f2(M.R)} m</dd>
+      <dt>farthest from the slope</dt><dd>${f2(M.hmax)} m</dd><dt>best β = 45° − α/2</dt><dd>${best.toFixed(1)}° → ${f2(Rm)} m</dd>`;
+    $('icap').innerHTML=Math.abs(IN.be-best)<0.6?`This is the best throw: β = ${best.toFixed(1)}° makes the launch direction bisect the ${90-IN.al}° angle between the slope and the vertical.`
+      :IN.be<best?`Too flat: the ball hits the slope soon. Raise β toward ${best.toFixed(1)}°.`:`Too steep: the ball spends its time going up, not along. Lower β toward ${best.toFixed(1)}°.`;
+  };
+  function loop(ts){
+    if(!IN.play||!IN.vis){IN.last=0;return;}
+    const M=incl(IN.u,IN.al,IN.be), dt=IN.last?Math.min(0.05,(ts-IN.last)/1000):0; IN.last=ts;
+    IN.f=Math.min(1,IN.f+dt/M.T); drawIN();
+    if(IN.f>=1){IN.play=false;$('ilaunch').textContent='Launch';return;}
+    requestAnimationFrame(loop);
+  }
+  $('ilaunch').addEventListener('click',()=>{
+    if(RM){IN.f=1;drawIN();return;}
+    if(IN.play){IN.play=false;$('ilaunch').textContent='Launch';return;}
+    IN.f=0;IN.play=true;IN.last=0;$('ilaunch').textContent='Stop';requestAnimationFrame(loop);
+  });
+  visWatch(svg,v=>{IN.vis=v;if(v&&IN.play){IN.last=0;requestAnimationFrame(loop);}});
+  drawIN();
+}
+{
+  const u=20, al=30, best=45-al/2, Rm=u*u/(G*(1+Math.sin(al*D2R)));
+  const be=30, T1=2*u*Math.sin(be*D2R)/(G*Math.cos(al*D2R)), T0=2*u*Math.sin(be*D2R)/G;
+  quiz($('q3'),[
+   {q:`A slope rises at ${al}°. To throw a ball as far up it as possible, at what angle to the <i>horizontal</i> should you throw?`,o:['45°',`${al+best}°`,`${best}°`,`${90-al}° + 15°`],a:1,
+    why:`β = 45° − α/2 = ${best}° above the slope, which is ${al}° + ${best}° = ${al+best}° above the horizontal: exactly halfway between the slope (${al}°) and the vertical (90°). At ${u} m/s it reaches u²/[g(1 + sin α)] = ${Rm.toFixed(1)} m up the slope.`},
+   {q:`Thrown at ${u} m/s, ${be}° above a ${al}° slope. Compared with ${be}° above level ground, the time in the air is:`,o:['the same','shorter','longer'],a:2,
+    why:`Out from the slope, only g cos α = ${(G*Math.cos(al*D2R)).toFixed(2)} m/s² pulls it back, so T = 2u sin β/(g cos α) = ${T1.toFixed(2)} s, against ${T0.toFixed(2)} s on level ground.`}
+  ]);
+}
+
+/* =================== 3 · TWO PROJECTILES =================== */
+/* A starts at the origin; B starts at (d, h). Angles from +x (B can be thrown back toward A, up to 180°). */
+const TP={ua:25,aa:45,ub:0,ab:90,d:30,h:30,view:'g',pick:null,f:0,done:false,play:false,vis:false,last:0};
+const TPRE=[
+ {l:'Aim at B, B is dropped',     ua:25,aa:45,ub:0, ab:90, d:30,h:30},
+ {l:'Thrown toward each other',   ua:20,aa:45,ub:20,ab:135,d:30,h:0},
+ {l:'Same velocity, side by side',ua:20,aa:60,ub:20,ab:60, d:20,h:0},
+ {l:'Thrown up together',         ua:20,aa:60,ub:15,ab:120,d:40,h:10}
+];
+const HIT=0.5; /* centres within 0.5 m count as a hit */
+function twoModel(){
+  const a=TP.aa*D2R, b=TP.ab*D2R;
+  const vA=[TP.ua*Math.cos(a),TP.ua*Math.sin(a)], vB=[TP.ub*Math.cos(b),TP.ub*Math.sin(b)];
+  const TA=2*vA[1]/G, TB=(vB[1]+Math.sqrt(vB[1]*vB[1]+2*G*TP.h))/G, Tend=Math.min(TA,TB);
+  const r0=[TP.d,TP.h], w=[vB[0]-vA[0],vB[1]-vA[1]], w2=w[0]*w[0]+w[1]*w[1];
+  let ts=w2>1e-12?-(r0[0]*w[0]+r0[1]*w[1])/w2:0; ts=Math.max(0,Math.min(Tend,ts));
+  const dmin=Math.hypot(r0[0]+w[0]*ts,r0[1]+w[1]*ts), hit=dmin<HIT;
+  return {vA,vB,TA,TB,Tend,r0,w,ts,dmin,hit,tEnd:hit?ts:Tend,
+    A:t=>[vA[0]*t,vA[1]*t-0.5*G*t*t], B:t=>[TP.d+vB[0]*t,TP.h+vB[1]*t-0.5*G*t*t]};
+}
+{
+  const svg=$('two'), L=40, Rr=626, B=310, TOP=24, N=8;
+  let k=5, ox=0, oy=0, skey='';
+  const X=x=>L+(x-ox)*k, Y=y=>B-(y-oy)*k;
+  const gG=el(svg,'g',{});
+  const ground=el(svg,'line',{stroke:'var(--muted)','stroke-width':1.6}), gtx=el(svg,'text',{'font-size':11,fill:'var(--muted)','text-anchor':'end'},'ground');
+  const tower=el(svg,'rect',{width:12,fill:'var(--ink)','fill-opacity':.12,stroke:'var(--ink)','stroke-opacity':.4});
+  const pA=el(svg,'polyline',{fill:'none',stroke:'var(--va)','stroke-width':2,'stroke-dasharray':'5 4',opacity:.8});
+  const pB=el(svg,'polyline',{fill:'none',stroke:'var(--vb)','stroke-width':2,'stroke-dasharray':'5 4',opacity:.8});
+  const gD=el(svg,'g',{}), dA=[], dB=[];
+  for(let i=0;i<=N;i++){dA.push(el(gD,'circle',{r:3,fill:'var(--va)','fill-opacity':.55}));dB.push(el(gD,'circle',{r:3,fill:'var(--vb)','fill-opacity':.55}));}
+  const vAr=mkArrow(svg,'var(--vel)',2.6,{head:9}), vBr=mkArrow(svg,'var(--vel)',2.6,{head:9});
+  const bA=el(svg,'circle',{r:7,fill:'var(--va)',stroke:'var(--ink)','stroke-width':1}), bB=el(svg,'circle',{r:7,fill:'var(--vb)',stroke:'var(--ink)','stroke-width':1});
+  const tA=el(svg,'text',{'font-size':13,'font-weight':700,fill:'var(--va)'},'A'), tB=el(svg,'text',{'font-size':13,'font-weight':700,fill:'var(--vb)'},'B');
+  const boom=el(svg,'circle',{r:16,fill:'none',stroke:'var(--flag)','stroke-width':2.5});
+  const note=el(svg,'text',{x:L+4,y:TOP+4,'font-size':11.5,fill:'var(--muted)'});
+  $('tpre').innerHTML=TPRE.map((p,i)=>`<button class="chip" data-k="${i}">${p.l}</button>`).join('');
+  $('tview').innerHTML='<button class="chip" data-k="g">From the ground</button><button class="chip" data-k="a">From ball A</button>';
+  $('tpick').innerHTML='<button class="chip" data-k="y">Yes</button><button class="chip" data-k="n">No</button>';
+  const ids={tua:'ua',taa:'aa',tub:'ub',tab:'ab',td:'d',th:'h'};
+  const reset=()=>{TP.f=0;TP.done=false;TP.play=false;$('tlaunch').textContent='Launch both';$('tverdict').textContent=TP.pick?'Now launch.':'Predict, then launch.';};
+  const syncT=()=>{for(const id in ids)$(id).value=TP[ids[id]];};
+  $('tpre').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;Object.assign(TP,TPRE[+c.dataset.k]);TP.pick=null;press($('tpick'),'');syncT();reset();drawT();});
+  $('tview').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;TP.view=c.dataset.k;store('kin2-view',TP.view);drawT();});
+  $('tpick').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;TP.pick=c.dataset.k;press($('tpick'),TP.pick);if(TP.done)verdict();else $('tverdict').textContent='Now launch.';});
+  for(const id in ids) $(id).addEventListener('input',e=>{TP[ids[id]]=+e.target.value;reset();drawT();});
+  {const v=load('kin2-view'); if(v==='a'||v==='g') TP.view=v;}
+  function rescale(M){
+    const key=[TP.ua,TP.aa,TP.ub,TP.ab,TP.d,TP.h,TP.view].join('|'); if(key===skey) return; skey=key;
+    let xs=[],ys=[];
+    for(let i=0;i<=40;i++){const t=M.tEnd*i/40, a=M.A(t), b=M.B(t);
+      if(TP.view==='g'){xs.push(a[0],b[0]);ys.push(a[1],b[1]);} else {xs.push(0,b[0]-a[0]);ys.push(0,b[1]-a[1]);}}
+    if(TP.view==='g'){xs.push(0);ys.push(0);}
+    let x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+    const pad=Math.max(x1-x0,y1-y0,4)*0.08; x0-=pad;x1+=pad;y0-=pad;y1+=pad; if(TP.view==='g') y0=Math.min(y0,-0.5);
+    k=Math.min((Rr-L)/(x1-x0),(B-TOP)/(y1-y0)); ox=x0-((Rr-L)/k-(x1-x0))/2; oy=y0;
+    const st=niceStep(Math.max(x1-x0,y1-y0)/7); gG.textContent='';
+    for(let x=Math.ceil(ox/st)*st;x<=ox+(Rr-L)/k;x+=st){el(gG,'line',{x1:X(x),x2:X(x),y1:B,y2:TOP-10,stroke:'var(--line)'});el(gG,'text',{x:X(x),y:B+15,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},+x.toFixed(1));}
+    for(let y=Math.ceil(oy/st)*st;y<=oy+(B-TOP+10)/k;y+=st){el(gG,'line',{x1:L,x2:Rr,y1:Y(y),y2:Y(y),stroke:'var(--line)'});el(gG,'text',{x:L-5,y:Y(y)+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'},+y.toFixed(1));}
+  }
+  function verdict(){
+    const M=twoModel();
+    let t=M.hit?`<b>They collide</b> after ${f2(M.ts)} s.`:`<b>They miss.</b> Closest approach ${f2(M.dmin)} m, at t = ${f2(M.ts)} s${M.ts>=M.Tend-1e-9?' (when the first ball lands)':''}.`;
+    if(TP.pick) t=((TP.pick==='y')===M.hit?'Your prediction was right. ':'Not this time. ')+t;
+    t+=M.hit?' From A, B’s straight line points right at A.':' From A, B’s straight line passes A by.';
+    $('tverdict').innerHTML=t;
+  }
+  window.drawT=function(){
+    const M=twoModel(); rescale(M);
+    press($('tview'),TP.view);
+    press($('tpre'),TPRE.findIndex(p=>['ua','aa','ub','ab','d','h'].every(q=>p[q]===TP[q])));
+    $('tuao').textContent=TP.ua.toFixed(1)+' m/s'; $('taao').textContent=TP.aa+'°'; $('tubo').textContent=TP.ub.toFixed(1)+' m/s'; $('tabo').textContent=TP.ab+'°'; $('tdo').textContent=TP.d+' m'; $('tho').textContent=TP.h+' m';
+    const t=M.tEnd*TP.f, g=TP.view==='g', a=M.A(t), b=M.B(t);
+    const P=p=>g?p:[p[0]-a[0],p[1]-a[1]]; /* frame transform at time t (A's frame moves with A) */
+    /* whole paths: in A's frame each point is taken at its own time */
+    let sa='',sb='';
+    for(let i=0;i<=60;i++){const tt=M.tEnd*i/60, A=M.A(tt), Bp=M.B(tt), q=g?Bp:[Bp[0]-A[0],Bp[1]-A[1]];
+      if(g) sa+=X(A[0]).toFixed(1)+','+Y(A[1]).toFixed(1)+' ';
+      sb+=X(q[0]).toFixed(1)+','+Y(q[1]).toFixed(1)+' ';}
+    pA.setAttribute('points',sa); show(pA,g); pB.setAttribute('points',sb);
+    dA.forEach((c,i)=>{const tt=M.tEnd*i/N, A=M.A(tt), Bp=M.B(tt);
+      if(g){at(c,{cx:X(A[0]),cy:Y(A[1])});show(c,true);} else show(c,false);
+      const q=g?Bp:[Bp[0]-A[0],Bp[1]-A[1]]; at(dB[i],{cx:X(q[0]),cy:Y(q[1])});});
+    /* ground: fixed, or (in A's frame) a line at −y_A(t) */
+    const gy=g?0:-a[1]; at(ground,{x1:L,x2:Rr,y1:Y(gy),y2:Y(gy)}); at(gtx,{x:Rr-4,y:Y(gy)-5});
+    const gin=Y(gy)<=B+2&&Y(gy)>=TOP-10; show(ground,gin); show(gtx,gin);
+    const tw=P([TP.d,0]), tt2=P([TP.d,TP.h]); at(tower,{x:X(tw[0])-6,y:Y(tt2[1]),height:Math.max(0,Y(tw[1])-Y(tt2[1]))}); show(tower,g&&TP.h>0);
+    const pa=P(a), pb=P(b);
+    at(bA,{cx:X(pa[0]),cy:Y(pa[1])}); at(bB,{cx:X(pb[0]),cy:Y(pb[1])});
+    at(tA,{x:X(pa[0])-10,y:Y(pa[1])-10,'text-anchor':'end'}); at(tB,{x:X(pb[0])+10,y:Y(pb[1])-10});
+    const KV=0.2*k, vAt=[M.vA[0],M.vA[1]-G*t], vBt=[M.vB[0],M.vB[1]-G*t];
+    if(g){vAr.set(X(pa[0]),Y(pa[1]),X(pa[0])+vAt[0]*KV,Y(pa[1])-vAt[1]*KV); vBr.set(X(pb[0]),Y(pb[1]),X(pb[0])+vBt[0]*KV,Y(pb[1])-vBt[1]*KV);}
+    else {vAr.hide(); vBr.set(X(pb[0]),Y(pb[1]),X(pb[0])+M.w[0]*KV,Y(pb[1])-M.w[1]*KV);}
+    const showBoom=M.hit&&TP.f>=1; show(boom,showBoom); if(showBoom) at(boom,{cx:(X(pa[0])+X(pb[0]))/2,cy:(Y(pa[1])+Y(pb[1]))/2});
+    note.textContent=g?'seen from the ground':'seen from A: A stays put, B moves in a straight line';
+    $('tkv').innerHTML=`<dt>B relative to A, v<sub>B</sub> − v<sub>A</sub></dt><dd>${sg1(M.w[0])} î ${M.w[1]<0?'−':'+'} ${f1(Math.abs(M.w[1]))} ĵ m/s</dd>
+      <dt>its size (constant)</dt><dd>${f2(Math.hypot(M.w[0],M.w[1]))} m/s</dd><dt>starting gap</dt><dd>${f2(Math.hypot(TP.d,TP.h))} m</dd>
+      <dt>first ball lands at</dt><dd>${f2(M.Tend)} s</dd><dt>time t</dt><dd>${f2(t)} s, gap ${f2(Math.hypot(b[0]-a[0],b[1]-a[1]))} m</dd>`;
+  };
+  function loop(ts){
+    if(!TP.play||!TP.vis){TP.last=0;return;}
+    const M=twoModel(), dt=TP.last?Math.min(0.05,(ts-TP.last)/1000):0; TP.last=ts;
+    TP.f=M.tEnd>0?Math.min(1,TP.f+dt/M.tEnd):1; drawT();
+    if(TP.f>=1){TP.play=false;TP.done=true;$('tlaunch').textContent='Launch both';verdict();return;}
+    requestAnimationFrame(loop);
+  }
+  $('tlaunch').addEventListener('click',()=>{
+    if(RM){TP.f=1;TP.done=true;drawT();verdict();return;}
+    if(TP.play){TP.play=false;$('tlaunch').textContent='Launch both';return;}
+    TP.f=0;TP.done=false;TP.play=true;TP.last=0;$('tlaunch').textContent='Stop';requestAnimationFrame(loop);
+  });
+  visWatch(svg,v=>{TP.vis=v;if(v&&TP.play){TP.last=0;requestAnimationFrame(loop);}});
+  syncT(); drawT();
+}
+{
+  /* monkey-and-hunter: aimed straight at B, B dropped at the same instant */
+  const d=30,h=30,u=25, a=Math.atan2(h,d), t=d/(u*Math.cos(a)), fall=0.5*G*t*t;
+  const u2=10, t2=2;
+  quiz($('q4'),[
+   {q:`A ball is aimed straight at a coconut ${h} m up and ${d} m away, and the coconut drops at the instant of the throw. Thrown at ${u} m/s, does it hit?`,o:['No, it passes below','Yes','No, it passes above','Only if g = 0'],a:1,
+    why:`Seen from the falling coconut, the ball moves in a straight line along the aim, with no gravity left over, so it must hit, as long as that happens before either lands. Here it takes ${f2(t)} s, during which both fall ${f2(fall)} m, less than ${h} m. Try the first preset in both views.`},
+   {q:`From the top of a tall tower, two stones are thrown at the same instant, one at ${u2} m/s straight up and one at ${u2} m/s horizontally. How far apart are they after ${t2} s (both still in the air)?`,o:[`${u2*t2} m`,`${(u2*t2*Math.SQRT2).toFixed(1)} m`,`${(u2*t2*Math.SQRT2+0.5*G*t2*t2).toFixed(1)} m`,'0 m'],a:1,
+    why:`Relative velocity = (${u2} î) − (${u2} ĵ), size ${(u2*Math.SQRT2).toFixed(2)} m/s, constant, because gravity cancels. Gap = ${(u2*Math.SQRT2).toFixed(2)} × ${t2} = ${(u2*t2*Math.SQRT2).toFixed(1)} m. g does not appear.`}
+  ]);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Standing Waves and Beats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&family=Noto+Sans+Symbols+2&text=%E2%86%90%E2%86%91%E2%86%92%E2%86%93%E2%86%94%E2%86%97%E2%87%8C%E2%87%92%E2%87%94%E2%88%82%E2%88%88%E2%88%92%E2%88%93%E2%88%9A%E2%88%9D%E2%88%9E%E2%88%AB%E2%89%88%E2%89%A0%E2%89%A1%E2%89%A4%E2%89%A5%E2%89%AA%E2%89%AB%E2%8A%95%E2%8A%97%E2%8A%99%E2%8A%A5%E2%96%B2%E2%96%B6%E2%97%80%E2%97%8B%E2%97%8F%E2%9C%93%E2%9C%97%E2%9D%9A%E2%9F%82%E2%9F%A8%E2%9F%A9&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) two pulses superpose; interference of two co-moving waves  (2) reflection at fixed / free end
+   (3) two opposite waves → standing wave  (4) string fixed at both ends: mode stepper  (5) closed vs open pipes
+   (6) beats with optional Web Audio (off by default) */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --acc:#b0377a; --disp:#1f8f87; --ke:#0f8a4f; --pe:#8a6d1f;
+  --b1:#7a52c7; --b2:#1f8f87; --b3:#b0377a; --b4:#8a6d1f;
+  --c1:#4d8a22; --c2:#94502a; /* page-local categorical colours: green, sienna */
+  --f-display:"Bricolage Grotesque","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","Noto Sans Math","Noto Sans Symbols 2",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a;
+  --b1:#a585f0; --b2:#3cb8ad; --b3:#e86fae; --b4:#d4b44a; --c1:#93cf62; --c2:#d9926a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a;
+  --b1:#a585f0; --b2:#3cb8ad; --b3:#e86fae; --b4:#d4b44a; --c1:#93cf62; --c2:#d9926a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:7.5em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:7.5em;text-align:right}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+.drag{cursor:ew-resize;touch-action:none}
+.step{display:inline-flex;align-items:center;gap:8px}
+.step .btn{min-width:34px;font:600 15px var(--f-mono);padding:4px 8px}
+.step output{font:500 14px var(--f-mono);min-width:12ch;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Superposition, Standing Waves and Beats</h1>
+    <p class="lede">When two waves meet, the medium simply adds their displacements. That one rule explains why pulses pass through each other, why a pulse flips over at a fixed end, why a guitar string or a flute can only sound certain notes, and why two nearly equal notes throb. The last section adds the Doppler effect: what motion does to the note you hear.</p>
+  </header>
+
+  <!-- 1 · superposition -->
+  <section class="stack">
+    <div>
+      <h2>1 · Two pulses pass through each other</h2>
+      <p class="lede">Two pulses run toward each other on a long string. Scrub the time, or play. Dashed: each pulse on its own. Solid: the actual string, their sum.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row"><div class="chips" id="pcase" role="group" aria-label="Pulse shapes"><button class="chip" data-k="same">Both up</button><button class="chip" data-k="opp">One up, one down</button></div>
+          <button class="btn primary" id="pplay">Play</button></div>
+        <div class="svgbox"><svg id="pul" viewBox="0 0 640 200" role="img" aria-label="Two pulses on a string" style="min-width:440px"></svg></div>
+        <div class="slider"><label for="pt">time</label><input type="range" id="pt" min="0" max="1" step="0.005" value="0.3"><output id="pto"></output></div>
+        <div class="legend"><span><i style="background:var(--c1)"></i>pulse moving right</span><span><i style="background:var(--c2)"></i>pulse moving left</span><span><i style="background:var(--ink)"></i>string = sum</span></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="pstate"></p>
+        <p class="cap key" id="pcap"></p>
+        <p class="cap"><b>Principle of superposition:</b> y = y₁ + y₂. Each pulse moves as if the other were not there, and comes out unchanged. This holds for small displacements, which is why it is a model, not a law for every medium.</p>
+      </div>
+    </div>
+    <div class="panel stack">
+      <h3>Two waves in the same direction: interference</h3>
+      <p class="muted">Two waves of equal amplitude a and the same frequency travel the same way, one shifted by a phase difference φ. Their sum is again a wave of the same λ and ν, but its amplitude depends on φ.</p>
+      <div class="split">
+        <div class="svgbox"><svg id="intf" viewBox="0 0 640 170" role="img" aria-label="Two waves and their sum" style="min-width:420px"></svg></div>
+        <div class="stack">
+          <div class="slider"><label for="iph">phase difference φ</label><input type="range" id="iph" min="0" max="24" step="1" value="6"><output id="ipho"></output></div>
+          <dl class="kv" id="ikv"></dl>
+          <p class="cap">Resultant amplitude <b>2a cos(φ/2)</b>: 2a in phase (φ = 0, 2π…, constructive), 0 when φ = π (destructive).</p>
+        </div>
+      </div>
+    </div>
+    <div class="qgrid" id="q1"></div>
+  </section>
+
+  <!-- 2 · reflection -->
+  <section class="stack">
+    <div>
+      <h2>2 · Reflection: fixed end and free end</h2>
+      <p class="lede">A pulse reaches the end of the string. At a <b>fixed end</b> (tied to a wall) the end cannot move. At a <b>free end</b> (a light ring sliding on a smooth rod) nothing holds it sideways. Predict which one sends the pulse back upside down, then play.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row"><div class="chips" id="rend" role="group" aria-label="Kind of end"><button class="chip" data-k="fixed">Fixed end</button><button class="chip" data-k="free">Free end</button></div>
+          <button class="btn primary" id="rplay">Play</button><label class="muted"><input type="checkbox" id="rghost"> show the trick</label></div>
+        <div class="svgbox"><svg id="refl" viewBox="0 0 640 200" role="img" aria-label="Pulse reflecting at the end of a string" style="min-width:440px"></svg></div>
+        <div class="slider"><label for="rt">time</label><input type="range" id="rt" min="0" max="1" step="0.005" value="0.2"><output id="rto"></output></div>
+      </div>
+      <div class="panel stack">
+        <p class="cap key" id="rcap"></p>
+        <p class="cap" id="rtrick" hidden><b>The trick:</b> imagine the string continues past the end, with a mirror-image pulse coming the other way. Fixed end: the image is upside down, so the two always cancel at the wall (y = 0 there). Free end: the image is upright, so at the end they add and the ring swings to twice the height. Rigid boundary → phase change π; free boundary → no phase change. The open end of an organ pipe behaves like the free end.</p>
+        <p class="cap">At a join between two different strings (or two media) part of the pulse goes on and part comes back. Going obliquely into a new medium, the transmitted wave bends: refraction, with Snell’s law.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q2"></div>
+  </section>
+
+  <!-- 3 · standing wave -->
+  <section class="stack">
+    <div>
+      <h2>3 · Two opposite waves make a standing wave</h2>
+      <p class="lede">A wave going right and its equal going left (for example, a wave and its reflection). Their sum does not travel at all: some points never move (<b>nodes</b>), others swing the most (<b>antinodes</b>).</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row"><button class="btn primary" id="splay">Play</button><label class="muted"><input type="checkbox" id="sparts" checked> show the two travelling waves</label></div>
+        <div class="svgbox"><svg id="stand" viewBox="0 0 640 230" role="img" aria-label="Standing wave from two travelling waves" style="min-width:440px"></svg></div>
+        <div class="legend"><span><i style="background:var(--c1)"></i>a sin(kx − ωt), going right</span><span><i style="background:var(--c2)"></i>a sin(kx + ωt), going left</span><span><i style="background:var(--ink)"></i>sum</span><span><i style="background:var(--muted)"></i>envelope ±2a sin kx</span></div>
+      </div>
+      <div class="panel stack">
+        <p class="cap key">y = a sin(kx − ωt) + a sin(kx + ωt) = <b>2a sin kx · cos ωt</b>. Position and time now sit in separate factors. Each point oscillates with the same ω, with its own fixed amplitude 2a|sin kx|.</p>
+        <p class="cap">Nodes where sin kx = 0: x = 0, λ/2, λ, … Antinodes where |sin kx| = 1: x = λ/4, 3λ/4, … Node to node: λ/2. Node to the next antinode: λ/4.</p>
+        <p class="cap">All points between two neighbouring nodes move in step (same phase), reaching their extremes together; the next loop moves the opposite way. In a travelling wave it is the other way round: same amplitude everywhere, phase changing along x.</p>
+        <p class="cap">Energy does not flow past a node (nothing there moves), so a standing wave stores energy rather than carrying it.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q3"></div>
+  </section>
+
+  <!-- 4 · string modes -->
+  <section class="stack">
+    <div>
+      <h2>4 · A string fixed at both ends</h2>
+      <p class="lede">Both ends must be nodes. So a whole number of half-wavelengths has to fit on the string: L = nλ/2. Only these wavelengths, and so only these frequencies, survive. Step through the modes.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row"><span class="step"><button class="btn" id="mdn" aria-label="Lower mode">−</button><output id="mn"></output><button class="btn" id="mup" aria-label="Higher mode">+</button></span><button class="btn primary" id="mplay">Play</button><span class="muted">slowed down</span></div>
+        <div class="svgbox"><svg id="mstr" viewBox="0 0 640 190" role="img" aria-label="Normal mode of a string fixed at both ends" style="min-width:440px"></svg></div>
+        <div><h3>Allowed frequencies</h3><div class="svgbox"><svg id="mlad" viewBox="0 0 640 82" role="img" aria-label="Ladder of harmonic frequencies" style="min-width:440px"></svg></div></div>
+      </div>
+      <div class="panel stack">
+        <div class="slider"><label for="mL">length L</label><input type="range" id="mL" min="0.3" max="1.2" step="0.01" value="0.65"><output id="mLo"></output></div>
+        <div class="slider"><label for="mT">tension</label><input type="range" id="mT" min="20" max="200" step="5" value="80"><output id="mTo"></output></div>
+        <div class="slider"><label for="mmu">mass/length</label><input type="range" id="mmu" min="0.5" max="10" step="0.1" value="2"><output id="mmuo"></output></div>
+        <dl class="kv" id="mkv"></dl>
+        <p class="cap key">λₙ = 2L/n and νₙ = n·v/(2L) = (n/2L)√(T/µ), n = 1, 2, 3, … The lowest, n = 1, is the <b>fundamental</b> (first harmonic); every mode is a whole-number multiple of it.</p>
+      </div>
+    </div>
+    <p class="cap">Shorter, tighter or lighter strings sound higher: that is how a sitar player’s finger, the tuning peg and the thinner strings work (the sonometer checks ν ∝ 1/L at fixed tension). A real plucked string vibrates in many modes at once; where you pluck or bow decides which are strong (plucking at the middle, an antinode of odd modes and a node of even ones, gives almost no even harmonics). That mixture is why a violin and a sitar playing the same note sound different. A tabla skin has its own modes, set by its fixed rim.</p>
+    <div class="qgrid" id="q4"></div>
+  </section>
+
+  <!-- 5 · pipes -->
+  <section class="stack">
+    <div>
+      <h2>5 · Air columns: closed and open pipes</h2>
+      <p class="lede">Sound in a pipe is longitudinal, but the rule is the same. The air at a <b>closed end</b> cannot move: a displacement node. At an <b>open end</b> the air moves freely: a displacement antinode. Count what fits.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row"><div class="chips" id="ptype" role="group" aria-label="Pipe type"><button class="chip" data-k="closed">Closed at one end</button><button class="chip" data-k="open">Open at both ends</button></div></div>
+        <div class="row"><span class="step"><button class="btn" id="pdn" aria-label="Lower mode">−</button><output id="pn"></output><button class="btn" id="pup" aria-label="Higher mode">+</button></span>
+          <div class="chips" id="pshow" role="group" aria-label="What to draw"><button class="chip" data-k="s">displacement</button><button class="chip" data-k="p">pressure</button></div>
+          <button class="btn primary" id="pplay2">Play</button></div>
+        <div class="svgbox"><svg id="pipe" viewBox="0 0 640 200" role="img" aria-label="Standing sound wave in a pipe" style="min-width:440px"></svg></div>
+        <div><h3>Allowed frequencies, same length L</h3><div class="svgbox"><svg id="plad" viewBox="0 0 640 110" role="img" aria-label="Harmonics of open and closed pipes" style="min-width:440px"></svg></div></div>
+      </div>
+      <div class="panel stack">
+        <div class="slider"><label for="pL">pipe length L</label><input type="range" id="pL" min="10" max="100" step="1" value="30"><output id="pLo"></output></div>
+        <dl class="kv" id="pkv"></dl>
+        <p class="cap key" id="pcap2"></p>
+        <p class="cap">The vertical lines are layers of air, moving along the pipe. The shaded lobes draw how far each layer swings, turned sideways so you can see it (schematic). Where layers swing the most, the pressure hardly changes; where they cannot move, neighbours squeeze against them and the pressure swings most. So a displacement node is a pressure antinode, and the other way round.</p>
+        <p class="cap"><span class="hw">rule of thumb</span> The antinode actually sits a little outside an open end. Add an end correction of about 0.6 × (pipe radius) per open end to L. Exam questions say whether to include it.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q5"></div>
+  </section>
+
+  <!-- 6 · beats -->
+  <section class="stack">
+    <div>
+      <h2>6 · Beats</h2>
+      <p class="lede">Two notes of nearly the same frequency. They drift in and out of step: in step they add, half a beat later they cancel. You hear one tone whose loudness throbs.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="beat" viewBox="0 0 640 286" role="img" aria-label="Two close frequencies and their sum" style="min-width:440px"></svg></div>
+        <div class="legend"><span><i style="background:var(--c1)"></i>ν₁</span><span><i style="background:var(--c2)"></i>ν₂</span><span><i style="background:var(--ink)"></i>sum</span><span><i style="background:var(--muted)"></i>envelope</span></div>
+        <div class="row"><button class="btn" id="bsnd">Listen</button><span class="muted" id="bsndn">Sound is off until you press Listen. Both notes are raised by 400 Hz so you can hear them; the beat rate is unchanged.</span></div>
+      </div>
+      <div class="panel stack">
+        <div class="slider"><label for="b1">ν₁</label><input type="range" id="b1" min="5" max="30" step="0.5" value="11"><output id="b1o"></output></div>
+        <div class="slider"><label for="b2">ν₂</label><input type="range" id="b2" min="5" max="30" step="0.5" value="9"><output id="b2o"></output></div>
+        <dl class="kv" id="bkv"></dl>
+        <p class="cap key">s = a cos ω₁t + a cos ω₂t = [2a cos((ω₁ − ω₂)t/2)] · cos((ω₁ + ω₂)t/2). A fast oscillation at the average frequency inside a slow envelope. Loudness peaks whenever the envelope reaches +2a <i>or</i> −2a, so there are <b>|ν₁ − ν₂| beats per second</b>, twice the envelope’s own frequency.</p>
+        <p class="cap">Musicians tune by ear this way: adjust until the beats slow down and vanish. Beats are easy to hear only when the difference is small (a few per second); a larger difference sounds rough, then as two notes.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q6"></div>
+  </section>
+
+  <!-- 7 · Doppler -->
+  <section class="stack">
+    <div>
+      <h2>7 · Doppler effect <span class="hw">JEE Advanced</span></h2>
+      <p class="lede">A siren sounds higher coming toward you and lower going away. The source does not change its note; the motion changes how closely the wavefronts are packed, and how fast you run into them. Each circle below is one wavefront, drawn round the point where the source was when it sent it.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row"><button class="btn primary" id="dplay">Play</button><span class="muted">Slowed down; wavefronts drawn far apart.</span></div>
+        <div class="svgbox"><svg id="dop" viewBox="0 0 640 260" role="img" aria-label="Wavefronts from a moving source reaching an observer" style="min-width:440px"></svg></div>
+        <div class="legend"><span><i style="background:var(--c1)"></i>source S</span><span><i style="background:var(--ink)"></i>observer O</span><span><i style="background:var(--vel)"></i>velocities</span></div>
+      </div>
+      <div class="panel stack">
+        <div class="slider"><label for="dS">source (m/s)</label><input type="range" id="dS" min="-150" max="150" step="5" value="100"><output id="dSo" style="min-width:10ch"></output></div>
+        <div class="slider"><label for="dO">observer (m/s)</label><input type="range" id="dO" min="-150" max="150" step="5" value="0"><output id="dOo" style="min-width:10ch"></output></div>
+        <p class="muted">Positive = moving toward the other one.</p>
+        <dl class="kv" id="dkv"></dl>
+        <p class="cap key" id="dcap"></p>
+      </div>
+    </div>
+    <p class="cap"><b>Read the signs off the picture: approaching → higher.</b> A source moving toward O crowds its wavefronts ahead of it: λ shrinks to (v − v<sub>s</sub>)/ν, so subtract v<sub>s</sub> in the denominator (add it when moving away). An observer moving toward S runs into the wavefronts faster, at v + v<sub>o</sub> relative to them, so add v<sub>o</sub> in the numerator (subtract when moving away). Together: <b>ν′ = ν (v ± v<sub>o</sub>)/(v ∓ v<sub>s</sub>)</b>, upper signs for approaching. The wave itself still travels at v through the air whatever the source does; only λ and the rate of meeting change.</p>
+    <div class="qgrid" id="q7"></div>
+    <div><button class="btn" id="qreset">Reset all answers</button></div>
+  </section>
+
+  <p class="cap">Before this: <a href="travelling-waves.html">Travelling Waves</a> (wave equation, wave speed, speed of sound). Resonance of a driven system: <a href="oscillations.html">Oscillations</a>.</p>
+
+  <footer>
+    <p><b>Models used:</b> small displacements, so waves add exactly; ideal strings (uniform, perfectly flexible, no damping) and ideal pipes (narrow, no end correction unless stated); air at 20 °C as an ideal gas with γ = 1.40, so v = 343 m s⁻¹. Doppler: still air, source and observer moving along the line joining them, both slower than sound. Pipe lobes, pulse shapes and wavefront spacing are schematic, not to scale; all motion is slowed down.</p>
+    <p><b>Based on:</b> NCERT Physics Class 11, "Waves"; H. C. Verma, <i>Concepts of Physics</i> Vol. 1, "Wave Motion and Waves on a String" and "Sound Waves".</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+const AIR={M:0.0289647, gamma:1.40, R:8.314462618, T:293.15}; /* dry air, CODATA R, 20 °C */
+const VS=Math.sqrt(AIR.gamma*AIR.R*AIR.T/AIR.M);              /* ≈ 343 m/s */
+const AUDIO_SHIFT=400; /* Hz added to both notes when listening */
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NS='http://www.w3.org/2000/svg', TAU=2*Math.PI;
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function txt(parent,attrs,s){const t=el('text',attrs,parent);t.textContent=s;return t;}
+function set(e,attrs){for(const k in attrs)e.setAttribute(k,attrs[k]);}
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function press(box,k){box.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===String(k)));}
+const fmt=(v,d)=>(+v).toFixed(d);
+const piFrac=n=>{const g=(a,b)=>b?g(b,a%b):a; if(n===0)return '0'; const d=g(n,12), p=n/d, q=12/d; return (p===1?'':p)+'π'+(q===1?'':'/'+q);};
+const ORD=['','first','second','third','fourth','fifth','sixth','seventh','eighth','ninth','tenth','eleventh'];
+function pathOf(f,x0,x1,N,sx,sy){let d='';for(let i=0;i<=N;i++){const x=x0+(x1-x0)*i/N;d+=(i?'L':'M')+sx(x).toFixed(1)+' '+sy(f(x)).toFixed(1);}return d;}
+/* one animation loop */
+const SCENES=[]; let lastTs=0, looping=false;
+function loop(ts){const dt=lastTs?Math.min(0.05,(ts-lastTs)/1000):0; lastTs=ts; let any=false;
+  SCENES.forEach(s=>{if(s.on&&s.vis){s.tick(dt);any=true;}}); if(any) requestAnimationFrame(loop); else {looping=false;lastTs=0;}}
+function kick(){if(!looping){looping=true;lastTs=0;requestAnimationFrame(loop);}}
+function scene(svg,btn,tick,startOn){
+  const s={on:startOn===undefined?!RM:(startOn&&!RM),vis:true,tick,btn};
+  SCENES.push(s); const lab=()=>{btn.textContent=s.on?'Pause':'Play';}; lab();
+  btn.addEventListener('click',()=>{s.on=!s.on;lab();if(s.onToggle)s.onToggle();kick();});
+  s.stop=()=>{s.on=false;lab();};
+  if('IntersectionObserver' in window){new IntersectionObserver(es=>{es.forEach(e=>{s.vis=e.isIntersecting;});kick();}).observe(svg);}
+  return s;
+}
+function axisLine(svg,x1,x2,y){el('line',{x1,x2,y1:y,y2:y,stroke:'var(--line)','stroke-dasharray':'3 4'},svg);}
+
+/* =================== 1 · PULSES =================== */
+(function(){
+  const svg=$('pul'), L=20, R=620, Y0=120, A=60, W=38;
+  const S={c:load('wav-pcase')==='opp'?'opp':'same',t:0.3};
+  axisLine(svg,L,R,Y0);
+  const p1=el('path',{fill:'none',stroke:'var(--c1)','stroke-width':2,'stroke-dasharray':'6 4'},svg);
+  const p2=el('path',{fill:'none',stroke:'var(--c2)','stroke-width':2,'stroke-dasharray':'6 4'},svg);
+  const sum=el('path',{fill:'none',stroke:'var(--ink)','stroke-width':2.6},svg);
+  const g=(x,c)=>Math.exp(-(((x-c)/W)**2));
+  const pos=t=>({c1:80+t*480,c2:560-t*480});
+  function draw(){
+    press($('pcase'),S.c); $('pt').value=S.t; $('pto').textContent=fmt(S.t,2);
+    const {c1,c2}=pos(S.t), s2=S.c==='same'?1:-1;
+    set(p1,{d:pathOf(x=>A*g(x,c1),L,R,240,x=>x,y=>Y0-y)});
+    set(p2,{d:pathOf(x=>s2*A*g(x,c2),L,R,240,x=>x,y=>Y0-y)});
+    set(sum,{d:pathOf(x=>A*g(x,c1)+s2*A*g(x,c2),L,R,320,x=>x,y=>Y0-y)});
+    const ov=Math.abs(c1-c2);
+    let st,c;
+    if(ov>4*W){st=c1<c2?'Approaching':'Moving apart';c=c1<c2?'Two separate pulses. Where they don’t overlap, the string just shows each one.':'They have passed straight through each other and come out with exactly their old shapes and speeds. Neither “bounced”.';}
+    else if(S.c==='same'){st=ov<6?'Fully overlapping: double height':'Overlapping: heights add';c='Where both pulses are, the string’s displacement is the sum. Exactly on top of each other, the height is 2 × the height of one pulse.';}
+    else {st=ov<6?'Fully overlapping: the string is flat':'Overlapping: heights subtract';c=ov<6?'For an instant the string is completely flat, yet the pulses re-emerge. The energy is still there: the string is flat but <i>moving</i> (its parts have velocity), so all the energy is kinetic for that instant.':'The up-pulse and the down-pulse cancel where they overlap.';}
+    $('pstate').textContent=st; $('pcap').innerHTML=c;
+  }
+  $('pcase').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;S.c=b.dataset.k;store('wav-pcase',S.c);draw();});
+  $('pt').addEventListener('input',e=>{S.t=+e.target.value;sc.stop();draw();});
+  draw();
+  const sc=scene(svg,$('pplay'),dt=>{S.t+=dt*0.18;if(S.t>1)S.t=0;draw();},false);
+})();
+(function(){ /* interference */
+  const svg=$('intf'), L=20,R=620, Y0=85, A=26;
+  axisLine(svg,L,R,Y0);
+  const w1=el('path',{fill:'none',stroke:'var(--c1)','stroke-width':1.6,'stroke-dasharray':'5 4'},svg);
+  const w2=el('path',{fill:'none',stroke:'var(--c2)','stroke-width':1.6,'stroke-dasharray':'5 4'},svg);
+  const ws=el('path',{fill:'none',stroke:'var(--ink)','stroke-width':2.6},svg);
+  const k=TAU/240;
+  function draw(){
+    const n=+$('iph').value, ph=n*Math.PI/12;
+    $('ipho').textContent=piFrac(n);
+    set(w1,{d:pathOf(x=>A*Math.sin(k*x),L,R,240,x=>x,y=>Y0-y)});
+    set(w2,{d:pathOf(x=>A*Math.sin(k*x+ph),L,R,240,x=>x,y=>Y0-y)});
+    set(ws,{d:pathOf(x=>A*(Math.sin(k*x)+Math.sin(k*x+ph)),L,R,240,x=>x,y=>Y0-y)});
+    const amp=2*Math.abs(Math.cos(ph/2));
+    $('ikv').innerHTML=`<dt>resultant amplitude</dt><dd>${fmt(amp,2)} a</dd><dt>kind</dt><dd>${amp>1.999?'fully constructive':amp<0.001?'fully destructive':'partial'}</dd>`;
+  }
+  $('iph').addEventListener('input',draw); draw();
+})();
+
+/* =================== 2 · REFLECTION =================== */
+(function(){
+  const svg=$('refl'), L=20, X1=560, Y0=110, A=52, W=34;
+  const S={e:load('wav-rend')==='free'?'free':'fixed',t:0.2,seen:{fixed:false,free:false}};
+  const reveal=()=>{S.seen[S.e]=true;$('rtrick').hidden=false;};
+  axisLine(svg,L,X1,Y0);
+  const wall=el('g',{},svg);
+  el('rect',{x:X1,y:30,width:16,height:160,fill:'var(--muted)',opacity:.35},wall);
+  for(let y=34;y<190;y+=12) el('line',{x1:X1+16,x2:X1+24,y1:y,y2:y+8,stroke:'var(--muted)'},wall);
+  const rod=el('g',{},svg);
+  el('line',{x1:X1,x2:X1,y1:24,y2:196,stroke:'var(--muted)','stroke-width':4},rod);
+  const ring=el('ellipse',{cx:X1,rx:5,ry:9,fill:'none',stroke:'var(--ink)','stroke-width':2.4},svg);
+  const ghostInc=el('path',{fill:'none',stroke:'var(--c1)','stroke-width':1.6,'stroke-dasharray':'5 4'},svg);
+  const ghostImg=el('path',{fill:'none',stroke:'var(--c2)','stroke-width':1.6,'stroke-dasharray':'5 4'},svg);
+  const beyond=el('rect',{x:X1+1,y:10,width:80,height:190,fill:'var(--surface)',opacity:.55},svg);
+  const str=el('path',{fill:'none',stroke:'var(--ink)','stroke-width':2.6},svg);
+  const lab=txt(svg,{x:X1-8,y:20,'font-size':12,fill:'var(--muted)','text-anchor':'end'},'');
+  const g=x=>Math.exp(-((x/W)**2));
+  function draw(){
+    press($('rend'),S.e); $('rt').value=S.t; $('rto').textContent=fmt(S.t,2);
+    const c=100+S.t*920, ci=2*X1-c, sg=S.e==='fixed'?-1:1, show=$('rghost').checked;
+    const inc=x=>A*g(x-c), img=x=>sg*A*g(x-ci);
+    set(str,{d:pathOf(x=>inc(x)+img(x),L,X1,300,x=>x,y=>Y0-y)});
+    set(ghostInc,{d:pathOf(inc,L,X1+80,300,x=>x,y=>Y0-y),visibility:show?'visible':'hidden'});
+    set(ghostImg,{d:pathOf(img,L,X1+80,300,x=>x,y=>Y0-y),visibility:show?'visible':'hidden'});
+    set(beyond,{visibility:show?'visible':'hidden'});
+    set(wall,{visibility:S.e==='fixed'?'visible':'hidden'}); set(rod,{visibility:S.e==='free'?'visible':'hidden'});
+    const ye=inc(X1)+img(X1); set(ring,{cy:Y0-ye,visibility:S.e==='free'?'visible':'hidden'});
+    lab.textContent=S.e==='fixed'?'tied to a wall':'ring on a smooth rod';
+    if(!S.seen[S.e]){$('rcap').innerHTML='<b>Predict first:</b> will the pulse come back on the same side or upside down? Then press Play or drag the time slider.';return;}
+    $('rcap').innerHTML=S.e==='fixed'
+      ?'<b>Fixed end: the pulse comes back upside down.</b> As the pulse arrives, the string pulls up on the wall; the wall pulls down on the string (Newton’s third law), launching an inverted pulse. Reflected wave: y = −a sin(kx + ωt), a phase change of π.'
+      :'<b>Free end: the pulse comes back upright.</b> Nothing holds the ring down, so it is pulled up to twice the pulse height (watch it), and its fall sends an upright pulse back. Reflected wave: y = +a sin(kx + ωt), no phase change.';
+  }
+  $('rend').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;S.e=b.dataset.k;store('wav-rend',S.e);draw();});
+  $('rt').addEventListener('input',e=>{S.t=+e.target.value;sc.stop();reveal();draw();});
+  $('rplay').addEventListener('click',()=>{reveal();draw();});
+  $('rghost').addEventListener('change',()=>{reveal();draw();});
+  draw();
+  const sc=scene(svg,$('rplay'),dt=>{S.t+=dt*0.16;if(S.t>1)S.t=0;draw();},false);
+})();
+
+/* =================== 3 · STANDING WAVE =================== */
+(function(){
+  const svg=$('stand'), L=20, R=620, Y0=110, A=34, LAM=240, k=TAU/LAM;
+  const S={t:0};
+  axisLine(svg,L,R,Y0);
+  const env=el('path',{fill:'none',stroke:'var(--muted)','stroke-width':1.2,'stroke-dasharray':'2 4'},svg);
+  set(env,{d:pathOf(x=>2*A*Math.sin(k*(x-L)),L,R,240,x=>x,y=>Y0-y)+pathOf(x=>-2*A*Math.sin(k*(x-L)),L,R,240,x=>x,y=>Y0-y)});
+  const w1=el('path',{fill:'none',stroke:'var(--c1)','stroke-width':1.6,'stroke-dasharray':'5 4'},svg);
+  const w2=el('path',{fill:'none',stroke:'var(--c2)','stroke-width':1.6,'stroke-dasharray':'5 4'},svg);
+  const ws=el('path',{fill:'none',stroke:'var(--ink)','stroke-width':2.6},svg);
+  for(let n=0;L+n*LAM/2<=R+0.1;n++){const x=L+n*LAM/2;el('circle',{cx:x,cy:Y0,r:5,fill:'var(--surface)',stroke:'var(--ink)','stroke-width':2},svg);txt(svg,{x,y:Y0+2*A+26,'font-size':12,'font-weight':600,fill:'var(--ink)','text-anchor':'middle'},'N');}
+  for(let n=0;L+LAM/4+n*LAM/2<R;n++){const x=L+LAM/4+n*LAM/2;txt(svg,{x,y:Y0+2*A+26,'font-size':12,'font-weight':600,fill:'var(--accent)','text-anchor':'middle'},'A');}
+  /* λ/2 bracket */
+  el('path',{d:`M${L} ${Y0-2*A-10}V${Y0-2*A-16}H${L+LAM/2}V${Y0-2*A-10}`,fill:'none',stroke:'var(--accent)'},svg);
+  txt(svg,{x:L+LAM/4,y:Y0-2*A-21,'font-size':12,fill:'var(--accent)','text-anchor':'middle'},'λ/2');
+  function draw(){
+    const w=TAU*0.35, t=S.t, show=$('sparts').checked;
+    set(w1,{d:pathOf(x=>A*Math.sin(k*(x-L)-w*t),L,R,240,x=>x,y=>Y0-y),visibility:show?'visible':'hidden'});
+    set(w2,{d:pathOf(x=>A*Math.sin(k*(x-L)+w*t),L,R,240,x=>x,y=>Y0-y),visibility:show?'visible':'hidden'});
+    set(ws,{d:pathOf(x=>2*A*Math.sin(k*(x-L))*Math.cos(w*t),L,R,300,x=>x,y=>Y0-y)});
+  }
+  $('sparts').addEventListener('change',draw);
+  S.t=0.4; draw();
+  scene(svg,$('splay'),dt=>{S.t+=dt;draw();});
+})();
+
+/* =================== 4 · STRING MODES =================== */
+(function(){
+  const svg=$('mstr'), lad=$('mlad'), X0=40, XMAX=600, LMAX=1.2, Y0=92, A=56;
+  let X1=XMAX;                       /* drawn string length is proportional to L */
+  const S={n:+(load('wav-mode')||2),L:0.65,T:80,mu:2,t:0.3};
+  if(!(S.n>=1&&S.n<=6)) S.n=2;
+  el('rect',{x:X0-12,y:30,width:12,height:124,fill:'var(--muted)',opacity:.35},svg);
+  const wallR=el('rect',{y:30,width:12,height:124,fill:'var(--muted)',opacity:.35},svg);
+  const rest=el('line',{x1:X0,y1:Y0,y2:Y0,stroke:'var(--line)','stroke-dasharray':'3 4'},svg);
+  const env=el('path',{fill:'none',stroke:'var(--muted)','stroke-width':1.2,'stroke-dasharray':'2 4'},svg);
+  const str=el('path',{fill:'none',stroke:'var(--ink)','stroke-width':2.6},svg);
+  const marks=el('g',{},svg);
+  const lamB=el('path',{fill:'none',stroke:'var(--accent)'},svg);
+  const lamT=txt(svg,{'font-size':12,fill:'var(--accent)','text-anchor':'middle'},'');
+  /* ladder */
+  /* ladder on a fixed axis in hertz, so the sliders visibly move the rungs */
+  const LX0=30, LX1=610, LY=40, FMAX=2000, FX=f=>LX0+f/FMAX*(LX1-LX0);
+  el('line',{x1:LX0,x2:LX1,y1:LY,y2:LY,stroke:'var(--muted)'},lad);
+  for(let f=0;f<=FMAX;f+=250){const maj=f%500===0;el('line',{x1:FX(f),x2:FX(f),y1:LY,y2:LY+(maj?6:3),stroke:'var(--muted)'},lad);
+    if(maj) txt(lad,{x:FX(f),y:LY+19,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},f);}
+  txt(lad,{x:LX1,y:LY+33,'font-size':10.5,fill:'var(--muted)','text-anchor':'end'},'frequency (Hz)');
+  const rungs=[],rl=[];
+  for(let n=1;n<=6;n++){rungs.push(el('line',{y1:LY-16,y2:LY,'stroke-width':3},lad));rl.push(txt(lad,{y:LY-21,'font-size':11,'text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},''));}
+  const offT=txt(lad,{x:LX0,y:LY+33,'font-size':10.5,fill:'var(--muted)'},'');
+  function draw(){
+    const n=S.n, kx=x=>Math.sin(n*Math.PI*(x-X0)/(X1-X0)), c=Math.cos(TAU*0.4*n*S.t);
+    set(str,{d:pathOf(x=>A*kx(x)*c,X0,X1,300,x=>x,y=>Y0-y)});
+    set(env,{d:pathOf(x=>A*kx(x),X0,X1,240,x=>x,y=>Y0-y)+pathOf(x=>-A*kx(x),X0,X1,240,x=>x,y=>Y0-y)});
+  }
+  function layout(){
+    const n=S.n, v=Math.sqrt(S.T/(S.mu/1000)), f1=v/(2*S.L);
+    X1=X0+(XMAX-X0)*S.L/LMAX; set(wallR,{x:X1}); set(rest,{x2:X1});
+    $('mn').textContent=`n = ${n}`;
+    $('mLo').textContent=fmt(S.L,2)+' m'; $('mTo').textContent=S.T+' N'; $('mmuo').textContent=fmt(S.mu,1)+' g/m';
+    let g='';
+    for(let j=0;j<=n;j++){const x=X0+j*(X1-X0)/n;g+=`<circle cx="${x}" cy="${Y0}" r="4.5" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><text x="${x}" y="${Y0+A+24}" font-size="12" font-weight="600" fill="var(--ink)" text-anchor="middle">N</text>`;}
+    for(let j=0;j<n;j++){const x=X0+(j+0.5)*(X1-X0)/n;g+=`<text x="${x}" y="${Y0+A+24}" font-size="12" font-weight="600" fill="var(--accent)" text-anchor="middle">A</text>`;}
+    marks.innerHTML=g;
+    const lx=(X1-X0)*2/n, xe=Math.min(X1,X0+lx);
+    set(lamB,{d:`M${X0} ${Y0-A-8}V${Y0-A-14}H${xe}V${Y0-A-8}`});
+    set(lamT,{x:(X0+xe)/2,y:Y0-A-19}); lamT.textContent=n===1?'λ/2 = L':(n===2?'λ = L':'λ = 2L/'+n);
+    const gap=FX(f1)-FX(0); let off=0;
+    for(let j=1;j<=6;j++){const on=j===n, f=j*f1, vis=f<=FMAX;
+      if(!vis) off++;
+      set(rungs[j-1],{x1:FX(f),x2:FX(f),visibility:vis?'visible':'hidden',stroke:on?'var(--accent)':'var(--muted)',opacity:on?1:.5});
+      /* label every rung when they are far enough apart, otherwise only the chosen one */
+      set(rl[j-1],{x:FX(f),visibility:vis&&(on||gap>=34)?'visible':'hidden',fill:on?'var(--accent)':'var(--muted)'});rl[j-1].textContent=j+'ν₁';}
+    offT.textContent=off?off+' higher mode'+(off>1?'s':'')+' beyond 2000 Hz':'';
+    $('mkv').innerHTML=`<dt>wave speed √(T/µ)</dt><dd>${fmt(v,1)} m s⁻¹</dd><dt>wavelength 2L/n</dt><dd>${fmt(2*S.L/n,3)} m</dd><dt>fundamental ν₁</dt><dd>${fmt(f1,1)} Hz</dd><dt>this mode νₙ</dt><dd>${fmt(n*f1,1)} Hz</dd><dt>name</dt><dd>${n===1?'fundamental (1st harmonic)':ORD[n]+' harmonic'}</dd><dt>nodes / antinodes</dt><dd>${n+1} / ${n}</dd>`;
+    $('mdn').disabled=n<=1; $('mup').disabled=n>=6;
+    draw();
+  }
+  $('mdn').onclick=()=>{if(S.n>1){S.n--;store('wav-mode',S.n);layout();}};
+  $('mup').onclick=()=>{if(S.n<6){S.n++;store('wav-mode',S.n);layout();}};
+  [['mL','L'],['mT','T'],['mmu','mu']].forEach(([id,key])=>$(id).addEventListener('input',e=>{S[key]=+e.target.value;layout();}));
+  layout();
+  scene(svg,$('mplay'),dt=>{S.t+=dt;draw();});
+})();
+
+/* =================== 5 · PIPES =================== */
+(function(){
+  const svg=$('pipe'), lad=$('plad'), X0=50, X1=590, YC=92, HH=50, NL=36, AMP=11;
+  const S={type:load('wav-pipe')==='open'?'open':'closed',idx:0,show:'s',L:30,t:0};
+  /* pipe walls */
+  el('line',{x1:X0,x2:X1,y1:YC-HH,y2:YC-HH,stroke:'var(--ink)','stroke-width':3},svg);
+  el('line',{x1:X0,x2:X1,y1:YC+HH,y2:YC+HH,stroke:'var(--ink)','stroke-width':3},svg);
+  const cap=el('rect',{x:X0-10,y:YC-HH-1.5,width:10,height:2*HH+3,fill:'var(--ink)'},svg);
+  const lobe=el('path',{fill:'var(--accent)','fill-opacity':.14,stroke:'var(--accent)','stroke-width':1.4},svg);
+  const layers=[];for(let i=0;i<NL;i++) layers.push(el('line',{y1:YC-HH+4,y2:YC+HH-4,stroke:'var(--ink)','stroke-width':1.3,opacity:.6},svg));
+  const marks=el('g',{},svg);
+  const capT=txt(svg,{x:X0-6,y:YC-HH-10,'font-size':11.5,fill:'var(--muted)'},'');
+  const endT=txt(svg,{x:X1,y:YC-HH-10,'font-size':11.5,fill:'var(--muted)','text-anchor':'end'},'open');
+  const LX0=110, LX1=620, rows=[{t:'open',y:30},{t:'closed',y:80}];
+  rows.forEach(r=>{el('line',{x1:LX0,x2:LX1,y1:r.y,y2:r.y,stroke:'var(--muted)'},lad);r.lab=txt(lad,{x:LX0-10,y:r.y+4,'font-size':12,'text-anchor':'end','font-weight':600},r.t==='open'?'open pipe':'closed pipe');r.r=[];r.l=[];
+    for(let j=0;j<12;j++){r.r.push(el('line',{y1:r.y-12,y2:r.y+4,'stroke-width':3},lad));r.l.push(txt(lad,{y:r.y+18,'font-size':10.5,'text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},''));}});
+  const harm=()=>S.type==='closed'?2*S.idx+1:S.idx+1;       /* harmonic number */
+  /* displacement amplitude along the pipe, u in [0,1] from the left end */
+  const disp=u=>{const h=harm();return S.type==='closed'?Math.sin(h*Math.PI*u/2):Math.cos(h*Math.PI*u);};
+  const pres=u=>{const h=harm();return S.type==='closed'?Math.cos(h*Math.PI*u/2):Math.sin(h*Math.PI*u);};
+  function draw(){
+    const c=Math.cos(TAU*0.5*S.t*(1+0.25*S.idx));
+    for(let i=0;i<NL;i++){const u=(i+0.5)/NL, x=X0+u*(X1-X0)+AMP*disp(u)*c;set(layers[i],{x1:x.toFixed(1),x2:x.toFixed(1)});}
+  }
+  function layout(){
+    const h=harm(), f1c=VS/(4*S.L/100), f1o=VS/(2*S.L/100), f=S.type==='closed'?h*f1c:h*f1o;
+    press($('ptype'),S.type); press($('pshow'),S.show);
+    $('pn').textContent=(h===1?'fundamental':ORD[h]+' harmonic');
+    $('pLo').textContent=S.L+' cm';
+    set(cap,{visibility:S.type==='closed'?'visible':'hidden'}); capT.textContent=S.type==='closed'?'closed':'open';
+    /* lobes: ±amplitude of the chosen quantity */
+    const F=S.show==='s'?disp:pres, Hh=HH-6;
+    let d=''; for(let i=0;i<=200;i++){const u=i/200;d+=(i?'L':'M')+(X0+u*(X1-X0)).toFixed(1)+' '+(YC-Hh*Math.abs(F(u))).toFixed(1);}
+    for(let i=200;i>=0;i--){const u=i/200;d+='L'+(X0+u*(X1-X0)).toFixed(1)+' '+(YC+Hh*Math.abs(F(u))).toFixed(1);}
+    set(lobe,{d:d+'Z',fill:S.show==='s'?'var(--disp)':'var(--c2)',stroke:S.show==='s'?'var(--disp)':'var(--c2)'});
+    /* N and A labels for displacement */
+    let g='';const h2=harm(), nodes=[], anti=[];
+    if(S.type==='closed'){for(let j=0;2*j<=h2;j++)nodes.push(2*j/h2);for(let j=0;2*j+1<=h2;j++)anti.push((2*j+1)/h2);}
+    else{for(let j=0;j<=h2;j++)anti.push(j/h2);for(let j=0;j<h2;j++)nodes.push((j+0.5)/h2);}
+    const lx=u=>Math.min(X1-5,Math.max(X0+5,X0+u*(X1-X0))).toFixed(1);
+    nodes.forEach(u=>{g+=`<text x="${lx(u)}" y="${YC+HH+20}" font-size="12" font-weight="600" fill="var(--ink)" text-anchor="middle">N</text>`;});
+    anti.forEach(u=>{g+=`<text x="${lx(u)}" y="${YC+HH+20}" font-size="12" font-weight="600" fill="var(--accent)" text-anchor="middle">A</text>`;});
+    g+=`<text x="${X0}" y="${YC+HH+40}" font-size="11" fill="var(--muted)">N, A: displacement node, antinode</text>`;
+    marks.innerHTML=g;
+    /* ladder: common scale up to 12 × closed fundamental */
+    const fmax=12*f1c, FX=q=>LX0+q/fmax*(LX1-LX0);
+    rows.forEach(r=>{for(let j=0;j<12;j++){
+      let q, on=false, vis=true;
+      if(r.t==='open'){q=(j+1)*f1o;vis=j<6;on=S.type==='open'&&j+1===h;}
+      else{q=(j+1)*f1c;on=S.type==='closed'&&j+1===h;}
+      const odd=(j%2===0), missing=r.t==='closed'&&!odd;
+      set(r.r[j],{x1:FX(q),x2:FX(q),visibility:vis?'visible':'hidden',stroke:on?'var(--accent)':missing?'var(--line)':'var(--muted)','stroke-dasharray':missing?'2 2':'none',opacity:on?1:missing?1:.6});
+      set(r.l[j],{x:FX(q),visibility:vis&&!missing&&(r.t==='open'||j<11)?'visible':'hidden',fill:on?'var(--accent)':'var(--muted)'});
+      r.l[j].textContent=Math.round(q);
+      set(r.lab,{fill:S.type===r.t?'var(--accent)':'var(--muted)'});
+    }});
+    $('pkv').innerHTML=`<dt>speed of sound (20 °C)</dt><dd>${fmt(VS,0)} m s⁻¹</dd><dt>wavelength</dt><dd>${fmt(VS/f*100,1)} cm</dd><dt>this mode</dt><dd>${fmt(f,0)} Hz</dd><dt>fundamental</dt><dd>${fmt(S.type==='closed'?f1c:f1o,0)} Hz = v/${S.type==='closed'?'4':'2'}L</dd>`;
+    $('pcap2').innerHTML=S.type==='closed'
+      ?`<b>Closed at one end:</b> node at the closed end, antinode at the open end. The shortest fit is a quarter wavelength: L = λ/4, so ν₁ = v/4L. Each next fit adds half a wavelength: L = λ/4, 3λ/4, 5λ/4… giving ν = v/4L, 3v/4L, 5v/4L… <b>Only odd harmonics.</b> An even one would need a node at the open end.`
+      :`<b>Open at both ends:</b> antinodes at both ends, so L = λ/2, λ, 3λ/2… and ν = n·v/2L with <b>every</b> n = 1, 2, 3… Its fundamental is twice that of a closed pipe of the same length (compare the two ladders).`;
+    $('pdn').disabled=S.idx<=0; $('pup').disabled=S.idx>=(S.type==='closed'?4:5);
+    draw();
+  }
+  $('ptype').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;S.type=b.dataset.k;S.idx=0;store('wav-pipe',S.type);layout();});
+  $('pshow').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;S.show=b.dataset.k;layout();});
+  $('pdn').onclick=()=>{if(S.idx>0){S.idx--;layout();}};
+  $('pup').onclick=()=>{if(S.idx<(S.type==='closed'?4:5)){S.idx++;layout();}};
+  $('pL').addEventListener('input',e=>{S.L=+e.target.value;layout();});
+  layout();
+  scene(svg,$('pplay2'),dt=>{S.t+=dt;draw();});
+})();
+
+/* =================== 6 · BEATS =================== */
+(function(){
+  const svg=$('beat'), X0=30, X1=620, TW=2;            /* 2 s window */
+  const sx=t=>X0+t/TW*(X1-X0);
+  const Y1=26, Y2=70, YS=180, a1=14, as=26;
+  [Y1,Y2,YS].forEach(y=>axisLine(svg,X0,X1,y));
+  for(let t=0;t<=TW;t+=0.5){txt(svg,{x:sx(t),y:270,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},t);}
+  txt(svg,{x:X1,y:252,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'t (s)');
+  const w1=el('path',{fill:'none',stroke:'var(--c1)','stroke-width':1.4},svg);
+  const w2=el('path',{fill:'none',stroke:'var(--c2)','stroke-width':1.4},svg);
+  const env=el('path',{fill:'none',stroke:'var(--muted)','stroke-width':1.4,'stroke-dasharray':'4 3'},svg);
+  const ws=el('path',{fill:'none',stroke:'var(--ink)','stroke-width':1.6},svg);
+  const bm=el('g',{},svg);
+  const S={n1:11,n2:9};
+  function draw(){
+    $('b1o').textContent=fmt(S.n1,1)+' Hz'; $('b2o').textContent=fmt(S.n2,1)+' Hz';
+    const N=1200;
+    set(w1,{d:pathOf(t=>a1*Math.cos(TAU*S.n1*t),0,TW,N,sx,y=>Y1-y)});
+    set(w2,{d:pathOf(t=>a1*Math.cos(TAU*S.n2*t),0,TW,N,sx,y=>Y2-y)});
+    set(ws,{d:pathOf(t=>as*(Math.cos(TAU*S.n1*t)+Math.cos(TAU*S.n2*t)),0,TW,N,sx,y=>YS-y)});
+    const e=t=>2*as*Math.cos(Math.PI*(S.n1-S.n2)*t);
+    set(env,{d:pathOf(e,0,TW,300,sx,y=>YS-y)+pathOf(t=>-e(t),0,TW,300,sx,y=>YS-y)});
+    const db=Math.abs(S.n1-S.n2);
+    let g='';
+    if(db>0){for(let m=0;m/db<=TW+1e-9;m++){const x=sx(m/db);g+=`<line x1="${x}" x2="${x}" y1="${YS-2*as-10}" y2="${YS-2*as-2}" stroke="var(--accent)" stroke-width="2"/>`;}
+      g+=`<text x="${X0}" y="${YS-2*as-14}" font-size="11" fill="var(--accent)">ticks: loudest moments</text>`;}
+    bm.innerHTML=g;
+    $('bkv').innerHTML=`<dt>average frequency</dt><dd>${fmt((S.n1+S.n2)/2,2)} Hz</dd><dt>beat frequency |ν₁ − ν₂|</dt><dd>${fmt(db,1)} Hz</dd><dt>time between beats</dt><dd>${db>0?fmt(1/db,2)+' s':'no beats'}</dd>`;
+    updAudio();
+  }
+  /* optional sound, created only on explicit request */
+  let ctx=null, o1=null, o2=null, gain=null;
+  function updAudio(){if(o1&&ctx){o1.frequency.setValueAtTime(AUDIO_SHIFT+S.n1,ctx.currentTime);o2.frequency.setValueAtTime(AUDIO_SHIFT+S.n2,ctx.currentTime);
+    $('bsndn').textContent=`Playing ${fmt(AUDIO_SHIFT+S.n1,1)} Hz and ${fmt(AUDIO_SHIFT+S.n2,1)} Hz: ${fmt(Math.abs(S.n1-S.n2),1)} beats per second.`;}}
+  function stopAudio(){if(o1){try{o1.stop();o2.stop();}catch(e){} o1=o2=null;} $('bsnd').textContent='Listen';
+    $('bsndn').textContent='Sound is off until you press Listen. Both notes are raised by 400 Hz so you can hear them; the beat rate is unchanged.';}
+  $('bsnd').addEventListener('click',()=>{
+    if(o1){stopAudio();return;}
+    try{
+      const AC=window.AudioContext||window.webkitAudioContext; if(!AC){$('bsndn').textContent='Sound is not available in this browser.';return;}
+      ctx=ctx||new AC(); if(ctx.state==='suspended') ctx.resume();
+      gain=ctx.createGain(); gain.gain.setValueAtTime(0,ctx.currentTime); gain.gain.linearRampToValueAtTime(0.12,ctx.currentTime+0.1); gain.connect(ctx.destination);
+      o1=ctx.createOscillator(); o2=ctx.createOscillator(); o1.connect(gain); o2.connect(gain);
+      o1.start(); o2.start(); $('bsnd').textContent='Stop sound'; updAudio();
+    }catch(e){$('bsndn').textContent='Sound could not start in this browser.';}
+  });
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&o1)stopAudio();});
+  $('b1').addEventListener('input',e=>{S.n1=+e.target.value;draw();});
+  $('b2').addEventListener('input',e=>{S.n2=+e.target.value;draw();});
+  draw();
+})();
+
+
+/* =================== 7 · DOPPLER =================== */
+const DOP={nu:500}; /* Hz, source frequency used in the readouts */
+(function(){
+  const svg=$('dop'), Y0=130, PXV=110, TV=0.32;     /* sound drawn at 110 px/s, one wavefront every 0.32 s (slowed) */
+  const S={us:100,uo:0,t:0};
+  axisLine(svg,10,630,Y0);
+  const circ=[]; for(let j=0;j<26;j++) circ.push(el('circle',{cx:0,cy:Y0,r:1,fill:'none',stroke:'var(--muted)','stroke-width':1.3,opacity:.75},svg));
+  const bA=el('path',{fill:'none',stroke:'var(--accent)','stroke-width':1.4},svg), bB=el('path',{fill:'none',stroke:'var(--accent)','stroke-width':1.4},svg);
+  const tA=txt(svg,{'font-size':12,fill:'var(--accent)','text-anchor':'middle',stroke:'var(--surface)','stroke-width':4,'paint-order':'stroke'},''), tB=txt(svg,{'font-size':12,fill:'var(--accent)','text-anchor':'middle',stroke:'var(--surface)','stroke-width':4,'paint-order':'stroke'},'');
+  const sDot=el('circle',{r:8,fill:'var(--c1)'},svg), sLab=txt(svg,{'font-size':13,'font-weight':700,fill:'var(--c1)','text-anchor':'middle',stroke:'var(--surface)','stroke-width':4,'paint-order':'stroke'},'S');
+  const oBody=el('circle',{r:9,fill:'var(--ink)'},svg), oRing=el('circle',{r:15,fill:'none',stroke:'var(--ink)','stroke-width':2},svg);
+  const oLab=txt(svg,{'font-size':13,'font-weight':700,fill:'var(--ink)','text-anchor':'middle',stroke:'var(--surface)','stroke-width':4,'paint-order':'stroke'},'O');
+  const sV=el('path',{stroke:'var(--vel)','stroke-width':2.2,fill:'var(--vel)'},svg), oV=el('path',{stroke:'var(--vel)','stroke-width':2.2,fill:'var(--vel)'},svg);
+  function arrowD(x1,y1,x2,y2,h){const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy);if(L<2)return '';h=Math.min(h||8,L*0.6);
+    const ux=dx/L,uy=dy/L,bx=x2-ux*h,by=y2-uy*h,px=-uy*h*0.5,py=ux*h*0.5;
+    return `M${x1.toFixed(1)} ${y1.toFixed(1)}L${bx.toFixed(1)} ${by.toFixed(1)}M${x2.toFixed(1)} ${y2.toFixed(1)}L${(bx+px).toFixed(1)} ${(by+py).toFixed(1)}L${(bx-px).toFixed(1)} ${(by-py).toFixed(1)}Z`;}
+  /* S starts left and moves right when approaching; O sits on the right and moves left when approaching */
+  const xs=t=>(S.us>=0?150:330)+S.us/VS*PXV*t, xo=t=>(S.uo>=0?585:470)-S.uo/VS*PXV*t;
+  function draw(){
+    const t=S.t, x=xs(t), xO=xo(t);
+    /* wavefronts sent at t_e = t − j·TV (also before the cycle began, so the pattern is always full) */
+    const ph=t%TV; let crossAt=[];
+    for(let j=0;j<circ.length;j++){const te=t-ph-j*TV, r=PXV*(t-te), c=xs(te);
+      set(circ[j],{cx:c.toFixed(1),r:Math.max(0.1,r).toFixed(1),opacity:Math.max(0.15,0.85-r/700).toFixed(2)}); crossAt.push({c,r});}
+    /* λ brackets from the two newest complete wavefronts: right crossings (ahead) and left crossings (behind) */
+    const w1=crossAt[1], w2=crossAt[2], yb=Y0+44;
+    const aR1=w1.c+w1.r, aR2=w2.c+w2.r, bL1=w1.c-w1.r, bL2=w2.c-w2.r;
+    set(bA,{d:`M${aR1} ${Y0+4}V${yb}H${aR2}V${Y0+4}`}); set(tA,{x:(aR1+aR2)/2,y:yb+15}); tA.textContent=S.us>=0?'λ ahead':'λ behind';
+    set(bB,{d:`M${bL1} ${Y0+4}V${yb}H${bL2}V${Y0+4}`}); set(tB,{x:(bL1+bL2)/2,y:yb+15}); tB.textContent=S.us>=0?'λ behind':'λ ahead';
+    set(sDot,{cx:x,cy:Y0}); set(sLab,{x,y:Y0-14});
+    set(sV,{d:arrowD(x,Y0-30,x+S.us*0.35,Y0-30,8),visibility:Math.abs(S.us)>0?'visible':'hidden'});
+    /* observer flashes when a wavefront passes over it */
+    const hit=crossAt.some(w=>{const d=Math.abs(xO-w.c);return w.r>=d&&w.r-d<PXV*0.05;});
+    set(oBody,{cx:xO,cy:Y0}); set(oRing,{cx:xO,cy:Y0,visibility:hit?'visible':'hidden'}); set(oLab,{x:xO,y:Y0+32});
+    set(oV,{d:arrowD(xO,Y0-36,xO-S.uo*0.35,Y0-36,8),visibility:Math.abs(S.uo)>0?'visible':'hidden'});
+    if(x>xO-40||x<20||xO>632||xO<20) S.t=0;           /* restart the run before they meet or leave */
+  }
+  function readout(){
+    const lab=u=>u===0?'at rest':Math.abs(u)+' '+(u>0?'toward':'away');
+    $('dSo').textContent=lab(S.us); $('dOo').textContent=lab(S.uo);
+    const lamS=(VS-S.us)/DOP.nu, f=DOP.nu*(VS+S.uo)/(VS-S.us);
+    $('dkv').innerHTML=`<dt>source note ν</dt><dd>${DOP.nu} Hz</dd><dt>speed of sound v</dt><dd>${fmt(VS,0)} m s⁻¹</dd><dt>λ reaching O</dt><dd>${fmt(lamS*100,1)} cm (at rest: ${fmt(VS/DOP.nu*100,1)} cm)</dd><dt>O hears ν′</dt><dd>${fmt(f,1)} Hz</dd>`;
+    const sgS=S.us>=0?'−':'+', sgO=S.uo>=0?'+':'−';
+    $('dcap').innerHTML=`ν′ = ν (v ${sgO} v<sub>o</sub>)/(v ${sgS} v<sub>s</sub>) = ${DOP.nu} × (${fmt(VS,0)} ${sgO} ${Math.abs(S.uo)})/(${fmt(VS,0)} ${sgS} ${Math.abs(S.us)}) = <b>${fmt(f,1)} Hz</b>, ${f>DOP.nu+0.05?'higher than':f<DOP.nu-0.05?'lower than':'equal to'} the source’s ${DOP.nu} Hz.`;
+  }
+  $('dS').addEventListener('input',e=>{S.us=+e.target.value;S.t=0;readout();draw();});
+  $('dO').addEventListener('input',e=>{S.uo=+e.target.value;S.t=0;readout();draw();});
+  S.t=1.2; readout(); draw();
+  scene(svg,$('dplay'),dt=>{S.t+=dt;draw();});
+})();
+
+/* =================== QUIZZES (numbers computed here) =================== */
+const e11={a:0.06,k:2*Math.PI/3,w:120*Math.PI,L:1.5,m:3.0e-2};  /* y = 0.06 sin(2πx/3) cos(120πt) */
+const lam11=TAU/e11.k, nu11=e11.w/TAU, v11=lam11*nu11, T11=(e11.m/e11.L)*v11*v11;
+const e14={nu:45,m:3.5e-2,mu:4.0e-2};                            /* fundamental 45 Hz */
+const L14=e14.m/e14.mu, v14=2*L14*e14.nu, T14=e14.mu*v14*v14;
+const e5={L:0.30,v:330,f:1100};                                  /* 30.0 cm pipe, 1.1 kHz */
+const e17={L:0.20,v:340,f:430};                                  /* 20 cm closed pipe, 430 Hz */
+const e15={f:340,l1:25.5,l2:79.3};                               /* resonance tube */
+const v15=2*(e15.l2-e15.l1)/100*e15.f;
+const dS=DOP.nu*VS/(VS-VS/10), dO=DOP.nu*(VS+VS/10)/VS, dAway=DOP.nu*VS/(VS+VS/10);
+const QUIZ=[
+ {s:'q1',q:'Two pulses of equal size, one up and one down, overlap exactly and the string is flat for an instant. Where is their energy?',
+  o:['It has been destroyed and is recreated later','In the motion of the string: it is all kinetic for that instant','Stored in the ends of the string'],a:1,
+  why:'Each part of the string is still moving even though it is at y = 0, so the energy is all kinetic at that instant. A moment later it is displaced again and the pulses re-emerge.'},
+ {s:'q1',q:'Two waves of amplitude a, same frequency and direction, differ in phase by π/2. Resultant amplitude?',
+  o:['2a','a','√2 a','0'],a:2,why:`2a cos(φ/2) = 2a cos(π/4) = ${fmt(2*Math.cos(Math.PI/4),3)}a = √2 a. Set φ = π/2 on the slider to check.`},
+ {s:'q2',q:'A pulse travels along a string tied firmly to a wall. The reflected pulse is:',
+  o:['upright, same side','inverted (phase change π)','absorbed by the wall'],a:1,
+  why:'The end cannot move, so the incoming and reflected pulses must cancel there at every instant: the reflection is inverted.'},
+ {s:'q2',q:'In terms of reflection of the air displacement, the open end of an organ pipe acts like:',
+  o:['a fixed end (node)','a free end (antinode)','neither'],a:1,
+  why:'Air at the open end can move freely in and out, so the reflection there has no phase change for displacement, and the open end is a displacement antinode.'},
+ {s:'q3',q:'In a standing wave, what is the distance between a node and the nearest antinode?',
+  o:['λ','λ/2','λ/4','2λ'],a:2,why:'Nodes are λ/2 apart and antinodes sit halfway between them, so node to antinode is λ/4.'},
+ {s:'q3',q:'A string 1.5 m long with mass 3.0 × 10⁻² kg carries y = 0.06 sin(2πx/3) cos(120πt) (SI units). What is the tension?',
+  o:[fmt(T11,0)+' N',fmt(T11/2,0)+' N',fmt(Math.sqrt(T11),1)+' N',fmt(T11*2,0)+' N'],a:0,
+  why:`It is 2a sin kx cos ωt with k = 2π/3, so λ = ${fmt(lam11,1)} m; ω = 120π, so ν = ${fmt(nu11,0)} Hz. Each travelling wave moves at v = νλ = ${fmt(v11,0)} m s⁻¹. µ = 0.030/1.5 = ${fmt(e11.m/e11.L,3)} kg m⁻¹, T = µv² = ${fmt(T11,0)} N.`},
+ {s:'q4',q:'A wire between two rigid supports vibrates in its fundamental at 45 Hz. Its mass is 3.5 × 10⁻² kg and µ = 4.0 × 10⁻² kg m⁻¹. Tension?',
+  o:[fmt(T14,0)+' N',fmt(e14.mu*v14,2)+' N',fmt(e14.mu*(L14*e14.nu)**2,0)+' N'],a:0,
+  why:`L = m/µ = ${fmt(L14,3)} m. Fundamental: λ = 2L = ${fmt(2*L14,2)} m, so v = νλ = ${fmt(v14,2)} m s⁻¹ and T = µv² = ${fmt(T14,0)} N. (Taking λ = L by mistake gives the last option.)`},
+ {s:'q4',q:'To raise a string’s fundamental by an octave (double ν) with the same string, you could:',
+  o:['double the tension','halve the length','halve the tension','double the length'],a:1,
+  why:'ν₁ = (1/2L)√(T/µ). Halving L doubles ν. Doubling T only multiplies ν by √2; you would need 4× the tension.'},
+ {s:'q5',q:'A pipe 30.0 cm long is open at both ends (v = 330 m s⁻¹). Which mode resonates with a 1.1 kHz source? And if one end is then closed?',
+  o:['2nd harmonic; then no resonance','1st harmonic; then 2nd harmonic','2nd harmonic; then 4th harmonic'],a:0,
+  why:`Open: νₙ = n × ${fmt(e5.v/(2*e5.L),0)} Hz, so 1100 Hz is n = ${fmt(e5.f/(e5.v/(2*e5.L)),0)}. Closed: ν₁ = v/4L = ${fmt(e5.v/(4*e5.L),0)} Hz and 1100 Hz would be ${fmt(e5.f/(e5.v/(4*e5.L)),0)}× that, an even multiple, which a closed pipe cannot produce.`},
+ {s:'q5',q:'A pipe 20 cm long is closed at one end (v = 340 m s⁻¹). Which mode does a 430 Hz source excite?',
+  o:['fundamental (ν₁ ≈ '+fmt(e17.v/(4*e17.L),0)+' Hz)','second harmonic','third harmonic'],a:0,
+  why:`ν₁ = v/4L = 340/0.80 = ${fmt(e17.v/(4*e17.L),0)} Hz, close to 430 Hz, so the fundamental. Open at both ends the lowest mode is ${fmt(e17.v/(2*e17.L),0)} Hz, far from 430 Hz: no resonance.`},
+ {s:'q5',q:'A tube closed by a movable piston resonates with a 340 Hz fork at 25.5 cm and next at 79.3 cm. Using the two resonances (so the end correction cancels), what is the speed of sound?',
+  o:[fmt(v15,0)+' m s⁻¹',fmt(4*e15.l1/100*e15.f,0)+' m s⁻¹',fmt(v15/2,0)+' m s⁻¹'],a:0,
+  why:`Successive resonances of a closed pipe are λ/2 apart: λ = 2 × (79.3 − 25.5) cm = ${fmt(2*(e15.l2-e15.l1),1)} cm, so v = νλ = ${fmt(v15,0)} m s⁻¹. Using 4 × 25.5 cm alone gives ${fmt(4*e15.l1/100*e15.f,0)} m s⁻¹ and hides the end correction; the difference method cancels it.`},
+ {s:'q6',q:'Sitar strings A (427 Hz) and B give 5 beats per second. Tightening B slightly makes it 3 beats per second. Original frequency of B?',
+  o:['432 Hz','422 Hz','424 Hz','430 Hz'],a:1,
+  why:'Tightening B raises its frequency. If B were above A (432 Hz) the beats would get faster. They slowed, so B was below A and is moving toward it: ν_B = 427 − 5 = 422 Hz.'},
+ {s:'q6',q:'Strings A (324 Hz) and B give 6 beats per second. Slightly loosening A brings it to 3 beats per second. Frequency of B?',
+  o:['330 Hz','318 Hz','321 Hz','327 Hz'],a:1,
+  why:'Loosening A lowers its frequency, and the beats slowed, so A was above B and moved toward it: ν_B = 324 − 6 = 318 Hz.'},
+ {s:'q7',q:'A 500 Hz source moves straight toward you at one-tenth the speed of sound. You are at rest. What do you hear?',
+  o:[fmt(dS,1)+' Hz',fmt(dO,1)+' Hz',fmt(dAway,1)+' Hz','500 Hz'],a:0,
+  why:`ν′ = ν·v/(v − v/10) = 500/0.9 = ${fmt(dS,1)} Hz. (${fmt(dO,1)} Hz is what you would hear if <i>you</i> moved toward a still source at the same speed.)`},
+ {s:'q7',q:'Same speed, two cases: (A) the source moves toward a still listener; (B) the listener moves toward a still source. Which hears the higher note?',
+  o:['A','B','Equal'],a:0,
+  why:`A: ${fmt(dS,1)} Hz; B: ${fmt(dO,1)} Hz. Not symmetric: a moving source changes λ in the air, a moving listener only changes how fast it meets the same λ. (For speeds much smaller than v the two nearly agree.)`},
+ {s:'q7',q:'A car sounding a 500 Hz horn drives past you at one-tenth the speed of sound. As it passes, the pitch you hear:',
+  o:['rises','drops from about '+fmt(dS,0)+' Hz to about '+fmt(dAway,0)+' Hz','stays at 500 Hz'],a:1,
+  why:`Approaching: ν·v/(v − v<sub>s</sub>) = ${fmt(dS,1)} Hz. Receding: ν·v/(v + v<sub>s</sub>) = ${fmt(dAway,1)} Hz. The drop happens as it passes, when the line-of-sight velocity changes sign.`}
+];
+function renderQuiz(){
+  ['q1','q2','q3','q4','q5','q6','q7'].forEach(id=>{
+    $(id).innerHTML=QUIZ.map((q,i)=>q.s!==id?'':`<div class="panel"><p class="qn">Q${i+1}</p><p>${q.q}</p>
+      <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');
+  });
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.qgrid .opt'); if(!b||b.disabled) return;
+  const box=b.parentElement, q=QUIZ[+box.dataset.i], j=+b.dataset.j;
+  box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+  const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+});
+$('qreset').onclick=renderQuiz;
+renderQuiz(); kick();
+</script>
+</body>
+</html>

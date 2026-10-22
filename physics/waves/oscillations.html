@@ -1,0 +1,1238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Oscillations and SHM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&family=Noto+Sans+Symbols+2&text=%E2%86%90%E2%86%91%E2%86%92%E2%86%93%E2%86%94%E2%86%97%E2%87%8C%E2%87%92%E2%87%94%E2%88%82%E2%88%88%E2%88%92%E2%88%93%E2%88%9A%E2%88%9D%E2%88%9E%E2%88%AB%E2%89%88%E2%89%A0%E2%89%A1%E2%89%A4%E2%89%A5%E2%89%AA%E2%89%AB%E2%8A%95%E2%8A%97%E2%8A%99%E2%8A%A5%E2%96%B2%E2%96%B6%E2%97%80%E2%97%8B%E2%97%8F%E2%9C%93%E2%9C%97%E2%9D%9A%E2%9F%82%E2%9F%A8%E2%9F%A9&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) periodic / oscillatory / SHM classifier  (2) reference circle with its shadow and a live x–t trace
+   (3) x, v, a stacked graphs  (4) spring–block: drag, F = −kx  (5) twin springs: period vs amplitude
+   (6) energy vs x and vs t  (7) simple pendulum, small-angle model vs real  (8) which is faster?  (9) more questions */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --acc:#b0377a; --disp:#1f8f87; --ke:#0f8a4f; --pe:#8a6d1f;
+  --f-display:"Bricolage Grotesque","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","Noto Sans Math","Noto Sans Symbols 2",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --acc:#e86fae; --disp:#3cb8ad; --ke:#4fd08f; --pe:#d9b44a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+svg.fit{display:block;width:100%;height:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:7.5em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:9ch;text-align:right;white-space:nowrap}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+.mono{font-family:var(--f-mono)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+.drag{cursor:grab;touch-action:none} .drag:active{cursor:grabbing}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Oscillations and SHM</h1>
+    <p class="lede">A swing, a guitar string, a mass on a spring, the atoms in a solid: each one moves to and fro about a point where it could rest. The simplest such motion, simple harmonic motion, is just the shadow of a point going round a circle at a steady speed. This page builds everything from that one picture: displacement, velocity, acceleration, the force law, energy, the spring and the pendulum.</p>
+    <div class="legend" aria-label="Colour key used on this page">
+      <span><i style="background:var(--disp)"></i>displacement x</span>
+      <span><i style="background:var(--vel)"></i>velocity v</span>
+      <span><i style="background:var(--acc)"></i>acceleration a</span>
+      <span><i style="background:var(--force)"></i>force</span>
+      <span><i style="background:var(--ke)"></i>kinetic energy</span>
+      <span><i style="background:var(--pe)"></i>potential energy</span>
+    </div>
+  </header>
+
+  <!-- 1 · periodic vs oscillatory vs SHM -->
+  <section class="stack" id="s1">
+    <div>
+      <h2>1 · Periodic, oscillatory, simple harmonic</h2>
+      <p class="lede">Watch each motion and its graph, then sort it into the right box. A motion that repeats itself at regular intervals is <b>periodic</b>. If it goes to and fro about an equilibrium point inside its path, it is also <b>oscillatory</b>. If the force pulling it back is proportional to its distance from that point, it is <b>simple harmonic</b>.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="pchips" role="group" aria-label="Choose a motion"></div>
+        <div class="svgbox"><svg id="per" viewBox="0 0 600 230" role="img" aria-label="The chosen motion and its graph against time" style="min-width:440px"></svg></div>
+        <div class="row"><button class="btn" id="pplay">Pause</button><span class="muted" id="pnote"></span></div>
+        <p class="cap">Every oscillation is periodic, but not every periodic motion is an oscillation. The number of repeats per second is the <b>frequency</b> ν, measured in hertz (1 Hz = one repeat per second), and the time for one repeat is the <b>period</b> T = 1/ν. Real oscillations die out because of friction and air drag (<i>damping</i>); sections 1–9 leave damping out, and <a href="#s10">section 10</a> puts it back in. Whether it is called an oscillation or a vibration is only a matter of how fast it is. And the thing that oscillates need not be a position: the angle of a pendulum, the voltage across a capacitor in an AC circuit or the pressure in a sound wave can all go to and fro in the same way.</p>
+
+      </div>
+      <div class="panel stack">
+        <p class="muted">Which box does this motion belong in?</p>
+        <div class="opts" id="pans" style="margin-top:0"></div>
+        <svg id="sets" class="fit" viewBox="0 0 320 210" role="img" aria-label="Nested boxes: periodic contains oscillatory, which contains SHM" style="max-width:380px"></svg>
+        <p class="cap key" id="pwhy">Choose an answer to see the reason.</p>
+      </div>
+    </div>
+    <div class="qgrid" data-quiz="s1"></div>
+  </section>
+
+  <!-- 2 · reference circle -->
+  <section class="stack" id="s2">
+    <div>
+      <h2>2 · SHM is the shadow of circular motion</h2>
+      <p class="lede">The point P goes round the circle anticlockwise at a steady angular speed ω. Light from above casts its shadow P′ on the horizontal diameter. The shadow just goes to and fro, and the strip below records where it was. Like the paper in a chart recorder, the strip scrolls downward, so the newest point is at the top and earlier moments lie further down.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="ref" viewBox="0 0 400 480" role="img" aria-label="Point on a circle, its shadow on the diameter, and the shadow's position against time" style="min-width:320px;max-width:470px;margin:0 auto"></svg></div>
+        <div class="row"><button class="btn primary" id="rplay">Pause</button><button class="btn" id="rzero">Restart at t = 0</button>
+          <label class="muted"><input type="checkbox" id="rvel"> velocity</label><label class="muted"><input type="checkbox" id="racc"> acceleration</label><label class="muted"><input type="checkbox" id="ry"> shadow on the vertical diameter</label></div>
+      </div>
+      <div class="panel stack">
+        <div class="slider"><label for="rA">amplitude A</label><input type="range" id="rA" min="1" max="5" step="0.1" value="4"><output id="rAo"></output></div>
+        <div class="slider"><label for="rw">angular freq. ω</label><input type="range" id="rw" min="0.5" max="2.5" step="0.01" value="1.57"><output id="rwo"></output></div>
+        <div class="slider"><label for="rphi">phase constant φ</label><input type="range" id="rphi" min="-180" max="180" step="15" value="0"><output id="rphio"></output></div>
+        <dl class="kv" id="rkv"></dl>
+        <p class="cap key">The shadow’s position is x = A cos(ωt + φ). The <b>amplitude</b> A is the radius of the circle. The <b>phase</b> ωt + φ is the angle of P from the +x axis right now; its starting value φ, the <b>phase constant</b>, says where P was at t = 0 (hollow dot). One trip round takes T = 2π/ω.</p>
+        <p class="cap">Turn on the vertical shadow: y = A sin(ωt + φ). It is the same SHM a quarter-turn (π/2) behind. Turn on velocity and acceleration: the shadow’s velocity and acceleration are just the horizontal parts of P’s arrows, which is all of section 3.</p>
+        <p class="cap">The circle is only a way to see the motion. A block on a spring has no point going round anywhere, and the force on it is not the centripetal force of circular motion. It moves exactly like this shadow, though.</p>
+      </div>
+    </div>
+    <div class="qgrid" data-quiz="s2"></div>
+  </section>
+
+  <!-- 3 · x, v, a -->
+  <section class="stack" id="s3">
+    <div>
+      <h2>3 · Displacement, velocity, acceleration</h2>
+      <p class="lede">The same motion as above (same A, ω and φ), drawn as three graphs against time. Each is scaled to its own peak, so you can compare their <i>timing</i>. The dot on the track is the moving body, with its velocity and acceleration arrows.</p>
+    </div>
+    <div class="panel stack">
+      <div class="svgbox"><svg id="xva" viewBox="0 0 640 420" role="img" aria-label="Displacement, velocity and acceleration graphs stacked" style="min-width:480px"></svg></div>
+      <div class="row"><button class="btn primary" id="xplay">Pause</button><span class="muted">Shares its clock with section 2.</span></div>
+      <div class="two">
+        <dl class="kv" id="xkv"></dl>
+        <div class="stack">
+          <p class="cap key"><b>v leads x by a quarter period (π/2):</b> the velocity peaks T/4 before the displacement does, while the body is racing through the centre. At the ends, where x is largest, v is zero. <b>a is x upside down (phase difference π):</b> a = −ω²x.</p>
+          <p class="cap">Peak sizes: v<sub>max</sub> = ωA at the centre, a<sub>max</sub> = ω²A at the ends. Between them, the speed at displacement x is v = ω√(A² − x²): the shadow’s speed is the horizontal part of P’s speed ωA.</p>
+        </div>
+      </div>
+    </div>
+    <div class="qgrid" data-quiz="s3"></div>
+  </section>
+
+  <!-- 4 · force law -->
+  <section class="stack" id="s4">
+    <div>
+      <h2>4 · The restoring force: F = −kx</h2>
+      <p class="lede"><b>Drag the block</b> to stretch or squash the spring, then let go. The spring always pulls or pushes it back toward x = 0, harder the further away it is. That is the whole recipe for SHM.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="spr" viewBox="0 0 600 190" role="img" aria-label="Block on a spring; drag it" style="min-width:420px"></svg></div>
+        <div class="slider"><label for="sk">spring constant k</label><input type="range" id="sk" min="10" max="100" step="5" value="50"><output id="sko"></output></div>
+        <div class="slider"><label for="sm">mass m</label><input type="range" id="sm" min="0.5" max="2" step="0.1" value="1"><output id="smo"></output></div>
+        <div class="row"><button class="btn" id="splay">Pause</button><span class="muted">Frictionless floor; the spring is massless.</span></div>
+    <p class="cap key">Hooke’s law: F = −kx. The minus sign is the arrow pointing back to the centre. Newton’s second law then gives a = −(k/m)x, which is a = −ω²x from section 3 with ω² = k/m. So <b>any</b> force that is proportional to displacement and points back to the equilibrium point gives SHM, with ω = √(k/m). A straight line through the origin with a negative slope on this graph is the signature. Real springs (and most forces) add small x² or x³ terms when stretched far; those are <i>non-linear</i> oscillators and are not exactly SHM.</p>
+      </div>
+      <div class="panel stack">
+        <h3>Force against displacement</h3>
+        <svg id="fx" class="fit" viewBox="0 0 320 230" role="img" aria-label="Force on the block against its displacement" style="max-width:380px"></svg>
+        <dl class="kv" id="skv"></dl>
+      </div>
+    </div>
+    <div class="qgrid" data-quiz="s4"></div>
+  </section>
+
+  <!-- 5 · period vs amplitude -->
+  <section class="stack" id="s5">
+    <div>
+      <h2>5 · Does a bigger swing take longer?</h2>
+      <p class="lede">Two identical blocks on identical springs (the m and k set in section 4). Block B is pulled further than block A. <b>Predict first</b>, then release them together.</p>
+    </div>
+    <div class="panel stack">
+      <div class="row"><span class="muted">Which gets back to the centre first?</span><div class="chips" id="tpick" role="group" aria-label="Your prediction"></div></div>
+      <div class="svgbox"><svg id="twin" viewBox="0 0 600 200" role="img" aria-label="Two blocks on springs with different amplitudes" style="min-width:420px"></svg></div>
+      <div class="slider"><label for="tB">B pulled out by</label><input type="range" id="tB" min="1" max="8" step="0.5" value="6"><output id="tBo"></output></div>
+      <div class="row"><button class="btn primary" id="trun">Release both</button><button class="btn" id="treset">Reset</button></div>
+      <p class="verdict" id="tverdict">A is pulled out 2 cm. Make your prediction, then release.</p>
+      <p class="muted">Displacement of A (dashed) and B (solid) against time. The grey dashed lines mark the moments both pass the centre together.</p>
+      <div class="svgbox"><svg id="twinxt" viewBox="0 0 600 150" role="img" aria-label="Displacement against time for both blocks" style="min-width:420px"></svg></div>
+      <p class="cap key">T = 2π√(m/k) contains no amplitude. Pulled twice as far, B feels twice the force, so it has twice the acceleration all the way and covers twice the distance in the same time. The period is also independent of the phase constant and of the energy. (A pendulum keeps this property only for small swings: section 7.)</p>
+    </div>
+    <div class="qgrid" data-quiz="s5"></div>
+  </section>
+
+  <!-- 6 · energy -->
+  <section class="stack" id="s6">
+    <div>
+      <h2>6 · Energy sloshes between kinetic and potential</h2>
+      <p class="lede">A 1 kg block on a spring with k = 50 N m⁻¹. Above each position x, the bar shows how the total energy is split: the stored spring energy (potential) up to the bowl-shaped curve, and the rest kinetic.</p>
+    </div>
+    <div class="panel stack">
+      <div class="svgbox"><svg id="en" viewBox="0 0 620 300" role="img" aria-label="Kinetic and potential energy against position" style="min-width:460px"></svg></div>
+      <div class="two">
+        <div class="stack">
+          <div class="slider"><label for="eA">amplitude A</label><input type="range" id="eA" min="2" max="10" step="0.5" value="10"><output id="eAo"></output></div>
+          <div class="row"><button class="btn primary" id="eplay">Pause</button><span class="muted">Stop it at:</span><div class="chips" id="estop" role="group" aria-label="Stop at a position"></div></div>
+          <dl class="kv" id="ekv"></dl>
+        </div>
+        <div class="stack">
+          <h3>Against time</h3>
+          <svg id="ent" class="fit" viewBox="0 0 320 150" role="img" aria-label="Kinetic and potential energy against time"></svg>
+        </div>
+      </div>
+      <p class="cap key">U = ½kx² is the parabola; it depends only on where the block is. The total E = ½kA² is the flat line, the same at every x and every moment (no friction). Kinetic energy K = E − U is the gap between them: all kinetic at the centre, all potential at the ends. Double the amplitude and E becomes four times as large.</p>
+      <p class="cap">On the time graph, K and U each repeat every T/2, twice per oscillation, because the speed and the stretch reach their peaks twice. Averaged over a cycle, each is exactly half the total energy.</p>
+    </div>
+    <div class="qgrid" data-quiz="s6"></div>
+  </section>
+
+  <!-- 7 · pendulum -->
+  <section class="stack" id="s7">
+    <div>
+      <h2>7 · The simple pendulum, and where the approximation breaks</h2>
+      <p class="lede">A point bob on a light string. <b>Drag the bob</b> out and let go. The solid pendulum moves exactly as Newton’s laws say. The dashed ghost follows the <span class="hw">small-angle model</span>, which replaces sin θ by θ to make the motion SHM. Small swings: they stay together. Big swings: watch the ghost get ahead.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="pend" viewBox="0 0 460 325" role="img" aria-label="Pendulum; drag the bob" style="min-width:300px"></svg></div>
+        <div class="slider"><label for="pL">length L</label><input type="range" id="pL" min="0.2" max="2" step="0.05" value="1"><output id="pLo"></output></div>
+        <div class="row"><span class="muted">gravity:</span><div class="chips" id="pg" role="group" aria-label="Choose g"></div><button class="btn" id="pplay2">Pause</button></div>
+        <div class="legend"><span><i style="background:var(--force)"></i>mg and its part along the arc, mg sin θ</span><span><i style="background:var(--muted);height:0;border-top:2px dashed var(--muted)"></i>small-angle model: mgθ</span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="pkv"></dl>
+        <div><h3>sin θ against θ (radians)</h3><svg id="sinth" class="fit" viewBox="0 0 320 190" role="img" aria-label="sin theta and theta against angle" style="max-width:380px"></svg></div>
+        <div><h3>True period ÷ 2π√(L/g)</h3><svg id="tratio" class="fit" viewBox="0 0 320 160" role="img" aria-label="Ratio of true period to the small-angle period" style="max-width:380px"></svg></div>
+      </div>
+    </div>
+    <p class="cap key">The string’s pull and the part mg cos θ act along the string and only keep the bob on its circle. The part along the arc, mg sin θ, pulls it back. Its torque about the support is −mgL sin θ = Iα with I = mL², so α = −(g/L) sin θ. For small θ, sin θ ≈ θ (in radians) and α = −(g/L)θ: SHM with ω² = g/L, so <b>T = 2π√(L/g)</b>. The mass has cancelled.</p>
+    <p class="cap">Where it breaks <span class="hw">rule of thumb</span>: at 20°, sin θ is 2% smaller than θ but the period is only 0.8% longer than 2π√(L/g); at 60°, the period is 7% longer and at 90°, 18%. The real restoring force mg sin θ is weaker than mgθ, so the real pendulum is always slower. The true period here is computed exactly from Newton’s law, which goes beyond the syllabus; you only need to know that it grows with amplitude. For a rigid body swinging about a pivot, the same steps give T = 2π√(I/mgd), with d the distance from the pivot to the centre of mass (see <a href="../mechanics/moment-of-inertia.html">moment of inertia</a>).</p>
+    <div class="qgrid" data-quiz="s7"></div>
+  </section>
+
+  <!-- 8 · compare -->
+  <section class="stack" id="s8">
+    <div>
+      <h2>8 · Which swings faster?</h2>
+      <p class="lede">Pick a change. Predict whether A or B has the shorter period, then watch them side by side.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="cchips" role="group" aria-label="Choose a comparison"></div>
+        <div class="svgbox"><svg id="cmp" viewBox="0 0 600 300" role="img" aria-label="Two oscillators side by side" style="min-width:340px"></svg></div>
+        <p class="muted" id="cnote"></p>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="cq"></p>
+        <div class="opts" id="cans" style="margin-top:0"></div>
+        <p class="verdict" id="cverdict" hidden></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · more -->
+  <section class="stack" id="s9">
+    <div>
+      <h2>9 · Predict, then check</h2>
+      <p class="lede">Is it periodic? Is it SHM? Two more oscillators. Choose first; the reasoning appears after.</p>
+    </div>
+    <div class="qgrid" data-quiz="s9"></div>
+    <div><button class="btn" id="qreset">Reset all answers</button></div>
+  </section>
+
+  <!-- 10 · damped and forced -->
+  <section class="stack" id="s10">
+    <div>
+      <h2>10 · Damped and forced oscillations, resonance <span class="hw">JEE Advanced</span></h2>
+      <p class="lede">Real oscillators lose energy to friction and drag, so their swings shrink. Push them in rhythm, though, and they can swing harder and harder. Both effects are shown here with the <span class="hw">model</span> used in textbooks: a drag force −bv proportional to the velocity, added to the spring force −kx.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <h3>Damped: pull it out, let go, watch it die out</h3>
+        <div class="svgbox"><svg id="dmp" viewBox="0 0 600 250" role="img" aria-label="Displacement of a damped oscillator against time" style="min-width:420px"></svg></div>
+        <div class="slider"><label for="dz">damping b ÷ b<sub>c</sub></label><input type="range" id="dz" min="0" max="1.6" step="0.01" value="0.1"><output id="dzo"></output></div>
+        <div class="row"><div class="chips" id="dpre" role="group" aria-label="Damping presets"></div><button class="btn primary" id="dplay">Release</button></div>
+        <div class="legend"><span><i style="background:var(--disp)"></i>displacement x</span><span><i style="background:var(--muted);height:0;border-top:2px dashed var(--muted)"></i>envelope ±A e<sup>−bt/2m</sup></span></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="dstate"></p>
+        <dl class="kv" id="dkv"></dl>
+        <p class="cap key" id="dcap"></p>
+        <p class="cap">Light damping: x = A e<sup>−bt/2m</sup> cos(ω′t + φ), with ω′ = √(k/m − b²/4m²), a little slower than ω₀ = √(k/m). The amplitude shrinks by the same <i>fraction</i> in every equal time interval: that is exponential decay. Energy ∝ (amplitude)², so it decays twice as fast, as e<sup>−bt/m</sup>. The oscillation stops at the <b>critical</b> value b<sub>c</sub> = 2√(km), where the body returns fastest without overshooting.</p>
+      </div>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <h3>Forced: push it in rhythm at ω<sub>d</sub></h3>
+        <div class="svgbox"><svg id="frc" viewBox="0 0 420 270" role="img" aria-label="Steady-state amplitude against driving frequency" style="min-width:340px"></svg></div>
+        <div class="slider"><label for="fr">driving ω<sub>d</sub> ÷ ω₀</label><input type="range" id="fr" min="0" max="2" step="0.01" value="0.6"><output id="fro"></output></div>
+        <div class="slider"><label for="fz">damping b ÷ b<sub>c</sub></label><input type="range" id="fz" min="0.05" max="1" step="0.01" value="0.1"><output id="fzo"></output></div>
+        <div class="svgbox"><svg id="frcb" viewBox="0 0 420 110" role="img" aria-label="Driven block with the driving force" style="min-width:340px"></svg></div>
+        <div class="row"><button class="btn" id="fplay">Pause</button><span class="muted">Steady state, after the start-up motion has died away.</span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="fkv"></dl>
+        <p class="cap key">Sweep ω<sub>d</sub>: the steady-state amplitude peaks when you drive close to the natural frequency ω₀. That is <b>resonance</b>. Lower the damping and the peak gets taller and narrower (faint curves: other damping values). With no damping at all the model’s amplitude would grow without limit; damping is what caps it.</p>
+        <p class="cap">A = (F₀/m) ÷ √[(ω₀² − ω<sub>d</sub>²)² + (bω<sub>d</sub>/m)²]. The body always oscillates at the <i>driving</i> frequency, not its own. Watch the timing too: driven slowly it moves in step with the push; at resonance it lags a quarter cycle, so the push is always along its velocity and keeps feeding in energy; driven fast it moves opposite to the push.</p>
+        <p class="cap">Real examples <span class="hw">qualitative</span>: a swing pushed once per swing goes higher and higher; London’s Millennium Footbridge swayed so much when crowds first walked on it, their steps falling into rhythm with its sway, that it was closed for about two years; a radio is tuned by bringing its circuit’s natural frequency to the station’s. Car shock absorbers are made close to critically damped, so the car settles after a bump without bouncing.</p>
+      </div>
+    </div>
+    <div class="qgrid" data-quiz="s10"></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> point masses; massless springs that obey Hooke’s law exactly; massless, inextensible strings; frictionless floors; no air drag or other damping in sections 1–9, so nothing ever stops there. Section 10 uses the standard model of damping, a drag force −bv proportional to the velocity, and a driving force F₀ cos ω<sub>d</sub>t; for the driven oscillator it shows only the steady state reached once the start-up motion has died away. The small-angle model (sin θ ≈ θ) is labelled where it is used. g = 9.8 m s⁻² on Earth and 1.62 m s⁻² on the Moon, unless a question says otherwise. Drawings of springs and pendulum lengths are schematic, not to scale; section 8 runs in slow or fast motion so that A always takes 2 s per full oscillation.</p>
+    <p><b>Based on:</b> NCERT Physics Class 11, "Oscillations"; H. C. Verma, <i>Concepts of Physics</i> Vol. 1, "Simple Harmonic Motion"; OpenStax <i>University Physics</i> Vol. 1, "Damped Oscillations" and "Forced Oscillations"; NASA Moon Fact Sheet (Moon’s surface gravity).</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+const G=9.8;          // m s^-2, Earth
+const G_MOON=1.62;    // m s^-2, NASA Moon Fact Sheet
+/* Section 1 motions. Each has period P (s, on screen) */
+const MOTIONS=[
+ {id:'circ', l:'Ball whirled in a circle', cls:0, P:2.4, ylab:'angle round (°)',
+  why:'<b>Periodic, not oscillatory.</b> It repeats every turn, but it goes round, not to and fro: there is no equilibrium point inside its path that it swings about. (Its <i>shadow</i>, though, does SHM: section 2.)'},
+ {id:'bounce', l:'Ball bouncing on the floor', cls:0, P:1.6, ylab:'height',
+  why:'<b>Periodic, not oscillatory.</b> Each bounce repeats exactly (no energy lost in this model), but the only place it could rest is the floor, at the very end of its path, and the force on it (gravity) points down the whole time. The height graph is a string of parabolas.'},
+ {id:'vee', l:'Ball rolling in a V-shaped trough', cls:1, P:2.4, ylab:'x',
+  why:'<b>Oscillatory, not SHM.</b> It goes to and fro about the bottom of the V, where it could rest. But on each straight side the force back toward the centre has the same size wherever the ball is, instead of growing with distance. Its x–t graph is made of parabola pieces. It looks close to a sine curve, but it is not one: the acceleration keeps the same size and simply flips direction as the ball crosses the bottom.'},
+ {id:'spring', l:'Block on a spring', cls:2, P:2.0, ylab:'x',
+  why:'<b>Simple harmonic.</b> The spring force grows in step with the stretch and always points back to the centre, F = −kx. Its x–t graph is a pure sine (cosine) curve.'}
+];
+const CLASSES=['Periodic only','Oscillatory, but not SHM','Simple harmonic (SHM)'];
+/* Section 8 comparisons. spring: m (kg), k (N/m), kind: 'v' vertical, 'h' horizontal, 'par', 'ser', 'half'; pend: L (m), g (m/s^2) */
+const CMP=[
+ {id:'m2', l:'Double the mass', A:{t:'spring',m:1,k:20,lab:'m'}, B:{t:'spring',m:2,k:20,lab:'2m'},
+  why:'T = 2π√(m/k). The same spring has to move twice the inertia, so B is slower: T grows by √2.'},
+ {id:'amp', l:'Double the amplitude', A:{t:'spring',m:1,k:20,lab:'m',amp:1}, B:{t:'spring',m:1,k:20,lab:'m',amp:2},
+  why:'Amplitude is not in T = 2π√(m/k). Twice as far to go, but twice the force all the way (section 5).'},
+ {id:'half', l:'Cut the spring in half', A:{t:'spring',m:1,k:20,lab:'m'}, B:{t:'spring',m:1,k:20,kind:'half',lab:'m'},
+  why:'Each half of a spring stretches half as much under the same force, so half a spring has twice the spring constant: k → 2k, T → T/√2. B is faster.'},
+ {id:'ps', l:'Two springs: side by side vs end to end', A:{t:'spring',m:1,k:20,kind:'par',lab:'m'}, B:{t:'spring',m:1,k:20,kind:'ser',lab:'m'},
+  why:'Side by side (parallel), both springs pull: k<sub>eff</sub> = k + k = 2k. End to end (series), each spring takes the whole force and stretches the full amount, so the total stretch doubles: 1/k<sub>eff</sub> = 1/k + 1/k, k<sub>eff</sub> = k/2. Period ratio T<sub>B</sub>/T<sub>A</sub> = √(2k ÷ k/2) = 2. A is faster.'},
+ {id:'hv', l:'Horizontal vs hanging spring', A:{t:'spring',m:1,k:20,kind:'h',lab:'m'}, B:{t:'spring',m:1,k:20,lab:'m'},
+  why:'Hanging, gravity just shifts the equilibrium point down by mg/k. Measured from that new centre, the net force is still −kx, so T = 2π√(m/k) either way.'},
+ {id:'bob', l:'Heavier pendulum bob', A:{t:'pend',L:1,g:G,lab:'m'}, B:{t:'pend',L:1,g:G,lab:'2m',heavy:true},
+  why:'T = 2π√(L/g) has no mass in it. Twice the mass means twice the pull of gravity but also twice the inertia; they cancel.'},
+ {id:'L4', l:'Pendulum four times as long', A:{t:'pend',L:0.5,g:G,lab:'L'}, B:{t:'pend',L:2,g:G,lab:'4L'},
+  why:'T ∝ √L: four times the length gives twice the period. B is slower.'},
+ {id:'moon', l:'Same pendulum on the Moon', A:{t:'pend',L:1,g:G,lab:'Earth'}, B:{t:'pend',L:1,g:G_MOON,lab:'Moon'},
+  why:'Weaker gravity pulls the bob back more gently: T ∝ 1/√g. On the Moon the period is √(9.8/1.62) ≈ 2.46 times as long.'},
+ {id:'lift', l:'Pendulum in a lift accelerating up', A:{t:'pend',L:1,g:G,lab:'at rest'}, B:{t:'pend',L:1,g:G+G/2,lab:'lift, a = g/2 up',lift:true},
+  why:'In a lift accelerating upward at a, everything feels heavier: the effective g is g + a = 1.5g. T ∝ 1/√g, so B is faster by √1.5 ≈ 1.22. (Accelerating downward it would be slower; in free fall it would not swing at all.)'}
+];
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+const TAU=2*Math.PI;
+function store(k,v){try{localStorage.setItem('shm-'+k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem('shm-'+k);}catch(e){return null;}}
+function mk(p,tag,a,txt){const e=document.createElementNS(NS,tag);if(a)at(e,a);if(txt!=null)e.textContent=txt;p.appendChild(e);return e;}
+function at(e,a){for(const k in a){const v=a[k];e.setAttribute(k,typeof v==='number'?(Math.round(v*100)/100):v);}return e;}
+function arrowObj(p,col,w,dash){
+  const g=mk(p,'g',{}), l=mk(g,'line',{stroke:col,'stroke-width':w||2.4,'stroke-linecap':'round'}), h=mk(g,'polygon',{fill:col});
+  if(dash) at(l,{'stroke-dasharray':dash});
+  return {g,set(x1,y1,x2,y2,hd){
+    const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy);
+    if(L<2){g.setAttribute('visibility','hidden');return;} g.setAttribute('visibility','visible');
+    const H=Math.min(hd||9,L*0.6),ux=dx/L,uy=dy/L,bx=x2-ux*H,by=y2-uy*H,px=-uy*H*0.5,py=ux*H*0.5;
+    at(l,{x1,y1,x2:bx,y2:by}); at(h,{points:`${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px).toFixed(1)},${(by+py).toFixed(1)} ${(bx-px).toFixed(1)},${(by-py).toFixed(1)}`});
+  },hide(){g.setAttribute('visibility','hidden');}};
+}
+function press(box,k){box.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.k===String(k))));}
+function zig(x0,x1,y,n,amp){ // horizontal zigzag spring from x0 to x1 at height y
+  const lead=Math.min(10,(x1-x0)*0.12), a=x0+lead, b=x1-lead, s=(b-a)/n; let d=`M${x0.toFixed(1)} ${y}L${a.toFixed(1)} ${y}`;
+  for(let i=0;i<n;i++) d+=`L${(a+s*(i+0.5)).toFixed(1)} ${(y+(i%2?amp:-amp)).toFixed(1)}`;
+  return d+`L${b.toFixed(1)} ${y}L${x1.toFixed(1)} ${y}`;
+}
+function zigV(x,y0,y1,n,amp){ // vertical zigzag
+  const lead=Math.min(8,(y1-y0)*0.12), a=y0+lead, b=y1-lead, s=(b-a)/n; let d=`M${x} ${y0.toFixed(1)}L${x} ${a.toFixed(1)}`;
+  for(let i=0;i<n;i++) d+=`L${(x+(i%2?amp:-amp)).toFixed(1)} ${(a+s*(i+0.5)).toFixed(1)}`;
+  return d+`L${x} ${b.toFixed(1)}L${x} ${y1.toFixed(1)}`;
+}
+function gcd(a,b){return b?gcd(b,a%b):a;}
+function piFrac(deg){ // multiples of 15° as fractions of π
+  const n=Math.round(deg/15); if(n===0) return '0';
+  const g=gcd(Math.abs(n),12), num=n/g, den=12/g, an=Math.abs(num);
+  return (num<0?'−':'')+(an===1?'':an)+'π'+(den===1?'':'/'+den);
+}
+const f1=v=>v.toFixed(1), f2=v=>v.toFixed(2), m0=v=>(Math.abs(v)<0.005?0:v);
+const sg=(v,d)=>{v=m0(v);return (v<0?'−':'')+Math.abs(v).toFixed(d);};
+
+/* ---------- one animation loop; each animation runs only while visible ---------- */
+const ANIMS=[]; let rafOn=false, lastTs=0;
+function anim(o){o.vis=false;ANIMS.push(o);return o;}
+function kick(){if(!rafOn&&ANIMS.some(a=>a.play&&a.vis)){rafOn=true;lastTs=0;requestAnimationFrame(frame);}}
+function frame(ts){
+  const dt=lastTs?Math.min(0.05,(ts-lastTs)/1000):0; lastTs=ts;
+  let any=false;
+  for(const a of ANIMS){ if(a.play&&a.vis){any=true;a.step(dt);a.draw();} }
+  if(any) requestAnimationFrame(frame); else rafOn=false;
+}
+function watch(el,a){
+  if(!('IntersectionObserver' in window)){a.vis=true;return;}
+  new IntersectionObserver(es=>{a.vis=es.some(e=>e.isIntersecting);kick();},{rootMargin:'40px'}).observe(el);
+}
+function playBtn(btn,a,extra){
+  const lab=()=>{btn.textContent=a.play?'Pause':'Play';};
+  btn.addEventListener('click',()=>{a.play=!a.play;lab();if(extra)extra();kick();});
+  lab(); return lab;
+}
+
+/* =================== 1 · CLASSIFY =================== */
+const P1=anim({play:!RM,t:0,m:MOTIONS[0],step(dt){this.t+=dt;},draw(){drawPer();}});
+const per=$('per');
+/* static frame */
+mk(per,'line',{x1:236,x2:236,y1:10,y2:220,stroke:'var(--line)'});
+const p1={};
+p1.scene=mk(per,'g',{});
+p1.gAxis=mk(per,'g',{});
+mk(p1.gAxis,'line',{x1:270,x2:590,y1:200,y2:200,stroke:'var(--muted)'});
+mk(p1.gAxis,'line',{x1:270,x2:270,y1:20,y2:200,stroke:'var(--muted)'});
+mk(p1.gAxis,'text',{x:590,y:216,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'time →');
+p1.ylab=mk(p1.gAxis,'text',{x:276,y:16,'font-size':11,fill:'var(--muted)'},'');
+p1.zero=mk(p1.gAxis,'line',{x1:270,x2:590,stroke:'var(--line)','stroke-dasharray':'3 3'});
+p1.curve=mk(per,'path',{fill:'none',stroke:'var(--disp)','stroke-width':2.2});
+p1.cur=mk(per,'line',{y1:20,y2:200,stroke:'var(--ink)','stroke-opacity':.35});
+p1.dot=mk(per,'circle',{r:4.5,fill:'var(--disp)'});
+p1.Tl=mk(per,'line',{stroke:'var(--muted)'}); p1.Tt=mk(per,'text',{'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'T');
+function perY(m,t){ // returns value in [-1,1] (or [0,1]) for graph
+  const P=m.P, s=((t%P)+P)%P/P;
+  if(m.id==='circ') return s;                       // angle fraction 0→1 (sawtooth)
+  if(m.id==='bounce') return 1-Math.pow(2*s-1,2);   // parabolic arcs
+  if(m.id==='vee'){ // constant |a| toward centre, released from +1 at rest; quarter period = 0.25
+    const q=s*4; if(q<1) return 1-q*q; if(q<2) return -(1-(2-q)*(2-q)); if(q<3) return -(1-(q-2)*(q-2)); return 1-(4-q)*(4-q);
+  }
+  return Math.cos(TAU*s);
+}
+const GY0=200, GY1=26;
+function graphY(m,v){ // map value to graph y
+  if(m.id==='circ'||m.id==='bounce') return GY0-v*(GY0-GY1-8);
+  return (GY0+GY1)/2-v*(GY0-GY1)/2*0.88;
+}
+const SPAN=3; // periods shown
+function buildPer(){
+  const m=P1.m; p1.scene.innerHTML='';
+  const S=p1.scene;
+  if(m.id==='circ'){
+    mk(S,'circle',{cx:118,cy:112,r:72,fill:'none',stroke:'var(--line)','stroke-width':2});
+    mk(S,'circle',{cx:118,cy:112,r:3,fill:'var(--muted)'});
+    p1.str=mk(S,'line',{x1:118,y1:112,stroke:'var(--muted)'});
+    p1.obj=mk(S,'circle',{r:10,fill:'var(--disp)'});
+    mk(S,'text',{x:118,y:214,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'seen from above');
+  } else if(m.id==='bounce'){
+    mk(S,'line',{x1:40,x2:200,y1:200,y2:200,stroke:'var(--muted)','stroke-width':2});
+    p1.obj=mk(S,'circle',{r:11,fill:'var(--disp)',cx:118});
+    mk(S,'text',{x:118,y:216,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'floor (only resting place)');
+  } else if(m.id==='vee'){
+    mk(S,'path',{d:'M20 60L118 170L216 60',fill:'none',stroke:'var(--muted)','stroke-width':2.2});
+    mk(S,'line',{x1:118,x2:118,y1:176,y2:206,stroke:'var(--muted)','stroke-dasharray':'3 3'});
+    mk(S,'text',{x:118,y:218,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'equilibrium');
+    p1.obj=mk(S,'circle',{r:10,fill:'var(--disp)'});
+  } else {
+    mk(S,'rect',{x:14,y:92,width:8,height:60,fill:'var(--muted)'});
+    mk(S,'line',{x1:14,x2:226,y1:152,y2:152,stroke:'var(--muted)','stroke-width':1.5});
+    mk(S,'line',{x1:140,x2:140,y1:70,y2:166,stroke:'var(--muted)','stroke-dasharray':'3 3'});
+    mk(S,'text',{x:140,y:180,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'equilibrium');
+    p1.spr=mk(S,'path',{fill:'none',stroke:'var(--ink)','stroke-opacity':.7,'stroke-width':1.6});
+    p1.obj=mk(S,'rect',{y:112,width:36,height:40,rx:3,fill:'var(--disp)'});
+  }
+  p1.ylab.textContent=m.ylab;
+  const zy=(m.id==='circ'||m.id==='bounce')?GY0:graphY(m,0);
+  at(p1.zero,{y1:zy,y2:zy,visibility:(m.id==='circ'||m.id==='bounce')?'hidden':'visible'});
+  let d=''; const N=360;
+  for(let i=0;i<=N;i++){const t=SPAN*m.P*i/N, x=270+320*i/N; let v=perY(m,t);
+    if(m.id==='circ'&&i>0&&perY(m,SPAN*m.P*(i-1)/N)>v) d+=`L${x.toFixed(1)} ${graphY(m,1).toFixed(1)}M${x.toFixed(1)} ${graphY(m,0).toFixed(1)}`;
+    d+=(i?'L':'M')+x.toFixed(1)+' '+graphY(m,v).toFixed(1);}
+  at(p1.curve,{d});
+  const xT=270+320/SPAN; at(p1.Tl,{x1:270,x2:xT,y1:210,y2:210}); at(p1.Tt,{x:(270+xT)/2,y:224});
+  // the T bracket sits under the axis; move "time" label clear of it
+  drawPer();
+}
+function drawPer(){
+  const m=P1.m, t=P1.t, v=perY(m,t), s=((t%(SPAN*m.P))+SPAN*m.P)%(SPAN*m.P)/(SPAN*m.P), x=270+320*s, y=graphY(m,v);
+  at(p1.cur,{x1:x,x2:x}); at(p1.dot,{cx:x,cy:y});
+  if(m.id==='circ'){const a=TAU*v, px=118+72*Math.cos(a), py=112-72*Math.sin(a); at(p1.obj,{cx:px,cy:py}); at(p1.str,{x2:px,y2:py});}
+  else if(m.id==='bounce'){at(p1.obj,{cy:189-v*150});}
+  else if(m.id==='vee'){const px=118+v*88; at(p1.obj,{cx:px,cy:170-Math.abs(px-118)*110/98-11});}
+  else {const bx=140+v*80; at(p1.obj,{x:bx-18}); at(p1.spr,{d:zig(22,bx-18,132,12,9)});}
+}
+$('pchips').innerHTML=MOTIONS.map(m=>`<button class="chip" data-k="${m.id}">${m.l}</button>`).join('');
+const answered1={};
+/* nested sets */
+const sets=$('sets');
+mk(sets,'rect',{x:4,y:4,width:312,height:202,rx:12,fill:'var(--disp)','fill-opacity':.05,stroke:'var(--muted)'});
+mk(sets,'text',{x:14,y:22,'font-size':12,'font-weight':600,fill:'var(--ink)'},'Periodic: repeats at regular intervals');
+mk(sets,'rect',{x:24,y:72,width:272,height:124,rx:10,fill:'var(--disp)','fill-opacity':.07,stroke:'var(--muted)'});
+mk(sets,'text',{x:34,y:90,'font-size':12,'font-weight':600,fill:'var(--ink)'},'Oscillatory: to and fro about');
+mk(sets,'text',{x:34,y:104,'font-size':12,'font-weight':600,fill:'var(--ink)'},'an equilibrium point');
+mk(sets,'rect',{x:44,y:132,width:232,height:54,rx:8,fill:'var(--disp)','fill-opacity':.12,stroke:'var(--disp)'});
+mk(sets,'text',{x:54,y:150,'font-size':12,'font-weight':600,fill:'var(--disp)'},'SHM: force ∝ −(displacement)');
+const SPOT={circ:[18,46],bounce:[168,46],vee:[200,122],spring:[56,172]};
+const setDots={};
+MOTIONS.forEach(m=>{const [x,y]=SPOT[m.id], g=mk(sets,'g',{visibility:'hidden'});
+  mk(g,'circle',{cx:x+5,cy:y-4,r:4.5,fill:'var(--disp)'}); mk(g,'text',{x:x+14,y,'font-size':11.5,fill:'var(--ink)'},m.l.replace('Ball rolling in a V-shaped trough','V-trough ball').replace('Ball whirled in a circle','whirled ball').replace('Ball bouncing on the floor','bouncing ball').replace('Block on a spring','block on a spring'));
+  setDots[m.id]=g;});
+function showSet(){
+  const m=P1.m, a=answered1[m.id];
+  $('pans').innerHTML=CLASSES.map((c,j)=>`<button class="opt${a!=null?(j===m.cls?' right':(j===a?' wrong':'')):''}" data-j="${j}" ${a!=null?'disabled':''}>${c}</button>`).join('');
+  $('pwhy').innerHTML=a!=null?((a===m.cls?'<b>Right.</b> ':'<b>Not quite.</b> ')+m.why):'Choose an answer to see the reason.';
+  MOTIONS.forEach(x=>setDots[x.id].setAttribute('visibility',answered1[x.id]!=null?'visible':'hidden'));
+}
+$('pans').addEventListener('click',e=>{const b=e.target.closest('.opt');if(!b||b.disabled)return;answered1[P1.m.id]=+b.dataset.j;showSet();});
+function pickMotion(id){P1.m=MOTIONS.find(m=>m.id===id)||MOTIONS[0];P1.t=0;press($('pchips'),P1.m.id);store('motion',P1.m.id);
+  $('pnote').textContent='One period T is marked under the graph.';buildPer();showSet();}
+$('pchips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)pickMotion(c.dataset.k);});
+playBtn($('pplay'),P1);
+watch(per,P1);
+pickMotion(load('motion')||'circ');
+
+/* =================== 2 · REFERENCE CIRCLE =================== */
+const R=anim({play:!RM,t:0,A:4,w:1.57,phi:0,step(dt){this.t+=dt;},draw(){drawRef();drawXVA();}});
+const ref=$('ref'), RC={cx:200,cy:125,px:20,pen:252,win:8,ps:27.5};
+const r2={};
+mk(ref,'line',{x1:70,x2:330,y1:RC.cy,y2:RC.cy,stroke:'var(--muted)','stroke-width':1});
+mk(ref,'line',{x1:RC.cx,x2:RC.cx,y1:10,y2:240,stroke:'var(--line)'});
+mk(ref,'text',{x:336,y:RC.cy+4,'font-size':11,fill:'var(--muted)'},'x');
+r2.circ=mk(ref,'circle',{cx:RC.cx,cy:RC.cy,fill:'none',stroke:'var(--ink)','stroke-opacity':.35,'stroke-width':1.6});
+mk(ref,'circle',{cx:RC.cx,cy:RC.cy,r:2.5,fill:'var(--muted)'});
+r2.arc=mk(ref,'path',{fill:'none',stroke:'var(--spin)','stroke-width':1.6});
+r2.rad=mk(ref,'line',{x1:RC.cx,y1:RC.cy,stroke:'var(--spin)','stroke-width':2});
+r2.start=mk(ref,'circle',{r:5,fill:'none',stroke:'var(--spin)','stroke-width':1.5});
+r2.drop=mk(ref,'line',{stroke:'var(--disp)','stroke-dasharray':'3 4','stroke-opacity':.8});
+r2.yline=mk(ref,'line',{stroke:'var(--muted)','stroke-dasharray':'3 4'});
+r2.ydot=mk(ref,'circle',{r:5,fill:'var(--surface)',stroke:'var(--disp)','stroke-width':2});
+r2.ylab=mk(ref,'text',{'font-size':11,fill:'var(--disp)','text-anchor':'end'},'y-shadow');
+/* strip */
+r2.pAl=mk(ref,'line',{y1:RC.pen,y2:RC.pen+RC.win*RC.ps,stroke:'var(--line)','stroke-dasharray':'2 4'});
+r2.pAr=mk(ref,'line',{y1:RC.pen,y2:RC.pen+RC.win*RC.ps,stroke:'var(--line)','stroke-dasharray':'2 4'});
+mk(ref,'line',{x1:RC.cx,x2:RC.cx,y1:RC.pen,y2:RC.pen+RC.win*RC.ps,stroke:'var(--line)'});
+mk(ref,'line',{x1:70,x2:330,y1:RC.pen,y2:RC.pen,stroke:'var(--muted)'});
+r2.tA1=mk(ref,'text',{y:RC.pen-4,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'},'−A');
+r2.tA2=mk(ref,'text',{y:RC.pen-4,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'},'+A');
+mk(ref,'text',{x:14,y:RC.pen+16,'font-size':11,fill:'var(--muted)'},'paper');
+mk(ref,'text',{x:14,y:RC.pen+30,'font-size':11,fill:'var(--muted)'},'scrolls');
+mk(ref,'text',{x:14,y:RC.pen+44,'font-size':11,fill:'var(--muted)'},'down ↓');
+r2.trace=mk(ref,'path',{fill:'none',stroke:'var(--disp)','stroke-width':2.2});
+r2.ticks=[...Array(6)].map(()=>{const g=mk(ref,'g',{});mk(g,'line',{x1:310,x2:324,stroke:'var(--muted)'});mk(g,'text',{x:328,'font-size':10.5,fill:'var(--muted)'},'');return g;});
+r2.zeroT=mk(ref,'g',{}); mk(r2.zeroT,'line',{x1:70,x2:330,stroke:'var(--muted)','stroke-dasharray':'1 3'}); mk(r2.zeroT,'text',{x:66,'font-size':10.5,fill:'var(--muted)','text-anchor':'end'},'t = 0');
+r2.vP=arrowObj(ref,'var(--vel)',2.4); r2.vS=arrowObj(ref,'var(--vel)',2.6);
+r2.aP=arrowObj(ref,'var(--acc)',2.4); r2.aS=arrowObj(ref,'var(--acc)',2.6);
+r2.P=mk(ref,'circle',{r:7,fill:'var(--spin)'});
+r2.Pl=mk(ref,'text',{'font-size':12,'font-weight':600,fill:'var(--spin)'},'P');
+r2.S=mk(ref,'circle',{r:6.5,fill:'var(--disp)'});
+r2.Sl=mk(ref,'text',{'font-size':12,'font-weight':600,fill:'var(--disp)','text-anchor':'middle'},'P′');
+r2.pen=mk(ref,'circle',{r:4,fill:'var(--disp)',cy:RC.pen});
+function drawRef(){
+  const {A,w,phi,t}=R, Rp=A*RC.px, th=w*t+phi*Math.PI/180, c=Math.cos(th), s=Math.sin(th);
+  const px=RC.cx+Rp*c, py=RC.cy-Rp*s, sx=px;
+  at(r2.circ,{r:Rp});
+  at(r2.rad,{x2:px,y2:py}); at(r2.P,{cx:px,cy:py});
+  at(r2.Pl,{x:px+(c>=0?10:-20),y:py+(s>=0?-8:18)});
+  at(r2.S,{cx:sx,cy:RC.cy}); at(r2.Sl,{x:sx-9,y:RC.cy+(s>=0?20:-10),'text-anchor':'end'});
+  const ph0=phi*Math.PI/180; at(r2.start,{cx:RC.cx+Rp*Math.cos(ph0),cy:RC.cy-Rp*Math.sin(ph0)});
+  /* phase arc from +x to OP (anticlockwise on screen) */
+  let a=((th%TAU)+TAU)%TAU, ra=24;
+  if(a<0.02) at(r2.arc,{d:''}); else at(r2.arc,{d:`M${RC.cx+ra} ${RC.cy}A${ra} ${ra} 0 ${a>Math.PI?1:0} 0 ${(RC.cx+ra*Math.cos(a)).toFixed(1)} ${(RC.cy-ra*Math.sin(a)).toFixed(1)}`});
+  at(r2.drop,{x1:px,y1:py,x2:sx,y2:RC.pen});
+  const yOn=$('ry').checked; [r2.yline,r2.ydot,r2.ylab].forEach(e=>e.setAttribute('visibility',yOn?'visible':'hidden'));
+  if(yOn){at(r2.yline,{x1:px,y1:py,x2:RC.cx,y2:py}); at(r2.ydot,{cx:RC.cx,cy:py}); at(r2.ylab,{x:RC.cx+(c<0?9:-9),y:py+(s>=0?-8:16),'text-anchor':c<0?'start':'end'});}
+  /* arrows (to scale: 5 px per cm/s, 2.5 px per cm/s²) */
+  const v=w*A, ac=w*w*A;
+  if($('rvel').checked){const L=5*v; r2.vP.set(px,py,px-L*s,py-L*c); r2.vS.set(sx,RC.cy-10,sx-L*s,RC.cy-10);} else {r2.vP.hide();r2.vS.hide();}
+  if($('racc').checked){const L=2.5*ac; r2.aP.set(px,py,px-L*c,py+L*s); r2.aS.set(sx,RC.cy+10,sx-L*c,RC.cy+10);} else {r2.aP.hide();r2.aS.hide();}
+  /* strip */
+  at(r2.pAl,{x1:RC.cx-Rp,x2:RC.cx-Rp}); at(r2.pAr,{x1:RC.cx+Rp,x2:RC.cx+Rp});
+  at(r2.tA1,{x:RC.cx-Rp}); at(r2.tA2,{x:RC.cx+Rp});
+  at(r2.pen,{cx:sx});
+  const t0=Math.max(0,t-RC.win), N=160; let d='';
+  for(let i=0;i<=N;i++){const tau=t0+(t-t0)*i/N; d+=(i?'L':'M')+(RC.cx+Rp*Math.cos(w*tau+ph0)).toFixed(1)+' '+(RC.pen+(t-tau)*RC.ps).toFixed(1);}
+  at(r2.trace,{d:t>0?d:''});
+  const T=TAU/w, n0=Math.max(1,Math.ceil(t0/T));
+  r2.ticks.forEach((g,i)=>{const n=n0+i, tn=n*T; if(tn>t+1e-9){g.setAttribute('visibility','hidden');return;}
+    const y=RC.pen+(t-tn)*RC.ps; g.setAttribute('visibility','visible'); at(g.firstChild,{y1:y,y2:y}); at(g.lastChild,{y:y+4}); g.lastChild.textContent=(n===1?'':n)+'T';});
+  if(t<=RC.win){r2.zeroT.setAttribute('visibility','visible');const y=RC.pen+t*RC.ps;at(r2.zeroT.firstChild,{y1:y,y2:y});at(r2.zeroT.lastChild,{y:y+4});} else r2.zeroT.setAttribute('visibility','hidden');
+  /* readouts */
+  const x=A*c;
+  $('rAo').textContent=f1(A)+' cm'; $('rwo').textContent=f2(w)+' rad/s'; $('rphio').textContent=piFrac(phi)+' ('+phi+'°)';
+  const pd=((th*180/Math.PI)%360+360)%360;
+  $('rkv').innerHTML=`<dt>period T = 2π/ω</dt><dd>${f2(T)} s</dd><dt>frequency ν = 1/T</dt><dd>${f2(1/T)} Hz</dd><dt>time t</dt><dd>${f1(t)} s</dd><dt>phase ωt + φ</dt><dd>${pd.toFixed(0)}° (mod 360°)</dd><dt>x = A cos(ωt + φ)</dt><dd>${sg(x,2)} cm</dd>`;
+}
+function setR(){R.A=+$('rA').value;const nw=+$('rw').value,np=+$('rphi').value;if(nw!==R.w||np!==R.phi){R.t=0;}R.w=nw;R.phi=np;buildXVA();drawRef();drawXVA();}
+['rA','rw','rphi'].forEach(id=>$(id).addEventListener('input',setR));
+['rvel','racc','ry'].forEach(id=>$(id).addEventListener('change',drawRef));
+$('rzero').addEventListener('click',()=>{R.t=0;drawRef();drawXVA();});
+let labX;
+const labR=playBtn($('rplay'),R,()=>labX&&labX());
+
+/* =================== 3 · x, v, a =================== */
+const xva=$('xva'), X3={L:86,R:620,trackY:34,panels:[{y:125,k:'x',col:'var(--disp)',n:'x'},{y:235,k:'v',col:'var(--vel)',n:'v'},{y:345,k:'a',col:'var(--acc)',n:'a'}],h:40};
+const x3={};
+/* track */
+mk(xva,'line',{x1:349-150,x2:349+150,y1:X3.trackY,y2:X3.trackY,stroke:'var(--muted)'});
+mk(xva,'line',{x1:349,x2:349,y1:X3.trackY-8,y2:X3.trackY+8,stroke:'var(--muted)'});
+mk(xva,'text',{x:349-150,y:X3.trackY+28,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'},'−A');
+mk(xva,'text',{x:349,y:X3.trackY+28,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'},'0');
+mk(xva,'text',{x:349+150,y:X3.trackY+28,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'},'+A');
+x3.va=arrowObj(xva,'var(--vel)',2.6); x3.aa=arrowObj(xva,'var(--acc)',2.6);
+x3.dot=mk(xva,'circle',{cy:X3.trackY,r:7,fill:'var(--disp)'});
+/* panels */
+X3.panels.forEach(p=>{
+  mk(xva,'line',{x1:X3.L,x2:X3.R,y1:p.y,y2:p.y,stroke:'var(--muted)'});
+  mk(xva,'line',{x1:X3.L,x2:X3.L,y1:p.y-X3.h-6,y2:p.y+X3.h+6,stroke:'var(--muted)'});
+  mk(xva,'line',{x1:X3.L,x2:X3.R,y1:p.y-X3.h,y2:p.y-X3.h,stroke:'var(--line)','stroke-dasharray':'2 4'});
+  mk(xva,'line',{x1:X3.L,x2:X3.R,y1:p.y+X3.h,y2:p.y+X3.h,stroke:'var(--line)','stroke-dasharray':'2 4'});
+  mk(xva,'text',{x:10,y:p.y+5,'font-size':15,'font-weight':600,fill:p.col},p.n);
+  p.top=mk(xva,'text',{x:X3.L-10,y:p.y-X3.h+4,'font-size':10,fill:'var(--muted)','text-anchor':'end',class:'mono'},'');
+  p.bot=mk(xva,'text',{x:X3.L-10,y:p.y+X3.h+4,'font-size':10,fill:'var(--muted)','text-anchor':'end',class:'mono'},'');
+  p.path=mk(xva,'path',{fill:'none',stroke:p.col,'stroke-width':2.2});
+  p.dot=mk(xva,'circle',{r:4.5,fill:p.col});
+});
+for(let i=0;i<=8;i++){const x=X3.L+(X3.R-X3.L)*i/8; mk(xva,'text',{x,y:398,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'},['0','T/4','T/2','3T/4','T','5T/4','3T/2','7T/4','2T'][i]);
+  mk(xva,'line',{x1:x,x2:x,y1:381,y2:386,stroke:'var(--muted)'});}
+mk(xva,'text',{x:X3.R,y:414,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'time');
+x3.g1=mk(xva,'line',{y1:80,y2:390,stroke:'var(--disp)','stroke-dasharray':'4 4','stroke-opacity':.8});
+x3.g2=mk(xva,'line',{y1:80,y2:280,stroke:'var(--vel)','stroke-dasharray':'4 4','stroke-opacity':.8});
+x3.br=arrowObj(xva,'var(--ink)',1.4); x3.brt=mk(xva,'text',{'font-size':11,fill:'var(--ink)','text-anchor':'middle'},'T/4 earlier');
+x3.cur=mk(xva,'line',{y1:78,y2:388,stroke:'var(--ink)','stroke-opacity':.3});
+const tx=s=>X3.L+(X3.R-X3.L)*s/2;
+function buildXVA(){
+  const ph=R.phi*Math.PI/180, N=240, fn=[s=>Math.cos(TAU*s+ph),s=>-Math.sin(TAU*s+ph),s=>-Math.cos(TAU*s+ph)];
+  X3.panels.forEach((p,j)=>{let d='';for(let i=0;i<=N;i++){const s=2*i/N;d+=(i?'L':'M')+tx(s).toFixed(1)+' '+(p.y-X3.h*fn[j](s)).toFixed(1);}at(p.path,{d});});
+  /* x peak in [1/4, 5/4) */
+  let sp=-ph/TAU; while(sp<0.25) sp+=1; while(sp>=1.25) sp-=1;
+  at(x3.g1,{x1:tx(sp),x2:tx(sp)}); at(x3.g2,{x1:tx(sp-0.25),x2:tx(sp-0.25)});
+  x3.br.set(tx(sp)-2,X3.panels[1].y-X3.h-14,tx(sp-0.25)+2,X3.panels[1].y-X3.h-14,6);
+  at(x3.brt,{x:(tx(sp)+tx(sp-0.25))/2,y:X3.panels[1].y-X3.h-20});
+  const {A,w}=R;
+  X3.panels[0].top.textContent='+'+f1(A)+' cm'; X3.panels[0].bot.textContent='−'+f1(A);
+  X3.panels[1].top.textContent='+'+f1(w*A)+' cm/s'; X3.panels[1].bot.textContent='−'+f1(w*A);
+  X3.panels[2].top.textContent='+'+f1(w*w*A)+' cm/s²'; X3.panels[2].bot.textContent='−'+f1(w*w*A);
+}
+function drawXVA(){
+  const {A,w,t}=R, T=TAU/w, ph=R.phi*Math.PI/180, th=w*t+ph, s=((t%(2*T))+2*T)%(2*T)/T;
+  const vals=[Math.cos(th),-Math.sin(th),-Math.cos(th)];
+  X3.panels.forEach((p,j)=>at(p.dot,{cx:tx(s),cy:p.y-X3.h*vals[j]}));
+  at(x3.cur,{x1:tx(s),x2:tx(s)});
+  const dx=349+150*vals[0]; at(x3.dot,{cx:dx});
+  x3.va.set(dx,X3.trackY-14,dx+55*vals[1],X3.trackY-14,8); x3.aa.set(dx,X3.trackY+14,dx+55*vals[2],X3.trackY+14,8);
+  const x=A*vals[0], v=w*A*vals[1], a=w*w*A*vals[2];
+  $('xkv').innerHTML=`<dt>x</dt><dd>${sg(x,2)} cm</dd><dt>v</dt><dd>${sg(v,2)} cm/s</dd><dt>a = −ω²x</dt><dd>${sg(a,2)} cm/s²</dd><dt>ω√(A² − x²)</dt><dd>${f2(w*Math.sqrt(Math.max(0,A*A-x*x)))} cm/s = |v|</dd><dt>v<sub>max</sub> = ωA</dt><dd>${f2(w*A)} cm/s</dd><dt>a<sub>max</sub> = ω²A</dt><dd>${f2(w*w*A)} cm/s²</dd>`;
+}
+labX=playBtn($('xplay'),R,()=>labR());
+/* R is visible if either svg is visible */
+(()=>{if(!('IntersectionObserver' in window)){R.vis=true;return;}
+  const seen=new Map(); const io=new IntersectionObserver(es=>{es.forEach(e=>seen.set(e.target,e.isIntersecting));R.vis=[...seen.values()].some(Boolean);kick();},{rootMargin:'40px'});
+  io.observe(ref); io.observe(xva);})();
+
+/* =================== 4 · SPRING =================== */
+const S=anim({play:!RM,x:0.05,v:0,k:50,m:1,drag:false,
+  step(dt){if(this.drag)return;const w=Math.sqrt(this.k/this.m),c=Math.cos(w*dt),s=Math.sin(w*dt),x=this.x,u=this.v/w;this.x=x*c+u*s;this.v=(-x*s+u*c)*w;},
+  draw(){drawSpr();}});
+const spr=$('spr'), SP={x0:330,px:1800,floor:150,bh:44,bw:48};  // px per metre = 1800 (18 px per cm)
+const s4={};
+mk(spr,'rect',{x:12,y:50,width:10,height:100,fill:'var(--muted)'});
+for(let i=0;i<6;i++) mk(spr,'line',{x1:12,x2:4,y1:58+i*16,y2:66+i*16,stroke:'var(--muted)'});
+mk(spr,'line',{x1:12,x2:590,y1:SP.floor,y2:SP.floor,stroke:'var(--muted)','stroke-width':1.5});
+for(let i=-8;i<=8;i+=2){const x=SP.x0+i*18; mk(spr,'line',{x1:x,x2:x,y1:SP.floor,y2:SP.floor+5,stroke:'var(--muted)'}); mk(spr,'text',{x,y:SP.floor+17,'font-size':10,fill:'var(--muted)','text-anchor':'middle',class:'mono'},String(i).replace('-','−'));}
+mk(spr,'text',{x:590,y:SP.floor+32,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'x (cm)');
+mk(spr,'line',{x1:SP.x0,x2:SP.x0,y1:30,y2:SP.floor,stroke:'var(--muted)','stroke-dasharray':'3 4'});
+mk(spr,'text',{x:SP.x0+4,y:26,'font-size':11,fill:'var(--muted)'},'x = 0, spring relaxed');
+s4.spr=mk(spr,'path',{fill:'none',stroke:'var(--ink)','stroke-opacity':.7,'stroke-width':1.8});
+s4.F=arrowObj(spr,'var(--force)',3,null); s4.a=arrowObj(spr,'var(--acc)',3,null);
+s4.Ft=mk(spr,'text',{'font-size':12,'font-weight':600,fill:'var(--force)'},'F'); s4.at=mk(spr,'text',{'font-size':12,'font-weight':600,fill:'var(--acc)'},'a');
+s4.blk=mk(spr,'rect',{y:SP.floor-SP.bh,width:SP.bw,height:SP.bh,rx:4,fill:'var(--disp)',class:'drag'});
+s4.hint=mk(spr,'text',{y:SP.floor-SP.bh/2+4,'font-size':11,fill:'var(--surface)','text-anchor':'middle','pointer-events':'none'},'drag');
+/* F–x graph */
+const fx=$('fx'), FX={cx:170,cy:112,sx:16.25,sy:11.875};
+mk(fx,'line',{x1:40,x2:300,y1:FX.cy,y2:FX.cy,stroke:'var(--muted)'}); mk(fx,'line',{x1:FX.cx,x2:FX.cx,y1:14,y2:210,stroke:'var(--muted)'});
+for(let i=-8;i<=8;i+=4){if(!i)continue;mk(fx,'text',{x:FX.cx+i*FX.sx,y:FX.cy+14,'font-size':10,fill:'var(--muted)','text-anchor':'middle',class:'mono'},String(i).replace('-','−'));}
+for(let i=-8;i<=8;i+=4){if(!i)continue;mk(fx,'text',{x:FX.cx-5,y:FX.cy-i*FX.sy+4,'font-size':10,fill:'var(--muted)','text-anchor':'end',class:'mono'},String(i).replace('-','−'));}
+mk(fx,'text',{x:302,y:FX.cy-6,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'x (cm)');
+mk(fx,'text',{x:FX.cx+6,y:20,'font-size':11,fill:'var(--force)'},'F (N)');
+s4.line=mk(fx,'line',{stroke:'var(--force)','stroke-width':2});
+s4.slope=mk(fx,'text',{x:296,y:206,'font-size':11,fill:'var(--force)','text-anchor':'end'},'');
+s4.mk=mk(fx,'line',{stroke:'var(--force)','stroke-dasharray':'2 3'});
+s4.dot=mk(fx,'circle',{r:5,fill:'var(--force)'});
+function drawSpr(){
+  const {x,k,m}=S, bx=SP.x0+x*SP.px, F=-k*x, a=F/m, w=Math.sqrt(k/m);
+  at(s4.blk,{x:bx-SP.bw/2}); at(s4.hint,{x:bx}); at(s4.spr,{d:zig(22,bx-SP.bw/2,SP.floor-SP.bh/2,14,10)});
+  const Fl=F*15, al=a*8;   // 15 px per N, 8 px per m/s²
+  s4.F.set(bx,72,bx+Fl,72,10); s4.a.set(bx,90,bx+al,90,10);
+  const fs=Fl>=0?1:-1; at(s4.Ft,{x:bx+Fl+fs*6,y:76,'text-anchor':fs>0?'start':'end',visibility:Math.abs(Fl)>3?'visible':'hidden'});
+  const as=al>=0?1:-1; at(s4.at,{x:bx+al+as*6,y:94,'text-anchor':as>0?'start':'end',visibility:Math.abs(al)>3?'visible':'hidden'});
+  const gx=FX.cx+x*100*FX.sx, gy=FX.cy-F*FX.sy; at(s4.dot,{cx:gx,cy:gy}); at(s4.mk,{x1:gx,x2:gx,y1:FX.cy,y2:gy});
+  $('skv').innerHTML=`<dt>x</dt><dd>${sg(x*100,1)} cm</dd><dt>F = −kx</dt><dd>${sg(F,2)} N</dd><dt>a = F/m</dt><dd>${sg(a,2)} m/s²</dd><dt>ω = √(k/m)</dt><dd>${f2(w)} rad/s</dd><dt>T = 2π√(m/k)</dt><dd>${f2(TAU/w)} s</dd>`;
+}
+function setS(){S.k=+$('sk').value;S.m=+$('sm').value;$('sko').textContent=S.k+' N/m';$('smo').textContent=f1(S.m)+' kg';
+  const xm=0.08, Fm=Math.min(8,S.k*xm), x1=Fm/S.k; at(s4.line,{x1:FX.cx-x1*100*FX.sx,y1:FX.cy-Fm*FX.sy,x2:FX.cx+x1*100*FX.sx,y2:FX.cy+Fm*FX.sy});
+  s4.slope.textContent='slope = −k = −'+S.k+' N/m';
+  drawSpr(); buildTwin(); drawTwin();}
+$('sk').addEventListener('input',setS); $('sm').addEventListener('input',setS);
+(function(){let id=null;
+  const toX=e=>{const r=spr.getBoundingClientRect(), vb=spr.viewBox.baseVal, sx=(e.clientX-r.left)*vb.width/r.width; return Math.max(-0.08,Math.min(0.08,(sx-SP.x0)/SP.px));};
+  let off=0;
+  s4.blk.addEventListener('pointerdown',e=>{id=e.pointerId;try{s4.blk.setPointerCapture(id);}catch(_){}S.drag=true;off=toX(e)-S.x;e.preventDefault();});
+  s4.blk.addEventListener('pointermove',e=>{if(e.pointerId!==id)return;S.x=Math.max(-0.08,Math.min(0.08,toX(e)-off));S.v=0;drawSpr();});
+  const up=e=>{if(e.pointerId!==id)return;id=null;S.drag=false;S.v=0;s4.hint.textContent='';if(!S.play){S.play=true;labS();}kick();};
+  s4.blk.addEventListener('pointerup',up); s4.blk.addEventListener('pointercancel',up);
+})();
+const labS=playBtn($('splay'),S);
+watch(spr,S);
+
+/* =================== 5 · TWIN =================== */
+const TW=anim({play:false,t:0,B:0.06,A:0.02,pick:null,ran:false,step(dt){this.t+=dt;},draw(){drawTwin();}});
+const twin=$('twin'), TWY=[60,150]; const t5={};
+TWY.forEach((y,i)=>{
+  mk(twin,'rect',{x:12,y:y-40,width:10,height:44,fill:'var(--muted)'});
+  mk(twin,'line',{x1:12,x2:590,y1:y+4,y2:y+4,stroke:'var(--muted)'});
+  mk(twin,'text',{x:30,y:y-30,'font-size':13,'font-weight':600,fill:'var(--ink)'},i?'B':'A');
+});
+mk(twin,'line',{x1:SP.x0,x2:SP.x0,y1:10,y2:176,stroke:'var(--muted)','stroke-dasharray':'3 4'});
+mk(twin,'text',{x:SP.x0+4,y:12,'font-size':11,fill:'var(--muted)'},'centre');
+t5.spr=TWY.map(()=>mk(twin,'path',{fill:'none',stroke:'var(--ink)','stroke-opacity':.7,'stroke-width':1.6}));
+t5.blk=TWY.map((y)=>mk(twin,'rect',{y:y-32,width:36,height:36,rx:3,fill:'var(--disp)'}));
+t5.clock=mk(twin,'text',{x:40,y:194,'font-size':11,fill:'var(--muted)',class:'mono'},'');
+const twxt=$('twinxt'), TX={L:40,R:590,cy:72,h:56};
+mk(twxt,'line',{x1:TX.L,x2:TX.R,y1:TX.cy,y2:TX.cy,stroke:'var(--muted)'});
+mk(twxt,'line',{x1:TX.L,x2:TX.L,y1:10,y2:134,stroke:'var(--muted)'});
+mk(twxt,'text',{x:TX.L-4,y:14,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'x');
+for(let i=0;i<=4;i++){const x=TX.L+(TX.R-TX.L)*i/4;mk(twxt,'text',{x,y:146,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'},['0','T/2','T','3T/2','2T'][i]);}
+t5.zl=[0.25,0.75,1.25,1.75].map(s=>mk(twxt,'line',{x1:TX.L+(TX.R-TX.L)*s/2,x2:TX.L+(TX.R-TX.L)*s/2,y1:10,y2:134,stroke:'var(--line)','stroke-dasharray':'3 3'}));
+t5.pa=mk(twxt,'path',{fill:'none',stroke:'var(--disp)','stroke-width':2,'stroke-dasharray':'6 3'});
+t5.pb=mk(twxt,'path',{fill:'none',stroke:'var(--disp)','stroke-width':2.4});
+t5.la=mk(twxt,'text',{'font-size':11.5,'font-weight':600,fill:'var(--disp)'},'A'); t5.lb=mk(twxt,'text',{'font-size':11.5,'font-weight':600,fill:'var(--disp)'},'B');
+t5.cur=mk(twxt,'line',{y1:10,y2:134,stroke:'var(--ink)','stroke-opacity':.3});
+function buildTwin(){
+  const N=200, mx=Math.max(TW.A,TW.B); let da='',db='';
+  for(let i=0;i<=N;i++){const s=2*i/N,x=TX.L+(TX.R-TX.L)*i/N,c=Math.cos(TAU*s);da+=(i?'L':'M')+x.toFixed(1)+' '+(TX.cy-TX.h*c*TW.A/0.08).toFixed(1);db+=(i?'L':'M')+x.toFixed(1)+' '+(TX.cy-TX.h*c*TW.B/0.08).toFixed(1);}
+  at(t5.pa,{d:da}); at(t5.pb,{d:db});
+  const ya=TX.cy-TX.h*TW.A/0.08, yb=TX.cy-TX.h*TW.B/0.08;
+  at(t5.la,{x:TX.L+6,y:Math.abs(ya-yb)<14?Math.max(ya,yb)+14:ya+(ya>yb?14:-6)}); at(t5.lb,{x:TX.L+6,y:yb-6});
+  $('tBo').textContent=f1(TW.B*100)+' cm';
+}
+function drawTwin(){
+  const w=Math.sqrt(S.k/S.m), T=TAU/w, c=Math.cos(w*TW.t);
+  [TW.A,TW.B].forEach((A,i)=>{const bx=SP.x0+A*c*SP.px; at(t5.blk[i],{x:bx-18}); at(t5.spr[i],{d:zig(22,bx-18,TWY[i]-14,12,8)});});
+  const s=((TW.t%(2*T))+2*T)%(2*T)/T; at(t5.cur,{x1:TX.L+(TX.R-TX.L)*s/2,x2:TX.L+(TX.R-TX.L)*s/2,visibility:TW.ran?'visible':'hidden'});
+  t5.clock.textContent=`t = ${f2(TW.t)} s   T = ${f2(T)} s   (m = ${f1(S.m)} kg, k = ${S.k} N/m)`;
+  if(TW.ran&&!TW.done&&TW.t>=T/4){TW.done=true;twVerdict();}
+}
+const TPICK=[{k:'A',l:'A first'},{k:'same',l:'Same time'},{k:'B',l:'B first'}];
+$('tpick').innerHTML=TPICK.map(p=>`<button class="chip" data-k="${p.k}">${p.l}</button>`).join('');
+$('tpick').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;TW.pick=c.dataset.k;press($('tpick'),TW.pick);if(TW.done)twVerdict();else $('tverdict').textContent='Now release both.';});
+function twVerdict(){
+  const T=TAU*Math.sqrt(S.m/S.k);
+  let t=TW.pick?(TW.pick==='same'?'<b>Your prediction was right.</b> ':'<b>Not this time.</b> '):'';
+  t+=`They reach the centre together, after T/4 = ${f2(T/4)} s, and keep in step forever. B moves ${f1(TW.B/TW.A)} times as fast, but has ${f1(TW.B/TW.A)} times as far to go.`;
+  $('tverdict').innerHTML=t;
+}
+function resetTwin(){TW.t=0;TW.play=false;TW.ran=false;TW.done=false;drawTwin();$('tverdict').textContent=TW.pick?'Now release both.':'A is pulled out 2 cm. Make your prediction, then release.';}
+$('trun').addEventListener('click',()=>{TW.t=0;TW.ran=true;TW.done=false;
+  if(RM){const T=TAU*Math.sqrt(S.m/S.k);TW.t=T/4;drawTwin();return;}
+  TW.play=true;kick();});
+$('treset').addEventListener('click',resetTwin);
+$('tB').addEventListener('input',e=>{TW.B=+e.target.value/100;buildTwin();resetTwin();});
+watch(twin,TW);
+
+/* =================== 6 · ENERGY =================== */
+const EK=50, EM=1; // N/m, kg
+const EN=anim({play:!RM,t:0,A:0.10,step(dt){this.t+=dt;},draw(){drawEn();}});
+const en=$('en'), EP={cx:220,sx:1700,y0:250,sy:840}; // 17 px per cm; 840 px per J
+const e6={};
+mk(en,'line',{x1:40,x2:400,y1:EP.y0,y2:EP.y0,stroke:'var(--muted)'});
+mk(en,'line',{x1:40,x2:40,y1:30,y2:EP.y0,stroke:'var(--muted)'});
+for(let i=-10;i<=10;i+=5){const x=EP.cx+i*17;mk(en,'line',{x1:x,x2:x,y1:EP.y0,y2:EP.y0+4,stroke:'var(--muted)'});mk(en,'text',{x,y:EP.y0+15,'font-size':10,fill:'var(--muted)','text-anchor':'middle',class:'mono'},String(i).replace('-','−'));}
+mk(en,'text',{x:406,y:EP.y0+4,'font-size':10.5,fill:'var(--muted)'},'x (cm)');
+[0.05,0.10,0.15,0.20,0.25].forEach(v=>{const y=EP.y0-v*EP.sy;mk(en,'line',{x1:36,x2:40,y1:y,y2:y,stroke:'var(--muted)'});mk(en,'text',{x:34,y:y+4,'font-size':10,fill:'var(--muted)','text-anchor':'end',class:'mono'},v.toFixed(2));});
+mk(en,'text',{x:44,y:24,'font-size':11,fill:'var(--muted)'},'energy (J)');
+{let d='';for(let i=0;i<=100;i++){const x=-0.1+0.2*i/100;d+=(i?'L':'M')+(EP.cx+x*EP.sx).toFixed(1)+' '+(EP.y0-0.5*EK*x*x*EP.sy).toFixed(1);}
+ mk(en,'path',{d,fill:'none',stroke:'var(--pe)','stroke-width':2.4});}
+mk(en,'text',{x:145,y:222,'font-size':11.5,fill:'var(--pe)','text-anchor':'end'},'U = ½kx²');
+e6.Kc=mk(en,'path',{fill:'none',stroke:'var(--ke)','stroke-width':2,'stroke-dasharray':'5 3'});
+e6.E=mk(en,'line',{stroke:'var(--ink)','stroke-width':2});
+e6.Et=mk(en,'text',{'font-size':11.5,fill:'var(--ink)'},'E = ½kA²');
+e6.Ab=[mk(en,'line',{stroke:'var(--line)','stroke-dasharray':'2 3'}),mk(en,'line',{stroke:'var(--line)','stroke-dasharray':'2 3'})];
+e6.barU=mk(en,'rect',{width:10,fill:'var(--pe)'}); e6.barK=mk(en,'rect',{width:10,fill:'var(--ke)'});
+e6.track=mk(en,'line',{y1:EP.y0+30,y2:EP.y0+30,stroke:'var(--muted)'});
+e6.blk=mk(en,'rect',{y:EP.y0+20,width:16,height:10,rx:2,fill:'var(--disp)'});
+/* bars on the right */
+const BX=[466,516,566], BL=['K','U','E'], BC=['var(--ke)','var(--pe)','var(--ink)'];
+mk(en,'line',{x1:452,x2:610,y1:EP.y0,y2:EP.y0,stroke:'var(--muted)'});
+e6.bars=BX.map((x,i)=>{mk(en,'text',{x:x+16,y:EP.y0+16,'font-size':12,'font-weight':600,fill:BC[i],'text-anchor':'middle'},BL[i]);
+  return {r:mk(en,'rect',{x,width:32,fill:BC[i],'fill-opacity':i===2?0.25:0.85}),t:mk(en,'text',{x:x+16,'font-size':10,fill:'var(--ink)','text-anchor':'middle',class:'mono'},'')};});
+/* vs time */
+const ent=$('ent'), ET={L:30,R:312,y0:120,h:96};
+mk(ent,'line',{x1:ET.L,x2:ET.R,y1:ET.y0,y2:ET.y0,stroke:'var(--muted)'}); mk(ent,'line',{x1:ET.L,x2:ET.L,y1:14,y2:ET.y0,stroke:'var(--muted)'});
+mk(ent,'line',{x1:ET.L,x2:ET.R,y1:ET.y0-ET.h,y2:ET.y0-ET.h,stroke:'var(--ink)','stroke-width':1.6});
+mk(ent,'text',{x:ET.L-4,y:ET.y0-ET.h+4,'font-size':10.5,fill:'var(--ink)','text-anchor':'end'},'E');
+mk(ent,'text',{x:ET.L-4,y:ET.y0+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end'},'0');
+{let dk='',du='';for(let i=0;i<=200;i++){const s=2*i/200,x=ET.L+(ET.R-ET.L)*i/200,c=Math.cos(TAU*s);du+=(i?'L':'M')+x.toFixed(1)+' '+(ET.y0-ET.h*c*c).toFixed(1);dk+=(i?'L':'M')+x.toFixed(1)+' '+(ET.y0-ET.h*(1-c*c)).toFixed(1);}
+ mk(ent,'path',{d:du,fill:'none',stroke:'var(--pe)','stroke-width':2}); mk(ent,'path',{d:dk,fill:'none',stroke:'var(--ke)','stroke-width':2,'stroke-dasharray':'5 3'});}
+for(let i=0;i<=4;i++){const x=ET.L+(ET.R-ET.L)*i/4;mk(ent,'text',{x,y:ET.y0+14,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'},['0','T/2','T','3T/2','2T'][i]);}
+mk(ent,'text',{x:ET.L+4,y:ET.y0-ET.h-6,'font-size':10.5,fill:'var(--pe)'},'U');
+mk(ent,'text',{x:ET.L+(ET.R-ET.L)/8,y:ET.y0-ET.h-6,'font-size':10.5,fill:'var(--ke)','text-anchor':'middle'},'K');
+e6.cur=mk(ent,'line',{y1:14,y2:ET.y0,stroke:'var(--ink)','stroke-opacity':.35});
+function buildEn(){
+  const A=EN.A, E=0.5*EK*A*A, yE=EP.y0-E*EP.sy, xl=EP.cx-A*EP.sx, xr=EP.cx+A*EP.sx;
+  at(e6.E,{x1:xl,x2:xr,y1:yE,y2:yE}); at(e6.Et,{x:EP.cx+40,y:yE-6});
+  e6.Ab.forEach((l,i)=>at(l,{x1:i?xr:xl,x2:i?xr:xl,y1:yE,y2:EP.y0+30}));
+  let d='';for(let i=0;i<=80;i++){const x=-A+2*A*i/80;d+=(i?'L':'M')+(EP.cx+x*EP.sx).toFixed(1)+' '+(EP.y0-(E-0.5*EK*x*x)*EP.sy).toFixed(1);}
+  at(e6.Kc,{d}); at(e6.track,{x1:xl-8,x2:xr+8});
+  $('eAo').textContent=f1(A*100)+' cm';
+}
+function drawEn(){
+  const A=EN.A, w=Math.sqrt(EK/EM), th=w*EN.t, x=A*Math.cos(th), v=-w*A*Math.sin(th), U=0.5*EK*x*x, E=0.5*EK*A*A, K=E-U;
+  const px=EP.cx+x*EP.sx;
+  at(e6.barU,{x:px-5,y:EP.y0-U*EP.sy,height:U*EP.sy}); at(e6.barK,{x:px-5,y:EP.y0-E*EP.sy,height:K*EP.sy});
+  at(e6.blk,{x:px-8});
+  [K,U,E].forEach((val,i)=>{const h=val*EP.sy;at(e6.bars[i].r,{y:EP.y0-h,height:h});at(e6.bars[i].t,{y:EP.y0-h-5});e6.bars[i].t.textContent=val.toFixed(3);});
+  const T=TAU/w, s=((EN.t%(2*T))+2*T)%(2*T)/T; at(e6.cur,{x1:ET.L+(ET.R-ET.L)*s/2,x2:ET.L+(ET.R-ET.L)*s/2});
+  $('ekv').innerHTML=`<dt>x</dt><dd>${sg(x*100,2)} cm</dd><dt>v</dt><dd>${sg(v,3)} m/s</dd><dt>K = ½mv²</dt><dd>${K.toFixed(4)} J</dd><dt>U = ½kx²</dt><dd>${U.toFixed(4)} J</dd><dt>K + U</dt><dd>${(K+U).toFixed(4)} J</dd>`;
+}
+const ESTOP=[{k:'0',l:'x = 0',f:0.25},{k:'h',l:'x = A/2',f:1/6},{k:'A',l:'x = A',f:0}];
+$('estop').innerHTML=ESTOP.map(p=>`<button class="chip" data-k="${p.k}">${p.l}</button>`).join('');
+const labE=playBtn($('eplay'),EN);
+$('estop').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;const p=ESTOP.find(q=>q.k===c.dataset.k);
+  EN.t=p.f*TAU/Math.sqrt(EK/EM);EN.play=false;labE();drawEn();});
+$('eA').addEventListener('input',e=>{EN.A=+e.target.value/100;buildEn();drawEn();});
+watch(en,EN);
+
+/* =================== 7 · PENDULUM =================== */
+const PD=anim({play:!RM,th:Math.PI/6,om:0,th0:Math.PI/6,t:0,L:1,g:G,drag:false,
+  step(dt){if(this.drag)return;const n=8,h=dt/n,k=this.g/this.L;
+    for(let i=0;i<n;i++){ // RK4 on θ'' = −(g/L) sin θ
+      const f=(th,om)=>[om,-k*Math.sin(th)];
+      const [a1,b1]=f(this.th,this.om),[a2,b2]=f(this.th+h/2*a1,this.om+h/2*b1),[a3,b3]=f(this.th+h/2*a2,this.om+h/2*b2),[a4,b4]=f(this.th+h*a3,this.om+h*b3);
+      this.th+=h/6*(a1+2*a2+2*a3+a4); this.om+=h/6*(b1+2*b2+2*b3+b4);}
+    this.t+=dt;},
+  draw(){drawPend();}});
+const pend=$('pend'), PV={x:230,y:24,Lp:220,r:13}; const p7={};
+mk(pend,'line',{x1:170,x2:290,y1:PV.y,y2:PV.y,stroke:'var(--muted)','stroke-width':3});
+mk(pend,'line',{x1:PV.x,x2:PV.x,y1:PV.y,y2:PV.y+PV.Lp+30,stroke:'var(--line)','stroke-dasharray':'3 4'});
+p7.arc=mk(pend,'path',{fill:'none',stroke:'var(--line)','stroke-width':1.5});
+p7.gs=mk(pend,'line',{x1:PV.x,y1:PV.y,stroke:'var(--muted)','stroke-dasharray':'4 4'});
+p7.gb=mk(pend,'circle',{r:PV.r+4,fill:'none',stroke:'var(--muted)','stroke-dasharray':'3 3','stroke-width':1.5});
+p7.s=mk(pend,'line',{x1:PV.x,y1:PV.y,stroke:'var(--ink)','stroke-width':1.6});
+p7.thArc=mk(pend,'path',{fill:'none',stroke:'var(--spin)','stroke-width':1.4});
+p7.thT=mk(pend,'text',{'font-size':12,fill:'var(--spin)','text-anchor':'middle'},'θ');
+p7.mg=arrowObj(pend,'var(--force)',2,null); p7.tan=arrowObj(pend,'var(--force)',3.2,null); p7.mod=arrowObj(pend,'var(--muted)',1.6,'4 3');
+p7.mgT=mk(pend,'text',{'font-size':11.5,fill:'var(--force)'},'mg'); p7.tanT=mk(pend,'text',{'font-size':11.5,'font-weight':600,fill:'var(--force)'},'mg sin θ');
+p7.b=mk(pend,'circle',{r:PV.r,fill:'var(--disp)',class:'drag'});
+p7.note=mk(pend,'text',{x:452,y:318,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'drag the bob');
+const PG=[{k:'e',l:'Earth, 9.8',g:G},{k:'m',l:'Moon, 1.62',g:G_MOON}];
+$('pg').innerHTML=PG.map(p=>`<button class="chip" data-k="${p.k}">${p.l} m s⁻²</button>`).join('');
+function agm(a,b){for(let i=0;i<30;i++){const c=(a+b)/2;b=Math.sqrt(a*b);a=c;}return a;}
+const Tratio=th0=>1/agm(1,Math.cos(th0/2));  // exact period of a pendulum ÷ 2π√(L/g)
+/* sinθ chart */
+const sth=$('sinth'), SC={L:40,R:300,y0:160,sx:260/(Math.PI/2),sy:140/1.6};
+mk(sth,'line',{x1:SC.L,x2:SC.R,y1:SC.y0,y2:SC.y0,stroke:'var(--muted)'}); mk(sth,'line',{x1:SC.L,x2:SC.L,y1:12,y2:SC.y0,stroke:'var(--muted)'});
+[0,15,30,45,60,75,90].forEach(d=>{const x=SC.L+d*Math.PI/180*SC.sx;mk(sth,'text',{x,y:SC.y0+14,'font-size':10,fill:'var(--muted)','text-anchor':'middle',class:'mono'},d+'°');});
+[0.5,1,1.5].forEach(v=>{const y=SC.y0-v*SC.sy;mk(sth,'text',{x:SC.L-4,y:y+4,'font-size':10,fill:'var(--muted)','text-anchor':'end',class:'mono'},v);mk(sth,'line',{x1:SC.L,x2:SC.R,y1:y,y2:y,stroke:'var(--line)','stroke-dasharray':'2 4'});});
+mk(sth,'line',{x1:SC.L,y1:SC.y0,x2:SC.L+Math.PI/2*SC.sx,y2:SC.y0-Math.PI/2*SC.sy,stroke:'var(--muted)','stroke-width':1.6,'stroke-dasharray':'5 3'});
+{let d='';for(let i=0;i<=90;i++){const t=i*Math.PI/180;d+=(i?'L':'M')+(SC.L+t*SC.sx).toFixed(1)+' '+(SC.y0-Math.sin(t)*SC.sy).toFixed(1);}mk(sth,'path',{d,fill:'none',stroke:'var(--force)','stroke-width':2.2});}
+mk(sth,'text',{x:SC.R-4,y:SC.y0-Math.PI/2*SC.sy+2,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'θ (rad)');
+mk(sth,'text',{x:SC.R-2,y:SC.y0-1*SC.sy+16,'font-size':11,fill:'var(--force)','text-anchor':'end'},'sin θ');
+p7.sm=mk(sth,'line',{stroke:'var(--ink)','stroke-width':2.4}); p7.sd=mk(sth,'line',{stroke:'var(--line)','stroke-dasharray':'2 3'});
+p7.st=mk(sth,'text',{'font-size':10.5,fill:'var(--ink)',class:'mono'},'');
+/* period ratio chart */
+const trs=$('tratio'), TRc={L:40,R:300,y0:130,sx:260/90,sy:110/0.2};
+mk(trs,'line',{x1:TRc.L,x2:TRc.R,y1:TRc.y0,y2:TRc.y0,stroke:'var(--muted)'}); mk(trs,'line',{x1:TRc.L,x2:TRc.L,y1:12,y2:TRc.y0,stroke:'var(--muted)'});
+[0,15,30,45,60,75,90].forEach(d=>mk(trs,'text',{x:TRc.L+d*TRc.sx,y:TRc.y0+14,'font-size':10,fill:'var(--muted)','text-anchor':'middle',class:'mono'},d+'°'));
+[1,1.05,1.1,1.15,1.2].forEach(v=>{const y=TRc.y0-(v-1)*TRc.sy;mk(trs,'text',{x:TRc.L-4,y:y+4,'font-size':10,fill:'var(--muted)','text-anchor':'end',class:'mono'},v.toFixed(2));if(v>1)mk(trs,'line',{x1:TRc.L,x2:TRc.R,y1:y,y2:y,stroke:'var(--line)','stroke-dasharray':'2 4'});});
+{let d='';for(let i=0;i<=90;i++){d+=(i?'L':'M')+(TRc.L+i*TRc.sx).toFixed(1)+' '+(TRc.y0-(Tratio(i*Math.PI/180)-1)*TRc.sy).toFixed(1);}mk(trs,'path',{d,fill:'none',stroke:'var(--disp)','stroke-width':2.2});}
+mk(trs,'text',{x:TRc.R,y:TRc.y0+28,'font-size':10.5,fill:'var(--muted)','text-anchor':'end'},'release angle θ₀');
+p7.tm=mk(trs,'line',{stroke:'var(--ink)','stroke-dasharray':'2 3'}); p7.td=mk(trs,'circle',{r:4.5,fill:'var(--disp)'});
+p7.tt=mk(trs,'text',{'font-size':10.5,fill:'var(--ink)',class:'mono'},'');
+const bobXY=th=>[PV.x+PV.Lp*Math.sin(th),PV.y+PV.Lp*Math.cos(th)];
+function drawPend(){
+  const {th,th0,L,g,t}=PD, w0=Math.sqrt(g/L), thm=th0*Math.cos(w0*t);
+  const [bx,by]=bobXY(th), [gx,gy]=bobXY(PD.drag?th:thm);
+  at(p7.s,{x2:bx,y2:by}); at(p7.b,{cx:bx,cy:by});
+  at(p7.gs,{x2:gx,y2:gy}); at(p7.gb,{cx:gx,cy:gy});
+  const a0=Math.abs(th0), [l1,l2]=[bobXY(-a0),bobXY(a0)];
+  at(p7.arc,{d:a0>0.01?`M${l1[0].toFixed(1)} ${l1[1].toFixed(1)}A${PV.Lp} ${PV.Lp} 0 0 0 ${l2[0].toFixed(1)} ${l2[1].toFixed(1)}`:''});
+  /* θ arc at the pivot */
+  const ra=46, e=bobXY(th).map((v,i)=>i?PV.y+(v-PV.y)*ra/PV.Lp:PV.x+(v-PV.x)*ra/PV.Lp);
+  if(Math.abs(th)>0.06){at(p7.thArc,{d:`M${PV.x} ${PV.y+ra}A${ra} ${ra} 0 0 ${th>0?0:1} ${e[0].toFixed(1)} ${e[1].toFixed(1)}`});at(p7.thT,{x:PV.x+Math.sin(th/2)*(ra+12),y:PV.y+Math.cos(th/2)*(ra+12)+4,visibility:'visible'});}
+  else {at(p7.thArc,{d:''});at(p7.thT,{visibility:'hidden'});}
+  /* forces: mg → 64 px */
+  const F=60, tx=Math.cos(th), ty=-Math.sin(th); // unit vector of increasing θ (screen coords)
+  p7.mg.set(bx,by+PV.r,bx,by+PV.r+F,9); at(p7.mgT,{x:bx+7,y:by+PV.r+F*0.75});
+  const ft=-Math.sin(th)*F, fm=-th*F;
+  p7.mod.set(bx,by,bx+fm*tx,by+fm*ty,8); p7.tan.set(bx,by,bx+ft*tx,by+ft*ty,10);
+  const lx=bx+ft*tx, ly=by+ft*ty;
+  at(p7.tanT,{x:lx+(ft*tx<0?-6:6),y:ly-8,'text-anchor':ft*tx<0?'end':'start',visibility:Math.abs(ft)>14?'visible':'hidden'});
+}
+function drawPendStatic(){
+  const {th0,L,g}=PD, a=Math.abs(th0), T0=TAU*Math.sqrt(L/g), r=Tratio(a);
+  $('pLo').textContent=f2(L)+' m';
+  const xs=SC.L+a*SC.sx; at(p7.sm,{x1:xs,x2:xs,y1:SC.y0-Math.sin(a)*SC.sy,y2:SC.y0-a*SC.sy}); at(p7.sd,{x1:xs,x2:xs,y1:SC.y0,y2:SC.y0-Math.sin(a)*SC.sy});
+  const gap=a>1e-6?(a-Math.sin(a))/a*100:0;
+  at(p7.st,{x:xs+(a>1.1?-6:6),y:SC.y0-Math.sin(a)*SC.sy+(a>1.1?-30:16),'text-anchor':a>1.1?'end':'start'}); p7.st.textContent=gap.toFixed(1)+'% gap';
+  const deg=a*180/Math.PI, xt=TRc.L+deg*TRc.sx, yt=TRc.y0-(r-1)*TRc.sy;
+  at(p7.tm,{x1:xt,x2:xt,y1:TRc.y0,y2:yt}); at(p7.td,{cx:xt,cy:yt});
+  at(p7.tt,{x:xt-8,y:yt-8,'text-anchor':'end'}); p7.tt.textContent='×'+r.toFixed(3);
+  $('pkv').innerHTML=`<dt>release angle θ₀</dt><dd>${deg.toFixed(0)}° = ${a.toFixed(3)} rad</dd><dt>sin θ₀</dt><dd>${Math.sin(a).toFixed(3)}</dd><dt>model: 2π√(L/g)</dt><dd>${f2(T0)} s</dd><dt>true period</dt><dd>${f2(T0*r)} s</dd><dt>true ÷ model</dt><dd>${r.toFixed(4)}</dd>`;
+}
+function setPg(k){const p=PG.find(x=>x.k===k)||PG[0];PD.g=p.g;press($('pg'),p.k);store('g',p.k);restartPend();}
+function restartPend(){PD.th=PD.th0;PD.om=0;PD.t=0;drawPend();drawPendStatic();}
+$('pg').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)setPg(c.dataset.k);});
+$('pL').addEventListener('input',e=>{PD.L=+e.target.value;restartPend();});
+(function(){let id=null;
+  const toTh=e=>{const r=pend.getBoundingClientRect(),vb=pend.viewBox.baseVal,sx=(e.clientX-r.left)*vb.width/r.width,sy=(e.clientY-r.top)*vb.height/r.height;
+    return Math.max(-Math.PI/2,Math.min(Math.PI/2,Math.atan2(sx-PV.x,Math.max(0,sy-PV.y)+1e-9)));};
+  p7.b.addEventListener('pointerdown',e=>{id=e.pointerId;try{p7.b.setPointerCapture(id);}catch(_){}PD.drag=true;e.preventDefault();});
+  p7.b.addEventListener('pointermove',e=>{if(e.pointerId!==id)return;PD.th0=toTh(e);PD.th=PD.th0;PD.om=0;PD.t=0;drawPend();drawPendStatic();});
+  const up=e=>{if(e.pointerId!==id)return;id=null;PD.drag=false;p7.note.textContent='';restartPend();if(!PD.play){PD.play=true;labP();}kick();};
+  p7.b.addEventListener('pointerup',up); p7.b.addEventListener('pointercancel',up);
+})();
+const labP=playBtn($('pplay2'),PD);
+watch(pend,PD);
+
+/* =================== 8 · COMPARE =================== */
+const cmp=$('cmp'); const C={sc:null,pick:null,t:0}; const CA=anim({play:false,step(dt){C.t+=dt;},draw(){drawCmp();}});
+function periodOf(o){
+  if(o.t==='pend') return TAU*Math.sqrt(o.L/o.g);
+  const k=o.kind==='par'||o.kind==='half'?2*o.k:o.kind==='ser'?o.k/2:o.k; return TAU*Math.sqrt(o.m/k);
+}
+function buildHalf(o,cx,name){
+  const g=mk(cmp,'g',{}); const H={o,cx};
+  mk(g,'text',{x:cx-130,y:20,'font-size':15,'font-weight':700,fill:'var(--ink)'},name);
+  if(o.t==='pend'){
+    const Lp=o.L<=0.5?55:o.L>=2?220:110, top=30;
+    if(o.lift){mk(g,'rect',{x:cx-80,y:top-8,width:160,height:242,rx:6,fill:'none',stroke:'var(--muted)'});
+      H.lift=arrowObj(g,'var(--acc)',2.6); H.lift.set(cx+100,200,cx+100,140,9); mk(g,'text',{x:cx+108,y:176,'font-size':14,fill:'var(--acc)'},'a');}
+    mk(g,'line',{x1:cx-40,x2:cx+40,y1:top,y2:top,stroke:'var(--muted)','stroke-width':3});
+    H.rot=mk(g,'g',{});
+    mk(H.rot,'line',{x1:cx,y1:top,x2:cx,y2:top+Lp,stroke:'var(--ink)','stroke-width':1.5});
+    mk(H.rot,'circle',{cx,cy:top+Lp,r:o.heavy?15:10,fill:'var(--disp)'});
+    H.amp=18*Math.PI/180; H.pv=[cx,top];
+    mk(g,'text',{x:cx,y:292,'font-size':14,fill:'var(--muted)','text-anchor':'middle'},o.lab);
+    if(o.g!==G&&!o.lift) mk(g,'text',{x:cx,y:276,'font-size':13,fill:'var(--muted)','text-anchor':'middle'},'g = '+o.g+' m s⁻²');
+  } else if(o.kind==='h'){
+    const y=170; mk(g,'rect',{x:cx-130,y:y-50,width:8,height:56,fill:'var(--muted)'}); mk(g,'line',{x1:cx-130,x2:cx+130,y1:y+6,y2:y+6,stroke:'var(--muted)'});
+    H.spr=mk(g,'path',{fill:'none',stroke:'var(--ink)','stroke-opacity':.7,'stroke-width':1.6}); H.blk=mk(g,'rect',{y:y-28,width:34,height:34,rx:3,fill:'var(--disp)'});
+    H.h=true; H.y=y; H.x0=cx+20; H.amp=30;
+    mk(g,'text',{x:cx,y:292,'font-size':14,fill:'var(--muted)','text-anchor':'middle'},'horizontal, '+o.lab);
+  } else {
+    const top=30, nat=o.kind==='half'?60:o.kind==='ser'?150:120; H.top=top; H.nat=nat; H.amp=30*(o.amp||1);
+    mk(g,'line',{x1:cx-40,x2:cx+40,y1:top,y2:top,stroke:'var(--muted)','stroke-width':3});
+    H.sprs=(o.kind==='par'?[-12,12]:[0]).map(()=>mk(g,'path',{fill:'none',stroke:'var(--ink)','stroke-opacity':.7,'stroke-width':1.6}));
+    if(o.kind==='ser') H.joint=mk(g,'circle',{r:3,fill:'var(--ink)'});
+    if(o.kind==='par') H.bar=mk(g,'line',{stroke:'var(--ink)','stroke-width':2});
+    const sz=o.lab==='2m'?40:32; H.sz=sz; H.blk=mk(g,'rect',{x:cx-sz/2,width:sz,height:sz,rx:3,fill:'var(--disp)'});
+    mk(g,'text',{x:cx,y:292,'font-size':14,fill:'var(--muted)','text-anchor':'middle'},
+      (o.kind==='par'?'two springs side by side, ':o.kind==='ser'?'two springs end to end, ':o.kind==='half'?'half the spring, ':'')+o.lab+(o.amp===2?', pulled twice as far':''));
+  }
+  H.update=u=>{ // u = cos(phase)
+    if(o.t==='pend'){at(H.rot,{transform:`rotate(${(H.amp*u*180/Math.PI).toFixed(2)} ${H.pv[0]} ${H.pv[1]})`});return;}
+    if(H.h){const bx=H.x0+H.amp*u; at(H.blk,{x:bx-17}); at(H.spr,{d:zig(cx-122,bx-17,H.y-11,12,8)});return;}
+    const yb=H.top+H.nat+H.amp*u; at(H.blk,{y:yb});
+    if(o.kind==='par'){H.sprs.forEach((p,i)=>at(p,{d:zigV(cx+(i?12:-12),H.top,yb-6,10,6)}));at(H.bar,{x1:cx-14,x2:cx+14,y1:yb-6,y2:yb-6});}
+    else if(o.kind==='ser'){const mid=H.top+(yb-H.top)/2; at(H.sprs[0],{d:zigV(cx,H.top,mid,7,8)+zigV(cx,mid,yb,7,8)}); at(H.joint,{cx,cy:mid});}
+    else at(H.sprs[0],{d:zigV(cx,H.top,yb,o.kind==='half'?6:12,8)});
+  };
+  return H;
+}
+let halves=[];
+function pickCmp(id){
+  C.sc=CMP.find(c=>c.id===id)||CMP[0]; C.pick=null; C.t=0; CA.play=false; press($('cchips'),C.sc.id); store('cmp',C.sc.id);
+  cmp.innerHTML=''; mk(cmp,'line',{x1:300,x2:300,y1:10,y2:290,stroke:'var(--line)'});
+  halves=[buildHalf(C.sc.A,150,'A'),buildHalf(C.sc.B,450,'B')];
+  halves.forEach(h=>h.update(1));
+  $('cq').textContent=C.sc.l+': which has the shorter period?';
+  $('cans').innerHTML=['A','Same','B'].map(k=>`<button class="opt" data-k="${k}">${k==='Same'?'Same period':k+' swings faster'}</button>`).join('');
+  $('cverdict').hidden=true; $('cnote').textContent='Predict first; they start moving when you answer.';
+}
+function cmpAnswer(){const r=periodOf(C.sc.B)/periodOf(C.sc.A);return Math.abs(r-1)<1e-9?'Same':r<1?'B':'A';}
+function drawCmp(){
+  if(!C.sc) return; const TA=periodOf(C.sc.A), sc=TA/2; // on screen, A takes 2 s
+  halves.forEach(h=>h.update(Math.cos(TAU*C.t*sc/periodOf(h.o))));
+}
+$('cchips').innerHTML=CMP.map(c=>`<button class="chip" data-k="${c.id}">${c.l}</button>`).join('');
+$('cchips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)pickCmp(c.dataset.k);});
+$('cans').addEventListener('click',e=>{const b=e.target.closest('.opt');if(!b||b.disabled)return;
+  const ans=cmpAnswer(), TA=periodOf(C.sc.A), TB=periodOf(C.sc.B);
+  $('cans').querySelectorAll('.opt').forEach(x=>{x.disabled=true;if(x.dataset.k===ans)x.classList.add('right');else if(x===b)x.classList.add('wrong');});
+  const v=$('cverdict'); v.hidden=false;
+  v.innerHTML=(b.dataset.k===ans?'<b>Right.</b> ':'<b>Not quite.</b> ')+C.sc.why+`<br><span class="mono">T<sub>A</sub> = ${f2(TA)} s, T<sub>B</sub> = ${f2(TB)} s, T<sub>B</sub>/T<sub>A</sub> = ${(TB/TA).toFixed(3)}</span>`;
+  $('cnote').textContent=RM?'Reduced motion: shown at one instant. Turn off reduced motion to watch them swing.':'Time is scaled so that A takes 2 s per full oscillation.';
+  C.t=0; if(RM){C.t=1.5;drawCmp();} else {CA.play=true;kick();}
+});
+watch(cmp,CA);
+pickCmp(load('cmp')||'m2');
+
+/* =================== 10 · DAMPED AND FORCED =================== */
+/* Model: m x'' + b x' + k x = F0 cos(ωd t). ζ = b/b_c with b_c = 2√(km). Here ω0 = 2π rad/s (T0 = 1 s) for the damped graph. */
+const W0=TAU;
+const DM=anim({play:false,t:0,z:0.1,step(dt){this.t+=dt;if(this.t>=8){this.t=8;this.play=false;labD();}},draw(){drawDmp();}});
+function dampX(z,t){ // released from x = 1 at rest
+  const g=z*W0;
+  if(Math.abs(z-1)<0.005) return Math.exp(-g*t)*(1+g*t);
+  if(z<1){const w=W0*Math.sqrt(1-z*z);return Math.exp(-g*t)*(Math.cos(w*t)+(g/w)*Math.sin(w*t));}
+  const q=W0*Math.sqrt(z*z-1), r1=-g+q, r2=-g-q; return (r2*Math.exp(r1*t)-r1*Math.exp(r2*t))/(r2-r1);
+}
+const dmp=$('dmp'), DG={L:120,R:590,cy:122,h:78,ts:8}; const d10={};
+mk(dmp,'line',{x1:DG.L,x2:DG.R,y1:DG.cy,y2:DG.cy,stroke:'var(--muted)'});
+mk(dmp,'line',{x1:DG.L,x2:DG.L,y1:DG.cy-DG.h-10,y2:DG.cy+DG.h+10,stroke:'var(--muted)'});
+for(let i=0;i<=8;i++){const x=DG.L+(DG.R-DG.L)*i/8;mk(dmp,'text',{x,y:DG.cy+DG.h+22,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle',class:'mono'},i);}
+mk(dmp,'text',{x:DG.R,y:DG.cy+DG.h+38,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'time (in units of the undamped period T₀)');
+mk(dmp,'text',{x:DG.L-6,y:DG.cy-DG.h+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end'},'+A');
+mk(dmp,'text',{x:DG.L-6,y:DG.cy+DG.h+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end'},'−A');
+mk(dmp,'rect',{x:30,y:4,width:60,height:6,fill:'var(--muted)'});
+d10.env=[mk(dmp,'path',{fill:'none',stroke:'var(--muted)','stroke-dasharray':'5 4','stroke-width':1.4}),mk(dmp,'path',{fill:'none',stroke:'var(--muted)','stroke-dasharray':'5 4','stroke-width':1.4})];
+d10.curve=mk(dmp,'path',{fill:'none',stroke:'var(--disp)','stroke-width':2.2});
+d10.cur=mk(dmp,'line',{y1:DG.cy-DG.h-10,y2:DG.cy+DG.h+10,stroke:'var(--ink)','stroke-opacity':.3});
+d10.dot=mk(dmp,'circle',{r:4.5,fill:'var(--disp)'});
+d10.link=mk(dmp,'line',{x1:76,stroke:'var(--line)','stroke-dasharray':'2 3'});
+d10.spr=mk(dmp,'path',{fill:'none',stroke:'var(--ink)','stroke-opacity':.7,'stroke-width':1.6});
+d10.blk=mk(dmp,'rect',{x:46,width:28,height:22,rx:3,fill:'var(--disp)'});
+const DPRE=[{k:'l',l:'Light',z:0.1},{k:'c',l:'Critical',z:1},{k:'h',l:'Heavy',z:1.5}];
+$('dpre').innerHTML=DPRE.map(p=>`<button class="chip" data-k="${p.k}">${p.l}</button>`).join('');
+function buildDmp(){
+  const z=DM.z, N=400, X=t=>DG.L+(DG.R-DG.L)*t/DG.ts; let d='',e1='',e2='';
+  for(let i=0;i<=N;i++){const t=DG.ts*i/N;d+=(i?'L':'M')+X(t).toFixed(1)+' '+(DG.cy-DG.h*dampX(z,t)).toFixed(1);
+    const en=Math.exp(-z*W0*t)/Math.sqrt(Math.max(1e-6,1-z*z)); e1+=(i?'L':'M')+X(t).toFixed(1)+' '+(DG.cy-DG.h*en).toFixed(1); e2+=(i?'L':'M')+X(t).toFixed(1)+' '+(DG.cy+DG.h*en).toFixed(1);}
+  at(d10.curve,{d}); const showEnv=z>0&&z<1; d10.env.forEach((p,i)=>at(p,{d:showEnv?(i?e2:e1):''}));
+  $('dzo').textContent=f2(z);
+  press($('dpre'),(DPRE.find(p=>Math.abs(p.z-z)<1e-9)||{}).k||'');
+  const g=z*W0;
+  let st,cp;
+  if(z===0){st='No damping (ideal SHM)';cp='Nothing takes energy away, so the amplitude never shrinks: sections 1–9.';}
+  else if(Math.abs(z-1)<0.005){st='Critical damping';cp='The body returns to the centre in the shortest time without overshooting. Any less damping and it overshoots; any more and it creeps back more slowly.';}
+  else if(z<1){st='Light damping (underdamped)';cp='It still oscillates, at almost the same period, but each swing is smaller than the last by the same fraction. The amplitude follows the dashed exponential envelope.';}
+  else {st='Heavy damping (overdamped)';cp='So much drag that it never swings through the centre: it creeps back slowly, like a door closer or a spoon released in honey.';}
+  $('dstate').textContent=st; $('dcap').textContent=cp;
+  $('dkv').innerHTML=`<dt>b ÷ b<sub>c</sub></dt><dd>${f2(z)}</dd>`+(z>0&&z<1?`<dt>period T′ ÷ T₀</dt><dd>${(1/Math.sqrt(1-z*z)).toFixed(3)}</dd><dt>amplitude halves every</dt><dd>${(Math.LN2/g).toFixed(2)} T₀</dd><dt>energy halves every</dt><dd>${(Math.LN2/(2*g)).toFixed(2)} T₀</dd>`:z===0?'<dt>amplitude halves</dt><dd>never</dd>':'<dt>oscillates?</dt><dd>no</dd>');
+  drawDmp();
+}
+function drawDmp(){
+  const t=DM.t, x=dampX(DM.z,t), X=DG.L+(DG.R-DG.L)*t/DG.ts, y=DG.cy-DG.h*x;
+  at(d10.cur,{x1:X,x2:X}); at(d10.dot,{cx:X,cy:y}); at(d10.link,{x2:X,y1:y,y2:y});
+  at(d10.blk,{y:y-11}); at(d10.spr,{d:zigV(60,10,y-11,10,9)});
+}
+$('dpre').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;DM.z=DPRE.find(p=>p.k===c.dataset.k).z;$('dz').value=DM.z;DM.t=0;buildDmp();});
+$('dz').addEventListener('input',e=>{DM.z=+e.target.value;DM.t=0;buildDmp();});
+const labD=()=>{$('dplay').textContent=DM.play?'Pause':'Release';};
+$('dplay').addEventListener('click',()=>{if(DM.play){DM.play=false;labD();return;}
+  if(DM.t>=8) DM.t=0; if(RM){DM.t=Math.min(8,DM.t+1);drawDmp();return;} DM.play=true;labD();kick();});
+watch(dmp,DM);
+
+/* forced: steady-state amplitude in units of the static stretch F0/k */
+const FA=(r,z)=>1/Math.sqrt((1-r*r)*(1-r*r)+(2*z*r)*(2*z*r));
+const FPH=(r,z)=>Math.atan2(2*z*r,1-r*r);   // lag of x behind the force, 0 … π
+const FO=anim({play:!RM,t:0,r:0.6,z:0.1,step(dt){this.t+=dt;},draw(){drawFrcB();}});
+const frc=$('frc'), FG={L:50,R:400,y0:232,sy:20.5,rmax:2}; const f10={};
+const FX_=r=>FG.L+(FG.R-FG.L)*r/FG.rmax, FY_=a=>FG.y0-Math.min(a,10.6)*FG.sy;
+mk(frc,'line',{x1:FG.L,x2:FG.R,y1:FG.y0,y2:FG.y0,stroke:'var(--muted)'}); mk(frc,'line',{x1:FG.L,x2:FG.L,y1:8,y2:FG.y0,stroke:'var(--muted)'});
+[0,0.5,1,1.5,2].forEach(r=>mk(frc,'text',{x:FX_(r),y:FG.y0+15,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle',class:'mono'},r));
+[2,4,6,8,10].forEach(a=>{mk(frc,'text',{x:FG.L-5,y:FY_(a)+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end',class:'mono'},a);mk(frc,'line',{x1:FG.L,x2:FG.R,y1:FY_(a),y2:FY_(a),stroke:'var(--line)','stroke-dasharray':'2 4'});});
+mk(frc,'text',{x:FG.R,y:FG.y0+32,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'driving frequency ω_d ÷ ω₀'.replace('ω_d','ωd'));
+mk(frc,'text',{x:FG.L+4,y:12,'font-size':11,fill:'var(--muted)'},'amplitude ÷ (F₀/k)');
+mk(frc,'line',{x1:FX_(1),x2:FX_(1),y1:8,y2:FG.y0,stroke:'var(--muted)','stroke-dasharray':'4 4'});
+mk(frc,'text',{x:FX_(1)+4,y:FG.y0-6,'font-size':10.5,fill:'var(--muted)'},'ω₀');
+function fpath(z){let d='';for(let i=0;i<=300;i++){const r=FG.rmax*i/300;d+=(i?'L':'M')+FX_(r).toFixed(1)+' '+FY_(FA(r,z)).toFixed(1);}return d;}
+[0.05,0.1,0.2,0.5].forEach(z=>mk(frc,'path',{d:fpath(z),fill:'none',stroke:'var(--ink)','stroke-opacity':.15,'stroke-width':1.2}));
+f10.curve=mk(frc,'path',{fill:'none',stroke:'var(--disp)','stroke-width':2.6});
+f10.mk=mk(frc,'line',{stroke:'var(--disp)','stroke-dasharray':'2 3'});
+f10.dot=mk(frc,'circle',{r:5,fill:'var(--disp)'});
+const frcb=$('frcb'), FB={x0:250,px:9,y:70}; 
+mk(frcb,'rect',{x:12,y:FB.y-30,width:8,height:42,fill:'var(--muted)'}); mk(frcb,'line',{x1:12,x2:410,y1:FB.y+12,y2:FB.y+12,stroke:'var(--muted)'});
+mk(frcb,'line',{x1:FB.x0,x2:FB.x0,y1:6,y2:FB.y+12,stroke:'var(--muted)','stroke-dasharray':'3 4'});
+f10.spr=mk(frcb,'path',{fill:'none',stroke:'var(--ink)','stroke-opacity':.7,'stroke-width':1.6});
+f10.blk=mk(frcb,'rect',{y:FB.y-14,width:26,height:26,rx:3,fill:'var(--disp)'});
+f10.F=arrowObj(frcb,'var(--force)',3); f10.Ft=mk(frcb,'text',{'font-size':11.5,'font-weight':600,fill:'var(--force)'},'F₀ cos ωdt');
+function buildFrc(){
+  const {r,z}=FO, a=FA(r,z);
+  at(f10.curve,{d:fpath(z)}); at(f10.mk,{x1:FX_(r),x2:FX_(r),y1:FG.y0,y2:FY_(a)}); at(f10.dot,{cx:FX_(r),cy:FY_(a)});
+  $('fro').textContent=f2(r); $('fzo').textContent=f2(z);
+  const ph=FPH(r,z)*180/Math.PI, rp=z<Math.SQRT1_2?Math.sqrt(1-2*z*z):null;
+  $('fkv').innerHTML=`<dt>ω<sub>d</sub> ÷ ω₀</dt><dd>${f2(r)}</dd><dt>amplitude</dt><dd>${a.toFixed(2)} × F₀/k</dd><dt>x lags the push by</dt><dd>${ph.toFixed(0)}°</dd><dt>peak at ω<sub>d</sub> ÷ ω₀</dt><dd>${rp!=null?rp.toFixed(3):'no peak (heavy damping)'}</dd><dt>peak amplitude</dt><dd>${rp!=null?FA(rp,z).toFixed(2)+' × F₀/k':'—'}</dd>`;
+  drawFrcB();
+}
+function drawFrcB(){
+  const {r,z,t}=FO, w0=TAU/1.5, wd=r*w0, a=FA(r,z), ph=FPH(r,z), x=a*Math.cos(wd*t-ph), F=Math.cos(wd*t);
+  const bx=FB.x0+x*FB.px; at(f10.blk,{x:bx-13}); at(f10.spr,{d:zig(20,bx-13,FB.y-1,12,8)});
+  f10.F.set(bx,FB.y-26,bx+F*40,FB.y-26,9); at(f10.Ft,{x:Math.min(330,Math.max(20,bx-40)),y:FB.y-38});
+}
+$('fr').addEventListener('input',e=>{FO.r=+e.target.value;buildFrc();});
+$('fz').addEventListener('input',e=>{FO.z=+e.target.value;buildFrc();});
+playBtn($('fplay'),FO);
+watch(frcb,FO);
+buildDmp(); buildFrc();
+
+/* =================== QUIZZES (all numbers computed here) =================== */
+const r2d=(v,n)=>v.toFixed(n);
+const QZ={};
+{ const nu=75/60; QZ.s1=[
+  {q:'A heart beats 75 times a minute. Its frequency and period?',o:[`${r2d(nu,2)} Hz, ${r2d(1/nu,1)} s`,'75 Hz, 0.013 s',`${r2d(1/nu,1)} Hz, ${r2d(nu,2)} s`],a:0,
+   why:`ν = 75 beats ÷ 60 s = ${r2d(nu,2)} Hz, and T = 1/ν = ${r2d(1/nu,1)} s. Frequency is per <i>second</i>, not per minute.`}];}
+QZ.s2=[
+ {q:'P goes anticlockwise round a circle of radius A, once every 4 s. At t = 0 it is at 45° above the +x axis. Its shadow on the x-axis is:',
+  o:['x = A cos(πt/2 + π/4)','x = A cos(πt/4 + π/4)','x = A sin(πt/2 + π/4)','x = A cos(2πt + π/4)'],a:0,
+  why:'ω = 2π/T = 2π/4 = π/2 rad s⁻¹, and the starting angle from the +x axis is the phase constant, φ = π/4. The x-shadow is the cosine.'},
+ {q:'A body in SHM (ω = 2 rad s⁻¹) is at the centre at t = 0, moving toward +x. With x = A cos(ωt + φ), what is φ?',
+  o:['0','π/2','−π/2','π'],a:2,
+  why:'At the centre, cos φ = 0, so φ = ±π/2. Moving toward +x means P is at the bottom of the circle, at −90°, moving right. Check: v = −ωA sin(−π/2) = +ωA. Two facts (starting position and direction of motion) are needed to fix the motion.'}];
+{ const A=5, w=TAU, t=1.5, ph=Math.PI/4, x=A*Math.cos(w*t+ph), v=-A*w*Math.sin(w*t+ph), a=-w*w*x;
+ QZ.s3=[
+ {q:`x = 5 cos(2πt + π/4) in metres. At t = 1.5 s, its speed is about:`,
+  o:[`${r2d(Math.abs(v),1)} m s⁻¹`,`${r2d(A*w,1)} m s⁻¹`,'0',`${r2d(Math.abs(x),2)} m s⁻¹`],a:0,
+  why:`Phase = 3π + π/4. x = 5 cos(3π + π/4) = ${r2d(x,2)} m. v = −ωA sin(phase) = ${r2d(v,1)} m s⁻¹ (moving toward +x), so the speed is ${r2d(Math.abs(v),1)} m s⁻¹. ${r2d(A*w,1)} m s⁻¹ = ωA is the top speed, only at the centre. Also a = −ω²x = ${r2d(a,0)} m s⁻², toward +x because x is negative.`},
+ {q:'At the instant a body in SHM is at its extreme position x = +A:',
+  o:['v = 0 and a = 0','v is largest and a = 0','v = 0 and a is largest, pointing to −x','v = 0 and a is largest, pointing to +x'],a:2,
+  why:'At the turning point it stops for an instant, so v = 0, and a = −ω²x is largest in size and points back toward the centre.'},
+ {q:'At half the amplitude (x = A/2), the speed is what fraction of the top speed ωA?',
+  o:['1/2','√3/2 ≈ 0.87','3/4','1/√2 ≈ 0.71'],a:1,
+  why:`v = ω√(A² − x²) = ω√(A² − A²/4) = (√3/2)ωA ≈ ${r2d(Math.sqrt(3)/2,2)} ωA. Halfway out, it still has most of its speed, because it slows down mostly near the ends.`}];}
+QZ.s4=[
+ {q:'A block of mass m sits between two identical springs (constant k), one on each side, both fixed to walls. Its period is:',
+  o:['2π√(m/k)','2π√(2m/k)','2π√(m/2k)','π√(m/k)'],a:2,
+  why:'Move it x to the right: the left spring is stretched by x and pulls left with kx; the right one is squashed by x and pushes left with kx. Net F = −2kx, so k<sub>eff</sub> = 2k and T = 2π√(m/2k).'},
+ {q:'Which acceleration–displacement relation describes SHM?',
+  o:['a = 0.7x','a = −200x²','a = −10x','a = −5x³'],a:2,
+  why:'SHM needs a ∝ −x: proportional to x and pointing back. a = 0.7x pushes it away; a = −200x² is not proportional to x (and always points one way). a = −5x³ points back but grows much faster than x: that is a non-linear oscillator, not SHM.'}];
+{ const k=60, m=1.2, T=TAU*Math.sqrt(m/k);
+ QZ.s5=[
+ {q:`A ${m} kg block on a spring of k = ${k} N m⁻¹ has period ${r2d(T,2)} s at amplitude 2 cm. At amplitude 6 cm, its period is:`,
+  o:[`${r2d(T,2)} s`,`${r2d(T*3,2)} s`,`${r2d(T*Math.sqrt(3),2)} s`,`${r2d(T/3,2)} s`],a:0,
+  why:'T = 2π√(m/k) does not depend on amplitude. Its maximum speed triples instead.'},
+ {q:'A spring with a block on it has period T. The spring is cut in half and the same block hung from one half. New period?',
+  o:['T/2','T/√2','√2 T','T'],a:1,
+  why:'Half a spring stretches half as much for the same pull: k doubles. T ∝ 1/√k gives T/√2.'}];}
+{ const k=50, m=1, A=0.10, x=0.05, w=Math.sqrt(k/m), v=w*Math.sqrt(A*A-x*x), K=0.5*m*v*v, U=0.5*k*x*x, E=0.5*k*A*A;
+ QZ.s6=[
+ {q:`A 1 kg block on a spring (k = 50 N m⁻¹) is pulled to 10 cm and released. Its kinetic energy at 5 cm from the centre?`,
+  o:[`${r2d(K,2)} J`,`${r2d(U,4)} J`,`${r2d(E,2)} J`,`${r2d(E/2,3)} J`],a:0,
+  why:`E = ½kA² = ${r2d(E,2)} J. U = ½kx² = ${r2d(U,4)} J. K = E − U = ${r2d(K,4)} J ≈ ${r2d(K,2)} J. At half the amplitude, ¾ of the energy is kinetic (try “x = A/2” above).`},
+ {q:'An oscillator has period T. How often does its kinetic energy repeat?',
+  o:['T','T/2','2T','T/4'],a:1,
+  why:'K = ½mv² depends on v², and the speed is the same going left as going right. So K peaks twice per oscillation: its period is T/2. Same for U.'}];}
+{ const L=G*4/(4*Math.PI*Math.PI), a=2.2, T0=2, T1=T0*Math.sqrt(G/(G+a));
+ QZ.s7=[
+ {q:'A “seconds pendulum” takes 1 s for each swing, so its period is 2 s. Its length, with g = 9.8 m s⁻²?',
+  o:[`${r2d(L,2)} m`,`${r2d(L/4,2)} m`,`${r2d(L*2,2)} m`,`${r2d(9.8/(2*Math.PI),2)} m`],a:0,
+  why:`L = gT²/4π² = 9.8 × 4 / 39.48 = ${r2d(L,3)} m, just under a metre.`},
+ {q:`A pendulum with period ${T0.toFixed(2)} s at rest is taken into a lift accelerating upward at ${a} m s⁻². New period?`,
+  o:[`${r2d(T1,2)} s`,`${T0.toFixed(2)} s`,`${r2d(T0*Math.sqrt((G+a)/G),2)} s`,`${r2d(T0*Math.sqrt(G/(G-a)),2)} s`],a:0,
+  why:`In the lift, the effective g is g + a = ${r2d(G+a,1)} m s⁻². T = ${T0.toFixed(2)} × √(9.8/${r2d(G+a,1)}) = ${r2d(T1,2)} s, so it swings faster.`},
+ {q:'Released at 60° instead of 5°, a real pendulum’s period is:',
+  o:['the same','about 7% longer','about 7% shorter','twice as long'],a:1,
+  why:`At large angles the restoring force mg sin θ is noticeably weaker than the mgθ the formula assumes, so the real pendulum is slower: ×${Tratio(Math.PI/3).toFixed(3)} at 60° compared with ×${Tratio(5*Math.PI/180).toFixed(4)} at 5° (drag the bob above to see). T = 2π√(L/g) is a small-angle result.`}];}
+{ QZ.s10=[
+ {q:'A lightly damped oscillator’s amplitude falls from 8 cm to 4 cm in the first 20 s. What is it after 60 s?',
+  o:['1 cm','2 cm','0 cm','2.67 cm'],a:0,
+  why:'Exponential decay: every 20 s the amplitude is multiplied by the same factor, ½. After 60 s: 8 × ½ × ½ × ½ = 1 cm. It never quite reaches zero in this model.'},
+ {q:'In that same time, by what factor does its energy fall in the first 20 s?',
+  o:['½','¼','⅛','It stays the same'],a:1,
+  why:'Energy ∝ (amplitude)². Amplitude × ½ means energy × ¼: energy decays twice as fast, as e<sup>−bt/m</sup>.'},
+ {q:'A lightly damped oscillator is driven exactly at its natural frequency. What stops the steady-state amplitude from growing for ever?',
+  o:['Nothing; it grows for ever','The damping','The mass','The spring constant alone'],a:1,
+  why:'At resonance each push adds energy; the amplitude grows until the energy lost to damping per cycle equals the energy fed in. Less damping means a higher peak (sweep the damping slider).'},
+ {q:'A car’s shock absorbers should give damping that is:',
+  o:['very light, so the ride stays springy','close to critical','zero'],a:1,
+  why:'Near critical damping the car returns to its level fastest after a bump without bouncing up and down. Light damping would let it bounce for several cycles; very heavy damping would make it slow to recover.'}];}
+{ const ac=5, ge=Math.sqrt(G*G+ac*ac), Tc=TAU*Math.sqrt(1/ge), T0=TAU*Math.sqrt(1/G), tilt=Math.atan(ac/G)*180/Math.PI, th=Math.atan(ac/G);
+  const px=110, py=26, Ls=58, bx=px-Ls*Math.sin(th), by=py+Ls*Math.cos(th);
+  const pic=`<svg viewBox="0 0 240 120" role="img" aria-label="Pendulum hanging in an accelerating car" style="display:block;width:100%;max-width:280px;height:auto;margin:8px 0">
+   <rect x="30" y="20" width="160" height="76" rx="10" fill="none" stroke="var(--muted)" stroke-width="2"/>
+   <circle cx="62" cy="100" r="11" fill="var(--muted)"/><circle cx="158" cy="100" r="11" fill="var(--muted)"/>
+   <line x1="${px}" y1="${py}" x2="${px}" y2="${py+Ls+6}" stroke="var(--line)" stroke-dasharray="3 3"/>
+   <line x1="${px}" y1="${py}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="var(--ink)" stroke-width="1.5"/>
+   <circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="6" fill="var(--disp)"/>
+   <text x="${px-13}" y="${py+46}" font-size="11" fill="var(--spin)">θ</text>
+   <line x1="198" y1="58" x2="226" y2="58" stroke="var(--acc)" stroke-width="2.4"/><polygon points="234,58 225,54 225,62" fill="var(--acc)"/>
+   <text x="210" y="50" font-size="11" fill="var(--acc)">a</text></svg>`;
+ QZ.s7.push(
+ {q:`A pendulum of length 1 m hangs from the roof of a car accelerating horizontally at ${ac} m s⁻² (no other motion). It settles tilted back at angle θ, as shown, and is set swinging gently about that tilted position. Its period?${pic}`,
+  o:[`${r2d(Tc,2)} s`,`${r2d(T0,2)} s`,`${r2d(TAU*Math.sqrt(1/(G+ac)),2)} s`,`${r2d(TAU*Math.sqrt(1/(G-ac)),2)} s`],a:0,
+  why:`In the car, the bob feels gravity g downward plus an apparent ${ac} m s⁻² backward (opposite to a). Together they act like an effective gravity g<sub>eff</sub> = √(g² + a²) = ${r2d(ge,2)} m s⁻², pointing down and back, at tan θ = a/g, θ = ${tilt.toFixed(0)}°. The string hangs along g<sub>eff</sub>, and T = 2π√(L/g<sub>eff</sub>) = ${r2d(Tc,2)} s, shorter than ${r2d(T0,2)} s at rest. Adding g + a would be wrong: the two are at right angles.`});}
+{ const Lc=0.40, T=TAU*Math.sqrt(Lc/(2*G));
+ QZ.s9=[
+ {q:'x(t) = sin ωt − cos ωt is:',o:['periodic but not SHM','SHM with period 2π/ω','SHM with period π/ω','not periodic'],a:1,
+  why:'sin ωt − cos ωt = √2 sin(ωt − π/4): a single sine with amplitude √2 and phase constant −π/4. That is SHM, with period 2π/ω.'},
+ {q:'x(t) = sin²ωt is:',o:['SHM about x = ½, period π/ω','SHM about x = 0, period 2π/ω','periodic but not SHM','not periodic'],a:0,
+  why:'sin²ωt = ½ − ½ cos 2ωt: a pure cosine of angular frequency 2ω, centred on ½ instead of 0. SHM about x = ½, with period 2π/2ω = π/ω.'},
+ {q:'x(t) = sin ωt + cos 2ωt + sin 4ωt is:',o:['SHM with period 2π/ω','periodic, period 2π/ω, but not SHM','periodic, period π/2ω','not periodic'],a:1,
+  why:'The three terms repeat every 2π/ω, π/ω and π/2ω. All three are back in step after 2π/ω, so the sum is periodic with that period. It is a sum of different frequencies, not a single sine, so it is not SHM. (In the same way, any periodic motion can be built from sines and cosines: Fourier’s result.)'},
+ {q:'x(t) = e<sup>−ωt</sup> is:',o:['SHM','periodic but not SHM','not periodic'],a:2,
+  why:'It only ever decreases toward zero and never repeats a value, so it is not periodic at all.'},
+ {q:'x(t) = sin 2t + sin 3t (t in seconds). Is it periodic, and if so, what is its period?',o:['Not periodic','Periodic, period 2π s','Periodic, period π s','Periodic, period 2π/5 s'],a:1,
+  why:'sin 2t repeats every π s and sin 3t every 2π/3 s. Both are back in step after 2π s (two cycles of one, three of the other). Two SHMs add up to a periodic motion whenever their frequencies are in a ratio of whole numbers; for an irrational ratio such as 1 : √2 they never get back in step.'},
+ {q:`Water fills a U-tube; the total length of the water column is ${Lc*100} cm. It is pushed down on one side and released. Period?`,
+  o:[`${r2d(T,2)} s`,`${r2d(TAU*Math.sqrt(Lc/G),2)} s`,`${r2d(TAU*Math.sqrt(Lc/(4*G)),2)} s`,'It does not oscillate'],a:0,
+  why:`Push one side down by y: the other side stands 2y higher. The weight of that extra 2y of water, ρA(2y)g, pushes back on the whole column of mass ρAL. So a = −(2g/L)y: SHM with T = 2π√(L/2g) = ${r2d(T,2)} s (no friction).`}];}
+function renderQuiz(){
+  document.querySelectorAll('[data-quiz]').forEach(box=>{const key=box.dataset.quiz,L=QZ[key]||[];
+    box.innerHTML=L.map((q,i)=>`<div class="panel"><p class="qn">${key.replace('s','§')} · Q${i+1}</p><p>${q.q}</p><div class="opts" data-k="${key}" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');});
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.opts[data-k] .opt'); if(!b||b.disabled) return;
+  const box=b.parentElement, q=QZ[box.dataset.k][+box.dataset.i], j=+b.dataset.j;
+  box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+  const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+});
+$('qreset').addEventListener('click',()=>{renderQuiz();Object.keys(answered1).forEach(k=>delete answered1[k]);showSet();pickCmp(C.sc.id);});
+
+/* =================== INIT =================== */
+setR(); setS(); buildTwin(); resetTwin(); buildEn(); drawEn(); setPg(load('g')||'e'); renderQuiz(); kick();
+</script>
+</body>
+</html>
