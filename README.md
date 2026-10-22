@@ -1,5 +1,7 @@
 # JEE Materials
 
+**🌐 Website: [madyarc.github.io/jee-materials](https://madyarc.github.io/jee-materials/)**
+
 Interactive pages for building intuition across the JEE syllabus (CBSE + JEE). Plain static HTML, with no build step.
 
 ## Subjects
@@ -56,7 +58,7 @@ Open `index.html` in a browser.
 
 ## Publish on GitHub Pages
 
-On GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: `main`, folder `/ (root)` → Save**. After a minute the site is live at `https://<your-username>.github.io/jee-materials/`.
+On GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: `main`, folder `/ (root)` → Save**. After a minute the site is live at https://madyarc.github.io/jee-materials/.
 
 `.nojekyll` tells GitHub Pages to serve the files as they are.
 
