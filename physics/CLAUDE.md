@@ -11,10 +11,14 @@ The project-wide rules in the root [`CLAUDE.md`](../CLAUDE.md) apply, including 
 ## Layout
 
 - `mechanics/` — `moment-of-inertia.html` (Module 01), `rolling-motion.html` (Module 02)
-- `thermodynamics/` — `laws-and-pv.html` (Module 03), `heat-engines.html` (Module 04). Shared foundation for chemistry too: keep the `#signs` section self-contained, as the chemistry index links straight to it.
+- `thermodynamics/` — `laws-and-pv.html` (Module 03), `heat-engines.html` (Module 04), `kinetic-theory.html` (05), `degrees-of-freedom.html` (06), `heat-transfer.html` (07). The folder holds all thermal physics (thermodynamics, kinetic theory, thermal properties of matter). Shared foundation for chemistry too: keep the `#signs` section self-contained, as the chemistry index links straight to it.
 - Later branches: `electromagnetism/`, `optics/`, `waves/`, `modern/`
 
 Module numbers are per subject, so don't renumber existing modules.
+
+## Coverage
+
+`SYLLABUS.md` is the checklist of every syllabus item, built from the NCERT chapter text. Before building a topic, list its items there first; tick each one with the module that teaches it.
 
 ## Visual rules
 

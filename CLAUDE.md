@@ -66,6 +66,7 @@ Handbook scans and coaching sites (Byju's and similar) summarise books into form
 
 ## Adding a module
 
+0. **List before building.** Before starting a topic, list every syllabus item for it in `<subject>/SYLLABUS.md`, built from the actual NCERT chapter text (plus JEE extras, marked **[JEE]**), so nothing is missed. After building, tick each item with the module that covers it (`[~]` for partial).
 1. Create `<subject>/<branch>/<name>.html`, copying the head and style tokens from an existing module.
 2. Verify all data first and record the sources in `<subject>/DATA-SOURCES.md`.
 3. Add a row to `<subject>/index.html` (number, title, one-line description, tags), and update the subject's summary line in the root `index.html`.

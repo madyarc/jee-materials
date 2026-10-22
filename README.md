@@ -21,6 +21,9 @@ Interactive pages for building intuition across the JEE syllabus (CBSE + JEE). P
 | 02 | [Rolling Motion](physics/mechanics/rolling-motion.html) | Mechanics | Velocity arrows on a rolling/slipping wheel; incline race by β = k²/R²; friction needed to roll; slipping → rolling |
 | 03 | [Thermodynamics: the PV Diagram](physics/thermodynamics/laws-and-pv.html) | Thermodynamics | Zeroth law; work as area; Q = ΔU + W bars; cycles; path dependence; Cp vs Cv; physics vs chemistry sign conventions |
 | 04 | [Heat Engines and the Second Law](physics/thermodynamics/heat-engines.html) | Thermodynamics | Energy-flow bands; Kelvin–Planck and Clausius as impossible machines; Carnot cycle; refrigerators and heat pumps |
+| 05 | [Kinetic Theory](physics/thermodynamics/kinetic-theory.html) | Thermodynamics | Molecule box → pressure and gas laws; KE ∝ T; Maxwell curve with v_mp, v_avg, v_rms; Graham; mean free path; real gases |
+| 06 | [Degrees of Freedom and Equipartition](physics/thermodynamics/degrees-of-freedom.html) | Thermodynamics | Molecule viewer toggling each DOF; ½kT buckets → Cv, Cp, γ; mixtures; solids 3R; frozen modes |
+| 07 | [Heat Transfer](physics/thermodynamics/heat-transfer.html) | Thermodynamics | Conduction (series/parallel, thermal resistance, ice growth); convection; black-body radiation; Newton's law of cooling |
 
 ### Mathematics — [`maths/`](maths/index.html)
 

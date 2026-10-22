@@ -1,0 +1,967 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kinetic Theory of Gases</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) box of molecules: pressure from wall hits, gas laws, Avogadro, Dalton, Brownian grain, live speed histogram
+   (2) temperature = mean KE (He, N2, Xe)  (3) Maxwell speed distribution and the three speeds (+ mean vs rms dots)
+   (4) Graham's law  (5) mean free path  (6) assumptions, real vs ideal  (7) predict-then-check
+   Thermal colour tokens shared with laws-and-pv.html and heat-engines.html. */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --heat:#c2306a; --work:#1f8f87; --du:#8a6d1f; --hot:#d0452c; --cold:#1f7fc4;
+  --p1:#7a52c7; --p2:#2c56cc;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --heat:#f06d9f; --work:#3cb8ad; --du:#d4b44a; --hot:#ff7b62; --cold:#5cb3f0;
+  --p1:#a585f0; --p2:#7d9dff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --heat:#f06d9f; --work:#3cb8ad; --du:#d4b44a; --hot:#ff7b62; --cold:#5cb3f0;
+  --p1:#a585f0; --p2:#7d9dff; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+svg.drag{touch-action:none;cursor:ew-resize}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:7.5em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);width:7em;flex:0 0 7em;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.legend b{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+a{color:var(--accent)}
+.tbl{overflow-x:auto}
+.tbl table{border-collapse:collapse;font-size:13px;min-width:340px;width:100%}
+.tbl th,.tbl td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.tbl th{font-weight:600;color:var(--muted)}
+canvas.sim{display:block;width:100%;height:auto;touch-action:none;border-radius:6px;background:var(--bg)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.readout div{background:var(--bg);border-radius:8px;padding:6px 10px}
+.readout span{display:block;font-size:12px;color:var(--muted)}
+.readout b{font:500 16px var(--f-mono);font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Kinetic Theory: Gas as Moving Molecules</h1>
+    <p class="lede">A gas looks still, but it is a crowd of molecules flying in straight lines, bouncing off each other and off the walls. Pressure is the push of those bounces. Temperature measures how much kinetic energy the molecules carry. Every gas law follows from this picture, and so does the spread of molecular speeds.</p>
+  </header>
+
+  <!-- 1 · box of molecules -->
+  <section class="stack" id="box">
+    <div>
+      <h2>1 · Pressure is molecules hitting the walls</h2>
+      <p class="lede">Each time a molecule bounces off a wall, its velocity component into the wall reverses and the wall gets a push of 2mv<sub>⊥</sub>. Add up the pushes per second on each unit of wall and you have the pressure. Change temperature, number of molecules or volume, and watch the measured pressure follow the gas laws. Drag the right-hand wall to change the volume.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row">
+          <button class="btn primary" id="bplay">Play</button>
+          <button class="btn" id="bsame" title="Give every molecule the same speed">All the same speed</button>
+          <button class="chip" id="bgrain" aria-pressed="false">Add a dust grain</button>
+        </div>
+        <div class="chips" id="bgas" role="group" aria-label="Gas in the box">
+          <button class="chip" data-k="He">Helium</button><button class="chip" data-k="Ar">Argon</button><button class="chip" data-k="mix">Mixture: He + Ar</button>
+        </div>
+        <canvas class="sim" id="bcv" width="560" height="280" aria-label="Molecules moving in a box; the right wall is draggable"></canvas>
+        <div class="legend" id="blegend"></div>
+        <div class="slider"><label for="bT">temperature T</label><input type="range" id="bT" min="100" max="600" step="10" value="300"><output id="bTo"></output></div>
+        <div class="slider"><label for="bN">molecules N</label><input type="range" id="bN" min="20" max="150" step="1" value="80"><output id="bNo"></output></div>
+        <div class="slider" id="bVrow"><label for="bV">volume V</label><input type="range" id="bV" min="32" max="100" step="1" value="100"><output id="bVo"></output></div>
+        <div class="slider" id="bProw" hidden><label for="bP">outside pressure</label><input type="range" id="bP" min="60" max="300" step="5" value="170"><output id="bPo"></output></div>
+        <div>
+          <p class="muted" style="margin-bottom:4px">Speeds right now (bars) and the spread collisions settle into (curve)</p>
+          <canvas class="sim" id="hcv" width="560" height="120" aria-label="Histogram of molecular speeds"></canvas>
+        </div>
+      </div>
+      <div class="panel stack">
+        <div class="readout">
+          <div><span>wall hits per second</span><b id="rhits">–</b></div>
+          <div><span>measured pressure</span><b id="rpm">–</b></div>
+          <div><span>predicted from N, T, V</span><b id="rpt">–</b></div>
+        </div>
+        <div id="rmix" hidden>
+          <svg id="mixsvg" viewBox="0 0 320 120" role="img" aria-label="Partial pressures and mean kinetic energy of each gas" style="width:100%;max-width:380px;height:auto;display:block"></svg>
+        </div>
+        <div>
+          <div class="chips" id="bexp" role="group" aria-label="Experiment">
+            <button class="chip" data-k="boyle">Boyle (T fixed)</button><button class="chip" data-k="charles">Charles (P fixed)</button><button class="chip" data-k="avo">Avogadro (V, T fixed)</button>
+          </div>
+        </div>
+        <svg id="exsvg" viewBox="0 0 360 240" role="img" aria-label="Measured points against the gas-law prediction" style="width:100%;height:auto;display:block"></svg>
+        <div class="legend"><span><i style="background:var(--ink)"></i>ideal-gas prediction</span><span><b style="background:none;border:2px solid var(--heat)"></b>measured now</span><span><b style="background:var(--vel)"></b>recorded</span></div>
+        <div class="row"><button class="btn" id="brec">Record this point</button><span class="muted" id="bexnote"></span></div>
+        <p class="cap key" id="bcap"></p>
+      </div>
+    </div>
+    <p class="cap"><b>From bounces to P = ⅓ n m⟨v²⟩.</b> A molecule with velocity component v<sub>x</sub> gives the wall 2mv<sub>x</sub> per hit, and the faster it moves the more often it comes back, so its contribution goes as m v<sub>x</sub>². Averaging over all molecules, P = n m⟨v<sub>x</sub>²⟩. Motion is the same in every direction, so ⟨v<sub>x</sub>²⟩ = ⟨v<sub>y</sub>²⟩ = ⟨v<sub>z</sub>²⟩ = ⅓⟨v²⟩, which gives <b>P = ⅓ n m⟨v²⟩</b> (n = molecules per unit volume). Together with PV = Nk<sub>B</sub>T this says the mean kinetic energy per molecule is (3/2)k<sub>B</sub>T. <span class="hw">2D model</span> The box is flat, so there the factor is ½ instead of ⅓ (two directions share the motion, not three); the gas laws come out the same.</p>
+    <div class="two">
+      <p class="cap"><b>Avogadro’s law.</b> In the Avogadro experiment, record points with helium, then switch to argon and record more. They fall on the same line: at the same V and T, pressure depends only on how many molecules there are, not which. So equal volumes of gases at equal T and P hold equal numbers of molecules. One mole (N<sub>A</sub> = 6.022 × 10²³ molecules) of any ideal gas occupies 22.4 L at 273 K and 1 atm, and PV = µRT = Nk<sub>B</sub>T with R = N<sub>A</sub>k<sub>B</sub>.</p>
+      <p class="cap"><b>Dalton’s law.</b> Choose the mixture. Each gas bounces off the walls on its own, so the pressure splits into a helium part and an argon part, and they add: P = P<sub>1</sub> + P<sub>2</sub>. Each partial pressure is what that gas would exert alone in the same box. Press “All the same speed” too: argon molecules start with ten times the kinetic energy of helium, and collisions share it out until the averages match.</p>
+    </div>
+    <p class="cap"><b>Brownian motion.</b> Add a dust grain: it is far heavier than the molecules, so you can’t see what pushes it, yet it jitters in a random path. Robert Brown saw pollen grains do this in water in 1827; it was later explained as uneven bombardment by molecules, direct evidence that they exist and keep moving. The smaller the grain and the hotter the fluid, the livelier the jitter. <span class="hw">qualitative</span></p>
+  </section>
+
+  <!-- 2 · temperature -->
+  <section class="stack">
+    <div>
+      <h2>2 · Temperature is average kinetic energy</h2>
+      <p class="lede">Three gases at the same temperature. Their molecules carry the same average translational kinetic energy, (3/2)k<sub>B</sub>T, whatever the gas. A heavy molecule therefore moves slowly, a light one fast: ½mv² is shared equally, v is not.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="tsvg" viewBox="0 0 520 230" role="img" aria-label="Helium, nitrogen and xenon molecules with their rms speeds and mean kinetic energies" style="min-width:360px"></svg></div>
+        <div class="slider"><label for="tT">temperature T</label><input type="range" id="tT" min="50" max="1000" step="10" value="300"><output id="tTo"></output></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="tkv"></dl>
+        <p class="cap key">Mean kinetic energy per molecule, <b>½m⟨v²⟩ = (3/2)k<sub>B</sub>T</b>, with k<sub>B</sub> = 1.380649 × 10⁻²³ J/K. Only T appears: not the pressure, the volume or the kind of gas. Solving for speed, <b>v<sub>rms</sub> = √(3k<sub>B</sub>T/m) = √(3RT/M)</b>, so at the same T, v<sub>rms</sub> ∝ 1/√M. Xenon is about 33 times heavier than helium, so it is about √33 ≈ 5.7 times slower.</p>
+        <p class="muted">This (3/2)k<sub>B</sub>T is the energy of moving from place to place. Molecules with more than one atom can also rotate and vibrate; how that energy is shared out is on the <a href="degrees-of-freedom.html">degrees of freedom</a> page.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · Maxwell -->
+  <section class="stack" id="speeds">
+    <div>
+      <h2>3 · Not one speed but a spread: the three speeds <span class="hw">beyond NCERT · JEE</span></h2>
+      <p class="lede">Collisions keep shuffling energy, so at any moment some molecules are slow, most are middling and a few are very fast. The Maxwell speed distribution gives the fraction of molecules at each speed. The total area under the curve is 1: every molecule is somewhere under it. Step through the three “typical” speeds and see why each sits where it does.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="mgas" role="group" aria-label="Gas"></div>
+        <div class="chips" id="mstep" role="group" aria-label="Which speed to explain">
+          <button class="chip" data-k="mp">1 · Most probable</button><button class="chip" data-k="avg">2 · Average</button><button class="chip" data-k="rms">3 · rms</button><button class="chip" data-k="all">All three</button>
+        </div>
+        <div class="svgbox"><svg id="msvg" viewBox="0 0 560 330" role="img" aria-label="Maxwell speed distribution with the three characteristic speeds" style="min-width:360px"></svg></div>
+        <div class="slider"><label for="mT">temperature T</label><input type="range" id="mT" min="100" max="1500" step="10" value="300"><output id="mTo"></output></div>
+        <div class="row"><button class="btn" id="mpin">Pin this curve to compare</button><span class="muted" id="mpinlab"></span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="mkv"></dl>
+        <p class="cap key" id="mcap"></p>
+        <p class="cap" id="mratio"></p>
+      </div>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <h3>Why rms is never smaller than the average</h3>
+        <p class="muted">Five molecules with speeds on a line (any units). Drag them. The average adds speeds; rms adds <i>squared</i> speeds, so one fast molecule raises rms more than it raises the average.</p>
+        <div class="svgbox"><svg id="dsvg" class="drag" viewBox="0 0 520 130" role="img" aria-label="Five draggable speeds with their mean and rms" style="min-width:340px"></svg></div>
+      </div>
+      <div class="panel stack">
+        <p class="big mono" id="dout"></p>
+        <p class="cap">Average = (v₁ + … + v₅)/5. rms = √((v₁² + … + v₅²)/5). They are equal only when every speed is the same; any spread makes rms larger. The Maxwell curve has a long fast tail, so v<sub>rms</sub> ends up about 8.5% above v<sub>avg</sub>.</p>
+      </div>
+    </div>
+    <p class="cap"><b>Shape with T and M.</b> Heat the gas (or pick a lighter one) and the whole curve stretches to the right: speeds scale as √(T/M). Because the area must stay 1, a wider curve must also be lower. Pin a curve, then move the slider to compare. <span class="hw">model</span> Maxwell’s distribution is for an ideal gas in equilibrium.</p>
+  </section>
+
+  <!-- 4 · Graham -->
+  <section class="stack">
+    <div>
+      <h2>4 · Heavier is slower: diffusion and effusion <span class="hw">JEE</span></h2>
+      <p class="lede">Two gases at the same temperature and pressure leak through tiny holes. Molecules escape at a rate set by how fast they reach the hole, and at the same T that speed goes as 1/√M.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="ggas" role="group" aria-label="Pair of gases"></div>
+        <div class="svgbox"><svg id="gsvg" viewBox="0 0 520 190" role="img" aria-label="Two gases leaking through pinholes at different rates" style="min-width:340px"></svg></div>
+      </div>
+      <div class="panel stack">
+        <p class="big mono" id="gout"></p>
+        <p class="cap key"><b>Graham’s law:</b> rate₁/rate₂ = √(M₂/M₁), at the same T and P. It is the 1/√M dependence of molecular speed showing up in a bulk measurement.</p>
+        <p class="cap" id="gcap"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · mean free path -->
+  <section class="stack">
+    <div>
+      <h2>5 · Mean free path: how far before the next collision</h2>
+      <p class="lede">Molecules move at hundreds of metres per second, yet a smell takes many seconds to cross a room. Each molecule keeps hitting others and changing direction. Follow one: each straight stretch is a free path. Crowd the gas or fatten the molecules and the stretches get shorter.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="fsvg" viewBox="0 0 520 280" role="img" aria-label="Zig-zag path of one molecule among others" style="min-width:340px"></svg></div>
+        <div class="slider"><label for="fP">pressure (crowding)</label><input type="range" id="fP" min="0.25" max="4" step="0.25" value="1"><output id="fPo"></output></div>
+        <div class="slider"><label for="fd">molecule diameter d</label><input type="range" id="fd" min="1" max="4" step="0.25" value="2"><output id="fdo"></output></div>
+        <div class="row"><button class="btn primary" id="fgo">New path</button><span class="muted" id="fmeas"></span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="fkv"></dl>
+        <p class="cap key">A molecule of diameter d hits any other whose centre comes within d of its own, so it sweeps out a tube of cross-section πd². With n molecules per unit volume it meets one about every 1/(nπd²) of travel. The others are moving too, which makes collisions a little more frequent: <b>l = 1/(√2 n π d²)</b>. Double the crowding and l halves; double d and l drops to a quarter.</p>
+        <p class="muted"><span class="hw">2D picture</span> On the flat picture a molecule sweeps a strip of width 2d, not a tube, so there the path shrinks as 1/d, not 1/d². The numbers alongside are for a real 3D gas at 300 K, with the slider pressure in atm.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · assumptions -->
+  <section class="stack">
+    <div>
+      <h2>6 · The assumptions, and when a real gas breaks them</h2>
+      <p class="lede">The ideal gas is a model. It works when molecules are far apart compared with their size and rarely feel each other. Squeeze the gas (high pressure) or slow it down (low temperature) and that stops being true.</p>
+    </div>
+    <div class="two">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="asvg" viewBox="0 0 320 200" role="img" aria-label="Spacing between molecules compared with their size" style="min-width:280px"></svg></div>
+        <div class="slider"><label for="aP">pressure</label><input type="range" id="aP" min="0" max="3" step="0.05" value="0"><output id="aPo"></output></div>
+        <p class="muted" id="acap"></p>
+      </div>
+      <div class="panel stack">
+        <div class="svgbox"><svg id="zsvg" viewBox="0 0 320 200" role="img" aria-label="PV over mu R T against pressure for a real gas at three temperatures" style="min-width:280px"></svg></div>
+        <p class="muted">PV/(µRT) is exactly 1 for an ideal gas at every pressure. A real gas dips below 1 where attractions pull molecules together, and rises above 1 at high pressure where their own volume matters. All curves start at 1 at low pressure. The colder the gas, the deeper the dip: slow molecules linger near each other long enough for attraction to matter. <span class="hw">schematic, shape only</span></p>
+      </div>
+    </div>
+    <div class="panel tbl">
+      <table>
+        <tr><th>Assumption of kinetic theory</th><th>Fails when</th><th>Why</th></tr>
+        <tr><td>A gas is a huge number of identical molecules in random motion, obeying Newton’s laws</td><td>(holds for ordinary gases)</td><td>a litre of gas has about 10²² molecules, so averages are steady</td></tr>
+        <tr><td>Molecules are tiny compared with the spaces between them (their own volume is ignored)</td><td>high pressure</td><td>spacing shrinks towards the molecular size, so less free room than V</td></tr>
+        <tr><td>No forces between molecules except during collisions</td><td>low temperature, high pressure</td><td>slow, close molecules feel each other’s attraction; near liquefaction this dominates</td></tr>
+        <tr><td>Collisions are elastic and last a negligible time</td><td>(holds in equilibrium)</td><td>total kinetic energy is shared, not lost</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- 7 · quiz -->
+  <section class="stack">
+    <div>
+      <h2>7 · Predict, then check</h2>
+      <p class="lede">CBSE- and JEE-style questions. Choose first; the reasoning appears after. R = 8.314 J mol⁻¹ K⁻¹.</p>
+    </div>
+    <div class="qgrid" id="quiz"></div>
+    <div><button class="btn" id="qreset">Reset answers</button></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> ideal gas: point-like molecules, no forces except in elastic collisions. The animated box is flat (2D) with a few dozen molecules and is kept at the chosen temperature, so its pressures are in relative units (100 = 80 helium atoms at 300 K in the full box). The Maxwell distribution is for an ideal gas in equilibrium. The mean-free-path picture is 2D and its numbers use a 3D gas at 300 K. The real-gas curves are schematic. Molecule sizes in the drawings are not to scale.</p>
+    <p><b>Based on:</b> NCERT Physics Class 11, "Kinetic Theory"; H. C. Verma, <i>Concepts of Physics</i> Vol. 2, "Kinetic Theory of Gases". Constants: k<sub>B</sub> = 1.380649 × 10⁻²³ J/K, N<sub>A</sub> = 6.02214076 × 10²³ mol⁻¹, R = 8.314 J mol⁻¹ K⁻¹; molar masses from standard atomic weights.</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+const KB=1.380649e-23;        // J/K (exact, SI 2019)
+const NA=6.02214076e23;       // 1/mol (exact, SI 2019)
+const R=8.314462618;          // J/(mol K) = NA*KB
+const ATM=101325;             // Pa
+/* Molar masses, g/mol, from IUPAC standard atomic weights (H 1.008, He 4.0026, C 12.011, N 14.007, O 15.999, Ar 39.95, Xe 131.29) */
+const GAS={
+  H2: {l:'H₂', M:2.016},
+  He: {l:'He', M:4.003},
+  N2: {l:'N₂', M:28.014},
+  O2: {l:'O₂', M:31.998},
+  CO2:{l:'CO₂',M:44.009},
+  Ar: {l:'Ar', M:39.95},
+  Xe: {l:'Xe', M:131.29}
+};
+const MGASES=['H2','He','N2','O2','CO2'];          // section 3 chips
+const TGASES=['He','N2','Xe'];                    // section 2 rows
+/* Graham pairs; UF6 masses as in NCERT Example 12.6 (235 + 6×19 = 349, 238 + 6×19 = 352) */
+const GPAIRS=[
+  {id:'h2o2', l:'H₂ vs O₂', a:{l:'H₂',M:2.016}, b:{l:'O₂',M:31.998}},
+  {id:'hear', l:'He vs Ar', a:{l:'He',M:4.003}, b:{l:'Ar',M:39.95}},
+  {id:'uf6',  l:'²³⁵UF₆ vs ²³⁸UF₆', a:{l:'²³⁵UF₆',M:349}, b:{l:'²³⁸UF₆',M:352}}
+];
+const FREE_T=300;     // K, section 5
+const FREE_M=28.014;  // N2, for the collision rate in section 5
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function mk(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function setA(e,attrs){for(const k in attrs)e.setAttribute(k,attrs[k]);}
+function press(el,k){el.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===String(k)));}
+function svgXY(svg,e){const r=svg.getBoundingClientRect(), vb=svg.viewBox.baseVal;return [(e.clientX-r.left)/r.width*vb.width,(e.clientY-r.top)/r.height*vb.height];}
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const fmt=(v,d)=>v.toFixed(d).replace('-','−');
+function sci(v,d){const e=Math.floor(Math.log10(Math.abs(v)));const m=v/Math.pow(10,e);return `${m.toFixed(d)} × 10${sup(e)}`;}
+function sup(e){const s='⁰¹²³⁴⁵⁶⁷⁸⁹';return (e<0?'⁻':'')+String(Math.abs(e)).split('').map(c=>s[+c]).join('');}
+function arrow(x1,y1,x2,y2,col,w,head){
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy); if(L<1.5) return '';
+  const h=Math.min(head||9,L*0.6), ux=dx/L, uy=dy/L, bx=x2-ux*h, by=y2-uy*h, px=-uy*h*0.5, py=ux*h*0.5;
+  return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="${w||2}"/><polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px).toFixed(1)},${(by+py).toFixed(1)} ${(bx-px).toFixed(1)},${(by-py).toFixed(1)}" fill="${col}"/>`;
+}
+function gauss(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+/* kinetic-theory speeds, m/s; M in g/mol */
+const vmp =(T,M)=>Math.sqrt(2*R*T/(M/1000));
+const vavg=(T,M)=>Math.sqrt(8*R*T/(Math.PI*M/1000));
+const vrms=(T,M)=>Math.sqrt(3*R*T/(M/1000));
+/* Maxwell speed density, per (m/s) */
+function maxw(v,T,M){const m=M/1000/NA, a=m/(2*KB*T);return 4*Math.PI*Math.pow(a/Math.PI,1.5)*v*v*Math.exp(-a*v*v);}
+/* canvas colours from CSS tokens */
+let TOK={};
+function readTok(){const cs=getComputedStyle(document.documentElement);for(const k of ['ink','muted','line','bg','surface','vel','force','accent','heat','work','flag'])TOK[k]=cs.getPropertyValue('--'+k).trim();}
+readTok();
+if(window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{readTok();drawBox();drawHist();});
+
+/* =================== 1 · BOX OF MOLECULES =================== */
+/* Sim units: px, s. Energy scale KAPPA per kelvin (2D: mean KE per molecule = KAPPA*T). Masses = molar mass. */
+const KAPPA=216;
+const BW=560, BH=280, X0=8, Y0=8, Y1=272, XMIN=180, XMAX=552;
+const AFULL=(XMAX-X0)*(Y1-Y0);
+const SP=[{k:'He',M:4.003,r:3,c:'vel'},{k:'Ar',M:39.95,r:4,c:'force'}];
+const CORE=0.6;   // molecules collide with each other at 0.6 × drawn radius, keeping their own volume small (ideal-gas limit)
+const GRAIN={M:900,r:13};
+const N0=80, T0=300;
+const PREF=N0*KAPPA*T0/((XMAX-X0-6)*(Y1-Y0-6))/100;      // display: 100 = N0 He (r = 3) at T0 in the full box
+const B={gas:load('ktg-gas')||'He', exp:load('ktg-exp')||'boyle', T:300, N:N0, xw:XMAX, Pext:170,
+  run:!RM, grain:false, P:0, Ps:[0,0], hits:0, hitsS:0, ke:[0,0], hist:[[],[]], ticks:[], trail:[], pts:[], hold:'', vis:true};
+if(!['He','Ar','mix'].includes(B.gas)) B.gas='He';
+if(!['boyle','charles','avo'].includes(B.exp)) B.exp='boyle';
+let parts=[];
+const NB=28;
+B.hist=[new Float64Array(NB),new Float64Array(NB)];
+
+const bcv=$('bcv'), bctx=bcv.getContext('2d'), hcv=$('hcv'), hctx=hcv.getContext('2d');
+function sizeCanvas(cv,ctx,w,h){const d=Math.min(2,window.devicePixelRatio||1);cv.width=w*d;cv.height=h*d;ctx.setTransform(d,0,0,d,0,0);}
+sizeCanvas(bcv,bctx,BW,BH); sizeCanvas(hcv,hctx,BW,120);
+
+const spOf=i=>B.gas==='He'?0:B.gas==='Ar'?1:(i%2);
+function sample(p){const s=Math.sqrt(KAPPA*B.T/p.m);p.vx=gauss()*s;p.vy=gauss()*s;}
+function place(p){
+  for(let t=0;t<60;t++){
+    p.x=X0+p.r+Math.random()*(B.xw-X0-2*p.r); p.y=Y0+p.r+Math.random()*(Y1-Y0-2*p.r);
+    if(parts.every(q=>q===p||Math.hypot(q.x-p.x,q.y-p.y)>q.r+p.r+1)) return;
+  }
+}
+function newMol(i){const s=SP[spOf(i)];const p={sp:spOf(i),m:s.M,r:s.r,x:0,y:0,vx:0,vy:0};return p;}
+function setN(n){
+  const mols=parts.filter(p=>p.sp!==2), g=parts.find(p=>p.sp===2);
+  while(mols.length>n) mols.pop();
+  while(mols.length<n){const p=newMol(mols.length);parts=mols.concat(g?[g]:[]);place(p);sample(p);mols.push(p);}
+  parts=mols.concat(g?[g]:[]);
+}
+function setGas(){
+  parts.forEach((p,i)=>{if(p.sp===2)return;const s=spOf(i);if(s!==p.sp){p.sp=s;p.m=SP[s].M;p.r=SP[s].r;sample(p);}});
+  B.hist.forEach(h=>h.fill(0)); B.Ps=[0,0];
+}
+function setGrain(on){
+  B.grain=on; parts=parts.filter(p=>p.sp!==2); B.trail=[];
+  if(on){const g={sp:2,m:GRAIN.M,r:GRAIN.r,x:(X0+B.xw)/2,y:(Y0+Y1)/2,vx:0,vy:0};
+    parts.forEach(p=>{if(Math.hypot(p.x-g.x,p.y-g.y)<g.r+p.r+2){p.x=X0+p.r+2;}});parts.push(g);}
+}
+function allSame(){
+  /* every molecule gets the same speed: the one that gives the right mean KE for helium */
+  /* pure gas: its own typical speed; mixture: one common speed with the right total KE, so argon starts with 10× the KE of helium */
+  const m=B.gas==='He'?SP[0].M:B.gas==='Ar'?SP[1].M:(SP[0].M+SP[1].M)/2, v=Math.sqrt(2*KAPPA*B.T/m);
+  parts.forEach(p=>{if(p.sp===2)return;const a=Math.random()*2*Math.PI;p.vx=v*Math.cos(a);p.vy=v*Math.sin(a);});
+  B.hist.forEach(h=>h.fill(0));
+}
+function rescaleT(Tn){const f=Math.sqrt(Tn/B.T);parts.forEach(p=>{p.vx*=f;p.vy*=f;});B.T=Tn;}
+
+function step(dt){
+  const xw=B.xw; let imp=[0,0], hits=0;
+  for(const p of parts){
+    p.x+=p.vx*dt; p.y+=p.vy*dt;
+    let hit=false, side=0;
+    if(p.x<X0+p.r){p.x=2*(X0+p.r)-p.x;if(p.vx<0){if(p.sp<2){imp[p.sp]+=-2*p.m*p.vx;}p.vx=-p.vx;hit=true;side=0;}}
+    if(p.x>xw-p.r){p.x=Math.min(2*(xw-p.r)-p.x,xw-p.r);if(p.vx>0){if(p.sp<2){imp[p.sp]+=2*p.m*p.vx;}p.vx=-p.vx;hit=true;side=1;}}
+    if(p.y<Y0+p.r){p.y=2*(Y0+p.r)-p.y;if(p.vy<0){if(p.sp<2){imp[p.sp]+=-2*p.m*p.vy;}p.vy=-p.vy;hit=true;side=2;}}
+    if(p.y>Y1-p.r){p.y=2*(Y1-p.r)-p.y;if(p.vy>0){if(p.sp<2){imp[p.sp]+=2*p.m*p.vy;}p.vy=-p.vy;hit=true;side=3;}}
+    if(p.x<X0+p.r)p.x=X0+p.r;
+    if(hit&&p.sp<2){hits++; if(B.ticks.length<60) B.ticks.push({x:p.x,y:p.y,s:side,a:1});}
+  }
+  /* elastic collisions between molecules (and the grain) */
+  const n=parts.length;
+  for(let i=0;i<n;i++){const a=parts[i];
+    for(let j=i+1;j<n;j++){const b=parts[j];
+      const dx=b.x-a.x, dy=b.y-a.y, rr=(a.sp===2||b.sp===2)?a.r+b.r:CORE*(a.r+b.r); if(dx>rr||dx<-rr||dy>rr||dy<-rr) continue;
+      const d2=dx*dx+dy*dy; if(d2>=rr*rr||d2===0) continue;
+      const d=Math.sqrt(d2), nx=dx/d, ny=dy/d, vrel=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
+      if(vrel>0){const J=2*vrel/(a.m+b.m);a.vx-=J*b.m*nx;a.vy-=J*b.m*ny;b.vx+=J*a.m*nx;b.vy+=J*a.m*ny;}
+      const ov=(rr-d)/2+0.01, wa=b.m/(a.m+b.m), wb=a.m/(a.m+b.m);
+      a.x-=nx*ov*2*wa; a.y-=ny*ov*2*wa; b.x+=nx*ov*2*wb; b.y+=ny*ov*2*wb;
+    }
+  }
+  /* thermostat: gently hold the mean KE of the molecules at KAPPA*T (the walls are at temperature T) */
+  let K=0, nm=0; for(const p of parts){if(p.sp===2)continue;K+=0.5*p.m*(p.vx*p.vx+p.vy*p.vy);nm++;}
+  if(K>0){const s=Math.sqrt(1+(nm*KAPPA*B.T/K-1)*Math.min(1,dt/0.6));for(const p of parts){if(p.sp!==2){p.vx*=s;p.vy*=s;}}}
+  return {imp,hits};
+}
+
+let lastTs=0, accR=0;
+function loop(ts){
+  if(!B.run||!B.vis){lastTs=0;return;}
+  const dt=lastTs?clamp((ts-lastTs)/1000,0.001,0.05):1/60; lastTs=ts;
+  tick(dt);
+  requestAnimationFrame(loop);
+}
+function tick(dt){
+  const sub=3, h=dt/sub; let imp=[0,0], hits=0;
+  for(let s=0;s<sub;s++){const r=step(h);imp[0]+=r.imp[0];imp[1]+=r.imp[1];hits+=r.hits;}
+  B.el=(B.el||0)+dt; const per=2*((B.xw-X0)+(Y1-Y0)), tau=Math.min(2.5,0.4+B.el), k=Math.min(1,dt/tau);
+  for(let s=0;s<2;s++) B.Ps[s]+=(imp[s]/(per*dt)-B.Ps[s])*k;
+  B.hitsS+=(hits/dt-B.hitsS)*Math.min(1,dt/1.5);
+  /* mean KE per species, and speed histogram (decaying accumulation) */
+  const ke=[0,0], cnt=[0,0], dec=Math.exp(-dt/1.5), vmax=histVmax();
+  B.hist.forEach(hh=>{for(let i=0;i<NB;i++)hh[i]*=dec;});
+  for(const p of parts){if(p.sp===2)continue;const v2=p.vx*p.vx+p.vy*p.vy;ke[p.sp]+=0.5*p.m*v2;cnt[p.sp]++;
+    const bi=Math.floor(Math.sqrt(v2)/vmax*NB); if(bi<NB) B.hist[p.sp][bi]+=1;}
+  for(let s=0;s<2;s++) if(cnt[s]) B.ke[s]+=(ke[s]/cnt[s]-B.ke[s])*Math.min(1,dt/1.0);
+  /* free piston (Charles): moves slowly until inside pressure matches outside */
+  if(B.exp==='charles'){
+    const Pin=(B.Ps[0]+B.Ps[1])/PREF, f=(Pin-B.Pext)/B.Pext;
+    B.xw=clamp(B.xw+0.5*f*(B.xw-X0)*dt,XMIN,XMAX);
+    syncV();
+  }
+  if(B.grain){const g=parts.find(p=>p.sp===2);if(g){B.trail.push(g.x,g.y);if(B.trail.length>1200)B.trail.splice(0,2);}}
+  B.ticks.forEach(t=>t.a-=dt*3); B.ticks=B.ticks.filter(t=>t.a>0);
+  drawBox(); drawHist();
+  accR+=dt; if(accR>0.25){accR=0;readouts();}
+}
+function start(){if(B.run&&B.vis&&!lastTs) requestAnimationFrame(loop);}
+
+function histVmax(){return 3.2*Math.sqrt(KAPPA*600/(B.gas==='Ar'?SP[1].M:SP[0].M));}
+function drawBox(){
+  const c=bctx; c.clearRect(0,0,BW,BH);
+  c.fillStyle=TOK.surface; c.fillRect(X0,Y0,B.xw-X0,Y1-Y0);
+  c.strokeStyle=TOK.ink; c.lineWidth=2; c.beginPath(); c.moveTo(B.xw,Y0); c.lineTo(X0,Y0); c.lineTo(X0,Y1); c.lineTo(B.xw,Y1); c.stroke();
+  /* region beyond the movable wall */
+  if(B.xw<XMAX-1){c.fillStyle=TOK.line;c.globalAlpha=.35;c.fillRect(B.xw,Y0,XMAX-B.xw,Y1-Y0);c.globalAlpha=1;}
+  /* movable wall / piston */
+  const pc=B.exp==='charles'?TOK.work:TOK.accent;
+  c.fillStyle=pc; c.fillRect(B.xw,Y0-4,5,Y1-Y0+8);
+  c.fillStyle=TOK.surface; for(let k=-1;k<=1;k++){c.fillRect(B.xw+1.5,(Y0+Y1)/2+k*7-1,2,2);}
+  if(B.exp==='charles'&&B.xw<XMAX-30){c.strokeStyle=TOK.work;c.fillStyle=TOK.work;c.lineWidth=2;
+    for(const y of [70,140,210]){c.beginPath();c.moveTo(B.xw+26,y);c.lineTo(B.xw+10,y);c.stroke();c.beginPath();c.moveTo(B.xw+8,y);c.lineTo(B.xw+15,y-4);c.lineTo(B.xw+15,y+4);c.fill();}}
+  /* wall hit ticks */
+  c.strokeStyle=TOK.heat; c.lineWidth=3;
+  for(const t of B.ticks){c.globalAlpha=t.a;c.beginPath();
+    if(t.s===0){c.moveTo(X0,t.y-5);c.lineTo(X0,t.y+5);}else if(t.s===1){c.moveTo(B.xw,t.y-5);c.lineTo(B.xw,t.y+5);}
+    else if(t.s===2){c.moveTo(t.x-5,Y0);c.lineTo(t.x+5,Y0);}else{c.moveTo(t.x-5,Y1);c.lineTo(t.x+5,Y1);}c.stroke();}
+  c.globalAlpha=1;
+  /* grain trail */
+  if(B.grain&&B.trail.length>3){c.strokeStyle=TOK.muted;c.lineWidth=1.2;c.beginPath();c.moveTo(B.trail[0],B.trail[1]);for(let i=2;i<B.trail.length;i+=2)c.lineTo(B.trail[i],B.trail[i+1]);c.stroke();}
+  for(const p of parts){
+    c.fillStyle=p.sp===2?TOK.ink:TOK[SP[p.sp].c];
+    c.beginPath(); c.arc(p.x,p.y,p.r,0,2*Math.PI); c.fill();
+  }
+  if(!B.run){c.fillStyle=TOK.muted;c.font='12px "IBM Plex Sans",sans-serif';c.fillText('paused',X0+8,Y0+18);}
+}
+function drawHist(){
+  const c=hctx, W=BW, H=120, L=8, Rr=8, T=8, Bt=18; c.clearRect(0,0,W,H);
+  const vmax=histVmax(), bw=(W-L-Rr)/NB;
+  c.strokeStyle=TOK.ink; c.lineWidth=1; c.beginPath(); c.moveTo(L,H-Bt); c.lineTo(W-Rr,H-Bt); c.stroke();
+  c.fillStyle=TOK.muted; c.font='11px "IBM Plex Sans",sans-serif'; c.fillText('speed →',W-Rr-48,H-4); c.fillText('0',L,H-4);
+  const sps=B.gas==='mix'?[0,1]:[B.gas==='Ar'?1:0];
+  /* height scale: theory density peak for He-type at current T */
+  let ymax=0; const dens=[];
+  for(const s of sps){const a=KAPPA*B.T/SP[s].M;const peak=(1/Math.sqrt(a))*Math.exp(-0.5);ymax=Math.max(ymax,peak);}
+  ymax*=1.25;
+  for(const s of sps){
+    const h=B.hist[s]; let tot=0; for(let i=0;i<NB;i++)tot+=h[i]; if(tot<=0) continue;
+    const dv=vmax/NB; c.fillStyle=TOK[SP[s].c]; c.globalAlpha=sps.length>1?.35:.45;
+    for(let i=0;i<NB;i++){const d=h[i]/(tot*dv);const hh=Math.min(1,d/ymax)*(H-T-Bt);c.fillRect(L+i*bw+1,H-Bt-hh,bw-2,hh);}
+    c.globalAlpha=1;
+    /* 2D Maxwell curve: f(v) = (v/a) exp(-v^2/2a), a = kT/m */
+    const a=KAPPA*B.T/SP[s].M; c.strokeStyle=TOK[SP[s].c]; c.lineWidth=2; c.beginPath();
+    for(let i=0;i<=120;i++){const v=vmax*i/120, f=v/a*Math.exp(-v*v/(2*a)), y=H-Bt-Math.min(1.05,f/ymax)*(H-T-Bt);if(i)c.lineTo(L+(W-L-Rr)*i/120,y);else c.moveTo(L,y);}
+    c.stroke();
+  }
+}
+/* readouts and experiment plot */
+/* ideal-gas prediction in display units. Molecule centres stay r from each wall, so each species fills (w − 2r)(h − 2r). */
+function pAt(N,T,xw){const fr=B.gas==='mix'?[Math.ceil(N/2),Math.floor(N/2)]:B.gas==='Ar'?[0,N]:[N,0];let P=0;
+  for(let s=0;s<2;s++) if(fr[s]) P+=fr[s]*KAPPA*T/((xw-X0-2*SP[s].r)*(Y1-Y0-2*SP[s].r));return P/PREF;}
+const xwOf=pct=>X0+pct/100*(XMAX-X0);
+const pTheory=()=>pAt(B.N,B.T,B.xw);
+const vPct=()=>(B.xw-X0)/(XMAX-X0)*100;
+function readouts(){
+  const Pm=(B.Ps[0]+B.Ps[1])/PREF;
+  $('rhits').textContent=Math.round(B.hitsS);
+  $('rpm').textContent=B.run||Pm>0?fmt(Pm,0):'–';
+  $('rpt').textContent=fmt(pTheory(),0);
+  if(B.gas==='mix') drawMix();
+  drawEx();
+}
+function drawMix(){
+  const p0=B.Ps[0]/PREF, p1=B.Ps[1]/PREF, tot=Math.max(1,p0+p1), sc=200/Math.max(tot,pTheory()*1.15);
+  let g=`<text x="0" y="14" font-size="12" fill="var(--muted)">partial pressures add up</text>`;
+  g+=`<rect x="0" y="22" width="${(p0*sc).toFixed(1)}" height="18" fill="var(--vel)" opacity=".75"/><rect x="${(p0*sc).toFixed(1)}" y="22" width="${(p1*sc).toFixed(1)}" height="18" fill="var(--force)" opacity=".75"/>`;
+  g+=`<text x="${((p0+p1)*sc+6).toFixed(1)}" y="36" font-size="12" font-family="IBM Plex Mono" fill="var(--ink)">${fmt(p0,0)} + ${fmt(p1,0)} = ${fmt(p0+p1,0)}</text>`;
+  const k0=B.ke[0]/(KAPPA*B.T), k1=B.ke[1]/(KAPPA*B.T), ks=60;
+  g+=`<text x="0" y="66" font-size="12" fill="var(--muted)">mean kinetic energy per molecule (1 = equal share)</text>`;
+  g+=`<rect x="34" y="74" width="${Math.min(260,k0*ks*2).toFixed(1)}" height="14" fill="var(--vel)" opacity=".75"/><text x="0" y="86" font-size="12" fill="var(--ink)">He</text><text x="${(40+Math.max(ks*2,Math.min(260,k0*ks*2))).toFixed(1)}" y="86" font-size="12" font-family="IBM Plex Mono" fill="var(--ink)">${fmt(k0,2)}</text>`;
+  g+=`<rect x="34" y="94" width="${Math.min(260,k1*ks*2).toFixed(1)}" height="14" fill="var(--force)" opacity=".75"/><text x="0" y="106" font-size="12" fill="var(--ink)">Ar</text><text x="${(40+Math.max(ks*2,Math.min(260,k1*ks*2))).toFixed(1)}" y="106" font-size="12" font-family="IBM Plex Mono" fill="var(--ink)">${fmt(k1,2)}</text>`;
+  g+=`<line x1="${34+ks*2}" x2="${34+ks*2}" y1="70" y2="112" stroke="var(--ink)" stroke-dasharray="3 3"/>`;
+  $('mixsvg').innerHTML=g;
+}
+/* experiment plot */
+const EX={W:360,H:240,L:46,R:12,T:12,B:36};
+function exCfg(){
+  const e=B.exp;
+  if(e==='boyle') return {xl:'volume V (% of box)',yl:'pressure P',x0:0,x1:100,y1:niceUp(pAt(B.N,B.T,XMIN)*1.05),
+    x:vPct(), th:x=>pAt(B.N,B.T,xwOf(x)), xs:32, hold:`${B.N}|${B.T}|${B.gas}`};
+  if(e==='charles') return {xl:'temperature T (K)',yl:'volume V (% of box)',x0:0,x1:600,y1:100,
+    x:B.T, th:x=>chV(x), xs:0, hold:`${B.N}|${B.Pext}|${B.gas}`};
+  return {xl:'number of molecules N',yl:'pressure P',x0:0,x1:150,y1:niceUp(pAt(150,B.T,B.xw)*1.05),
+    x:B.N, th:x=>pAt(x,B.T,B.xw), xs:0, hold:`${B.T}|${Math.round(B.xw)}`};
+}
+/* Charles: volume % where the predicted pressure equals the outside pressure (pAt is ∝ T and falls with xw; bisection) */
+function chV(T){let a=X0+12,b=X0+5*(XMAX-X0);for(let i=0;i<40;i++){const m=(a+b)/2;if(pAt(B.N,T,m)>B.Pext)a=m;else b=m;}return (a-X0)/(XMAX-X0)*100;}
+function niceUp(v){const s=[50,100,150,200,300,400,600,800,1000,1500,2000];for(const x of s)if(v<=x)return x;return Math.ceil(v/500)*500;}
+function drawEx(){
+  const c=exCfg(), {W,H,L,T}=EX, Rm=EX.R, Bm=EX.B;
+  if(c.hold!==B.hold){if(B.hold&&B.pts.length) $('bexnote').textContent='A held quantity changed, so old points were cleared.'; B.pts=[]; B.hold=c.hold;}
+  const sx=x=>L+(x-c.x0)/(c.x1-c.x0)*(W-L-Rm), sy=y=>H-Bm-y/c.y1*(H-T-Bm);
+  let g='';
+  for(let i=0;i<=4;i++){const yv=c.y1*i/4;g+=`<line x1="${L}" x2="${W-Rm}" y1="${sy(yv)}" y2="${sy(yv)}" stroke="var(--line)"/><text x="${L-5}" y="${sy(yv)+4}" font-size="10.5" fill="var(--muted)" text-anchor="end">${Math.round(yv)}</text>`;}
+  for(let i=0;i<=4;i++){const xv=c.x0+(c.x1-c.x0)*i/4;g+=`<text x="${sx(xv)}" y="${H-Bm+15}" font-size="10.5" fill="var(--muted)" text-anchor="middle">${Math.round(xv)}</text>`;}
+  g+=`<line x1="${L}" x2="${W-Rm}" y1="${H-Bm}" y2="${H-Bm}" stroke="var(--ink)"/><line x1="${L}" x2="${L}" y1="${H-Bm}" y2="${T}" stroke="var(--ink)"/>`;
+  g+=`<text x="${(L+W-Rm)/2}" y="${H-4}" font-size="11.5" fill="var(--muted)" text-anchor="middle">${c.xl}</text><text x="12" y="${(T+H-Bm)/2}" font-size="11.5" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 12 ${(T+H-Bm)/2})">${c.yl}</text>`;
+  /* theory curve */
+  let d='', dd='';
+  if(B.exp==='charles'){
+    const tmin=100; for(let i=0;i<=50;i++){const t=tmin+(600-tmin)*i/50, v=c.th(t); if(v>c.y1) break; d+=(i?'L':'M')+sx(t).toFixed(1)+' '+sy(v).toFixed(1);}
+    dd=`M${sx(0)} ${sy(0)}L${sx(tmin)} ${sy(c.th(tmin)).toFixed(1)}`;
+  } else {
+    for(let i=0;i<=80;i++){const x=Math.max(c.xs,c.x0+1e-6)+(c.x1-Math.max(c.xs,c.x0+1e-6))*i/80;d+=(i?'L':'M')+sx(x).toFixed(1)+' '+sy(Math.min(c.y1,c.th(x))).toFixed(1);}
+  }
+  g+=`<path d="${d}" fill="none" stroke="var(--ink)" stroke-width="1.6" opacity=".7"/>`;
+  if(dd) g+=`<path d="${dd}" fill="none" stroke="var(--ink)" stroke-width="1.4" stroke-dasharray="4 4" opacity=".6"/><text x="${sx(0)+6}" y="${sy(0)-6}" font-size="10" fill="var(--muted)">0 K</text>`;
+  /* recorded points */
+  for(const p of B.pts) g+=`<circle cx="${sx(p.x)}" cy="${sy(Math.min(c.y1,p.y))}" r="4.5" fill="${p.c}"/>`;
+  /* live point */
+  const ly=liveY(); if(ly!=null) g+=`<circle cx="${sx(c.x)}" cy="${sy(Math.min(c.y1,ly))}" r="6" fill="none" stroke="var(--heat)" stroke-width="2"/>`;
+  $('exsvg').innerHTML=g;
+}
+function liveY(){
+  const Pm=(B.Ps[0]+B.Ps[1])/PREF; if(Pm<=0) return null;
+  return B.exp==='charles'?vPct():Pm;
+}
+function capBox(){
+  const e=B.exp;
+  $('bcap').innerHTML=e==='boyle'?'<b>Boyle’s law: PV = constant at fixed T and N.</b> Halve the volume and each molecule gets back to a wall twice as often, so the hits double and so does P. Record points at several volumes; they follow P ∝ 1/V.'
+   :e==='charles'?'<b>Charles’s law: V ∝ T at fixed P and N.</b> The piston is free and pushed by a fixed outside pressure. Heat the gas: faster molecules hit harder and more often, the piston moves out until the hits per unit area drop back to match. Extend the line down and it reaches V = 0 at T = 0 K.'
+   :'<b>P ∝ N at fixed V and T.</b> Twice the molecules, twice the hits. Record points with helium, then with argon: they lie on one line, because an argon atom is 10 times heavier but moves about √10 times slower, and m⟨v²⟩ comes out the same.';
+  $('bVrow').hidden=e==='charles'; $('bProw').hidden=e!=='charles';
+}
+function syncV(){const v=Math.round(vPct());$('bV').value=v;$('bVo').textContent=v+' %';}
+function setXw(x){const old=B.xw;B.xw=clamp(x,XMIN,XMAX);for(const p of parts){if(p.x>B.xw-p.r){p.x=B.xw-p.r-Math.random()*Math.min(20,B.xw-X0-2*p.r);}}syncV();if(!B.run){drawBox();}readouts();}
+function legend(){
+  const s=B.gas==='mix'?[0,1]:[B.gas==='Ar'?1:0];
+  $('blegend').innerHTML=s.map(i=>`<span><b style="background:var(--${SP[i].c})"></b>${i?'argon (M = 39.95)':'helium (M = 4.003)'}</span>`).join('')+
+   `<span><i style="background:var(--heat)"></i>wall hit</span>`+(B.grain?`<span><b style="background:var(--ink)"></b>dust grain (path traced)</span>`:'');
+}
+/* controls */
+$('bplay').onclick=()=>{B.run=!B.run;$('bplay').textContent=B.run?'Pause':'Play';if(B.run)start();else drawBox();};
+$('bsame').onclick=()=>{allSame();if(!B.run)drawBox();};
+$('bgrain').onclick=()=>{setGrain(!B.grain);$('bgrain').setAttribute('aria-pressed',B.grain);legend();if(!B.run)drawBox();};
+$('bgas').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;B.gas=c.dataset.k;store('ktg-gas',B.gas);press($('bgas'),B.gas);setGas();legend();$('rmix').hidden=B.gas!=='mix';if(!B.run){drawBox();drawHist();}readouts();});
+$('bexp').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;B.exp=c.dataset.k;store('ktg-exp',B.exp);press($('bexp'),B.exp);B.pts=[];B.hold='';$('bexnote').textContent='';capBox();readouts();});
+$('bT').addEventListener('input',e=>{rescaleT(+e.target.value);$('bTo').textContent=B.T+' K';if(!B.run){drawHist();}readouts();});
+$('bN').addEventListener('input',e=>{B.N=+e.target.value;setN(B.N);$('bNo').textContent=B.N;if(!B.run)drawBox();readouts();});
+$('bV').addEventListener('input',e=>{setXw(X0+(+e.target.value)/100*(XMAX-X0));});
+$('bP').addEventListener('input',e=>{B.Pext=+e.target.value;$('bPo').textContent=B.Pext;readouts();});
+$('brec').onclick=()=>{const c=exCfg(), y=liveY(); if(y==null){$('bexnote').textContent='Press Play first, so there are hits to measure.';return;}
+  B.pts.push({x:c.x,y,c:B.gas==='Ar'?'var(--force)':B.gas==='mix'?'var(--spin)':'var(--vel)'});$('bexnote').textContent=B.pts.length+' point'+(B.pts.length>1?'s':'')+' recorded';drawEx();};
+/* drag the wall */
+(function(){let drag=false;
+  const lx=e=>{const r=bcv.getBoundingClientRect();return (e.clientX-r.left)/r.width*BW;};
+  bcv.addEventListener('pointerdown',e=>{if(B.exp==='charles')return;const x=lx(e);if(Math.abs(x-B.xw)<40){drag=true;try{bcv.setPointerCapture(e.pointerId);}catch(_){}e.preventDefault();}});
+  bcv.addEventListener('pointermove',e=>{const x=lx(e);bcv.style.cursor=B.exp!=='charles'&&Math.abs(x-B.xw)<40?'ew-resize':'default';if(drag)setXw(x);});
+  const end=()=>{drag=false;};bcv.addEventListener('pointerup',end);bcv.addEventListener('pointercancel',end);
+})();
+/* pause when off screen */
+if('IntersectionObserver' in window){new IntersectionObserver(es=>{B.vis=es[0].isIntersecting;start();}).observe(bcv);}
+document.addEventListener('visibilitychange',()=>{B.vis=!document.hidden;start();});
+
+function initBox(){
+  press($('bgas'),B.gas); press($('bexp'),B.exp); legend(); capBox(); $('rmix').hidden=B.gas!=='mix';
+  $('bTo').textContent=B.T+' K'; $('bNo').textContent=B.N; $('bPo').textContent=B.Pext; syncV();
+  setN(B.N); $('bplay').textContent=B.run?'Pause':'Play';
+  drawBox(); drawHist(); readouts(); start();
+}
+
+/* =================== 2 · TEMPERATURE =================== */
+const TS={T:300};
+const tsvg=$('tsvg'); const TR={};
+(function(){
+  const rows=TGASES.map(k=>GAS[k]);
+  let y=40;
+  mk('text',{x:0,y:14,'font-size':12,fill:'var(--muted)'},tsvg).textContent='rms speed (arrow)';
+  mk('text',{x:330,y:14,'font-size':12,fill:'var(--muted)'},tsvg).textContent='mean KE (bar)';
+  rows.forEach((g,i)=>{
+    const yy=40+i*68, r=6+5*Math.cbrt(g.M/4)/1.6;
+    mk('circle',{cx:28,cy:yy+10,r:Math.min(r,22),fill:'var(--vel)',opacity:.85},tsvg);
+    mk('text',{x:28,y:yy+44,'font-size':12,'font-weight':600,fill:'var(--ink)','text-anchor':'middle'},tsvg).textContent=g.l;
+    const ar=mk('g',{},tsvg);
+    const lab=mk('text',{x:60,y:yy+34,'font-size':12,'font-family':'IBM Plex Mono',fill:'var(--ink)'},tsvg);
+    const bar=mk('rect',{x:330,y:yy+2,height:16,fill:'var(--heat)',opacity:.8},tsvg);
+    const bl=mk('text',{x:330,y:yy+34,'font-size':12,'font-family':'IBM Plex Mono',fill:'var(--ink)'},tsvg);
+    TR[g.l]={ar,lab,bar,bl,M:g.M,y:yy+10};
+  });
+  mk('line',{x1:320,x2:320,y1:24,y2:220,stroke:'var(--line)'},tsvg);
+})();
+function drawT(){
+  $('tTo').textContent=TS.T+' K';
+  const vmax=vrms(1000,GAS.He.M), sc=250/vmax, ke=1.5*KB*TS.T, kmax=1.5*KB*1000;
+  for(const k in TR){const r=TR[k], v=vrms(TS.T,r.M);
+    r.ar.innerHTML=arrow(52,r.y,52+Math.max(4,v*sc),r.y,'var(--vel)',3,10);
+    r.lab.textContent=fmt(v,0)+' m/s';
+    setA(r.bar,{width:(ke/kmax*170).toFixed(1)});
+    r.bl.textContent=sci(ke,2)+' J';
+  }
+  const kv=[['mean KE, any gas',sci(ke,3)+' J'],['v_rms He',fmt(vrms(TS.T,GAS.He.M),0)+' m/s'],['v_rms N₂',fmt(vrms(TS.T,GAS.N2.M),0)+' m/s'],['v_rms Xe',fmt(vrms(TS.T,GAS.Xe.M),0)+' m/s'],
+    ['He : Xe speed',fmt(Math.sqrt(GAS.Xe.M/GAS.He.M),2)+' : 1']];
+  $('tkv').innerHTML=kv.map(([a,b])=>`<dt>${a.replace('v_rms','v<sub>rms</sub>')}</dt><dd>${b}</dd>`).join('');
+}
+$('tT').addEventListener('input',e=>{TS.T=+e.target.value;drawT();});
+
+/* =================== 3 · MAXWELL =================== */
+const MX={gas:load('ktg-mgas')||'N2',T:300,step:'all',pin:null};
+if(!MGASES.includes(MX.gas)) MX.gas='N2';
+$('mgas').innerHTML=MGASES.map(k=>`<button class="chip" data-k="${k}">${GAS[k].l}</button>`).join('');
+const MP={W:560,H:330,L:58,R:14,T:16,B:46};
+const msvg=$('msvg');
+const ML={axis:mk('g',{},msvg),pin:mk('path',{fill:'none',stroke:'var(--muted)','stroke-width':1.6,'stroke-dasharray':'5 4'},msvg),
+  pinlab:mk('text',{'font-size':11,fill:'var(--muted)'},msvg),
+  tail:mk('path',{fill:'var(--force)',opacity:.18},msvg),
+  fill:mk('path',{fill:'var(--vel)',opacity:.13},msvg),
+  w2:mk('path',{fill:'none',stroke:'var(--flag)','stroke-width':1.5,'stroke-dasharray':'2 3'},msvg),
+  curve:mk('path',{fill:'none',stroke:'var(--vel)','stroke-width':2.4},msvg),
+  extra:mk('g',{},msvg), lines:mk('g',{},msvg)};
+const FRAC_ABOVE_MP=(()=>{ /* fraction of molecules faster than v_mp, by numerical integration (dimensionless u = v/v_mp) */
+  let s=0, du=0.0005; for(let u=1+du/2;u<8;u+=du) s+=4/Math.sqrt(Math.PI)*u*u*Math.exp(-u*u)*du; return s;})();
+let mScale='';
+/* axes: x steps by ×2 so a curve always fits; y is fixed within a step (5.6/xmax), raised only if a pinned narrower curve needs it */
+function mAxes(xmax,ymax){
+  const key=xmax+'|'+ymax; if(key===mScale) return; mScale=key;
+  const {W,H,L,T}=MP, Rm=MP.R, Bm=MP.B;
+  const sx=v=>L+v/xmax*(W-L-Rm), sy=f=>H-Bm-f/ymax*(H-T-Bm);
+  let g='';
+  const xs=xmax/4; for(let i=0;i<=4;i++){const v=xs*i;g+=`<line x1="${sx(v)}" x2="${sx(v)}" y1="${T}" y2="${H-Bm}" stroke="var(--line)"/><text x="${sx(v)}" y="${H-Bm+16}" font-size="11" fill="var(--muted)" text-anchor="middle">${Math.round(v)}</text>`;}
+  const e=Math.floor(Math.log10(ymax)), un=Math.pow(10,e);
+  for(let i=1;i<=4;i++){const f=ymax*i/4.4;g+=`<text x="${L-6}" y="${sy(f)+4}" font-size="11" fill="var(--muted)" text-anchor="end">${(f/un).toFixed(1)}</text><line x1="${L-3}" x2="${L}" y1="${sy(f)}" y2="${sy(f)}" stroke="var(--ink)"/>`;}
+  g+=`<line x1="${L}" x2="${W-Rm}" y1="${H-Bm}" y2="${H-Bm}" stroke="var(--ink)" stroke-width="1.3"/><line x1="${L}" x2="${L}" y1="${H-Bm}" y2="${T}" stroke="var(--ink)" stroke-width="1.3"/>`;
+  g+=`<text x="${(L+W-Rm)/2}" y="${H-8}" font-size="12" fill="var(--muted)" text-anchor="middle">molecular speed v (m/s)</text>`;
+  g+=`<text x="14" y="${(T+H-Bm)/2}" font-size="12" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 14 ${(T+H-Bm)/2})">fraction per m/s (×10${sup(e)})</text>`;
+  ML.axis.innerHTML=g;
+}
+function mPath(T,M,xmax,ymax,close){
+  const {W,H,L,T:Tm}=MP, Rm=MP.R, Bm=MP.B, sx=v=>L+v/xmax*(W-L-Rm), sy=f=>H-Bm-Math.min(1.02,f/ymax)*(H-Tm-Bm);
+  let d=''; for(let i=0;i<=200;i++){const v=xmax*i/200;d+=(i?'L':'M')+sx(v).toFixed(1)+' '+sy(maxw(v,T,M)).toFixed(1);}
+  if(close) d+=`L${sx(xmax)} ${H-Bm}L${L} ${H-Bm}Z`;
+  return d;
+}
+function drawM(){
+  press($('mgas'),MX.gas); press($('mstep'),MX.step);
+  $('mTo').textContent=MX.T+' K';
+  const M=GAS[MX.gas].M, T=MX.T, a=vmp(T,M), b=vavg(T,M), c=vrms(T,M);
+  let need=a; if(MX.pin) need=Math.max(need,vmp(MX.pin.T,MX.pin.M));
+  let xmax=500; while(xmax<need*3.4) xmax*=2;
+  let ymax=5.6/xmax; if(MX.pin) ymax=Math.max(ymax,1.08*maxw(vmp(MX.pin.T,MX.pin.M),MX.pin.T,MX.pin.M));
+  mAxes(xmax,ymax);
+  const {W,H,L,T:Tm}=MP, Rm=MP.R, Bm=MP.B, sx=v=>L+v/xmax*(W-L-Rm), sy=f=>H-Bm-f/ymax*(H-Tm-Bm);
+  ML.curve.setAttribute('d',mPath(T,M,xmax,ymax,false));
+  ML.fill.setAttribute('d',mPath(T,M,xmax,ymax,true));
+  if(MX.pin&&!(MX.pin.T===T&&MX.pin.M===M)){ML.pin.setAttribute('d',mPath(MX.pin.T,MX.pin.M,xmax,ymax,false));
+    const pv=vmp(MX.pin.T,MX.pin.M);setA(ML.pinlab,{x:(sx(pv)+4).toFixed(1),y:(sy(maxw(pv,MX.pin.T,MX.pin.M))-6).toFixed(1)});ML.pinlab.textContent=`pinned: ${MX.pin.l}, ${MX.pin.T} K`;}
+  else {ML.pin.setAttribute('d','');ML.pinlab.textContent='';}
+  const st=MX.step;
+  /* tail beyond v_mp (step 2) */
+  if(st==='avg'){let d=`M${sx(a)} ${H-Bm}`;for(let i=0;i<=120;i++){const v=a+(xmax-a)*i/120;d+=`L${sx(v).toFixed(1)} ${sy(maxw(v,T,M)).toFixed(1)}`;}d+=`L${sx(xmax)} ${H-Bm}Z`;ML.tail.setAttribute('d',d);}
+  else ML.tail.setAttribute('d','');
+  /* v^2-weighted curve (step 3): v^2 f(v), scaled to the same peak height */
+  if(st==='rms'){const pk=maxw(a,T,M);const wpk=2*a*a*maxw(Math.SQRT2*a,T,M);let d='';
+    for(let i=0;i<=200;i++){const v=xmax*i/200;d+=(i?'L':'M')+sx(v).toFixed(1)+' '+sy(v*v*maxw(v,T,M)/wpk*pk).toFixed(1);}ML.w2.setAttribute('d',d);}
+  else ML.w2.setAttribute('d','');
+  /* lines */
+  const L3=[{k:'mp',v:a,c:'var(--spin)',t:'v_mp'},{k:'avg',v:b,c:'var(--force)',t:'v_avg'},{k:'rms',v:c,c:'var(--flag)',t:'v_rms'}];
+  let g='';
+  /* each line stops on the curve (its height = how many molecules have that speed); labels sit in a column to the right, joined by leaders */
+  const lx=Math.min(sx(c)+46,W-Rm-118);
+  L3.forEach((o,i)=>{const on=st==='all'||st===o.k, op=on?1:.22, x=sx(o.v), y=sy(maxw(o.v,T,M)), ly=Tm+14+i*20;
+    g+=`<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${H-Bm}" y2="${y.toFixed(1)}" stroke="${o.c}" stroke-width="${on?2.2:1.5}" opacity="${op}"/>`;
+    g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${on?4:3}" fill="${o.c}" opacity="${op}"/>`;
+    g+=`<polyline points="${x.toFixed(1)},${y.toFixed(1)} ${x.toFixed(1)},${(y-8-(2-i)*6).toFixed(1)} ${(lx-4).toFixed(1)},${(ly-4).toFixed(1)}" fill="none" stroke="${o.c}" stroke-width="1" stroke-dasharray="3 3" opacity="${op*.8}"/>`;
+    g+=`<text x="${lx.toFixed(1)}" y="${ly}" font-size="12.5" font-weight="600" fill="${o.c}" opacity="${op}">${o.t.replace('_','<tspan font-size="9.5" dy="3">')}</tspan><tspan dy="-3" font-weight="500"> ${fmt(o.v,0)} m/s</tspan></text>`;});
+  let ex='';
+  if(st==='avg'){const x=sx(b);ex+=`<polygon points="${x},${H-Bm+1} ${x-9},${H-Bm+14} ${x+9},${H-Bm+14}" fill="var(--force)"/>`;
+    ex+=`<text x="${(sx(a)+sx(xmax))/2}" y="${sy(maxw(a,T,M))*0.5+(H-Bm)*0.5}" font-size="12" fill="var(--force)" text-anchor="middle" font-weight="600">${fmt(FRAC_ABOVE_MP*100,0)}% are faster than the peak</text>`;}
+  if(st==='mp'){const x=sx(a), y=sy(maxw(a,T,M));ex+=`<circle cx="${x}" cy="${y}" r="5" fill="var(--spin)"/>`;}
+  ML.lines.innerHTML=g; ML.extra.innerHTML=ex;
+  $('mkv').innerHTML=[['molar mass M',GAS[MX.gas].M+' g/mol'],['most probable v<sub>mp</sub> = √(2RT/M)',fmt(a,0)+' m/s'],['average v<sub>avg</sub> = √(8RT/πM)',fmt(b,0)+' m/s'],['rms v<sub>rms</sub> = √(3RT/M)',fmt(c,0)+' m/s'],['peak height',sci(maxw(a,T,M),2)+' per m/s']]
+    .map(([p,q])=>`<dt>${p}</dt><dd>${q}</dd>`).join('');
+  $('mcap').innerHTML=st==='mp'?`<b>1 · Most probable speed, the peak.</b> More molecules have speeds near v<sub>mp</sub> than near any other speed. Few are very slow: that needs all three velocity components to be small at once. Few are very fast: that needs a lot of the shared energy in one molecule.`
+    :st==='avg'?`<b>2 · Average speed, the balance point.</b> If the shaded area were a cardboard cut-out, it would balance on the triangle at v<sub>avg</sub>. The curve is lopsided: it stops at 0 on the left but trails off far to the right. That long tail (shaded orange, ${fmt(FRAC_ABOVE_MP*100,0)}% of molecules) pulls the balance point to the right of the peak.`
+    :st==='rms'?`<b>3 · rms speed, the square-weighted average.</b> To find v<sub>rms</sub> you average v², then take the square root. Squaring makes fast molecules count extra: a molecule at twice the speed contributes four times as much. The dotted curve shows each speed’s share of ⟨v²⟩, and it is dominated by the fast tail, so v<sub>rms</sub> lands right of v<sub>avg</sub>. v<sub>rms</sub> is the speed that sets the energy, ½m v<sub>rms</sub>² = (3/2)k<sub>B</sub>T.`
+    :`<b>Always in this order:</b> v<sub>mp</sub> &lt; v<sub>avg</sub> &lt; v<sub>rms</sub>, for every gas at every temperature. The peak marks the commonest speed, the fast tail drags the mean to the right, and squaring drags rms further still.`;
+  const r2=Math.SQRT2, r8=Math.sqrt(8/Math.PI), r3=Math.sqrt(3);
+  $('mratio').innerHTML=`v<sub>mp</sub> : v<sub>avg</sub> : v<sub>rms</sub> = √2 : √(8/π) : √3 = 1 : ${fmt(r8/r2,3)} : ${fmt(r3/r2,3)}. All three grow as √(T/M), so the ratio never changes; only the scale does.`;
+  $('mpinlab').textContent=MX.pin?`pinned: ${MX.pin.l} at ${MX.pin.T} K`:'';
+}
+$('mgas').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;MX.gas=c.dataset.k;store('ktg-mgas',MX.gas);drawM();});
+$('mstep').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;MX.step=c.dataset.k;drawM();});
+$('mT').addEventListener('input',e=>{MX.T=+e.target.value;drawM();});
+$('mpin').onclick=()=>{MX.pin={T:MX.T,M:GAS[MX.gas].M,l:GAS[MX.gas].l};drawM();};
+
+/* five-dot mean vs rms */
+const DS={v:[2,3,3.5,4,8]};
+const dsvg=$('dsvg');
+const DL={axis:mk('g',{},dsvg),marks:mk('g',{},dsvg),dots:mk('g',{},dsvg)};
+const dx=v=>30+v/10*460;
+(function(){let g=`<line x1="30" x2="490" y1="60" y2="60" stroke="var(--ink)"/>`;for(let v=0;v<=10;v++)g+=`<line x1="${dx(v)}" x2="${dx(v)}" y1="56" y2="64" stroke="var(--ink)"/><text x="${dx(v)}" y="78" font-size="10.5" fill="var(--muted)" text-anchor="middle">${v}</text>`;
+  g+=`<text x="490" y="20" font-size="11" fill="var(--muted)" text-anchor="end">drag the dots</text>`;DL.axis.innerHTML=g;
+  DS.v.forEach((v,i)=>{const h=mk('g',{'data-h':i,style:'cursor:ew-resize'},DL.dots);mk('circle',{r:16,fill:'transparent'},h);mk('circle',{r:8,fill:'var(--vel)',stroke:'var(--surface)','stroke-width':2},h);});})();
+function drawD(){
+  const n=DS.v.length, m=DS.v.reduce((a,b)=>a+b,0)/n, r=Math.sqrt(DS.v.reduce((a,b)=>a+b*b,0)/n);
+  [...DL.dots.children].forEach((h,i)=>h.setAttribute('transform',`translate(${dx(DS.v[i]).toFixed(1)},${(42-(i%2)*10)})`));
+  DL.marks.innerHTML=`<line x1="${dx(m)}" x2="${dx(m)}" y1="64" y2="100" stroke="var(--force)" stroke-width="2.4"/><text x="${dx(m)-4}" y="114" font-size="12" font-weight="600" fill="var(--force)" text-anchor="end">avg</text>`+
+    `<line x1="${dx(r)}" x2="${dx(r)}" y1="64" y2="100" stroke="var(--flag)" stroke-width="2.4"/><text x="${dx(r)+4}" y="114" font-size="12" font-weight="600" fill="var(--flag)">rms</text>`;
+  $('dout').innerHTML=`<span style="color:var(--force)">avg ${fmt(m,2)}</span> &nbsp; <span style="color:var(--flag)">rms ${fmt(r,2)}</span>`;
+}
+(function(){let act=null;
+  dsvg.addEventListener('pointerdown',e=>{const h=e.target.closest('[data-h]');if(!h)return;act=+h.dataset.h;try{dsvg.setPointerCapture(e.pointerId);}catch(_){}e.preventDefault();});
+  dsvg.addEventListener('pointermove',e=>{if(act==null)return;const [x]=svgXY(dsvg,e);DS.v[act]=Math.round(clamp((x-30)/460*10,0,10)*10)/10;drawD();});
+  const end=()=>{act=null;};dsvg.addEventListener('pointerup',end);dsvg.addEventListener('pointercancel',end);})();
+
+/* =================== 4 · GRAHAM =================== */
+const GG={pair:load('ktg-gpair')||'h2o2'};
+if(!GPAIRS.some(p=>p.id===GG.pair)) GG.pair='h2o2';
+$('ggas').innerHTML=GPAIRS.map(p=>`<button class="chip" data-k="${p.id}">${p.l}</button>`).join('');
+function drawG(){
+  press($('ggas'),GG.pair);
+  const P=GPAIRS.find(p=>p.id===GG.pair), ra=1/Math.sqrt(P.a.M), rb=1/Math.sqrt(P.b.M), mx=Math.max(ra,rb), ratio=ra/rb;
+  let g='';
+  [[P.a,ra,20,'var(--vel)'],[P.b,rb,270,'var(--force)']].forEach(([gs,rt,x,col],k)=>{
+    g+=`<rect x="${x}" y="20" width="150" height="120" rx="6" fill="none" stroke="var(--ink)" stroke-width="1.5"/>`;
+    g+=`<rect x="${x+148}" y="74" width="4" height="12" fill="var(--surface)"/>`;
+    let s=7+k*3; const rnd=()=>{s=(s*9301+49297)%233280;return s/233280;};
+    for(let i=0;i<22;i++) g+=`<circle cx="${(x+12+rnd()*126).toFixed(1)}" cy="${(32+rnd()*96).toFixed(1)}" r="${k?4.5:3.5}" fill="${col}" opacity=".8"/>`;
+    const w=Math.max(2,rt/mx*26), len=Math.max(14,rt/mx*80);
+    g+=`<polygon points="${x+154},${80-w/2} ${x+154+len-10},${80-w/2} ${x+154+len-10},${80-w/2-5} ${x+154+len},80 ${x+154+len-10},${80+w/2+5} ${x+154+len-10},${80+w/2} ${x+154},${80+w/2}" fill="${col}" opacity=".85"/>`;
+    g+=`<text x="${x+75}" y="160" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">${gs.l} · M = ${gs.M}</text>`;
+    g+=`<text x="${x+75}" y="178" font-size="11.5" fill="var(--muted)" text-anchor="middle">escape rate ∝ 1/√M</text>`;
+  });
+  $('gsvg').innerHTML=g;
+  $('gout').textContent=`${P.a.l} escapes ${fmt(ratio,ratio<1.1?4:2)}× as fast`;
+  $('gcap').innerHTML=GG.pair==='uf6'?`The two uranium isotopes differ by only 3 mass units in 349 and 352, so the lighter molecule is only ${fmt((ratio-1)*100,2)}% faster. That tiny edge is still used: uranium hexafluoride gas is pushed through porous barriers again and again to enrich ²³⁵U.`
+    :`Heavier molecules are slower on average, so fewer of them reach the hole each second. Arrow width shows the escape rate. The same reason makes a light gas spread through a room faster than a heavy one.`;
+}
+$('ggas').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;GG.pair=c.dataset.k;store('ktg-gpair',GG.pair);drawG();});
+
+/* =================== 5 · MEAN FREE PATH =================== */
+const FP={P:1,d:2,obs:[],path:[],anim:0};
+const FW=520, FH=280, RHO1=1/1200, DPX=3.4;   // picture: obstacles per px² at 1 atm; px per ångström of diameter
+const fsvg=$('fsvg');
+const FL={obs:mk('g',{},fsvg),path:mk('g',{},fsvg),mol:mk('circle',{r:5,fill:'var(--heat)'},fsvg)};
+function fobs(){
+  const rho=RHO1*FP.P, area=9*FW*FH, n=Math.round(rho*area), o=[];
+  for(let i=0;i<n;i++) o.push([-FW+Math.random()*3*FW,-FH+Math.random()*3*FH]);
+  const dp=FP.d*DPX, cx=FW/2, cy=FH/2;
+  FP.obs=o.filter(p=>Math.hypot(p[0]-cx,p[1]-cy)>dp+1);
+  let g=''; for(const p of FP.obs){if(p[0]<-10||p[0]>FW+10||p[1]<-10||p[1]>FH+10)continue;g+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${(dp/2).toFixed(1)}" fill="var(--muted)" opacity=".45"/>`;}
+  FL.obs.innerHTML=g; FL.mol.setAttribute('r',(dp/2).toFixed(1));
+}
+function ftrace(){
+  const dp=FP.d*DPX; let x=FW/2, y=FH/2, a=Math.random()*2*Math.PI, ux=Math.cos(a), uy=Math.sin(a);
+  const pts=[[x,y]], segs=[];
+  for(let k=0;k<14;k++){
+    let best=Infinity, hit=null;
+    for(const p of FP.obs){const ox=p[0]-x, oy=p[1]-y, t=ox*ux+oy*uy; if(t<=0.01) continue;
+      const c2=ox*ox+oy*oy-t*t; if(c2>=dp*dp) continue; const s=t-Math.sqrt(dp*dp-c2); if(s>0.01&&s<best){best=s;hit=p;}}
+    if(!hit){ best=2000; }
+    x+=ux*best; y+=uy*best; pts.push([x,y]); segs.push(best);
+    if(!hit||x<-FW||x>2*FW||y<-FH||y>2*FH) break;
+    const nx=(x-hit[0])/dp, ny=(y-hit[1])/dp, dot=ux*nx+uy*ny; ux-=2*dot*nx; uy-=2*dot*ny;
+  }
+  FP.path=pts; FP.segs=segs;
+}
+function fdraw(prog){ /* prog: distance travelled along the path, px */
+  let g='', left=prog;
+  for(let i=0;i<FP.path.length-1&&left>0;i++){
+    const [x1,y1]=FP.path[i], [x2,y2]=FP.path[i+1], L=Math.hypot(x2-x1,y2-y1), f=Math.min(1,left/L);
+    const ex=x1+(x2-x1)*f, ey=y1+(y2-y1)*f;
+    g+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="${i%2?'var(--spin)':'var(--vel)'}" stroke-width="2.6" stroke-linecap="round"/>`;
+    if(f===1&&i<FP.path.length-2) g+=`<circle cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="3" fill="var(--ink)"/>`;
+    left-=L; FL.mol.setAttribute('cx',ex.toFixed(1)); FL.mol.setAttribute('cy',ey.toFixed(1));
+  }
+  FL.path.innerHTML=g;
+}
+function fmeasure(){
+  const s=FP.segs||[], full=s.slice(0,-1);
+  const m=full.length?full.reduce((a,b)=>a+b,0)/full.length:0;
+  const model=1/(2*RHO1*FP.P*FP.d*DPX);
+  $('fmeas').textContent=full.length?`average free path in the picture: ${fmt(m,0)} px (flat model predicts about ${fmt(model,0)} px)`:'the molecule flew off without a collision';
+}
+function fgo(){
+  cancelAnimationFrame(FP.anim); fobs(); ftrace();
+  const total=FP.path.slice(1).reduce((a,p,i)=>a+Math.hypot(p[0]-FP.path[i][0],p[1]-FP.path[i][1]),0);
+  if(RM){fdraw(total);fmeasure();return;}
+  let t0=0; const sp=420;
+  const tick=ts=>{if(!t0)t0=ts;const d=(ts-t0)/1000*sp;fdraw(Math.min(d,total));if(d<total)FP.anim=requestAnimationFrame(tick);else fmeasure();};
+  $('fmeas').textContent=''; FP.anim=requestAnimationFrame(tick);
+}
+function fnums(){
+  $('fPo').textContent=fmt(FP.P,2)+' atm'; $('fdo').textContent=fmt(FP.d,2)+' Å';
+  const n=FP.P*ATM/(KB*FREE_T), d=FP.d*1e-10, l=1/(Math.SQRT2*n*Math.PI*d*d), va=vavg(FREE_T,FREE_M);
+  $('fkv').innerHTML=[['molecules per m³, n = P/k<sub>B</sub>T',sci(n,2)],['mean free path l',fmt(l*1e9,0)+' nm'],['l in molecule diameters',fmt(l/d,0)+' d'],
+    ['collisions per second (N₂, v<sub>avg</sub> '+fmt(va,0)+' m/s)',sci(va/l,1)]].map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('');
+}
+$('fP').addEventListener('input',e=>{FP.P=+e.target.value;fnums();fgo();});
+$('fd').addEventListener('input',e=>{FP.d=+e.target.value;fnums();fgo();});
+$('fgo').onclick=fgo;
+
+/* =================== 6 · ASSUMPTIONS / REAL GAS =================== */
+const AS={lp:0};
+const asvg=$('asvg');
+const AJ=(()=>{const a=[];let s=11;const r=()=>{s=(s*9301+49297)%233280;return s/233280-0.5;};for(let i=0;i<400;i++)a.push([r(),r()]);return a;})();
+const AD=2;   // Å, typical molecular size used by NCERT
+function drawA(){
+  const P=Math.pow(10,AS.lp);   // atm
+  const s=Math.cbrt(KB*300/(P*ATM))*1e10;   // Å, ideal-gas spacing at 300 K
+  $('aPo').textContent=(P<10?fmt(P,1):fmt(P,0))+' atm';
+  const dpx=5, spx=dpx*s/AD, W=320, H=200;
+  let g=`<rect x="1" y="1" width="${W-2}" height="${H-2}" rx="6" fill="none" stroke="var(--line)"/>`;
+  const cols=Math.ceil(W/spx)+1, rows=Math.ceil(H/spx)+1, pts=[], grid=[];
+  let k=0;
+  for(let i=0;i<cols;i++){grid.push([]);for(let j=0;j<rows;j++){const jt=AJ[(k++)%AJ.length];const x=spx*(i+0.5)+jt[0]*spx*0.5, y=spx*(j+0.5)+jt[1]*spx*0.5;
+    const ok=!(x<4||x>W-4||y<4||y>H-4); grid[i].push(ok?[x,y]:null); if(ok)pts.push([x,y]);}}
+  const link=(a,b)=>{if(a&&b&&Math.hypot(a[0]-b[0],a[1]-b[1])<dpx*2.4)g+=`<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="var(--heat)" stroke-width="1.2" opacity=".6"/>`;};
+  if(spx<dpx*3){for(let i=0;i<cols;i++)for(let j=0;j<rows;j++){if(i+1<cols)link(grid[i][j],grid[i+1][j]);if(j+1<rows)link(grid[i][j],grid[i][j+1]);}}
+  for(const p of pts) g+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${dpx/2}" fill="var(--vel)"/>`;
+  asvg.innerHTML=g;
+  $('acap').innerHTML=`Average spacing ≈ ${fmt(s,1)} Å, about ${fmt(s/AD,s/AD<10?1:0)} molecule sizes (size taken as 2 Å). `+
+    (s/AD>8?'Molecules are far apart: their own volume and their pull on each other hardly matter. The ideal model works.'
+      :s/AD>3?'Molecules are getting close: their own volume and their attraction start to matter, and PV/µRT drifts away from 1.'
+      :'Molecules are almost touching (red lines: neighbours close enough to attract). The ideal model has failed; even this spacing estimate, which assumes an ideal gas, is only rough.')+
+    ' <span class="hw">simplified model</span>';
+}
+$('aP').addEventListener('input',e=>{AS.lp=+e.target.value;drawA();});
+(function drawZ(){
+  const W=320,H=200,L=40,Rm=10,T=12,Bm=34, sx=p=>L+p/1*(W-L-Rm), sy=z=>H-Bm-(z-0.7)/0.7*(H-T-Bm);
+  /* schematic shape only: Z = 1 + B p + C p^2 with B = (0.4 - 0.75/t)/t, C = 0.6/t^2, t = relative temperature */
+  const curves=[{t:0.7,c:'var(--cold)',l:'low T'},{t:1,c:'var(--du)',l:'medium T'},{t:2,c:'var(--hot)',l:'high T'}];
+  let g='';
+  g+=`<line x1="${L}" x2="${W-Rm}" y1="${H-Bm}" y2="${H-Bm}" stroke="var(--ink)"/><line x1="${L}" x2="${L}" y1="${H-Bm}" y2="${T}" stroke="var(--ink)"/>`;
+  g+=`<line x1="${L}" x2="${W-Rm}" y1="${sy(1)}" y2="${sy(1)}" stroke="var(--ink)" stroke-dasharray="5 4"/><text x="${W-Rm}" y="${sy(1)-5}" font-size="11" fill="var(--ink)" text-anchor="end">ideal gas</text>`;
+  g+=`<text x="${L-6}" y="${sy(1)+4}" font-size="11" fill="var(--muted)" text-anchor="end">1</text>`;
+  curves.forEach((cv,k)=>{let d='';const Bc=(0.4-0.75/cv.t)/cv.t, Cc=0.6/(cv.t*cv.t);
+    for(let i=0;i<=60;i++){const p=i/60, z=1+Bc*p+Cc*p*p;d+=(i?'L':'M')+sx(p).toFixed(1)+' '+sy(clamp(z,0.7,1.4)).toFixed(1);}
+    g+=`<path d="${d}" fill="none" stroke="${cv.c}" stroke-width="2"/><line x1="${L+10}" x2="${L+26}" y1="${T+8+k*15}" y2="${T+8+k*15}" stroke="${cv.c}" stroke-width="2"/><text x="${L+31}" y="${T+12+k*15}" font-size="11" fill="${cv.c}">${cv.l}</text>`;});
+  g+=`<text x="${(L+W-Rm)/2}" y="${H-8}" font-size="11.5" fill="var(--muted)" text-anchor="middle">pressure P →</text>`;
+  g+=`<text x="12" y="${(T+H-Bm)/2}" font-size="11.5" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 12 ${(T+H-Bm)/2})">PV/(µRT)</text>`;
+  $('zsvg').innerHTML=g;
+})();
+
+/* =================== 7 · QUIZ (numbers computed from the data above) =================== */
+const r0=(v)=>Math.round(v);
+const qO2=vrms(300,GAS.O2.M);
+const qHeAr=Math.sqrt(GAS.Ar.M/GAS.He.M);
+const qTAr=(273.15-20)*39.9/4.0;           // NCERT Exercise 12.9 data: M_Ar = 39.9, M_He = 4.0
+const qGraham=Math.sqrt(GAS.O2.M/GAS.H2.M);
+const qT2=Math.sqrt((927+273.15)/(27+273.15));
+const QUIZ=[
+ {q:'Root-mean-square speed of oxygen molecules (M = 32.0 g/mol) at 300 K?',
+  o:[`≈ ${r0(vmp(300,GAS.O2.M))} m/s`,`≈ ${r0(qO2)} m/s`,`≈ ${r0(qO2*Math.sqrt(32))} m/s`,`≈ ${r0(Math.sqrt(3*R*300/32))} m/s`],a:1,
+  why:`v<sub>rms</sub> = √(3RT/M) = √(3 × 8.314 × 300 / 0.032) ≈ ${r0(qO2)} m/s. Keep M in kg/mol: using 32 instead of 0.032 gives the tiny last option. ${r0(vmp(300,GAS.O2.M))} m/s is the most probable speed, √(2RT/M).`},
+ {q:'A gas is heated from 27 °C to 927 °C. Its rms speed becomes:',
+  o:['2 times','√2 times','about 5.9 times','4 times'],a:0,
+  why:`v<sub>rms</sub> ∝ √T with T in kelvin: √(1200 K / 300 K) = ${fmt(qT2,2)} ≈ 2. Using °C (√(927/27) ≈ 5.9) is the classic trap.`},
+ {q:'Helium and argon are mixed in one flask at 300 K. Ratio of mean kinetic energy per atom (He : Ar), and of rms speed (He : Ar)?',
+  o:['1 : 1 and 1 : 1',`1 : 1 and ${fmt(qHeAr,2)} : 1`,'1 : 10 and 1 : 1',`10 : 1 and ${fmt(qHeAr,2)} : 1`],a:1,
+  why:`Same T means same mean KE, (3/2)k<sub>B</sub>T, for any gas: 1 : 1. Then v<sub>rms</sub> ∝ 1/√M, so He : Ar = √(39.95/4.003) ≈ ${fmt(qHeAr,2)} : 1. The mixing ratio doesn’t matter.`},
+ {q:'At what temperature is the rms speed of argon atoms (39.9 u) equal to that of helium atoms (4.0 u) at −20 °C?',
+  o:[`≈ ${r0(253.15*Math.sqrt(39.9/4.0))} K`,`≈ ${r0(qTAr)} K`,`≈ ${r0(273.15-20*39.9/4.0)} K`,'253 K'],a:1,
+  why:`Equal v<sub>rms</sub> means equal T/M: T<sub>Ar</sub> = 253 K × 39.9/4.0 ≈ ${r0(qTAr)} K. Argon must be about ten times hotter to move as fast. (NCERT Exercise 12.9.)`},
+ {q:'For any gas in equilibrium, which is true?',
+  o:['v<sub>avg</sub> &lt; v<sub>mp</sub> &lt; v<sub>rms</sub>','v<sub>mp</sub> &lt; v<sub>avg</sub> &lt; v<sub>rms</sub>','v<sub>rms</sub> &lt; v<sub>avg</sub> &lt; v<sub>mp</sub>','all three are equal for a light gas'],a:1,
+  why:`The peak is the commonest speed; the long fast tail pulls the mean right of it; squaring gives fast molecules extra weight, so rms is further right still. Ratio 1 : ${fmt(Math.sqrt(4/Math.PI),3)} : ${fmt(Math.sqrt(1.5),3)}, for every gas.`},
+ {q:'Raise the temperature of a gas. The Maxwell speed curve:',
+  o:['shifts right and gets taller','shifts right and gets lower; area unchanged','shifts left and gets lower','keeps its peak, only the tail grows'],a:1,
+  why:'All speeds scale as √T, so the curve stretches to the right. The area is the total fraction of molecules, always 1, so a wider curve must be lower.'},
+ {q:'At fixed temperature the pressure of a gas is doubled. Its mean free path:',
+  o:['doubles','halves','stays the same','drops to a quarter'],a:1,
+  why:'At fixed T, n = P/k<sub>B</sub>T doubles, and l = 1/(√2 nπd²) ∝ 1/n, so l halves. A quarter would be doubling the molecular diameter instead.'},
+ {q:'Hydrogen and oxygen at the same T and P leak through the same pinhole. Rate of H₂ : rate of O₂ is about:',
+  o:['16 : 1','4 : 1','1 : 4','1 : 1'],a:1,
+  why:`Graham’s law: rate ∝ 1/√M, so the ratio is √(32.0/2.016) ≈ ${fmt(qGraham,2)} ≈ 4 : 1. 16 : 1 is the mass ratio, without the square root.`},
+ {q:'A vessel holds 2 mol of N₂ and 1 mol of O₂ at a total pressure of 3 atm. Partial pressure of O₂?',
+  o:['1 atm','1.5 atm','2 atm','3 atm'],a:0,
+  why:'Each gas pushes on the walls independently, in proportion to its number of molecules. O₂ is 1/3 of the molecules, so p<sub>O₂</sub> = 1 atm, and p<sub>N₂</sub> = 2 atm. Dalton: 1 + 2 = 3 atm.'}
+];
+function quiz(el,Q){
+  const render=()=>{el.innerHTML=Q.map((q,i)=>`<div class="panel"><p class="qn">Q${i+1}</p><p>${q.q}</p>
+    <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');};
+  el.addEventListener('click',e=>{
+    const b=e.target.closest('.opt'); if(!b||b.disabled) return;
+    const box=b.parentElement, q=Q[+box.dataset.i], j=+b.dataset.j;
+    box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+    const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+  });
+  render(); return render;
+}
+const rq=quiz($('quiz'),QUIZ);
+$('qreset').onclick=rq;
+
+initBox(); drawT(); drawM(); drawD(); drawG(); fnums(); fgo(); drawA();
+</script>
+</body>
+</html>

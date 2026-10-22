@@ -1,0 +1,979 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Heat Transfer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) three modes on one picture  (2) conduction through a rod + K chart (selector)
+   (3) compound bars, series/parallel + resistor analogy  (4) ice on a pond
+   (5) convection: pot, sea/land breeze  (6) radiation: Planck curves, exchange + Kirchhoff, thermos, greenhouse
+   (7) Newton's law of cooling + limit of Stefan  (8) predict-then-check
+   Quantity colours shared with laws-and-pv.html: --heat (Q), --hot, --cold. Temperatures use the jet colormap. */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --heat:#c2306a; --work:#1f8f87; --du:#8a6d1f; --hot:#d0452c; --cold:#1f7fc4;
+  --p1:#7a52c7; --p2:#2c56cc;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --heat:#f06d9f; --work:#3cb8ad; --du:#d4b44a; --hot:#ff7b62; --cold:#5cb3f0;
+  --p1:#a585f0; --p2:#7d9dff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --heat:#f06d9f; --work:#3cb8ad; --du:#d4b44a; --hot:#ff7b62; --cold:#5cb3f0;
+  --p1:#a585f0; --p2:#7d9dff; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+svg.drag{touch-action:none;cursor:crosshair}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:7.5em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:6.5em;text-align:right;white-space:nowrap}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+.q{color:var(--heat);font-weight:600}
+select{font:500 13px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+.sel{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted)}
+@keyframes ht-flow{to{stroke-dashoffset:-28}}
+.flowing{animation:ht-flow 1.1s linear infinite}
+.paused .flowing{animation-play-state:paused}
+#kchart .krow{cursor:pointer}
+#tfsvg [data-part]{cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Heat Transfer: Conduction, Convection, Radiation</h1>
+    <p class="lede">Heat always flows from hotter to colder. What differs is how it travels: passed from molecule to molecule through matter that stays put (<b>conduction</b>), carried along by matter that moves (<b>convection</b>), or sent as electromagnetic waves that need no matter at all (<b>radiation</b>). This page builds each one as a picture you can change, then ends with how fast a hot body cools.</p>
+  </header>
+
+  <!-- 1 · three modes -->
+  <section class="stack">
+    <div>
+      <h2>1 · Three ways for heat to travel</h2>
+      <p class="lede">One pot of water on a flame uses all three at once. Pick a mode to see where it acts.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="mmode" role="group" aria-label="Mode of heat transfer">
+          <button class="chip" data-k="all">All three</button><button class="chip" data-k="cond">Conduction</button><button class="chip" data-k="conv">Convection</button><button class="chip" data-k="rad">Radiation</button>
+        </div>
+        <div class="svgbox"><svg id="msvg" viewBox="0 0 520 270" role="img" aria-label="A pot of water on a flame, with a hand held beside it" style="min-width:340px"></svg></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="mtitle"></p>
+        <p class="cap key" id="mcap"></p>
+        <div id="mkv"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · conduction -->
+  <section class="stack">
+    <div>
+      <h2>2 · Conduction through a rod</h2>
+      <p class="lede">One end of the rod sits in boiling water (100 °C), the other in melting ice (0 °C). Its sides are wrapped, so heat can only travel along it. Pick a material from the chart, change the rod’s size, and watch the heat current (the pink band).</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="rsvg" viewBox="0 0 560 300" role="img" aria-label="A rod between hot and cold reservoirs with its temperature profile" style="min-width:360px"></svg></div>
+        <div class="slider"><label for="rA">cross-section A</label><input type="range" id="rA" min="1" max="10" step="0.5" value="4"><output id="rAo"></output></div>
+        <div class="slider"><label for="rL">length L</label><input type="range" id="rL" min="10" max="100" step="1" value="50"><output id="rLo"></output></div>
+        <div class="row"><button class="btn primary" id="rgo">Start with a cold rod</button><span class="muted" id="rstat"></span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="rkv"></dl>
+        <p class="cap key" id="rcap"></p>
+      </div>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <h3>Thermal conductivity K (W m⁻¹ K⁻¹), tap one to use it</h3>
+        <div class="svgbox"><svg id="kchart" viewBox="0 0 380 400" role="img" aria-label="Thermal conductivities on a logarithmic scale" style="min-width:320px;max-width:460px"></svg></div>
+        <div class="legend"><span><i style="background:var(--p1);height:10px;width:10px"></i>metals</span><span><i style="background:var(--force);height:10px;width:10px"></i>non-metals</span><span><i style="background:var(--cold);height:10px;width:10px"></i>gases</span><span>each grid line is ×10</span></div>
+      </div>
+      <div class="panel stack">
+        <h3>Conductors and insulators</h3>
+        <p class="cap">The scale is logarithmic: silver conducts about <b id="kratio"></b> times better than air. In a metal, free electrons carry energy quickly through the lattice. In a gas, molecules are far apart and only pass energy on when they happen to collide.</p>
+        <p class="cap key"><b>Why fluffy things keep you warm.</b> Felt and glass wool sit right next to air on the chart. They are mostly trapped air; the fibres just stop the air from moving, so it cannot carry heat away by convection. Foam, wool and feathers work the same way.</p>
+        <p class="cap">A brass tumbler feels colder than a wooden tray on a chilly day, though both are at room temperature. Brass (K = 109) conducts heat out of your hand about <span id="kbw"></span> times faster than wood (K = 0.12), so your skin cools quickly.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · compound bars -->
+  <section class="stack">
+    <div>
+      <h2>3 · Two materials: series and parallel</h2>
+      <p class="lede">Join two rods end to end (series) or side by side (parallel). Before you look at the graph: in series, which rod has the steeper temperature drop?</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row">
+          <div class="chips" id="cmode" role="group" aria-label="Arrangement"><button class="chip" data-k="series">Series</button><button class="chip" data-k="parallel">Parallel</button></div>
+        </div>
+        <div class="row">
+          <label class="sel">rod 1 <select id="cm1"></select></label>
+          <label class="sel">rod 2 <select id="cm2"></select></label>
+        </div>
+        <div class="svgbox"><svg id="csvg" viewBox="0 0 560 300" role="img" aria-label="Two rods and their temperature profile" style="min-width:360px"></svg></div>
+        <div id="cser" class="stack">
+          <div class="slider"><label for="cL1">length L₁</label><input type="range" id="cL1" min="5" max="40" step="1" value="10"><output id="cL1o"></output></div>
+          <div class="slider"><label for="cL2">length L₂</label><input type="range" id="cL2" min="5" max="40" step="1" value="10"><output id="cL2o"></output></div>
+        </div>
+        <div id="cpar" class="stack">
+          <div class="slider"><label for="cA1">area A₁</label><input type="range" id="cA1" min="1" max="10" step="0.5" value="4"><output id="cA1o"></output></div>
+          <div class="slider"><label for="cA2">area A₂</label><input type="range" id="cA2" min="1" max="10" step="0.5" value="4"><output id="cA2o"></output></div>
+          <div class="slider"><label for="cLp">length L</label><input type="range" id="cLp" min="10" max="80" step="1" value="30"><output id="cLpo"></output></div>
+        </div>
+      </div>
+      <div class="panel stack">
+        <h3>The same thing as a circuit <span class="hw">analogy</span></h3>
+        <svg id="ccirc" viewBox="0 0 360 170" role="img" aria-label="Thermal resistances drawn as resistors" style="width:100%;max-width:400px;height:auto;display:block"></svg>
+        <dl class="kv" id="ckv"></dl>
+        <p class="cap key" id="ccap"></p>
+      </div>
+    </div>
+    <p class="cap"><b>Thermal resistance R = L/(KA).</b> Read H = ΔT/R like Ohm’s law I = V/R: temperature difference plays the voltage, heat current plays the electric current. Long, thin, poorly conducting rods have a large R. Series resistances add (R = R₁ + R₂); in parallel the reciprocals add (1/R = 1/R₁ + 1/R₂). This is an analogy for steady flow only; heat has no “charge” that is conserved inside a rod while it is warming up.</p>
+  </section>
+
+  <!-- 4 · ice on a pond -->
+  <section class="stack">
+    <div>
+      <h2>4 · Ice growing on a pond</h2>
+      <p class="lede">On a freezing night the air above a pond is below 0 °C while the water under the ice stays at 0 °C. To freeze one more layer, the latent heat of that layer has to be conducted up through the ice already there. Drag time forward: does the ice grow at a steady rate?</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="isvg" viewBox="0 0 540 270" role="img" aria-label="Pond cross-section and ice thickness against time" style="min-width:360px"></svg></div>
+        <div class="slider"><label for="ith">air temperature</label><input type="range" id="ith" min="-20" max="-2" step="1" value="-10"><output id="itho"></output></div>
+        <div class="slider"><label for="itt">time since freezing began</label><input type="range" id="itt" min="0" max="240" step="1" value="48"><output id="itto"></output></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="ikv"></dl>
+        <p class="cap key">The thicker the ice, the larger its thermal resistance, so heat leaves more slowly and the next layer freezes more slowly. The rate of growth is dx/dt = Kθ/(ρLx), where θ is how far the air is below 0 °C. Integrating gives <b>x² = 2Kθt/(ρL)</b>: thickness grows as √t. Doubling the thickness takes four times as long.</p>
+        <p class="cap">Time to grow from x₁ to x₂: t = ρL(x₂² − x₁²)/(2Kθ). <span class="hw">simplified model</span> The top of the ice is taken to be at the air temperature, the water below already at 0 °C, and the heat needed to cool the ice itself is ignored (only latent heat counts), so the temperature in the ice is a straight line at every instant. Ice data: K = 1.6 W m⁻¹ K⁻¹, L = 3.33 × 10⁵ J kg⁻¹, ρ = 917 kg m⁻³.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · convection -->
+  <section class="stack">
+    <div>
+      <h2>5 · Convection: the hot fluid moves</h2>
+      <p class="lede">Heat a fluid from below. The warm part expands, becomes less dense, and buoyancy pushes it up; cooler, denser fluid sinks to take its place. The fluid itself carries the energy. This needs a fluid (it cannot happen in a solid) and, for natural convection, gravity.</p>
+    </div>
+    <div class="two">
+      <div class="panel stack">
+        <div class="row"><button class="btn" id="vplay"></button><span class="muted">dot colour = temperature</span></div>
+        <div class="svgbox"><svg id="vsvg" viewBox="0 0 320 260" role="img" aria-label="Convection currents in a heated pot" style="max-width:420px;margin:0 auto"></svg></div>
+        <p class="cap"><b>Natural convection</b> is driven by density differences and gravity: water in this pot, air above a heater. <b>Forced convection</b> uses a pump or fan to push the fluid: a home forced-air heater, a car engine’s coolant, and your blood, with the heart as the pump keeping your body at an even temperature.</p>
+      </div>
+      <div class="panel stack">
+        <div class="chips" id="bmode" role="group" aria-label="Time of day"><button class="chip" data-k="day">Day: sea breeze</button><button class="chip" data-k="night">Night: land breeze</button></div>
+        <div class="svgbox"><svg id="bsvg" viewBox="0 0 520 250" role="img" aria-label="Sea breeze and land breeze circulation" style="min-width:340px"></svg></div>
+        <p class="cap key" id="bcap"></p>
+      </div>
+    </div>
+    <p class="cap"><b>Trade winds.</b> The same idea on the scale of the planet: air at the equator is heated most, rises and moves towards the poles at height, while cooler air streams in at the surface towards the equator. The Earth’s rotation bends this circulation, so the air descends at about 30° latitude instead of at the poles and returns to the equator as the steady north-east trade winds. <span class="hw">simplified picture</span></p>
+  </section>
+
+  <!-- 6 · radiation -->
+  <section class="stack">
+    <div>
+      <h2>6 · Radiation: heat as light</h2>
+      <p class="lede">Every body emits electromagnetic waves because of its temperature. Radiation needs no medium; it crosses empty space at the speed of light, which is how sunlight reaches the Earth and why you feel a fire on your face at once. A <b>black body</b> absorbs all radiation that falls on it, and (as you’ll see) it is also the best possible emitter. Heat it and watch its spectrum.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="sscale" role="group" aria-label="Vertical scale"><button class="chip" data-k="fixed">Fixed scale</button><button class="chip" data-k="fit">Zoom to fit</button></div>
+        <div class="svgbox"><svg id="ssvg" viewBox="0 0 560 340" role="img" aria-label="Black-body spectrum: power against wavelength" style="min-width:360px"></svg></div>
+        <div class="slider"><label for="sT">temperature T</label><input type="range" id="sT" min="800" max="6500" step="50" value="3000"><output id="sTo"></output></div>
+        <p class="muted">Curves computed from Planck’s law for a perfect black body. The rainbow strip marks visible light (0.38–0.75 µm).</p>
+      </div>
+      <div class="panel stack">
+        <div class="row" style="gap:14px;align-items:center">
+          <svg id="sswatch" viewBox="0 0 80 80" width="80" height="80" role="img" aria-label="Approximate colour of the glowing body"><circle cx="40" cy="40" r="34" stroke="var(--line)" stroke-width="2"/></svg>
+          <p class="muted" style="flex:1;min-width:140px" id="sswcap"></p>
+        </div>
+        <dl class="kv" id="skv"></dl>
+        <p class="cap key"><b>Wien’s displacement law:</b> the peak sits at λ<sub>m</sub> = b/T, b = 2.898 × 10⁻³ m K. Hotter means a shorter peak wavelength, which is why heated iron goes dull red, then orange-yellow, then white.</p>
+        <p class="cap key"><b>Stefan–Boltzmann law:</b> the area under the curve is the total power per square metre, σT⁴, with σ = 5.67 × 10⁻⁸ W m⁻² K⁻⁴. Double T and the area grows 16 times. That steep rise is why radiation takes over from conduction and convection at high temperatures.</p>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="panel stack">
+        <h3>Emitting and absorbing at the same time</h3>
+        <div class="chips" id="xpre" role="group" aria-label="Surface"></div>
+        <div class="svgbox"><svg id="xsvg" viewBox="0 0 440 250" role="img" aria-label="A body exchanging radiation with its surroundings" style="min-width:340px"></svg></div>
+        <div class="slider"><label for="xe">emissivity e</label><input type="range" id="xe" min="0.05" max="1" step="0.01" value="0.97"><output id="xeo"></output></div>
+        <div class="slider"><label for="xT">body T</label><input type="range" id="xT" min="250" max="1000" step="5" value="600"><output id="xTo"></output></div>
+        <div class="slider"><label for="xs">surroundings Tₛ</label><input type="range" id="xs" min="250" max="1000" step="5" value="300"><output id="xso"></output></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="xkv"></dl>
+        <p class="cap key">A real surface emits only a fraction e (its <b>emissivity</b>, 0 to 1) of what a black body at the same T would: eσAT⁴. It also absorbs only a fraction a of the radiation falling on it; the rest is reflected (opaque body: a + r = 1). The body sends out eσAT⁴ and takes in aσAT<sub>s</sub>⁴, so the net loss is <b>H = eσA(T⁴ − T<sub>s</sub>⁴)</b>.</p>
+        <p class="cap" id="xcap"></p>
+        <p class="cap"><b>Kirchhoff’s law:</b> at a given temperature, the ratio of emissive power to absorptivity is the same for every body and equals the emissive power of a black body. So a = e: <b>good absorbers are good emitters</b>, and good reflectors are poor emitters. Set T = T<sub>s</sub>: the net flow must be zero for every e (otherwise a body could heat itself from surroundings at its own temperature), which only works if the same e multiplies both arrows.</p>
+      </div>
+    </div>
+
+    <div class="two">
+      <div class="panel stack">
+        <h3>Thermos (Dewar) flask: tap a part</h3>
+        <div class="chips" id="tfpart" role="group" aria-label="Flask part"></div>
+        <div class="svgbox"><svg id="tfsvg" viewBox="0 0 320 300" role="img" aria-label="Cut-away of a vacuum flask" style="max-width:380px;margin:0 auto"></svg></div>
+        <p class="cap key" id="tfcap"></p>
+      </div>
+      <div class="panel stack">
+        <h3>Greenhouse effect <span class="hw">qualitative</span></h3>
+        <div class="svgbox"><svg id="gsvg" viewBox="0 0 400 230" role="img" aria-label="Short-wavelength sunlight passes through glass; long-wavelength infrared is trapped" style="max-width:460px;margin:0 auto"></svg></div>
+        <p class="cap key" id="gcap"></p>
+        <p class="cap"><b>Clothes and cooking pots.</b> Light-coloured clothes reflect more sunlight and absorb less, so we wear them in summer and darker ones in winter. The bottoms of cooking pots are often blackened so that they absorb as much of the flame’s heat as possible.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · Newton's law of cooling -->
+  <section class="stack">
+    <div>
+      <h2>7 · Newton’s law of cooling</h2>
+      <p class="lede">A cup of tea on the table cools fast at first, then more and more slowly as it nears room temperature. For small temperature differences, the rate of cooling is proportional to how much hotter the body is than its surroundings: <b>dT/dt = −k(T − T<sub>s</sub>)</b>. Drag the point along the curve.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="nmode" role="group" aria-label="View"><button class="chip" data-k="tan">Slope at a point</button><button class="chip" data-k="avg">Average-temperature method</button><button class="chip" data-k="log">Straight-line test</button></div>
+        <div class="svgbox"><svg id="nsvg" class="drag" viewBox="0 0 520 340" role="img" aria-label="Cooling curve, temperature against time" style="min-width:340px"></svg></div>
+        <div class="slider"><label for="nk">cooling constant k</label><input type="range" id="nk" min="0.03" max="0.3" step="0.01" value="0.1"><output id="nko"></output></div>
+        <div class="slider"><label for="nts">surroundings Tₛ</label><input type="range" id="nts" min="0" max="40" step="1" value="20"><output id="ntso"></output></div>
+        <div class="slider"><label for="nt0">starting T</label><input type="range" id="nt0" min="50" max="100" step="1" value="90"><output id="nt0o"></output></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="nkv"></dl>
+        <p class="cap key" id="ncap"></p>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="panel stack">
+        <h3>Where Newton’s law comes from (radiation only)</h3>
+        <div class="svgbox"><svg id="lsvg" viewBox="0 0 520 300" role="img" aria-label="Rate of radiative heat loss against temperature excess, Stefan law and straight-line approximation" style="min-width:340px"></svg></div>
+        <div class="slider"><label for="lts">surroundings Tₛ</label><input type="range" id="lts" min="250" max="350" step="5" value="300"><output id="ltso"></output></div>
+        <div class="slider"><label for="ldt">excess T − Tₛ</label><input type="range" id="ldt" min="1" max="400" step="1" value="20"><output id="ldto"></output></div>
+        <div class="legend"><span><i style="background:var(--heat)"></i>Stefan: σ(T⁴ − Tₛ⁴)</span><span><i style="background:var(--accent)"></i>Newton: 4σTₛ³(T − Tₛ)</span></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="lkv"></dl>
+        <p class="cap key">Write T = T<sub>s</sub> + ΔT. Then T⁴ − T<sub>s</sub>⁴ = 4T<sub>s</sub>³ΔT + 6T<sub>s</sub>²ΔT² + …, and when ΔT ≪ T<sub>s</sub> only the first term matters: the net radiation loss eσA(T⁴ − T<sub>s</sub>⁴) ≈ 4eσAT<sub>s</sub>³ ΔT, a straight line in ΔT. That is Newton’s law, with k = 4eσAT<sub>s</sub>³/(ms) for a body of mass m and specific heat s. The straight line is the tangent to Stefan’s curve at ΔT = 0; slide the excess up to see them part.</p>
+        <p class="cap">In practice a cooling body also loses heat by convection and conduction to the air. Newton’s law describes the total well for small temperature differences, which is why it works for a cup of tea but not for a red-hot iron. <span class="hw">approximation</span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · quiz -->
+  <section class="stack">
+    <div>
+      <h2>8 · Predict, then check</h2>
+      <p class="lede">CBSE- and JEE-style questions. Choose first; the reasoning appears after.</p>
+    </div>
+    <div class="qgrid" id="quiz"></div>
+    <div><button class="btn" id="qreset">Reset answers</button></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> rods with perfectly insulated sides and ends held at fixed temperatures; thermal conductivities taken as constant over the temperature range; the “cold rod” animation is sped up and schematic. Ice growth is a quasi-steady model (ice’s own heat capacity ignored). Spectra are Planck’s law for an ideal black body; the glow colour is approximate. The radiation exchange assumes surroundings that act as a black enclosure, and absorptivity equal to emissivity (Kirchhoff). Convection, breeze, flask and greenhouse drawings are schematic, not to scale.</p>
+    <p><b>Based on:</b> NCERT Physics Class 11, “Thermal Properties of Matter” (heat transfer, blackbody radiation, Newton’s law of cooling; conductivities from its table of thermal conductivities); H. C. Verma, <i>Concepts of Physics</i> Vol. 2, “Heat Transfer”. Constants σ and b: CODATA recommended values.</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+/* Thermal conductivities, J s^-1 m^-1 K^-1 = W m^-1 K^-1: NCERT Class 11 Physics, Table 10.6 */
+const KT=[
+ {n:'Silver',k:406,g:'m'},{n:'Copper',k:385,g:'m'},{n:'Aluminium',k:205,g:'m'},{n:'Brass',k:109,g:'m'},
+ {n:'Steel',k:50.2,g:'m'},{n:'Lead',k:34.7,g:'m'},{n:'Mercury',k:8.3,g:'m'},
+ {n:'Ice',k:1.6,g:'n'},{n:'Concrete',k:0.8,g:'n'},{n:'Glass',k:0.8,g:'n'},{n:'Water',k:0.8,g:'n'},
+ {n:'Body fat',k:0.20,g:'n'},{n:'Insulating brick',k:0.15,g:'n'},{n:'Wood',k:0.12,g:'n'},
+ {n:'Felt',k:0.04,g:'n'},{n:'Glass wool',k:0.04,g:'n'},
+ {n:'Hydrogen',k:0.14,g:'g'},{n:'Air',k:0.024,g:'g'},{n:'Argon',k:0.016,g:'g'}
+];
+const SIGMA=5.670374419e-8;   // W m^-2 K^-4, CODATA 2018
+const WIEN=2.897771955e-3;    // m K, CODATA 2018
+const HPL=6.62607015e-34, CL=299792458, KB=1.380649e-23; // exact SI values
+/* Ice: K from NCERT Table 10.6; latent heat of fusion of water from NCERT Table 10.5; density of ice at 0 °C, CRC Handbook (0.9167 g/cm^3) */
+const ICE={K:1.6, Lf:3.33e5, rho:917};
+/* Emissivity examples quoted in NCERT (skin, tungsten lamp) */
+const EPRE=[{id:'bb',l:'Black body (e = 1)',e:1},{id:'skin',l:'Skin (e ≈ 0.97)',e:0.97},{id:'w',l:'Tungsten (e ≈ 0.4)',e:0.4},{id:'shiny',l:'Shiny surface (small e)',e:0.1}];
+const TH=100, TCd=0; /* rod reservoirs, °C */
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const neg=s=>String(s).replace(/-/g,'−');
+function sig(v,n){ if(!isFinite(v)) return '—'; if(v===0) return '0'; const a=Math.abs(v);
+  if(a>=1e5||a<1e-3){const e=Math.floor(Math.log10(a)), m=v/Math.pow(10,e);return neg(m.toFixed(n-1))+' × 10'+sup(e);}
+  const d=Math.max(0,n-1-Math.floor(Math.log10(a))); return neg(v.toFixed(d)); }
+function sup(e){const m={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};return String(e).split('').map(c=>m[c]).join('');}
+const f1=v=>neg(v.toFixed(1)), f0=v=>neg(Math.round(v).toString());
+function arrow(x1,y1,x2,y2,col,w,head){
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy); if(L<1.5) return '';
+  const h=Math.min(head||9,L*0.6), ux=dx/L, uy=dy/L, bx=x2-ux*h, by=y2-uy*h, px=-uy*h*0.5, py=ux*h*0.5;
+  return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="${w||2}"/><polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px).toFixed(1)},${(by+py).toFixed(1)} ${(bx-px).toFixed(1)},${(by-py).toFixed(1)}" fill="${col}"/>`;
+}
+/* fat arrow for energy flows: width w px */
+function fat(x1,y1,x2,y2,col,w){
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy); if(L<2||w<0.3) return '';
+  const ux=dx/L, uy=dy/L, px=-uy, py=ux, hw=Math.max(w/2,0.5), hh=Math.min(L*0.5,hw+9), hx=x2-ux*hh, hy=y2-uy*hh, hb=hw+6;
+  const p=[[x1+px*hw,y1+py*hw],[hx+px*hw,hy+py*hw],[hx+px*hb,hy+py*hb],[x2,y2],[hx-px*hb,hy-py*hb],[hx-px*hw,hy-py*hw],[x1-px*hw,y1-py*hw]];
+  return `<polygon points="${p.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ')}" fill="${col}" opacity=".9"/>`;
+}
+/* wavy arrow (radiation) */
+function wave(x1,y1,x2,y2,col,amp,wl,w){
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy), ux=dx/L, uy=dy/L, px=-uy, py=ux, n=Math.max(8,Math.round(L/2)), Lw=L-8;
+  let d=''; for(let i=0;i<=n;i++){const s=Lw*i/n, o=amp*Math.sin(2*Math.PI*s/wl);d+=(i?'L':'M')+(x1+ux*s+px*o).toFixed(1)+' '+(y1+uy*s+py*o).toFixed(1);}
+  const bx=x1+ux*Lw, by=y1+uy*Lw;
+  return `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w||2}" stroke-linecap="round"/><polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px*5).toFixed(1)},${(by+py*5).toFixed(1)} ${(bx-px*5).toFixed(1)},${(by-py*5).toFixed(1)}" fill="${col}"/>`;
+}
+/* jet colormap, t in [0,1] */
+function jet(t){t=Math.max(0,Math.min(1,t));const c=x=>Math.round(255*Math.max(0,Math.min(1,1.5-Math.abs(4*t-x))));return `rgb(${c(3)},${c(2)},${c(1)})`;}
+const jC=T=>jet(0.06+0.88*(T-TCd)/(TH-TCd)); /* 0–100 °C */
+function gradStops(Ta,Tb,map){let s='';for(let i=0;i<=10;i++){const T=Ta+(Tb-Ta)*i/10;s+=`<stop offset="${i/10}" stop-color="${map(T)}"/>`;}return s;}
+function chips(el,list,key){el.innerHTML=list.map(x=>`<button class="chip" data-k="${x[key||'id']}">${x.l}</button>`).join('');}
+function press(el,k){el.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===String(k)));}
+function onChip(el,fn){el.addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)fn(c.dataset.k);});}
+function svgXY(svg,e){const r=svg.getBoundingClientRect(), vb=svg.viewBox.baseVal;return [(e.clientX-r.left)/r.width*vb.width,(e.clientY-r.top)/r.height*vb.height];}
+function mk(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function dragger(svg,onMove,pick){
+  let act=null;
+  svg.addEventListener('pointerdown',e=>{
+    const h=e.target.closest('[data-h]'); act=h?h.dataset.h:pick(...svgXY(svg,e)); if(act==null) return;
+    try{svg.setPointerCapture(e.pointerId);}catch(_){} onMove(act,...svgXY(svg,e)); e.preventDefault();
+  });
+  svg.addEventListener('pointermove',e=>{if(act==null)return;onMove(act,...svgXY(svg,e));});
+  const end=()=>{act=null;}; svg.addEventListener('pointerup',end); svg.addEventListener('pointercancel',end);
+}
+const kOf=n=>KT.find(m=>m.n===n).k;
+const hatch=id=>`<pattern id="${id}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="var(--muted)" stroke-width="1.6" opacity=".55"/></pattern>`;
+/* Planck spectral exitance, W m^-2 per metre of wavelength */
+function planck(lam,T){const x=HPL*CL/(lam*KB*T); if(x>700) return 0; return 2*Math.PI*HPL*CL*CL/Math.pow(lam,5)/Math.expm1(x);}
+
+/* =================== 1 · THREE MODES =================== */
+const MODES={
+ all:{t:'All three at once',c:'The flame heats the pot’s base; the base passes heat to the water by <b>conduction</b>; the warmed water rises and circulates by <b>convection</b>; and the flame and hot pot <b>radiate</b> to your hand beside them. Hold your hand above the pot instead and rising hot air (convection) reaches it too.'},
+ cond:{t:'Conduction',c:'Energy passes from each vibrating molecule (and, in metals, from free electrons) to its neighbours. Nothing flows: the metal of the base stays where it is. The main mode in solids.',kv:[['carrier','molecular collisions, free electrons'],['needs a medium?','yes'],['matter moves?','no'],['dominates in','solids, especially metals']]},
+ conv:{t:'Convection',c:'Water at the bottom is heated, expands and rises; cooler water sinks to replace it. The moving water carries its energy with it. Only possible in fluids.',kv:[['carrier','bulk motion of the fluid'],['needs a medium?','yes, a fluid'],['matter moves?','yes'],['dominates in','liquids and gases']]},
+ rad:{t:'Radiation',c:'The flame and the hot pot emit electromagnetic waves, mostly infrared. They travel in straight lines at the speed of light and need no medium, so your hand beside the pot (not above it) feels the warmth at once.',kv:[['carrier','electromagnetic waves'],['needs a medium?','no, works in vacuum'],['matter moves?','no'],['dominates in','vacuum, and at high T (grows as T⁴)']]}
+};
+let MM=load('ht-mode')||'all'; if(!MODES[MM]) MM='all';
+onChip($('mmode'),k=>{MM=k;store('ht-mode',k);drawM();});
+function drawM(){
+  press($('mmode'),MM);
+  const op=k=>MM==='all'||MM===k?1:0.13;
+  let g=`<defs><linearGradient id="mwat" x1="0" y1="1" x2="0" y2="0">${gradStops(85,40,jC)}</linearGradient></defs>`;
+  /* flame */
+  g+=`<path d="M200 252 Q205 205 230 195 Q228 215 245 222 Q250 190 268 178 Q270 210 290 214 Q300 200 304 190 Q320 222 316 252 Z" fill="${jet(.86)}" opacity=".85"/><path d="M228 252 Q236 226 252 220 Q258 236 272 228 Q284 236 290 252 Z" fill="${jet(.7)}"/>`;
+  g+=`<rect x="160" y="252" width="200" height="10" rx="3" fill="var(--muted)" opacity=".6"/>`;
+  /* pot */
+  g+=`<rect x="170" y="80" width="180" height="104" fill="url(#mwat)" opacity=".55"/>`;
+  g+=`<path d="M164 58 L164 190 L356 190 L356 58" fill="none" stroke="var(--ink)" stroke-width="4"/>`;
+  g+=`<text x="260" y="76" font-size="11.5" fill="var(--muted)" text-anchor="middle">water</text>`;
+  /* conduction: base glow + small arrows through base */
+  g+=`<g opacity="${op('cond')}"><rect x="166" y="184" width="188" height="8" fill="var(--hot)" opacity=".85"/>`;
+  for(const x of [196,232,268,304,338]) g+=arrow(x,203,x,181,'var(--heat)',2,6);
+  g+=`<text x="40" y="196" font-size="12.5" font-weight="600" fill="var(--heat)">conduction</text><text x="40" y="210" font-size="10.5" fill="var(--muted)">through the metal base</text></g>`;
+  /* convection loops */
+  g+=`<g opacity="${op('conv')}" fill="none" stroke="var(--cold)" stroke-width="2.2">`;
+  g+=`<path d="M255 172 L255 100 Q255 92 247 92 L196 92 Q186 92 186 102 L186 160 Q186 170 196 170 L240 170" marker-end="url(#mah)"/>`;
+  g+=`<path d="M265 172 L265 100 Q265 92 273 92 L324 92 Q334 92 334 102 L334 160 Q334 170 324 170 L280 170" marker-end="url(#mah)"/>`;
+  g+=`<path d="M255 120 L255 104" marker-end="url(#mah)"/><path d="M265 120 L265 104" marker-end="url(#mah)"/></g>`;
+  g+=`<defs><marker id="mah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="var(--cold)"/></marker></defs>`;
+  g+=`<text x="40" y="104" font-size="12.5" font-weight="600" fill="var(--cold)" opacity="${op('conv')}">convection</text><text x="40" y="118" font-size="10.5" fill="var(--muted)" opacity="${op('conv')}">hot water rises,</text><text x="40" y="131" font-size="10.5" fill="var(--muted)" opacity="${op('conv')}">cool water sinks</text>`;
+  /* radiation to hand */
+  g+=`<g opacity="${op('rad')}">`+wave(322,232,440,232,'var(--hot)',4,12,2)+wave(360,140,440,140,'var(--hot)',4,12,2)+wave(360,170,440,190,'var(--hot)',4,12,2);
+  g+=`<text x="370" y="128" font-size="12.5" font-weight="600" fill="var(--hot)">radiation</text></g>`;
+  /* hand (simple mitten shape) */
+  g+=`<path d="M450 150 Q450 128 466 128 L486 128 Q500 128 500 144 L500 230 Q500 246 486 246 L466 246 Q450 246 450 230 Z M450 160 Q436 158 436 172 Q436 182 450 184" fill="var(--force)" opacity=".35" stroke="var(--force)" stroke-width="1.5"/>`;
+  g+=`<text x="475" y="264" font-size="11" fill="var(--muted)" text-anchor="middle">hand</text>`;
+  $('msvg').innerHTML=g;
+  const M=MODES[MM]; $('mtitle').textContent=M.t; $('mcap').innerHTML=M.c;
+  $('mkv').innerHTML=M.kv?'<dl class="kv">'+M.kv.map(r=>`<dt>${r[0]}</dt><dd style="font-family:var(--f-body)">${r[1]}</dd>`).join('')+'</dl>':'';
+}
+
+/* =================== 2 · CONDUCTION ROD =================== */
+const ROD={mat:load('ht-mat')||'Copper',A:4,L:50,T:null,run:false};
+if(!KT.some(m=>m.n===ROD.mat)) ROD.mat='Copper';
+const NROD=41;
+const HMAXR=406*10e-4*(TH-TCd)/0.10; /* silver, A = 10 cm², L = 10 cm */
+$('rA').addEventListener('input',e=>{ROD.A=+e.target.value;drawR();});
+$('rL').addEventListener('input',e=>{ROD.L=+e.target.value;drawR();});
+$('rgo').addEventListener('click',()=>{
+  ROD.T=new Array(NROD).fill(TCd); ROD.T[0]=TH;
+  if(RM){ROD.T=null;drawR();return;}
+  if(!ROD.run){ROD.run=true;requestAnimationFrame(rloop);} drawR();
+});
+function rloop(){
+  if(!ROD.run||!ROD.T) {ROD.run=false;return;}
+  const T=ROD.T, r=0.45;
+  for(let s=0;s<5;s++){const n=T.slice();for(let i=1;i<NROD-1;i++) n[i]=T[i]+r*(T[i+1]-2*T[i]+T[i-1]);for(let i=1;i<NROD-1;i++)T[i]=n[i];}
+  let dev=0; for(let i=0;i<NROD;i++) dev=Math.max(dev,Math.abs(T[i]-(TH-(TH-TCd)*i/(NROD-1))));
+  if(dev<0.15){ROD.T=null;ROD.run=false;}
+  drawR(); if(ROD.run) requestAnimationFrame(rloop);
+}
+function hRod(){const K=kOf(ROD.mat);return K*ROD.A*1e-4*(TH-TCd)/(ROD.L/100);}
+function drawR(){
+  $('rAo').textContent=ROD.A.toFixed(1)+' cm²'; $('rLo').textContent=ROD.L+' cm';
+  const K=kOf(ROD.mat), H=hRod(), x0=90, x1=x0+ROD.L*3.6, yc=100, h=9*Math.sqrt(ROD.A);
+  const prof=ROD.T?ROD.T.slice():Array.from({length:NROD},(_,i)=>TH-(TH-TCd)*i/(NROD-1));
+  let st=''; for(let i=0;i<NROD;i+=4) st+=`<stop offset="${i/(NROD-1)}" stop-color="${jC(prof[i])}"/>`;
+  let g=`<defs>${hatch('rh')}<linearGradient id="rg" x1="0" x2="1" y1="0" y2="0">${st}</linearGradient></defs>`;
+  /* reservoirs */
+  g+=`<rect x="10" y="58" width="${x0-10}" height="84" rx="6" fill="${jC(TH)}" opacity=".75"/><text x="${(10+x0)/2}" y="94" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">100 °C</text><text x="${(10+x0)/2}" y="110" font-size="9.5" fill="#fff" text-anchor="middle">boiling water</text>`;
+  g+=`<rect x="${x1}" y="58" width="70" height="84" rx="6" fill="${jC(TCd)}" opacity=".75"/><text x="${x1+35}" y="94" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">0 °C</text><text x="${x1+35}" y="110" font-size="9.5" fill="#fff" text-anchor="middle">melting ice</text>`;
+  /* lagging + rod */
+  g+=`<rect x="${x0}" y="${yc-h/2-7}" width="${x1-x0}" height="${h+14}" fill="url(#rh)" stroke="var(--muted)" stroke-opacity=".5"/>`;
+  g+=`<rect x="${x0}" y="${yc-h/2}" width="${x1-x0}" height="${h}" fill="url(#rg)"/>`;
+  g+=`<text x="${x0}" y="160" font-size="10.5" fill="var(--muted)">${ROD.mat} rod, sides insulated (hatched)</text>`;
+  /* heat band(s): width ∝ H. In the transient, inflow ≠ outflow */
+  const wOf=Hx=>clamp(34*Hx/HMAXR,0.8,34), yb=32;
+  if(ROD.T){
+    const n=NROD-1, Hin=H*(prof[0]-prof[1])*n/(TH-TCd), Hout=H*(prof[n-1]-prof[n])*n/(TH-TCd), xm=(x0+x1)/2;
+    g+=fat(x0,yb,xm-6,yb,'var(--heat)',wOf(Hin))+fat(xm+6,yb,x1,yb,'var(--heat)',wOf(Math.max(Hout,0)));
+    g+=`<text x="${x0}" y="${yb+28}" font-size="10.5" fill="var(--heat)">in: ${sig(Hin,3)} W</text><text x="${x1}" y="${yb+28}" font-size="10.5" fill="var(--heat)" text-anchor="end">out: ${sig(Math.max(Hout,0),3)} W</text>`;
+  } else {
+    g+=fat(x0,yb,x1,yb,'var(--heat)',wOf(H));
+    g+=`<text x="${(x0+x1)/2}" y="${yb+30}" font-size="11" font-weight="600" fill="var(--heat)" text-anchor="middle">H = ${sig(H,3)} W</text>`;
+  }
+  /* temperature profile */
+  const py0=180, py1=280, ty=T=>py1-(T-TCd)/(TH-TCd)*(py1-py0);
+  g+=`<line x1="${x0}" x2="${x0}" y1="${py0-6}" y2="${py1}" stroke="var(--ink)" stroke-width="1.2"/><line x1="${x0}" x2="${x1}" y1="${py1}" y2="${py1}" stroke="var(--ink)" stroke-width="1.2"/>`;
+  for(const T of [0,50,100]) g+=`<text x="${x0-6}" y="${ty(T)+4}" font-size="10.5" fill="var(--muted)" text-anchor="end">${T} °C</text><line x1="${x0}" x2="${x1}" y1="${ty(T)}" y2="${ty(T)}" stroke="var(--line)"/>`;
+  g+=`<text x="${x1}" y="${py1+14}" font-size="10.5" fill="var(--muted)" text-anchor="end">distance along rod →</text>`;
+  let d=''; prof.forEach((T,i)=>{d+=(i?'L':'M')+(x0+(x1-x0)*i/(NROD-1)).toFixed(1)+' '+ty(T).toFixed(1);});
+  g+=`<path d="${d}" fill="none" stroke="var(--ink)" stroke-width="2.2"/>`;
+  if(!ROD.T) g+=`<text x="${(x0+x1)/2+8}" y="${ty(50)-8}" font-size="11" fill="var(--ink)">slope = −${sig((TH-TCd)/ROD.L,3)} °C/cm</text>`;
+  $('rsvg').innerHTML=g;
+  $('rstat').textContent=ROD.T?'warming up: more heat enters than leaves':'steady state';
+  const R=(ROD.L/100)/(K*ROD.A*1e-4);
+  $('rkv').innerHTML=`<dt>material</dt><dd>${ROD.mat}</dd><dt>K</dt><dd>${K} W m⁻¹ K⁻¹</dd><dt>heat current H</dt><dd>${sig(H,3)} W</dd><dt>temperature gradient</dt><dd>${sig((TH-TCd)/ROD.L,3)} °C per cm</dd><dt>thermal resistance R = L/KA</dt><dd>${sig(R,3)} K/W</dd>`;
+  $('rcap').innerHTML=ROD.T
+    ?'<b>Not yet steady.</b> The rod is still storing heat: more enters at the hot end than leaves at the cold end, and the profile is curved. Wait for it to settle.'
+    :`<b>Steady state:</b> every slice passes on exactly the heat it receives, so H is the same all along the rod and the temperature falls in a straight line. <b>H = KA(T<sub>C</sub> − T<sub>D</sub>)/L</b>: double A and the band doubles; double L and it halves (the gradient is half as steep).`;
+  drawK();
+}
+/* log-scale conductivity chart, doubles as material picker */
+function drawK(){
+  const rows=KT.slice().sort((a,b)=>b.k-a.k), x0=118, x1=360, lo=-2, hi=3, xs=k=>x0+(Math.log10(k)-lo)/(hi-lo)*(x1-x0), rh=19, y0=22;
+  const col={m:'var(--p1)',n:'var(--force)',g:'var(--cold)'};
+  let g='';
+  for(let e=lo;e<=hi;e++) g+=`<line x1="${xs(Math.pow(10,e))}" x2="${xs(Math.pow(10,e))}" y1="${y0-6}" y2="${y0+rows.length*rh}" stroke="var(--line)"/><text x="${xs(Math.pow(10,e))}" y="${y0-9}" font-size="9.5" fill="var(--muted)" text-anchor="middle">${Math.pow(10,e)}</text>`;
+  rows.forEach((m,i)=>{const y=y0+i*rh, on=m.n===ROD.mat, xe=xs(m.k);
+    g+=`<g class="krow" data-m="${m.n}"><rect x="0" y="${y}" width="380" height="${rh}" fill="${on?'var(--accent)':'transparent'}" opacity="${on?.12:1}"/>`;
+    g+=`<text x="${x0-8}" y="${y+13.5}" font-size="11.5" fill="var(--ink)" text-anchor="end" font-weight="${on?700:400}">${m.n}</text>`;
+    g+=`<rect x="${x0}" y="${y+4}" width="${(xe-x0).toFixed(1)}" height="${rh-8}" rx="2" fill="${col[m.g]}" opacity="${on?1:.75}"/>`;
+    g+=xe>320?`<text x="${xe-4}" y="${y+13.5}" font-size="10" fill="#fff" text-anchor="end" font-family="var(--f-mono)">${m.k}</text>`:`<text x="${xe+4}" y="${y+13.5}" font-size="10" fill="var(--muted)" font-family="var(--f-mono)">${m.k}</text>`;
+    g+='</g>';});
+  const svg=$('kchart'); svg.setAttribute('viewBox',`0 0 380 ${y0+rows.length*rh+6}`); svg.innerHTML=g;
+}
+$('kchart').addEventListener('click',e=>{const r=e.target.closest('[data-m]');if(!r)return;ROD.mat=r.dataset.m;store('ht-mat',ROD.mat);drawR();});
+$('kratio').textContent=(Math.round(406/0.024/1000)*1000).toLocaleString('en-US');
+$('kbw').textContent=Math.round(109/0.12/100)*100;
+
+/* =================== 3 · COMPOUND BARS =================== */
+const CB={mode:load('ht-cmode')||'series',m1:'Steel',m2:'Copper',L1:10,L2:10,A1:4,A2:4,Lp:30,Aser:4};
+if(CB.mode!=='series'&&CB.mode!=='parallel') CB.mode='series';
+for(const id of ['cm1','cm2']) $(id).innerHTML=KT.filter(m=>m.g!=='g').map(m=>`<option>${m.n}</option>`).join('');
+$('cm1').value=CB.m1; $('cm2').value=CB.m2;
+$('cm1').addEventListener('change',e=>{CB.m1=e.target.value;drawC();});
+$('cm2').addEventListener('change',e=>{CB.m2=e.target.value;drawC();});
+onChip($('cmode'),k=>{CB.mode=k;store('ht-cmode',k);drawC();});
+for(const [id,key] of [['cL1','L1'],['cL2','L2'],['cA1','A1'],['cA2','A2'],['cLp','Lp']]) $(id).addEventListener('input',e=>{CB[key]=+e.target.value;drawC();});
+function zig(x1,x2,y,lab,val){ /* resistor between x1..x2 */
+  const a=x1+(x2-x1)*0.25, b=x2-(x2-x1)*0.25, n=6; let d=`M${x1} ${y} L${a} ${y}`;
+  for(let i=0;i<n;i++){d+=` L${(a+(b-a)*(i+0.5)/n).toFixed(1)} ${y+(i%2?7:-7)}`;} d+=` L${b} ${y} L${x2} ${y}`;
+  return `<path d="${d}" fill="none" stroke="var(--ink)" stroke-width="1.8"/><text x="${(x1+x2)/2}" y="${y-14}" font-size="12" font-weight="600" fill="var(--ink)" text-anchor="middle">${lab}</text><text x="${(x1+x2)/2}" y="${y+24}" font-size="10.5" fill="var(--muted)" text-anchor="middle" font-family="var(--f-mono)">${val}</text>`;
+}
+function drawC(){
+  press($('cmode'),CB.mode); const ser=CB.mode==='series';
+  $('cser').hidden=!ser; $('cpar').hidden=ser;
+  $('cL1o').textContent=CB.L1+' cm'; $('cL2o').textContent=CB.L2+' cm'; $('cA1o').textContent=CB.A1.toFixed(1)+' cm²'; $('cA2o').textContent=CB.A2.toFixed(1)+' cm²'; $('cLpo').textContent=CB.Lp+' cm';
+  const K1=kOf(CB.m1), K2=kOf(CB.m2), wOf=H=>clamp(30*H/160,0.8,30);
+  let g=`<defs>${hatch('ch')}`, c='', kv='', cap='';
+  if(ser){
+    const A=CB.Aser*1e-4, R1=(CB.L1/100)/(K1*A), R2=(CB.L2/100)/(K2*A), R=R1+R2, H=(TH-TCd)/R, Tj=TH-H*R1;
+    const x0=90, s=4, xa=x0+CB.L1*s, x1=xa+CB.L2*s, yc=100, h=18;
+    g+=`<linearGradient id="cg1">${gradStops(TH,Tj,jC)}</linearGradient><linearGradient id="cg2">${gradStops(Tj,TCd,jC)}</linearGradient></defs>`;
+    g+=`<rect x="10" y="62" width="${x0-10}" height="76" rx="6" fill="${jC(TH)}" opacity=".75"/><text x="${(10+x0)/2}" y="105" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">100 °C</text>`;
+    g+=`<rect x="${x1}" y="62" width="64" height="76" rx="6" fill="${jC(TCd)}" opacity=".75"/><text x="${x1+32}" y="105" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">0 °C</text>`;
+    g+=`<rect x="${x0}" y="${yc-h/2-6}" width="${x1-x0}" height="${h+12}" fill="url(#ch)" stroke="var(--muted)" stroke-opacity=".5"/>`;
+    g+=`<rect x="${x0}" y="${yc-h/2}" width="${xa-x0}" height="${h}" fill="url(#cg1)"/><rect x="${xa}" y="${yc-h/2}" width="${x1-xa}" height="${h}" fill="url(#cg2)"/><line x1="${xa}" x2="${xa}" y1="${yc-h/2-6}" y2="${yc+h/2+6}" stroke="var(--ink)" stroke-width="1.5"/>`;
+    g+=`<text x="${(x0+xa)/2}" y="${yc+h/2+20}" font-size="11" font-weight="600" fill="var(--muted)" text-anchor="middle">1</text><text x="${(xa+x1)/2}" y="${yc+h/2+20}" font-size="11" font-weight="600" fill="var(--muted)" text-anchor="middle">2</text><text x="${x0}" y="150" font-size="10.5" fill="var(--muted)">1 = ${CB.m1}, 2 = ${CB.m2}</text>`;
+    g+=fat(x0,40,x1,40,'var(--heat)',wOf(H))+`<text x="${(x0+x1)/2}" y="${40-wOf(H)/2-8}" font-size="11" font-weight="600" fill="var(--heat)" text-anchor="middle">same H through both: ${sig(H,3)} W</text>`;
+    const py0=170, py1=272, ty=T=>py1-(T-TCd)/(TH-TCd)*(py1-py0);
+    g+=`<line x1="${x0}" x2="${x0}" y1="${py0-6}" y2="${py1}" stroke="var(--ink)" stroke-width="1.2"/><line x1="${x0}" x2="${x1}" y1="${py1}" y2="${py1}" stroke="var(--ink)" stroke-width="1.2"/>`;
+    for(const T of [0,50,100]) g+=`<text x="${x0-6}" y="${ty(T)+4}" font-size="10.5" fill="var(--muted)" text-anchor="end">${T} °C</text><line x1="${x0}" x2="${x1}" y1="${ty(T)}" y2="${ty(T)}" stroke="var(--line)"/>`;
+    g+=`<line x1="${xa}" x2="${xa}" y1="${py0-6}" y2="${py1}" stroke="var(--muted)" stroke-dasharray="3 3"/>`;
+    g+=`<path d="M${x0} ${ty(TH)} L${xa} ${ty(Tj).toFixed(1)} L${x1} ${ty(TCd)}" fill="none" stroke="var(--ink)" stroke-width="2.4"/>`;
+    g+=`<circle cx="${xa}" cy="${ty(Tj).toFixed(1)}" r="5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`;
+    g+=`<line x1="${xa+6}" x2="${x1+8}" y1="${ty(Tj).toFixed(1)}" y2="${ty(Tj).toFixed(1)}" stroke="var(--accent)" stroke-dasharray="2 3"/><text x="${x1+12}" y="${(ty(Tj)+4).toFixed(1)}" font-size="12" font-weight="700" fill="var(--accent)">junction ${f1(Tj)} °C</text>`;
+    $('csvg').innerHTML=g;
+    c=`<text x="20" y="40" font-size="11" fill="var(--muted)">100 °C</text><text x="340" y="40" font-size="11" fill="var(--muted)" text-anchor="end">0 °C</text>`;
+    c+=`<circle cx="30" cy="75" r="4" fill="${jC(TH)}"/><circle cx="330" cy="75" r="4" fill="${jC(TCd)}"/><circle cx="180" cy="75" r="4" fill="var(--accent)"/>`;
+    c+=zig(34,176,75,'R₁',sig(R1,3)+' K/W')+zig(184,326,75,'R₂',sig(R2,3)+' K/W');
+    c+=arrow(120,128,240,128,'var(--heat)',2.5,9)+`<text x="180" y="150" font-size="11.5" fill="var(--heat)" text-anchor="middle" font-weight="600">H = ΔT / (R₁ + R₂)</text>`;
+    $('ccirc').innerHTML=c;
+    const Keq=(CB.L1+CB.L2)/(CB.L1/K1+CB.L2/K2);
+    kv=`<dt>R₁ = L₁/K₁A</dt><dd>${sig(R1,3)} K/W</dd><dt>R₂ = L₂/K₂A</dt><dd>${sig(R2,3)} K/W</dd><dt>R = R₁ + R₂</dt><dd>${sig(R,3)} K/W</dd><dt>H = ΔT/R</dt><dd>${sig(H,3)} W</dd><dt>junction T</dt><dd>${f1(Tj)} °C</dd><dt>equivalent K</dt><dd>${sig(Keq,3)} W m⁻¹ K⁻¹</dd><dt>A (both)</dt><dd>${CB.Aser} cm²</dd>`;
+    const steeper=R1/CB.L1>R2/CB.L2?1:R1/CB.L1<R2/CB.L2?2:0;
+    cap=steeper?`The same heat current must squeeze through both rods. The poorer conductor (rod ${steeper}, ${steeper===1?CB.m1:CB.m2}) needs a steeper temperature drop per cm to push it through, so the graph is two straight lines with a kink at the junction. The temperature drop across each rod is in proportion to its resistance: ΔT₁ : ΔT₂ = R₁ : R₂.`
+      :'Both rods conduct equally well, so there is no kink: one straight line.';
+    cap+=` Equivalent conductivity K = (L₁ + L₂)/(L₁/K₁ + L₂/K₂); for equal lengths this is 2K₁K₂/(K₁ + K₂).`;
+  } else {
+    const L=CB.Lp/100, R1=L/(K1*CB.A1*1e-4), R2=L/(K2*CB.A2*1e-4), H1=(TH-TCd)/R1, H2=(TH-TCd)/R2, H=H1+H2, R=1/(1/R1+1/R2);
+    const x0=90, x1=x0+CB.Lp*4.2, h1=7*Math.sqrt(CB.A1), h2=7*Math.sqrt(CB.A2), y1=82, y2=128;
+    g+=`<linearGradient id="cgp">${gradStops(TH,TCd,jC)}</linearGradient></defs>`;
+    g+=`<rect x="10" y="48" width="${x0-10}" height="116" rx="6" fill="${jC(TH)}" opacity=".75"/><text x="${(10+x0)/2}" y="110" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">100 °C</text>`;
+    g+=`<rect x="${x1}" y="48" width="64" height="116" rx="6" fill="${jC(TCd)}" opacity=".75"/><text x="${x1+32}" y="110" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">0 °C</text>`;
+    for(const [y,h,m,Hx,dir] of [[y1,h1,CB.m1,H1,-1],[y2,h2,CB.m2,H2,1]]){
+      g+=`<rect x="${x0}" y="${y-h/2-4}" width="${x1-x0}" height="${h+8}" fill="url(#ch)" stroke="var(--muted)" stroke-opacity=".5"/><rect x="${x0}" y="${y-h/2}" width="${x1-x0}" height="${h}" fill="url(#cgp)"/>`;
+      const by=y+dir*(h/2+18);
+      g+=fat(x0+30,by,x1-30,by,'var(--heat)',wOf(Hx));
+      g+=`<text x="${x0+4}" y="${by+4}" font-size="10.5" fill="var(--muted)" text-anchor="start">${dir<0?'1':'2'}</text><text x="${x1-4}" y="${by+4}" font-size="10.5" fill="var(--heat)" text-anchor="end">${sig(Hx,3)} W</text>`;
+    }
+    g+=`<text x="${(x0+x1)/2}" y="22" font-size="10.5" fill="var(--muted)" text-anchor="middle">1 · ${CB.m1}</text><text x="${(x0+x1)/2}" y="${y2+h2/2+46}" font-size="10.5" fill="var(--muted)" text-anchor="middle">2 · ${CB.m2}</text>`;
+    const py0=212, py1=282, ty=T=>py1-(T-TCd)/(TH-TCd)*(py1-py0);
+    g+=`<line x1="${x0}" x2="${x0}" y1="${py0-4}" y2="${py1}" stroke="var(--ink)" stroke-width="1.2"/><line x1="${x0}" x2="${x1}" y1="${py1}" y2="${py1}" stroke="var(--ink)" stroke-width="1.2"/>`;
+    for(const T of [0,100]) g+=`<text x="${x0-6}" y="${ty(T)+4}" font-size="10.5" fill="var(--muted)" text-anchor="end">${T} °C</text>`;
+    g+=`<path d="M${x0} ${ty(TH)} L${x1} ${ty(TCd)}" fill="none" stroke="var(--ink)" stroke-width="2.4"/><text x="${(x0+x1)/2+10}" y="${ty(50)-6}" font-size="11" fill="var(--ink)">same profile in both rods</text>`;
+    $('csvg').innerHTML=g;
+    c=`<circle cx="40" cy="85" r="4" fill="${jC(TH)}"/><circle cx="320" cy="85" r="4" fill="${jC(TCd)}"/><text x="40" y="74" font-size="11" fill="var(--muted)" text-anchor="middle">100 °C</text><text x="320" y="74" font-size="11" fill="var(--muted)" text-anchor="middle">0 °C</text>`;
+    c+=`<path d="M40 85 L80 85 M80 45 L80 125 M280 45 L280 125 M280 85 L320 85" stroke="var(--ink)" stroke-width="1.8" fill="none"/>`;
+    c+=zig(80,280,45,'','')+zig(80,280,125,'','');
+    c+=`<text x="180" y="30" font-size="11.5" font-weight="600" fill="var(--ink)" text-anchor="middle">R₁ = ${sig(R1,3)} K/W</text><text x="180" y="152" font-size="11.5" font-weight="600" fill="var(--ink)" text-anchor="middle">R₂ = ${sig(R2,3)} K/W</text>`;
+    c+=arrow(300,105,340,105,'var(--heat)',2.5,8)+`<text x="345" y="125" font-size="11" fill="var(--heat)" text-anchor="end" font-weight="600">H₁ + H₂</text>`;
+    $('ccirc').innerHTML=c;
+    const Keq=(K1*CB.A1+K2*CB.A2)/(CB.A1+CB.A2);
+    kv=`<dt>R₁ = L/K₁A₁</dt><dd>${sig(R1,3)} K/W</dd><dt>R₂ = L/K₂A₂</dt><dd>${sig(R2,3)} K/W</dd><dt>1/R = 1/R₁ + 1/R₂</dt><dd>R = ${sig(R,3)} K/W</dd><dt>H₁, H₂</dt><dd>${sig(H1,3)} W, ${sig(H2,3)} W</dd><dt>H = H₁ + H₂</dt><dd>${sig(H,3)} W</dd><dt>equivalent K</dt><dd>${sig(Keq,3)} W m⁻¹ K⁻¹</dd>`;
+    cap=`Side by side, both rods feel the same 100 °C drop over the same length, so each has the same straight-line profile. They simply carry separate currents, which add: H = H₁ + H₂. The better conductor (or the thicker rod) carries more. Equivalent conductivity K = (K₁A₁ + K₂A₂)/(A₁ + A₂).`;
+  }
+  $('ckv').innerHTML=kv; $('ccap').innerHTML=cap;
+}
+
+/* =================== 4 · ICE ON A POND =================== */
+const IC={th:10,t:48};
+$('ith').addEventListener('input',e=>{IC.th=-(+e.target.value);drawI();});
+$('itt').addEventListener('input',e=>{IC.t=+e.target.value;drawI();});
+const iceX=(th,hrs)=>Math.sqrt(2*ICE.K*th*hrs*3600/(ICE.rho*ICE.Lf)); /* metres */
+const iceT=(th,x)=>ICE.rho*ICE.Lf*x*x/(2*ICE.K*th)/3600;              /* hours */
+const jI=T=>jet(0.08+0.6*(T+20)/30); /* −20 … +10 °C */
+function drawI(){
+  $('itho').textContent=neg(-IC.th)+' °C'; $('itto').textContent=IC.t+' h';
+  const x=iceX(IC.th,IC.t), xc=x*100;
+  /* pond cross-section: 3 px per cm */
+  const pX0=20, pX1=230, ys=80, s=3, yi=ys+xc*s;
+  let g=`<defs><linearGradient id="ig" x1="0" x2="0" y1="0" y2="1">${gradStops(-IC.th,0,jI)}</linearGradient></defs>`;
+  g+=`<rect x="${pX0}" y="10" width="${pX1-pX0}" height="${ys-10}" fill="${jI(-IC.th)}" opacity=".25"/><text x="${pX0+8}" y="30" font-size="12" font-weight="600" fill="var(--ink)">air ${neg(-IC.th)} °C</text>`;
+  g+=`<rect x="${pX0}" y="${ys}" width="${pX1-pX0}" height="${250-ys}" fill="${jI(2)}" opacity=".3"/>`;
+  if(xc>0.05) g+=`<rect x="${pX0}" y="${ys}" width="${pX1-pX0}" height="${(yi-ys).toFixed(1)}" fill="url(#ig)" opacity=".85"/>`;
+  g+=`<line x1="${pX0}" x2="${pX1}" y1="${ys}" y2="${ys}" stroke="var(--ink)" stroke-width="1.2"/>`;
+  g+=`<text x="${pX0+8}" y="${Math.min(yi+18,244)}" font-size="12" fill="var(--ink)">water at 0 °C below the ice</text>`;
+  if(xc>4) g+=`<text x="${pX1-8}" y="${(ys+yi)/2+4}" font-size="12" font-weight="600" fill="#fff" text-anchor="end">ice ${f1(xc)} cm</text>`;
+  else g+=`<text x="${pX1-8}" y="${ys-8}" font-size="12" font-weight="600" fill="var(--ink)" text-anchor="end">ice ${f1(xc)} cm</text>`;
+  /* heat leaving upward + freezing at the bottom */
+  if(xc>1){g+=arrow(60,yi-4,60,ys-22,'var(--heat)',2.2,8)+`<text x="68" y="${ys-14}" font-size="10.5" fill="var(--heat)">latent heat conducted up</text>`;}
+  /* growth plot x vs t */
+  const gx0=290, gx1=520, gy0=20, gy1=230, tmax=240, xmax=40;
+  const sx=t=>gx0+t/tmax*(gx1-gx0), sy=v=>gy1-v/xmax*(gy1-gy0);
+  g+=`<line x1="${gx0}" x2="${gx1}" y1="${gy1}" y2="${gy1}" stroke="var(--ink)" stroke-width="1.2"/><line x1="${gx0}" x2="${gx0}" y1="${gy0}" y2="${gy1}" stroke="var(--ink)" stroke-width="1.2"/>`;
+  for(let t=0;t<=tmax;t+=48) g+=`<text x="${sx(t)}" y="${gy1+14}" font-size="10" fill="var(--muted)" text-anchor="middle">${t}</text>`;
+  for(let v=0;v<=xmax;v+=10) g+=`<text x="${gx0-5}" y="${sy(v)+4}" font-size="10" fill="var(--muted)" text-anchor="end">${v}</text><line x1="${gx0}" x2="${gx1}" y1="${sy(v)}" y2="${sy(v)}" stroke="var(--line)"/>`;
+  g+=`<text x="${(gx0+gx1)/2}" y="${gy1+30}" font-size="11" fill="var(--muted)" text-anchor="middle">time (h)</text><text x="${gx0+6}" y="${gy0+4}" font-size="11" fill="var(--muted)">ice thickness (cm)</text>`;
+  let d=''; for(let i=0;i<=80;i++){const t=tmax*i/80;d+=(i?'L':'M')+sx(t).toFixed(1)+' '+sy(Math.min(xmax,iceX(IC.th,t)*100)).toFixed(1);}
+  g+=`<path d="${d}" fill="none" stroke="var(--cold)" stroke-width="2.4"/>`;
+  g+=`<circle cx="${sx(IC.t)}" cy="${sy(Math.min(xc,xmax))}" r="5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`;
+  $('isvg').innerHTML=g;
+  const rate=xc>0?ICE.K*IC.th/(ICE.rho*ICE.Lf*x)*3600*100:Infinity;
+  const nextCm=iceT(IC.th,(Math.floor(xc)+1)/100)-iceT(IC.th,Math.floor(xc)/100);
+  $('ikv').innerHTML=`<dt>thickness x</dt><dd>${f1(xc)} cm</dd><dt>growing at</dt><dd>${xc>0?sig(rate,2)+' cm per hour':'—'}</dd><dt>first 1 cm took</dt><dd>${sig(iceT(IC.th,0.01),2)} h</dd><dt>cm ${Math.floor(xc)}→${Math.floor(xc)+1} takes</dt><dd>${sig(nextCm,3)} h</dd>`;
+}
+
+/* =================== 5 · CONVECTION =================== */
+const CV={on:!RM,last:0,ph:Array.from({length:36},(_,i)=>(i*0.137)%1),vis:true};
+(function buildPot(){
+  const s=$('vsvg');
+  let g=`<path d="M40 40 L40 220 L280 220 L280 40" fill="none" stroke="var(--ink)" stroke-width="4"/>`;
+  g+=`<rect x="42" y="60" width="236" height="158" fill="var(--cold)" opacity=".08"/>`;
+  g+=`<path d="M120 252 Q126 228 146 222 Q146 236 160 238 Q166 218 180 214 Q186 232 196 236 Q204 226 206 220 Q214 238 210 252 Z" fill="${jet(.86)}" opacity=".85"/>`;
+  g+=`<text x="160" y="16" font-size="11.5" fill="var(--ink)" text-anchor="middle" font-weight="600">hot water rises in the middle,</text><text x="160" y="32" font-size="11.5" fill="var(--muted)" text-anchor="middle">cooler water sinks at the sides</text>`;
+  s.innerHTML=g;
+  CV.paths=[mk('path',{d:'M158 210 L158 80 Q158 70 148 70 L64 70 Q54 70 54 80 L54 200 Q54 210 64 210 Z',fill:'none'},s),
+            mk('path',{d:'M162 210 L162 80 Q162 70 172 70 L256 70 Q266 70 266 80 L266 200 Q266 210 256 210 Z',fill:'none'},s)];
+  CV.len=CV.paths.map(p=>p.getTotalLength());
+  CV.dots=CV.ph.map((_,i)=>mk('circle',{r:4.2,opacity:.9},s));
+})();
+/* temperature of a parcel against fraction s of the way round its loop (start bottom centre, going up) */
+function parcelT(s){const P=[[0,.88],[.3,.78],[.55,.5],[.8,.28],[1,.88]];for(let i=1;i<P.length;i++)if(s<=P[i][0]){const a=P[i-1],b=P[i];return a[1]+(b[1]-a[1])*(s-a[0])/(b[0]-a[0]);}return .88;}
+function placeDots(){CV.dots.forEach((c,i)=>{const k=i%2, p=CV.paths[k].getPointAtLength(CV.ph[i]*CV.len[k]);c.setAttribute('cx',p.x.toFixed(1));c.setAttribute('cy',p.y.toFixed(1));c.setAttribute('fill',jet(parcelT(CV.ph[i])));});}
+function vloop(ts){
+  if(!CV.on){CV.last=0;return;}
+  const dt=CV.last?Math.min(0.05,(ts-CV.last)/1000):0; CV.last=ts;
+  if(CV.vis){for(let i=0;i<CV.ph.length;i++) CV.ph[i]=(CV.ph[i]+dt*0.09)%1; placeDots();}
+  requestAnimationFrame(vloop);
+}
+function setPlay(on){CV.on=on;$('vplay').textContent=on?'Pause':'Play';document.querySelector('#bsvg').classList.toggle('paused',!on);if(on)requestAnimationFrame(vloop);}
+$('vplay').addEventListener('click',()=>setPlay(!CV.on));
+if('IntersectionObserver' in window){new IntersectionObserver(es=>{CV.vis=es[0].isIntersecting;}).observe($('vsvg'));}
+
+let BM=load('ht-breeze')||'day'; if(BM!=='day'&&BM!=='night') BM='day';
+onChip($('bmode'),k=>{BM=k;store('ht-breeze',k);drawB();});
+function drawB(){
+  press($('bmode'),BM); const day=BM==='day';
+  const landT=day?.72:.32, seaT=day?.4:.52;
+  let g=`<defs><marker id="bah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="var(--ink)"/></marker></defs>`;
+  g+=`<rect x="0" y="0" width="520" height="250" fill="${day?'var(--cold)':'var(--ink)'}" opacity="${day?.1:.12}"/>`;
+  g+=day?`<circle cx="470" cy="34" r="16" fill="${jet(.7)}"/>`:`<path d="M474 20 A16 16 0 1 0 486 46 A12 12 0 1 1 474 20 Z" fill="var(--muted)"/>`;
+  g+=`<path d="M0 196 L250 196 L262 206 L262 250 L0 250 Z" fill="${jet(landT)}" opacity=".55"/>`;
+  g+=`<rect x="262" y="206" width="258" height="44" fill="${jet(seaT)}" opacity=".55"/>`;
+  g+=`<text x="120" y="230" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">land: ${day?'warmer':'cooler'}</text><text x="390" y="234" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">sea: ${day?'cooler':'warmer'}</text>`;
+  /* circulation loop: day rises over land; night rises over sea */
+  const dayPath='M420 182 L140 182 Q110 182 110 152 L110 90 Q110 60 140 60 L390 60 Q420 60 420 90 L420 150';
+  const nightPath='M110 182 L390 182 Q420 182 420 152 L420 90 Q420 60 390 60 L140 60 Q110 60 110 90 L110 150';
+  g+=`<path d="${day?dayPath:nightPath}" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-dasharray="10 4" class="flowing" marker-end="url(#bah)"/>`;
+  g+=`<text x="265" y="174" font-size="12" font-weight="600" fill="var(--ink)" text-anchor="middle">${day?'← sea breeze (surface)':'land breeze (surface) →'}</text>`;
+  g+=`<text x="265" y="52" font-size="11" fill="var(--muted)" text-anchor="middle">${day?'return flow aloft →':'← return flow aloft'}</text>`;
+  g+=`<text x="${day?100:430}" y="120" font-size="11" fill="var(--muted)" text-anchor="${day?'end':'start'}">warm air</text><text x="${day?100:430}" y="134" font-size="11" fill="var(--muted)" text-anchor="${day?'end':'start'}">rises</text>`;
+  g+=`<text x="${day?430:100}" y="120" font-size="11" fill="var(--muted)" text-anchor="${day?'start':'end'}">cool air</text><text x="${day?430:100}" y="134" font-size="11" fill="var(--muted)" text-anchor="${day?'start':'end'}">sinks</text>`;
+  $('bsvg').innerHTML=g; $('bsvg').classList.toggle('paused',!CV.on);
+  $('bcap').innerHTML=day
+    ?'<b>By day</b> the ground heats up faster than the sea. Water has the largest specific heat capacity of common substances (4186 J kg⁻¹ K⁻¹), and currents mix the absorbed heat through a great depth of water. Air over the warm land expands and rises; cooler air from over the sea flows in to replace it: a <b>sea breeze</b>.'
+    :'<b>At night</b> the land loses its heat faster and becomes cooler than the sea, which holds its warmth. Now air rises over the sea and the surface wind blows from land to sea: a <b>land breeze</b>. The cycle has reversed.';
+}
+
+/* =================== 6 · RADIATION =================== */
+const SP={T:3000,scale:load('ht-scale')||'fixed'}; if(SP.scale!=='fixed'&&SP.scale!=='fit') SP.scale='fixed';
+const SPW={x0:60,x1:540,y0:24,y1:290,lmax:3}; /* λ in µm */
+const peakM=T=>planck(WIEN/T,T)*1e-12; /* MW m^-2 µm^-1 */
+const SPEL={};
+$('sT').addEventListener('input',e=>{SP.T=+e.target.value;updS();});
+onChip($('sscale'),k=>{SP.scale=k;store('ht-scale',k);buildS();});
+function ymaxS(){return SP.scale==='fixed'?peakM(6500)*1.06:peakM(SP.T)*1.15;}
+function curveD(T,ym,close){
+  const {x0,x1,y0,y1,lmax}=SPW, n=220; let d='';
+  for(let i=0;i<=n;i++){const l=0.02+(lmax-0.02)*i/n, M=planck(l*1e-6,T)*1e-12;
+    const x=x0+l/lmax*(x1-x0), y=y1-Math.min(M/ym,1.3)*(y1-y0); d+=(i?'L':'M')+x.toFixed(1)+' '+Math.max(y,y0-40).toFixed(1);}
+  if(close) d+=`L${x1} ${y1} L${x0+0.02/SPW.lmax*(x1-x0)} ${y1} Z`;
+  return d;
+}
+function buildS(){
+  press($('sscale'),SP.scale);
+  const {x0,x1,y0,y1,lmax}=SPW, ym=ymaxS(), sx=l=>x0+l/lmax*(x1-x0), s=$('ssvg');
+  const vis=[[0.38,'#7a00c8'],[0.45,'#2a3cff'],[0.49,'#00b4ff'],[0.53,'#00d04a'],[0.58,'#f0e000'],[0.62,'#ff8a00'],[0.75,'#d00000']];
+  let g=`<defs><clipPath id="spc"><rect x="${x0}" y="${y0-2}" width="${x1-x0}" height="${y1-y0+2}"/></clipPath><linearGradient id="vis" x1="0" x2="1">${vis.map(v=>`<stop offset="${(v[0]-0.38)/(0.75-0.38)}" stop-color="${v[1]}"/>`).join('')}</linearGradient></defs>`;
+  g+=`<rect x="${sx(.38)}" y="${y0}" width="${sx(.75)-sx(.38)}" height="${y1-y0}" fill="url(#vis)" opacity=".07"/><rect x="${sx(.38)}" y="${y1+2}" width="${sx(.75)-sx(.38)}" height="7" fill="url(#vis)"/>`;
+  for(let l=0;l<=lmax;l+=0.5) g+=`<line x1="${sx(l)}" x2="${sx(l)}" y1="${y1}" y2="${y1+4}" stroke="var(--ink)"/><text x="${sx(l)}" y="${y1+22}" font-size="10.5" fill="var(--muted)" text-anchor="middle">${l}</text>`;
+  g+=`<text x="${(x0+x1)/2}" y="${y1+40}" font-size="11.5" fill="var(--muted)" text-anchor="middle">wavelength λ (µm)</text>`;
+  g+=`<text x="${x0+8}" y="${y0+6}" font-size="11" fill="var(--muted)">power per m² per µm of wavelength</text>`;
+  const step=ym>60?20:ym>20?5:ym>6?2:ym>2?0.5:ym>0.6?0.2:0.05;
+  for(let v=step;v<ym;v+=step) g+=`<line x1="${x0}" x2="${x1}" y1="${(y1-v/ym*(y1-y0)).toFixed(1)}" y2="${(y1-v/ym*(y1-y0)).toFixed(1)}" stroke="var(--line)"/><text x="${x0-6}" y="${(y1-v/ym*(y1-y0)+4).toFixed(1)}" font-size="10" fill="var(--muted)" text-anchor="end">${+v.toFixed(2)}</text>`;
+  g+=`<text x="14" y="${(y0+y1)/2}" font-size="11" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 14 ${(y0+y1)/2})">MW m⁻² µm⁻¹</text>`;
+  g+=`<g clip-path="url(#spc)">`;
+  if(SP.scale==='fixed'){
+    for(const T of [3000,4000,5000,6000]){const lm=WIEN/T*1e6;
+      g+=`<path d="${curveD(T,ym,false)}" fill="none" stroke="var(--muted)" stroke-width="1" opacity=".5"/><text x="${sx(lm)+4}" y="${(y1-peakM(T)/ym*(y1-y0)-4).toFixed(1)}" font-size="9.5" fill="var(--muted)">${T} K</text>`;}
+    let d=''; for(let i=0;i<=60;i++){const T=2400+4100*i/60, lm=WIEN/T*1e6;d+=(i?'L':'M')+sx(lm).toFixed(1)+' '+(y1-peakM(T)/ym*(y1-y0)).toFixed(1);}
+    g+=`<path d="${d}" fill="none" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3"/>`;
+  }
+  g+='</g>';
+  g+=`<line x1="${x0}" x2="${x1}" y1="${y1}" y2="${y1}" stroke="var(--ink)" stroke-width="1.2"/><line x1="${x0}" x2="${x0}" y1="${y0}" y2="${y1}" stroke="var(--ink)" stroke-width="1.2"/>`;
+  s.innerHTML=g;
+  const L=mk('g',{'clip-path':'url(#spc)'},s);
+  SPEL.fill=mk('path',{fill:'var(--heat)',opacity:.16},L);
+  SPEL.curve=mk('path',{fill:'none',stroke:'var(--heat)','stroke-width':2.6},L);
+  SPEL.peak=mk('line',{stroke:'var(--accent)','stroke-width':1.5,'stroke-dasharray':'5 4'},s);
+  SPEL.plab=mk('text',{'font-size':12,'font-weight':700,fill:'var(--accent)'},s);
+  SPEL.off=mk('text',{'font-size':11,fill:'var(--muted)','text-anchor':'end',x:x1-4,y:y0+24},s);
+  updS();
+}
+function glow(T){ /* approximate colour from Planck at three wavelengths; brightness on a log scale between ~700 K and 2500 K */
+  /* channels white-balanced so that a 6500 K body shows as white */
+  const r=planck(610e-9,T)/planck(610e-9,6500), gg=planck(550e-9,T)/planck(550e-9,6500), b=planck(465e-9,T)/planck(465e-9,6500), m=Math.max(r,gg,b);
+  const lr=Math.log10(planck(650e-9,T)), lo=Math.log10(planck(650e-9,700)), hi=Math.log10(planck(650e-9,2500));
+  const v=clamp((lr-lo)/(hi-lo),0,1);
+  const c=x=>Math.round(255*v*x/m);
+  return {col:`rgb(${c(r)},${c(gg)},${c(b)})`,v};
+}
+function updS(){
+  const T=SP.T, ym=ymaxS(), {x0,x1,y0,y1,lmax}=SPW, sx=l=>x0+l/lmax*(x1-x0), lm=WIEN/T*1e6;
+  $('sTo').textContent=T+' K';
+  SPEL.curve.setAttribute('d',curveD(T,ym,false)); SPEL.fill.setAttribute('d',curveD(T,ym,true));
+  const yp=y1-Math.min(peakM(T)/ym,1)*(y1-y0), inPlot=lm<=lmax;
+  SPEL.peak.setAttribute('x1',inPlot?sx(lm):-10); SPEL.peak.setAttribute('x2',inPlot?sx(lm):-10); SPEL.peak.setAttribute('y1',y1); SPEL.peak.setAttribute('y2',yp);
+  SPEL.plab.setAttribute('x',inPlot?sx(lm)+6:x1-4); SPEL.plab.setAttribute('y',Math.max(yp-8,y0+12)); SPEL.plab.setAttribute('text-anchor',inPlot&&sx(lm)<x1-120?'start':'end');
+  SPEL.plab.textContent=inPlot?`λm = ${lm.toFixed(2)} µm`:`peak at ${lm.toFixed(2)} µm, off the right edge`;
+  SPEL.off.textContent=SP.scale==='fixed'&&peakM(T)/ym<0.04?'curve too low to see on this scale: try Zoom to fit':'';
+  const G=glow(T); $('sswatch').querySelector('circle').setAttribute('fill',G.col);
+  $('sswcap').innerHTML=G.v<0.02?'Too faint to see: a body this cool glows only in the infrared. A dull red glow becomes visible at about 800 K. <span class="hw">approximate colour</span>'
+    :`What the body looks like at ${T} K. ${lm>0.75?'Most of its radiation is still infrared; only the short-wavelength tail reaches the visible.':'The peak is now in or near the visible.'} <span class="hw">approximate colour</span>`;
+  const P=SIGMA*Math.pow(T,4);
+  const band=lm<0.38?'ultraviolet':lm<=0.75?'visible':'infrared';
+  $('skv').innerHTML=`<dt>peak λ<sub>m</sub> = b/T</dt><dd>${lm.toFixed(3)} µm (${band})</dd><dt>area = σT⁴</dt><dd>${sig(P/1e6,3)} MW per m²</dd><dt>compared with 1000 K</dt><dd>×${sig(Math.pow(T/1000,4),3)} (T ratio ${(T/1000).toFixed(2)})</dd>`;
+}
+/* exchange with surroundings */
+const XR={e:0.97,T:600,Ts:300};
+chips($('xpre'),EPRE);
+onChip($('xpre'),k=>{XR.e=EPRE.find(p=>p.id===k).e;$('xe').value=XR.e;drawX();});
+$('xe').addEventListener('input',e=>{XR.e=+e.target.value;drawX();});
+$('xT').addEventListener('input',e=>{XR.T=+e.target.value;drawX();});
+$('xs').addEventListener('input',e=>{XR.Ts=+e.target.value;drawX();});
+const jX=T=>jet(0.08+0.84*(T-250)/750);
+function drawX(){
+  const {e,T,Ts}=XR; press($('xpre'),(EPRE.find(p=>Math.abs(p.e-e)<0.001)||{}).id);
+  $('xeo').textContent=e.toFixed(2); $('xTo').textContent=T+' K'; $('xso').textContent=Ts+' K';
+  const Pb=SIGMA*Math.pow(T,4), Pin=SIGMA*Math.pow(Ts,4), emit=e*Pb, abs=e*Pin, refl=(1-e)*Pin, net=emit-abs, Pmax=SIGMA*1e12;
+  const w=P=>clamp(30*P/Pmax,0.6,30);
+  let g=`<rect x="4" y="4" width="432" height="242" rx="10" fill="${jX(Ts)}" opacity=".18" stroke="${jX(Ts)}" stroke-opacity=".6"/>`;
+  g+=`<text x="16" y="24" font-size="11.5" fill="var(--muted)">surroundings at ${Ts} K</text>`;
+  g+=`<circle cx="220" cy="130" r="48" fill="${jX(T)}" opacity="${0.35+0.55*e}" stroke="var(--ink)" stroke-opacity=".5"/>`;
+  g+=`<text x="220" y="127" font-size="12.5" font-weight="700" fill="var(--ink)" text-anchor="middle">${T} K</text><text x="220" y="143" font-size="11" fill="var(--ink)" text-anchor="middle">e = ${e.toFixed(2)}</text>`;
+  /* incoming from left: absorbed part enters, reflected part bounces */
+  g+=fat(30,110,166,110,'var(--cold)',w(Pin))+fat(160,128,40,170,'var(--cold)',w(refl)).replace('opacity=".9"','opacity=".45"');
+  g+=`<text x="34" y="${110-w(Pin)/2-8}" font-size="11" fill="var(--cold)" font-weight="600">falls on it: σTₛ⁴</text><text x="30" y="${190+w(refl)/2}" font-size="11" fill="var(--muted)">reflected (1 − e)</text>`;
+  /* emitted to the right */
+  g+=fat(272,130,412,130,'var(--heat)',w(emit));
+  g+=`<text x="410" y="${130-w(emit)/2-8}" font-size="11" fill="var(--heat)" font-weight="600" text-anchor="end">emits eσT⁴</text>`;
+  $('xsvg').innerHTML=g;
+  $('xkv').innerHTML=`<dt>emitted eσT⁴</dt><dd>${sig(emit,3)} W/m²</dd><dt>absorbed eσTₛ⁴</dt><dd>${sig(abs,3)} W/m²</dd><dt>reflected</dt><dd>${sig(refl,3)} W/m²</dd><dt>net loss eσ(T⁴ − Tₛ⁴)</dt><dd>${sig(net,3)} W/m²</dd>`;
+  $('xcap').innerHTML=Math.abs(T-Ts)<1?'<b>Same temperature:</b> it emits exactly what it absorbs, whatever e is. Equilibrium.'
+    :net>0?`Net <b>loss</b>: the body is hotter than its surroundings. Lower e and both arrows shrink together; a shiny body cools more slowly by radiation.`
+    :`Net <b>gain</b>: the surroundings are hotter. A dark body (large e) warms faster than a shiny one in the same place.`;
+}
+/* thermos flask */
+const TF=[
+ {id:'silver',l:'Silvered walls',c:'<b>Blocks radiation.</b> The silver coating on the inner wall reflects the contents’ radiation back in; the coating on the outer wall reflects incoming radiation away. Shiny surfaces are poor emitters as well as poor absorbers.'},
+ {id:'vac',l:'Vacuum gap',c:'<b>Blocks conduction and convection.</b> The space between the two glass walls is evacuated. With almost no air there, nothing can carry heat by collisions or by moving.'},
+ {id:'stop',l:'Stopper',c:'<b>Blocks convection and conduction</b> at the opening: an insulating cork or plastic stopper stops warm air rising out and is a poor conductor itself.'},
+ {id:'sup',l:'Insulating supports',c:'<b>Blocks conduction.</b> The fragile glass vessel rests on insulating pads (such as cork), so very little heat leaks into the outer case through the contact points.'}
+];
+let TFK='silver'; chips($('tfpart'),TF); onChip($('tfpart'),k=>{TFK=k;drawTF();});
+function drawTF(){
+  press($('tfpart'),TFK);
+  const hl=id=>TFK===id?'var(--accent)':'var(--muted)', on=id=>TFK===id?1:0.55;
+  let g=`<rect x="70" y="40" width="180" height="250" rx="16" fill="none" stroke="var(--ink)" stroke-width="2.5"/><text x="258" y="70" font-size="10.5" fill="var(--muted)">outer case</text>`;
+  /* vacuum gap */
+  g+=`<g data-part="vac" opacity="${on('vac')}"><rect x="92" y="66" width="136" height="196" rx="18" fill="${TFK==='vac'?'var(--accent)':'var(--line)'}" opacity="${TFK==='vac'?.25:.6}"/></g>`;
+  /* liquid */
+  g+=`<rect x="108" y="96" width="104" height="150" rx="10" fill="${jet(.82)}" opacity=".45"/><text x="160" y="180" font-size="11.5" fill="var(--ink)" text-anchor="middle">hot drink</text>`;
+  /* double glass walls with silvering */
+  g+=`<g data-part="silver" opacity="${on('silver')}"><rect x="92" y="66" width="136" height="196" rx="18" fill="none" stroke="${hl('silver')}" stroke-width="${TFK==='silver'?4:2.5}"/><rect x="104" y="80" width="112" height="170" rx="12" fill="none" stroke="${hl('silver')}" stroke-width="${TFK==='silver'?4:2.5}"/></g>`;
+  g+=`<line x1="222" y1="160" x2="256" y2="160" stroke="var(--muted)"/><text x="258" y="164" font-size="10.5" fill="var(--muted)">vacuum</text><line x1="216" y1="210" x2="256" y2="210" stroke="var(--muted)"/><text x="258" y="214" font-size="10.5" fill="var(--muted)">silvered</text><text x="258" y="227" font-size="10.5" fill="var(--muted)">glass walls</text>`;
+  /* stopper */
+  g+=`<g data-part="stop" opacity="${on('stop')}"><rect x="128" y="44" width="64" height="44" rx="5" fill="${TFK==='stop'?'var(--accent)':'var(--force)'}" opacity=".75"/></g>`;
+  /* supports */
+  g+=`<g data-part="sup" opacity="${on('sup')}"><rect x="124" y="262" width="22" height="26" fill="${TFK==='sup'?'var(--accent)':'var(--force)'}" opacity=".75"/><rect x="174" y="262" width="22" height="26" fill="${TFK==='sup'?'var(--accent)':'var(--force)'}" opacity=".75"/></g>`;
+  /* reflected radiation squiggle */
+  if(TFK==='silver') g+=wave(150,150,108,120,'var(--hot)',3,9,1.6)+wave(110,124,150,104,'var(--hot)',3,9,1.6);
+  $('tfsvg').innerHTML=g; $('tfcap').innerHTML=TF.find(t=>t.id===TFK).c;
+}
+$('tfsvg').addEventListener('click',e=>{const p=e.target.closest('[data-part]');if(p){TFK=p.dataset.part;drawTF();}});
+function drawG(){
+  const lSun=0.4753, lEarth=WIEN/300*1e6; /* NCERT: solar peak 4753 Å; ground taken as ~300 K */
+  let g=`<rect x="0" y="180" width="400" height="50" fill="${jet(.62)}" opacity=".35"/><text x="200" y="214" font-size="11.5" fill="var(--ink)" text-anchor="middle">ground and plants, about 300 K</text>`;
+  g+=`<path d="M60 180 L60 90 L200 40 L340 90 L340 180" fill="var(--cold)" fill-opacity=".05" stroke="var(--cold)" stroke-width="3"/><text x="346" y="100" font-size="10.5" fill="var(--cold)">glass</text>`;
+  g+=`<circle cx="40" cy="26" r="14" fill="${jet(.7)}"/>`;
+  g+=wave(50,34,110,176,jet(.66),3,7,2)+wave(75,22,150,176,jet(.66),3,7,2);
+  g+=`<text x="214" y="22" font-size="10.5" fill="var(--ink)">sunlight, short λ:</text><text x="214" y="35" font-size="10.5" fill="var(--ink)">passes through glass</text>`;
+  g+=wave(250,178,270,74,'var(--hot)',5,22,2)+wave(276,74,300,170,'var(--hot)',5,22,2).replace(/stroke="var\(--hot\)"/,'stroke="var(--hot)" opacity=".55"');
+  g+=`<text x="200" y="128" font-size="10.5" fill="var(--hot)" text-anchor="middle">infrared, long λ:</text><text x="200" y="141" font-size="10.5" fill="var(--hot)" text-anchor="middle">mostly held back</text>`;
+  $('gsvg').innerHTML=g;
+  $('gcap').innerHTML=`Sunlight peaks near ${lSun.toFixed(2)} µm, mostly visible light, which passes through glass. The warmed ground re-radiates at about 300 K, and Wien’s law puts that peak at b/300 K ≈ ${lEarth.toFixed(1)} µm, far in the infrared. Glass (and, for the Earth, water vapour and CO₂ in the atmosphere) lets much less of this long-wavelength radiation out, so energy builds up until the inside is warm enough to lose it as fast as it arrives. Without its atmosphere the Earth would be far colder. <span class="hw">simplified picture</span>`;
+}
+
+/* =================== 7 · NEWTON'S LAW =================== */
+const NW={k:0.1,Ts:20,T0:90,mode:load('ht-nmode')||'tan',tp:6,ta:3,tb:9};
+if(!['tan','avg','log'].includes(NW.mode)) NW.mode='tan';
+const NWIN={x0:56,x1:504,y0:16,y1:296,tmax:30};
+onChip($('nmode'),k=>{NW.mode=k;store('ht-nmode',k);drawN();});
+$('nk').addEventListener('input',e=>{NW.k=+e.target.value;drawN();});
+$('nts').addEventListener('input',e=>{NW.Ts=+e.target.value;drawN();});
+$('nt0').addEventListener('input',e=>{NW.T0=+e.target.value;drawN();});
+const Tn=t=>NW.Ts+(NW.T0-NW.Ts)*Math.exp(-NW.k*t);
+const nsx=t=>NWIN.x0+t/NWIN.tmax*(NWIN.x1-NWIN.x0), nit=x=>(x-NWIN.x0)/(NWIN.x1-NWIN.x0)*NWIN.tmax;
+function nsy(v){const {y0,y1}=NWIN; if(NW.mode==='log') return y1-v/Math.log(100)*(y1-y0); return y1-v/100*(y1-y0);}
+const nY=t=>NW.mode==='log'?Math.log(Math.max(Tn(t)-NW.Ts,1e-3)):Tn(t);
+dragger($('nsvg'),(h,x)=>{const t=clamp(nit(x),0.2,NWIN.tmax-0.2);
+  if(h==='a') NW.ta=Math.min(t,NW.tb-0.5); else if(h==='b') NW.tb=Math.max(t,NW.ta+0.5); else NW.tp=t; drawN();},
+  (x)=>{if(NW.mode!=='avg') return 'p'; const t=nit(x); return Math.abs(t-NW.ta)<Math.abs(t-NW.tb)?'a':'b';});
+function handle(x,y,id,col,lab){return `<g data-h="${id}" style="cursor:grab"><circle cx="${x}" cy="${y}" r="16" fill="transparent"/><circle cx="${x}" cy="${y}" r="6.5" fill="${col}" stroke="var(--surface)" stroke-width="2"/>${lab?`<text x="${x+9}" y="${y-10}" font-size="13" font-weight="700" fill="var(--ink)">${lab}</text>`:''}</g>`;}
+function drawN(){
+  press($('nmode'),NW.mode);
+  $('nko').textContent=NW.k.toFixed(2)+' /min'; $('ntso').textContent=NW.Ts+' °C'; $('nt0o').textContent=NW.T0+' °C';
+  const {x0,x1,y0,y1,tmax}=NWIN, lg=NW.mode==='log';
+  let g='';
+  for(let t=0;t<=tmax;t+=5) g+=`<line x1="${nsx(t)}" x2="${nsx(t)}" y1="${y0}" y2="${y1}" stroke="var(--line)"/><text x="${nsx(t)}" y="${y1+15}" font-size="10.5" fill="var(--muted)" text-anchor="middle">${t}</text>`;
+  if(lg){for(const v of [1,2,5,10,20,50,100]) g+=`<line x1="${x0}" x2="${x1}" y1="${nsy(Math.log(v))}" y2="${nsy(Math.log(v))}" stroke="var(--line)"/><text x="${x0-6}" y="${nsy(Math.log(v))+4}" font-size="10.5" fill="var(--muted)" text-anchor="end">${v}</text>`;}
+  else for(let v=0;v<=100;v+=20) g+=`<line x1="${x0}" x2="${x1}" y1="${nsy(v)}" y2="${nsy(v)}" stroke="var(--line)"/><text x="${x0-6}" y="${nsy(v)+4}" font-size="10.5" fill="var(--muted)" text-anchor="end">${v}</text>`;
+  g+=`<line x1="${x0}" x2="${x1}" y1="${y1}" y2="${y1}" stroke="var(--ink)" stroke-width="1.2"/><line x1="${x0}" x2="${x0}" y1="${y0}" y2="${y1}" stroke="var(--ink)" stroke-width="1.2"/>`;
+  g+=`<text x="${(x0+x1)/2}" y="${y1+32}" font-size="11.5" fill="var(--muted)" text-anchor="middle">time t (min)</text><text x="14" y="${(y0+y1)/2}" font-size="11.5" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 14 ${(y0+y1)/2})">${lg?'T − Tₛ (°C), log scale':'temperature T (°C)'}</text>`;
+  if(!lg) g+=`<line x1="${x0}" x2="${x1}" y1="${nsy(NW.Ts)}" y2="${nsy(NW.Ts)}" stroke="var(--cold)" stroke-width="1.5" stroke-dasharray="6 4"/><text x="${x1-4}" y="${nsy(NW.Ts)+(NW.Ts<8?-6:15)}" font-size="11" fill="var(--cold)" text-anchor="end">surroundings Tₛ = ${NW.Ts} °C</text>`;
+  let d=''; for(let i=0;i<=150;i++){const t=tmax*i/150;d+=(i?'L':'M')+nsx(t).toFixed(1)+' '+nsy(nY(t)).toFixed(1);}
+  g+=`<path d="${d}" fill="none" stroke="var(--heat)" stroke-width="2.6"/>`;
+  let kv='', cap='';
+  if(NW.mode==='tan'){
+    const t=NW.tp, T=Tn(t), sl=-NW.k*(T-NW.Ts), dt=5; /* °C per min */
+    const xa=nsx(Math.max(0,t-dt)), xb=nsx(Math.min(tmax,t+dt)), ya=nsy(T+sl*(Math.max(0,t-dt)-t)), yb=nsy(T+sl*(Math.min(tmax,t+dt)-t));
+    g+=`<line x1="${xa}" y1="${ya}" x2="${xb}" y2="${yb}" stroke="var(--accent)" stroke-width="2"/>`;
+    g+=`<line x1="${nsx(t)}" x2="${nsx(t)}" y1="${nsy(T)}" y2="${nsy(NW.Ts)}" stroke="var(--force)" stroke-width="2"/><text x="${nsx(t)<x0+60?nsx(t)+8:nsx(t)-6}" y="${(nsy(T)+nsy(NW.Ts))/2+4}" font-size="11.5" font-weight="600" fill="var(--force)" text-anchor="${nsx(t)<x0+60?'start':'end'}">T − Tₛ</text>`;
+    g+=handle(nsx(t),nsy(T),'p','var(--accent)','');
+    kv=`<dt>time</dt><dd>${t.toFixed(1)} min</dd><dt>T</dt><dd>${f1(T)} °C</dd><dt>excess T − Tₛ</dt><dd>${f1(T-NW.Ts)} °C</dd><dt>slope dT/dt</dt><dd>${neg(sl.toFixed(2))} °C/min</dd><dt>slope ÷ excess</dt><dd>${neg((sl/(T-NW.Ts)).toFixed(3))} /min = −k</dd>`;
+    cap=`The <span style="color:var(--accent);font-weight:600">tangent</span> is the cooling rate; the <span style="color:var(--force);font-weight:600">orange gap</span> is the excess temperature. Drag the point: their ratio stays fixed at −k. Where the gap is half as big, the curve is half as steep. A rate proportional to what is left gives an <b>exponential</b>: T − T<sub>s</sub> = (T₀ − T<sub>s</sub>)e<sup>−kt</sup>, which never quite reaches T<sub>s</sub>. Here k = hA/(ms) bundles the surface area, the surface and the heat capacity ms of the body.`;
+  } else if(NW.mode==='avg'){
+    const ta=NW.ta, tb=NW.tb, Ta=Tn(ta), Tb=Tn(tb), Tm=(Ta+Tb)/2;
+    const exact=Math.log((Ta-NW.Ts)/(Tb-NW.Ts))/NW.k, approx=(Ta-Tb)/(NW.k*(Tm-NW.Ts));
+    g+=`<line x1="${nsx(ta)}" y1="${nsy(Ta)}" x2="${nsx(tb)}" y2="${nsy(Tb)}" stroke="var(--accent)" stroke-width="2"/>`;
+    g+=`<line x1="${x0}" x2="${nsx((ta+tb)/2)}" y1="${nsy(Tm)}" y2="${nsy(Tm)}" stroke="var(--force)" stroke-dasharray="4 3" stroke-width="1.5"/><text x="${x0+4}" y="${nsy(Tm)-5}" font-size="11" fill="var(--force)" font-weight="600">T̄ = ${f1(Tm)} °C</text>`;
+    g+=handle(nsx(ta),nsy(Ta),'a','var(--ink)','1')+handle(nsx(tb),nsy(Tb),'b','var(--accent)','2');
+    kv=`<dt>T₁ → T₂</dt><dd>${f1(Ta)} → ${f1(Tb)} °C</dd><dt>average T̄</dt><dd>${f1(Tm)} °C</dd><dt>exact time</dt><dd>${exact.toFixed(2)} min</dd><dt>average method</dt><dd>${approx.toFixed(2)} min</dd><dt>error</dt><dd>${neg(((approx-exact)/exact*100).toFixed(1))} %</dd>`;
+    cap=`For problems, replace the curve between two readings by its <span style="color:var(--accent);font-weight:600">chord</span>, and use the average temperature for the excess: <b>(T₁ − T₂)/t = k(T̄ − T<sub>s</sub>)</b>, T̄ = (T₁ + T₂)/2. Drag points 1 and 2. When the drop T₁ − T₂ is small compared with the excess, the chord hugs the curve and the error is tiny; the method always comes out a little short of the exact time, and the gap grows with the size of the drop. <span class="hw">approximation</span>`;
+  } else {
+    kv=`<dt>straight line, slope</dt><dd>−k = ${neg((-NW.k).toFixed(2))} per min</dd><dt>ln(T − Tₛ) at t = 0</dt><dd>ln ${NW.T0-NW.Ts} = ${Math.log(NW.T0-NW.Ts).toFixed(2)}</dd>`;
+    cap=`Plot ln(T − T<sub>s</sub>) against t and the curve becomes a <b>straight line</b> of slope −k: ln(T − T<sub>s</sub>) = ln(T₀ − T<sub>s</sub>) − kt. This is how Newton’s law is tested in the lab: record a cooling body’s temperature every minute and check that the points fall on a line. Change k and only the steepness changes.`;
+  }
+  $('nsvg').innerHTML=g; $('nkv').innerHTML=kv; $('ncap').innerHTML=cap;
+}
+/* Stefan vs Newton */
+const LS={Ts:300,dT:20};
+$('lts').addEventListener('input',e=>{LS.Ts=+e.target.value;drawL();});
+$('ldt').addEventListener('input',e=>{LS.dT=+e.target.value;drawL();});
+function drawL(){
+  const {Ts,dT}=LS; $('ltso').textContent=Ts+' K'; $('ldto').textContent=dT+' K';
+  const x0=70,x1=504,y0=16,y1=256, dmax=400, st=d=>SIGMA*(Math.pow(Ts+d,4)-Math.pow(Ts,4)), nw=d=>4*SIGMA*Math.pow(Ts,3)*d;
+  const ymax=st(dmax)*1.05, sx=d=>x0+d/dmax*(x1-x0), sy=v=>y1-v/ymax*(y1-y0);
+  let g='';
+  for(let d=0;d<=dmax;d+=100) g+=`<line x1="${sx(d)}" x2="${sx(d)}" y1="${y0}" y2="${y1}" stroke="var(--line)"/><text x="${sx(d)}" y="${y1+15}" font-size="10.5" fill="var(--muted)" text-anchor="middle">${d}</text>`;
+  const step=ymax>16000?4000:ymax>8000?2000:1000;
+  for(let v=0;v<ymax;v+=step) g+=`<line x1="${x0}" x2="${x1}" y1="${sy(v)}" y2="${sy(v)}" stroke="var(--line)"/><text x="${x0-6}" y="${sy(v)+4}" font-size="10.5" fill="var(--muted)" text-anchor="end">${v/1000}</text>`;
+  g+=`<line x1="${x0}" x2="${x1}" y1="${y1}" y2="${y1}" stroke="var(--ink)" stroke-width="1.2"/><line x1="${x0}" x2="${x0}" y1="${y0}" y2="${y1}" stroke="var(--ink)" stroke-width="1.2"/>`;
+  g+=`<text x="${(x0+x1)/2}" y="${y1+32}" font-size="11.5" fill="var(--muted)" text-anchor="middle">excess temperature T − Tₛ (K)</text><text x="16" y="${(y0+y1)/2}" font-size="11.5" fill="var(--muted)" text-anchor="middle" transform="rotate(-90 16 ${(y0+y1)/2})">net loss (kW per m², e = 1)</text>`;
+  let a='',b=''; for(let i=0;i<=100;i++){const d=dmax*i/100;a+=(i?'L':'M')+sx(d).toFixed(1)+' '+sy(st(d)).toFixed(1);b+=(i?'L':'M')+sx(d).toFixed(1)+' '+sy(nw(d)).toFixed(1);}
+  g+=`<path d="${a}" fill="none" stroke="var(--heat)" stroke-width="2.6"/><path d="${b}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="7 4"/>`;
+  g+=`<line x1="${sx(dT)}" x2="${sx(dT)}" y1="${y1}" y2="${sy(st(dT))}" stroke="var(--muted)" stroke-dasharray="3 3"/>`;
+  g+=`<circle cx="${sx(dT)}" cy="${sy(st(dT))}" r="5" fill="var(--heat)"/><circle cx="${sx(dT)}" cy="${sy(nw(dT))}" r="4.5" fill="var(--accent)"/>`;
+  $('lsvg').innerHTML=g;
+  const e=(st(dT)-nw(dT))/st(dT)*100;
+  $('lkv').innerHTML=`<dt>Stefan σ(T⁴ − Tₛ⁴)</dt><dd>${sig(st(dT),3)} W/m²</dd><dt>Newton 4σTₛ³ΔT</dt><dd>${sig(nw(dT),3)} W/m²</dd><dt>Newton is low by</dt><dd>${e.toFixed(1)} %</dd><dt>ΔT / Tₛ</dt><dd>${(dT/Ts).toFixed(3)}</dd>`;
+}
+
+/* =================== QUIZ =================== */
+/* All numbers computed here from the question data */
+const qz={};
+{ /* NCERT Example 10.8: 94→86 °C in 2 min, room 20 °C; 71→69 °C? */
+  const K=(94-86)/2/((94+86)/2-20), t=(71-69)/(K*((71+69)/2-20)); qz.a=t*60; }
+{ /* NCERT Exercise 10.20: 80→50 °C in 5 min, Ts 20 °C; 60→30 °C? exact exponential */
+  const k=Math.log((80-20)/(50-20))/5; qz.b=Math.log((60-20)/(30-20))/k;
+  const K=(80-50)/5/((80+50)/2-20); qz.bAvg=(60-30)/(K*((60+30)/2-20)); }
+{ /* NCERT Example 10.6: steel (K 50.2, 15 cm, area 2A) + copper (K 385, 10 cm, area A), 300 °C and 0 °C */
+  const g1=50.2*2/15, g2=385/10; qz.c=g1*300/(g1+g2); const h1=50.2/15; qz.cNoArea=h1*300/(h1+g2); }
+const QUIZ=[
+ {q:'A pan of hot food cools from 94 °C to 86 °C in 2 minutes in a room at 20 °C. Using Newton’s law (average-temperature method), how long will it take to cool from 71 °C to 69 °C?',
+  o:[`${Math.round(qz.a)} s`,'30 s','60 s',`${Math.round(qz.a*2)} s`],a:0,
+  why:`First interval: 8 °C in 2 min with average excess 90 − 20 = 70 °C, so 4 °C/min = K × 70. Second: 2 °C with average excess 70 − 20 = 50 °C, so 2/t = K × 50. Dividing, t = 2 × 70/(4 × 50) = 0.7 min ≈ ${Math.round(qz.a)} s. The body is cooler, so it cools more slowly per degree.`},
+ {q:'A body cools from 80 °C to 50 °C in 5 minutes; the surroundings are at 20 °C. Using the exact exponential law, how long does it take to cool from 60 °C to 30 °C?',
+  o:[`${qz.bAvg.toFixed(0)} min`,`${qz.b.toFixed(0)} min`,'5 min','7.5 min'],a:1,
+  why:`Excess 60 → 30 °C (halved) in 5 min, so the half-life of the excess is 5 min. From 60 to 30 °C the excess goes 40 → 10 °C: halved twice, ${qz.b.toFixed(0)} min. The average-temperature method gives ${qz.bAvg.toFixed(0)} min here: close but not exact, because these drops are large compared with the excess.`},
+ {q:'The absolute temperature of a black body is doubled. What happens to the wavelength of peak emission λ<sub>m</sub> and the total power radiated?',
+  o:['λ<sub>m</sub> doubles; power ×16','λ<sub>m</sub> halves; power ×16','λ<sub>m</sub> halves; power ×4','λ<sub>m</sub> unchanged; power ×2'],a:1,
+  why:'Wien: λ<sub>m</sub>T is constant, so doubling T halves λ<sub>m</sub> (shifts towards blue). Stefan: power ∝ T⁴ = 2⁴ = 16 times. Check it on the spectrum above with 3000 K and 6000 K.'},
+ {q:'Two spheres of the same material: one has radius r at temperature 2T, the other radius 2r at temperature T. Ratio of power radiated (first : second)?',
+  o:['1 : 1','2 : 1','4 : 1','16 : 1'],a:2,
+  why:'P = eσAT⁴ with A = 4πr². First: r² × (2T)⁴ = 16r²T⁴. Second: (2r)² × T⁴ = 4r²T⁴. Ratio 16 : 4 = 4 : 1. The temperature wins because it enters as the fourth power.'},
+ {q:'A steel rod (15 cm, K = 50.2) and a copper rod (10 cm, K = 385) are joined end to end. The steel rod has twice the cross-section of the copper. The free ends are at 300 °C and 0 °C. Junction temperature? (K in W m⁻¹ K⁻¹)',
+  o:[`${(300-qz.c).toFixed(1)} °C`,`${qz.c.toFixed(1)} °C`,'150 °C',`${qz.cNoArea.toFixed(1)} °C`],a:1,
+  why:`Same H through both: 50.2 × 2A(300 − T)/15 = 385 × A × T/10, giving T ≈ ${qz.c.toFixed(1)} °C. Copper conducts so well that it needs only a small temperature drop; most of the 300 °C is dropped across the steel. (${qz.cNoArea.toFixed(1)} °C is what you get if you forget the factor 2 in area.)`},
+ {q:'Two identical rods joined end to end (in series) between two reservoirs conduct a certain amount of heat in 12 minutes. If they are placed side by side (in parallel) between the same reservoirs, the same heat flows in:',
+  o:['24 min','6 min','3 min','12 min'],a:2,
+  why:'Each rod has resistance R. In series: 2R. In parallel: R/2. The resistance falls by a factor of 4, so the heat current is 4 times larger and the same heat flows in 12/4 = 3 min.'},
+ {q:'On a pond, the first 1 cm of ice forms in 7 hours. With the air temperature unchanged, how long does it take for the ice to grow from 1 cm to 2 cm?',
+  o:['7 h','14 h','21 h','28 h'],a:2,
+  why:'t ∝ x², so reaching 2 cm takes 2² = 4 times as long as reaching 1 cm: 28 h in total. The second centimetre takes 28 − 7 = 21 h, because the heat now has to be conducted through a thicker layer of ice.'},
+ {q:'Why is a body with a large reflectivity a poor emitter of radiation?',
+  o:['Reflection heats the surface','By Kirchhoff’s law, emissivity equals absorptivity, and a good reflector absorbs little','Shiny bodies are always colder','Reflected radiation cancels emitted radiation'],a:1,
+  why:'For an opaque body, a = 1 − r, so a large reflectivity means a small absorptivity. Kirchhoff’s law says e = a at a given temperature, so it is a poor emitter too. If it emitted strongly while absorbing weakly, it would cool itself below its surroundings for free.'}
+];
+function quiz(el,Q){
+  const render=()=>{el.innerHTML=Q.map((q,i)=>`<div class="panel"><p class="qn">Q${i+1}</p><p>${q.q}</p>
+    <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');};
+  el.addEventListener('click',e=>{
+    const b=e.target.closest('.opt'); if(!b||b.disabled) return;
+    const box=b.parentElement, q=Q[+box.dataset.i], j=+b.dataset.j;
+    box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+    const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+  });
+  render(); return render;
+}
+const rq=quiz($('quiz'),QUIZ); $('qreset').onclick=rq;
+
+drawM(); drawR(); drawC(); drawI(); drawB(); placeDots(); setPlay(!RM); buildS(); drawX(); drawTF(); drawG(); drawN(); drawL();
+</script>
+</body>
+</html>
