@@ -1,0 +1,998 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calorimetry and Change of State</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) specific heat: same heat, different rise; S, s, C views; gases Cp/Cv
+   (2) calorimetry: method of mixtures, water equivalent  (3) heating curve ice → steam, latent heats
+   (4) steam burns  (5) ice + water: does it all melt?  (6) phase diagrams of water and CO₂
+   (7) boiling point vs pressure + NCERT flask activity  (8) regelation  (9) predict-then-check
+   Quantity colours shared with laws-and-pv.html / heat-transfer.html: --heat (Q), --work, --du, --hot, --cold.
+   Liquid temperatures use the jet colormap. */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --heat:#c2306a; --work:#1f8f87; --du:#8a6d1f; --hot:#d0452c; --cold:#1f7fc4;
+  --p1:#7a52c7; --p2:#2c56cc; --ice:#cfe8f7; --iceln:#7fb6d9;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --heat:#f06d9f; --work:#3cb8ad; --du:#d4b44a; --hot:#ff7b62; --cold:#5cb3f0;
+  --p1:#a585f0; --p2:#7d9dff; --ice:#2a4a60; --iceln:#6fa8cf; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --heat:#f06d9f; --work:#3cb8ad; --du:#d4b44a; --hot:#ff7b62; --cold:#5cb3f0;
+  --p1:#a585f0; --p2:#7d9dff; --ice:#2a4a60; --iceln:#6fa8cf; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+a{color:var(--accent)}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+svg.drag{touch-action:none;cursor:crosshair}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.btn[disabled]{opacity:.45;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:7.5em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:6.5em;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px;margin:0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+select{font:500 13px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+.sel{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted)}
+.selgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.selgrid select{width:100%;min-width:0}
+.steps{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Heat, Calorimetry and Change of State</h1>
+    <p class="lede">Put the same heat into two different things and their temperatures change by very different amounts. Keep heating ice and the temperature stops rising twice, while the heat goes into breaking the ice apart and then into boiling the water. Squeeze ice and it can melt. This page builds each of these as a picture you can change. (How temperature is measured and how things expand when heated are on <a href="temperature-expansion.html">Temperature and Thermal Expansion</a>.)</p>
+  </header>
+
+  <!-- 1 · specific heat -->
+  <section class="stack">
+    <div>
+      <h2>1 · Same heat, very different warming</h2>
+      <p class="lede">Four blocks of equal mass sit on identical heaters and each receives the same amount of heat. Before you move the slider: which thermometer will rise the most, and which the least?</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="selgrid" id="s1sel" aria-label="Materials"></div>
+        <div class="svgbox"><svg id="tsvg" viewBox="0 0 520 300" role="img" aria-label="Four thermometers showing the temperature rise of four materials" style="min-width:400px"></svg></div>
+        <div class="slider"><label for="sQ">heat to each</label><input type="range" id="sQ" min="0" max="40" step="0.5" value="10"><output id="sQo"></output></div>
+        <div class="slider"><label for="sm">mass of each</label><input type="range" id="sm" min="0.1" max="2" step="0.05" value="1"><output id="smo"></output></div>
+      </div>
+      <div class="panel stack">
+        <p class="cap key">For the same heat ΔQ, the rise is <b>ΔT = ΔQ/(m s)</b>. A material with a large <b>specific heat capacity s</b> soaks up a lot of heat per degree, so its thermometer barely moves. Water is the extreme case: it needs about <b id="wAl"></b> times as much heat as aluminium and about <b id="wCu"></b> times as much as copper for the same rise.</p>
+        <p class="cap"><b>Why water’s high s matters.</b> A car radiator uses water because each kilogram carries away a lot of heat for a small rise in temperature; a hot-water bag stays warm for the same reason. The sea warms and cools far more slowly than the land, which drives the sea breeze by day and the land breeze by night (see <a href="heat-transfer.html">Heat Transfer</a>, section 5). Deserts, with little water, heat up fast in the day and cool fast at night.</p>
+        <p class="muted">Values: specific heats at room temperature and 1 atm. Real specific heats change a little with temperature; here they are taken as constant.</p>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="panel stack">
+        <h3>Three ways to count “how much heat per degree”</h3>
+        <div class="chips" id="vmode" role="group" aria-label="Quantity"><button class="chip" data-k="S">Heat capacity S (this block)</button><button class="chip" data-k="s">Specific heat s (per kg)</button><button class="chip" data-k="C">Molar heat C (per mole)</button></div>
+        <div class="svgbox"><svg id="vsvg" viewBox="0 0 520 190" role="img" aria-label="Bars comparing heat capacity, specific heat or molar heat of the chosen materials" style="min-width:380px"></svg></div>
+      </div>
+      <div class="panel stack">
+        <p class="cap key" id="vcap"></p>
+        <dl class="kv">
+          <dt>heat capacity</dt><dd>S = ΔQ/ΔT &nbsp;(J K⁻¹)</dd>
+          <dt>specific heat</dt><dd>s = ΔQ/(m ΔT) &nbsp;(J kg⁻¹ K⁻¹)</dd>
+          <dt>molar heat</dt><dd>C = ΔQ/(μ ΔT) &nbsp;(J mol⁻¹ K⁻¹)</dd>
+        </dl>
+        <p class="muted">μ is the number of moles. C = s × (molar mass in kg mol⁻¹).</p>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="panel stack">
+        <h3>Gases need two molar heats: C<sub>p</sub> and C<sub>v</sub></h3>
+        <div class="svgbox"><svg id="gsvg" viewBox="0 0 520 210" role="img" aria-label="Molar heat at constant volume and constant pressure for five gases" style="min-width:420px"></svg></div>
+        <div class="legend"><span><i style="background:var(--du);height:10px;width:10px"></i>C<sub>v</sub>: all the heat raises internal energy</span><span><i style="background:var(--work);height:10px;width:10px"></i>extra at constant pressure: work done expanding</span></div>
+      </div>
+      <div class="panel stack">
+        <p class="cap key">A gas can be heated in a sealed rigid box (constant volume) or under a free piston (constant pressure). At constant pressure the gas also expands and pushes the piston, so part of the heat leaves as work and more heat is needed per degree. For every gas in the table, <b>C<sub>p</sub> − C<sub>v</sub></b> comes out close to <b>R = 8.31 J mol⁻¹ K⁻¹</b>: the extra work per mole per kelvin of an ideal gas.</p>
+        <p class="cap">Why the gap is exactly R: <a href="laws-and-pv.html">First Law and PV Diagrams</a>, section 5. Why helium’s C<sub>v</sub> is about (3/2)R while N₂’s is about (5/2)R: <a href="degrees-of-freedom.html">Degrees of Freedom</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · calorimetry -->
+  <section class="stack">
+    <div>
+      <h2>2 · Calorimetry: heat lost = heat gained</h2>
+      <p class="lede">Drop a hot metal block into cold water in a calorimeter. Heat flows from block to water until they reach the same temperature. If no heat escapes (an <b>isolated system</b>), every joule the block loses, the water and the vessel gain. Drag the cursor on the graph to guess the final temperature; the two dots must meet.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="cpre" role="group" aria-label="Preset"><button class="chip" data-k="ex">NCERT Example 10.3</button><button class="chip" data-k="free">Your own</button></div>
+        <div class="svgbox"><svg id="csvg" class="drag" viewBox="0 0 560 300" role="img" aria-label="A calorimeter and a graph of heat lost and heat gained against the final temperature" style="min-width:440px"></svg></div>
+        <div class="row"><button class="btn primary" id="creveal">Show the answer</button><span class="muted" id="cstat"></span></div>
+      </div>
+      <div class="panel stack">
+        <label class="sel">block <select id="cmat"></select></label>
+        <div class="slider"><label for="cmb">block mass</label><input type="range" id="cmb" min="0.02" max="0.5" step="0.001" value="0.047"><output id="cmbo"></output></div>
+        <div class="slider"><label for="cTb">block temp.</label><input type="range" id="cTb" min="50" max="200" step="1" value="100"><output id="cTbo"></output></div>
+        <div class="slider"><label for="cmw">water mass</label><input type="range" id="cmw" min="0.05" max="0.5" step="0.01" value="0.25"><output id="cmwo"></output></div>
+        <div class="slider"><label for="cTw">water temp.</label><input type="range" id="cTw" min="5" max="40" step="1" value="20"><output id="cTwo"></output></div>
+        <div class="slider"><label for="cmc">copper vessel</label><input type="range" id="cmc" min="0" max="0.4" step="0.01" value="0.14"><output id="cmco"></output></div>
+        <dl class="kv" id="ckv"></dl>
+        <p class="cap">The answer is a weighted average of the two starting temperatures, weighted by heat capacity: it lands nearer whichever side can store more heat per degree. That is the steeper line on the graph.</p>
+      </div>
+    </div>
+    <div class="two">
+      <p class="cap key"><b>The calorimeter.</b> A copper or aluminium vessel with a stirrer of the same metal, inside a wooden jacket packed with an insulator such as glass wool. The jacket is a heat shield: it keeps the system close to isolated. A thermometer goes in through the lid. Because the vessel warms up with the water, it takes some of the heat too; the dashed line on the graph is what the water alone would take.</p>
+      <p class="cap"><b>Water equivalent</b> <span class="hw">JEE</span> The vessel (mass m<sub>c</sub>, specific heat s<sub>c</sub>) absorbs as much heat per degree as a mass <b>W = m<sub>c</sub>s<sub>c</sub>/s<sub>w</sub></b> of water would. So in any calculation you can replace the vessel by W of extra water. A copper vessel is a good choice: its small s makes W small. In grams, W is just m<sub>c</sub>s<sub>c</sub> with s in cal g⁻¹ K⁻¹, since water’s is 1.</p>
+    </div>
+  </section>
+
+  <!-- 3 · heating curve -->
+  <section class="stack">
+    <div>
+      <h2>3 · Heating ice until it becomes steam</h2>
+      <p class="lede">1 kg of ice at −20 °C is heated steadily at 1 atm until it is steam at 120 °C. Drag along the graph to add heat. The horizontal axis is drawn to scale: notice how much of it is spent at constant temperature.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="hview" role="group" aria-label="View"><button class="chip" data-k="all">Whole curve (to scale)</button><button class="chip" data-k="start">Zoom: ice → water</button><button class="chip" data-k="end">Zoom: water → steam</button></div>
+        <div class="svgbox"><svg id="hsvg" class="drag" viewBox="0 0 560 320" role="img" aria-label="Temperature of water against heat added, from ice to steam" style="min-width:420px"></svg></div>
+        <p class="muted">Drag on the graph, or use the arrow keys after tapping it.</p>
+      </div>
+      <div class="panel stack">
+        <svg id="bsvg" viewBox="0 0 220 230" role="img" aria-label="The beaker: ice, water and steam" style="width:100%;max-width:240px;height:auto;display:block;margin:0 auto"></svg>
+        <p class="big" id="hphase"></p>
+        <dl class="kv" id="hkv"></dl>
+      </div>
+    </div>
+    <div class="two">
+      <div class="stack">
+        <p class="cap key"><b>Flat parts: a change of state.</b> While ice melts, ice and water coexist at 0 °C and the temperature does not move, however much heat goes in; the same while water boils at 100 °C. The heat goes into pulling the molecules apart, not into making them move faster. The heat per kilogram is the <b>latent heat</b> L, and Q = mL. For water, L<sub>f</sub> = 3.33 × 10⁵ J kg⁻¹ (fusion) and L<sub>v</sub> = 22.6 × 10⁵ J kg⁻¹ (vaporisation): boiling away water takes <b id="lratio"></b> times the heat that melting the ice did.</p>
+        <p class="cap"><b>Sloped parts: one phase warming.</b> Here Q = m s ΔT, so the slope ΔT/ΔQ = 1/(m s). Ice and steam have about half the specific heat of liquid water, so their parts of the line are about twice as steep. On the whole curve they are the short steep bits at the two ends; zoom in to see them.</p>
+        <p class="cap">Cooling runs the same curve backwards: steam gives out L<sub>v</sub> per kilogram as it <b>condenses</b>, and water gives out L<sub>f</sub> as it <b>freezes</b>. Latent heats are quoted at 1 atm; they change with pressure (section 7).</p>
+      </div>
+      <div class="panel stack">
+        <h3>Latent heats at 1 atm (10⁵ J kg⁻¹)</h3>
+        <div class="svgbox"><svg id="lsvg" viewBox="0 0 440 250" role="img" aria-label="Latent heats of fusion and vaporisation of several substances" style="min-width:320px"></svg></div>
+        <div class="legend"><span><i style="background:var(--cold);height:10px;width:10px"></i>L<sub>f</sub> (melting)</span><span><i style="background:var(--hot);height:10px;width:10px"></i>L<sub>v</sub> (boiling)</span></div>
+        <p class="muted">For every substance, boiling takes far more energy than melting: in a liquid the molecules are still touching, and only boiling pulls them fully apart against their attraction.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · steam burns -->
+  <section class="stack">
+    <div>
+      <h2>4 · Why a steam burn is worse than a boiling-water burn</h2>
+      <p class="lede">Both are at 100 °C. Suppose 10 g of each lands on your skin and ends up at body temperature, 37 °C. Predict first: how many times more heat does the steam deliver?</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="wsvg" viewBox="0 0 520 170" role="img" aria-label="Energy delivered to the skin by boiling water and by steam" style="min-width:400px"></svg></div>
+        <div class="row"><button class="btn primary" id="wgo">Show the steam bar</button></div>
+      </div>
+      <div class="panel stack">
+        <p class="cap key" id="wcap">Water only cools from 100 °C to 37 °C. Steam first has to condense on the skin, releasing its latent heat, and then the condensed water cools as well.</p>
+        <p class="muted">Rough model: all the heat is taken to go into the skin.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · ice + water -->
+  <section class="stack">
+    <div>
+      <h2>5 · Ice in warm water: does it all melt? <span class="hw">JEE</span></h2>
+      <p class="lede">The common trap: writing “heat lost = heat gained” with an unknown final temperature and getting an answer below 0 °C (or a negative mass). First compare the heat the water <i>can</i> give with the heat the ice <i>needs</i>.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="ipre" role="group" aria-label="Preset"><button class="chip" data-k="ex">NCERT Example 10.4</button><button class="chip" data-k="half">Not all melts</button><button class="chip" data-k="cold">Very cold ice</button></div>
+        <div class="svgbox"><svg id="isvg" viewBox="0 0 520 330" role="img" aria-label="Ice and water before and after mixing, with energy bars" style="min-width:430px"></svg></div>
+        <div class="slider"><label for="imi">ice mass</label><input type="range" id="imi" min="0.05" max="1" step="0.01" value="0.15"><output id="imio"></output></div>
+        <div class="slider"><label for="iTi">ice temp.</label><input type="range" id="iTi" min="-40" max="0" step="1" value="0"><output id="iTio"></output></div>
+        <div class="slider"><label for="imw">water mass</label><input type="range" id="imw" min="0.05" max="1" step="0.01" value="0.3"><output id="imwo"></output></div>
+        <div class="slider"><label for="iTw">water temp.</label><input type="range" id="iTw" min="0" max="100" step="1" value="50"><output id="iTwo"></output></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="ires"></p>
+        <p class="cap key" id="icap"></p>
+        <dl class="kv" id="ikv"></dl>
+        <p class="cap"><b>Recipe.</b> (1) Heat the water gives cooling to 0 °C: m<sub>w</sub>s<sub>w</sub>T<sub>w</sub>. (2) Heat the ice needs to reach 0 °C, then to melt: m<sub>i</sub>s<sub>i</sub>|T<sub>i</sub>| and m<sub>i</sub>L<sub>f</sub>. If (1) is less than the total of (2), the mixture ends at <b>0 °C</b> with some ice left, and the leftover follows from the energy that is short. Only if (1) is bigger do you solve for a final temperature above 0 °C.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · phase diagrams -->
+  <section class="stack">
+    <div>
+      <h2>6 · Phase diagrams: where pressure enters</h2>
+      <p class="lede">Melting and boiling points depend on pressure. A pressure–temperature map shows which state is stable at every (T, P). Three curves divide it: on each curve, two states coexist. Drag the point; then use the guide lines to heat at fixed pressure or squeeze at fixed temperature.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row">
+          <div class="chips" id="psub" role="group" aria-label="Substance"><button class="chip" data-k="w">Water</button><button class="chip" data-k="c">CO₂</button></div>
+          <span class="hw">schematic, not to scale</span>
+        </div>
+        <div class="chips" id="pmode" role="group" aria-label="How the point moves"><button class="chip" data-k="free">Drag anywhere</button><button class="chip" data-k="h">Heat at 1 atm</button><button class="chip" data-k="v">Squeeze at fixed T</button></div>
+        <div class="svgbox"><svg id="psvg" class="drag" viewBox="0 0 520 340" role="img" aria-label="Pressure–temperature phase diagram" style="min-width:420px"></svg></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="pphase"></p>
+        <p class="cap key" id="pcap"></p>
+        <dl class="kv" id="pkv"></dl>
+      </div>
+    </div>
+    <div class="two">
+      <p class="cap key"><b>Why water’s fusion curve leans backwards.</b> Ice is less dense than water (it floats). Squeezing favours the denser state, which for water is the liquid, so more pressure means a <i>lower</i> melting point: about 0.0073 °C less for each extra atmosphere. The tilt is tiny; the diagram exaggerates it. For most substances, CO₂ included, the solid is the denser state, so their fusion curve leans forwards and pressure raises the melting point.</p>
+      <p class="cap"><b>Sublimation.</b> Below the triple-point pressure there is no liquid at all: a solid heated there turns straight into vapour. CO₂’s triple point is at 5.11 atm, above ordinary air pressure, so solid CO₂ (dry ice) sublimes at −78.5 °C and never melts in the open. Iodine is also used to show sublimation: it gives off violet vapour well below its melting point. But its triple point (12.1 kPa) is below 1 atm, so heated in a closed tube iodine does melt, at 114 °C.</p>
+    </div>
+    <p class="cap">The <b>normal</b> melting and boiling points are those at 1 atm (101.325 kPa). The <b>triple point</b> is the one (T, P) where solid, liquid and vapour all coexist. Above the <b>critical point</b> the liquid and vapour become indistinguishable, and no amount of squeezing will condense the gas into a separate liquid.</p>
+  </section>
+
+  <!-- 7 · boiling and pressure -->
+  <section class="stack">
+    <div>
+      <h2>7 · Boiling point and pressure: hills and pressure cookers</h2>
+      <p class="lede">Water boils when its vapour pressure reaches the pressure pushing down on it. Lower the outside pressure and it boils cooler; raise it and it must get hotter first. This curve is to scale (it is the liquid–vapour curve of section 6, zoomed in). Drag along it, or pick a place.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="bpre" role="group" aria-label="Place"></div>
+        <div class="svgbox"><svg id="bpsvg" class="drag" viewBox="0 0 560 320" role="img" aria-label="Boiling point of water against pressure" style="min-width:420px"></svg></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="bpbig"></p>
+        <dl class="kv" id="bpkv"></dl>
+        <p class="cap key" id="bpcap"></p>
+        <p class="muted">Altitude pressures from the standard-atmosphere model; real air pressure on a mountain varies with the weather by a few per cent.</p>
+      </div>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <h3>NCERT activity: making water boil again by cooling the flask</h3>
+        <div class="steps" id="fsteps"></div>
+        <div class="svgbox"><svg id="fsvg" viewBox="0 0 520 250" role="img" aria-label="Round-bottom flask experiment and its state on the boiling curve" style="min-width:420px"></svg></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="ftitle"></p>
+        <p class="cap key" id="fcap"></p>
+        <p class="muted">The dot on the small graph is the state of the water in the flask. It boils only when the dot is on or above the curve. Pressures in steps 2–4 are illustrative.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · regelation -->
+  <section class="stack">
+    <div>
+      <h2>8 · Regelation: a wire that cuts through ice and leaves it whole</h2>
+      <p class="lede">A thin metal wire hangs over a slab of ice with heavy weights on both ends. Slide time forward. The wire sinks through the ice, yet the slab never splits.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="rsvg" viewBox="0 70 520 230" role="img" aria-label="A loaded wire passing through a slab of ice" style="min-width:400px"></svg></div>
+        <div class="slider"><label for="rt">time</label><input type="range" id="rt" min="0" max="100" step="1" value="35"><output id="rto"></output></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="rtitle"></p>
+        <p class="cap key" id="rcap"></p>
+        <p class="cap"><b>The cycle.</b> (1) The thin wire presses hard on the ice just under it; higher pressure lowers the melting point (section 6), so that ice melts. (2) The water squeezes round to the top of the wire. (3) There the pressure is back to normal, so the water <b>refreezes</b> (regelation = freezing again). The latent heat released by refreezing is conducted down through the metal wire and helps melt the next layer below, which is why a metal wire works much better than a string.</p>
+        <p class="cap">NCERT uses the same idea to explain skating: the skate’s pressure melts a film of water that acts as a lubricant. <span class="hw">simplified picture</span> Pressure melting alone cannot explain skating on ice colder than about −3.5 °C, yet people skate on much colder ice. Friction heating by the moving blade and a thin liquid-like layer that is always present on an ice surface do most of the work.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · quiz -->
+  <section class="stack">
+    <div>
+      <h2>9 · Predict, then check</h2>
+      <p class="lede">CBSE- and JEE-style questions. Choose first; the reasoning appears after.</p>
+    </div>
+    <div class="qgrid" id="quiz"></div>
+    <div><button class="btn" id="qreset">Reset answers</button></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> specific heats and latent heats taken as constant over each temperature range; no heat lost to the surroundings in mixing problems (isolated system); the heating curve is for steady heating of 1 kg at 1 atm, with the steam’s specific heat taken as about 2.0 × 10³ J kg⁻¹ K⁻¹. Phase diagrams are schematic and not to scale; only the labelled points are real values. The boiling-point curve uses measured data for water; mountain pressures use the standard-atmosphere model. The regelation and flask drawings are schematic.</p>
+    <p><b>Based on:</b> NCERT Physics Class 11, “Thermal Properties of Matter” (specific heat capacity, calorimetry, change of state, latent heat; its tables of specific heats, molar specific heats of gases and latent heats; Examples 10.3–10.5 and the end-of-chapter exercises); H. C. Verma, <i>Concepts of Physics</i> Vol. 2, “Calorimetry”. Triple points, critical points and boiling points: NIST Chemistry WebBook.</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+/* Specific heats, J kg^-1 K^-1: NCERT Class 11 Physics, Table 10.3.
+   Molar masses, g mol^-1: NIST Chemistry WebBook (IUPAC standard atomic weights); null = not a single substance */
+const SH=[
+ {n:'Water',s:4186.0,M:18.0153},{n:'Aluminium',s:900.0,M:26.9815386},{n:'Copper',s:386.4,M:63.546},
+ {n:'Lead',s:127.7,M:207.2},{n:'Silver',s:236.1,M:107.8682},{n:'Tungsten',s:134.4,M:183.84},
+ {n:'Iron',s:450,M:55.845},{n:'Carbon',s:506.5,M:12.0107},{n:'Mercury',s:140,M:200.59},
+ {n:'Ice',s:2060,M:18.0153},{n:'Glass',s:840,M:null},{n:'Kerosene',s:2118,M:null},{n:'Edible oil',s:1965,M:null}
+];
+/* Molar specific heats of gases, J mol^-1 K^-1: NCERT Table 10.4 */
+const GAS=[{n:'He',cp:20.8,cv:12.5},{n:'H₂',cp:28.8,cv:20.4},{n:'N₂',cp:29.1,cv:20.8},{n:'O₂',cp:29.4,cv:21.1},{n:'CO₂',cp:37.0,cv:28.5}];
+const RGAS=8.314; /* J mol^-1 K^-1, CODATA */
+/* Water: s_water, s_ice from NCERT Table 10.3; Lf, Lv from NCERT Table 10.5.
+   Steam: cp at 1 atm is 2.080 (100 °C), 2.044 (110 °C), 2.021 (120 °C) kJ/kg K (NIST WebBook) → 2040 as the average */
+const WAT={cw:4186, ci:2060, cs:2040, Lf:3.33e5, Lv:22.6e5};
+/* Latent heats, 10^5 J kg^-1, at 1 atm: NCERT Table 10.5 */
+const LAT=[{n:'Water',f:3.33,v:22.6},{n:'Ethanol',f:1.0,v:8.5},{n:'Lead',f:0.25,v:8.67},{n:'Mercury',f:0.12,v:2.7},{n:'Nitrogen',f:0.26,v:2.0},{n:'Oxygen',f:0.14,v:2.1}];
+/* Water saturation (boiling) temperature vs pressure, and latent heat of vaporisation there:
+   NIST Chemistry WebBook, saturation properties of water (IAPWS-95), interpolated. [P atm, T °C, Lv kJ/kg] */
+const BPT=[[0.2,60.34,2356.8],[0.3,69.40,2334.5],[0.4,76.17,2317.7],[0.5,81.65,2303.9],[0.6,86.26,2292.1],[0.7,90.28,2281.7],
+ [0.8,93.84,2272.6],[0.9,97.05,2264.2],[1.0,99.97,2256.4],[1.2,105.17,2242.7],[1.5,111.74,2224.9],[1.8,117.32,2209.6],[2.0,120.63,2200.4],[2.5,127.84,2179.9]];
+/* Standard atmosphere (troposphere): P = P0 (1 − 2.25577e-5 h)^5.25588, h in m */
+const PATM=h=>Math.pow(1-2.25577e-5*h,5.25588);
+/* Phase-diagram key points. Water: NIST WebBook (triple 273.16 K, 611.657 Pa; critical 647.096 K, 22.064 MPa);
+   CO2: NIST WebBook (triple −56.56 °C, 0.5180 MPa = 5.11 atm; critical 30.98 °C, 7.377 MPa = 72.8 atm; vapour pressure at 20 °C 56.5 atm);
+   CO2 sublimation at 1 atm: −78.5 °C (194.7 K). Ice melting point falls 0.0073 °C per atm. */
+const PD={
+ w:{name:'Water', x0:70,y0:300, tp:[210,215], F:[185,25], cp:[430,70], atm:165, vx:200,
+    lab:{s:[110,95],l:[335,110],v:[370,272]},
+    kv:[['triple point','0.01 °C, 611.657 Pa (0.006 atm)'],['critical point','374 °C, 218 atm (22.06 MPa)'],['normal melting point','0 °C at 1 atm'],['normal boiling point','100 °C at 1 atm'],['melting point shift','−0.0073 °C per atm']],
+    hpts:{a:'0 °C',b:'100 °C'}, vlab:'just below 0 °C'},
+ c:{name:'CO₂', x0:70,y0:300, tp:[230,150], F:[292,25], cp:[400,70], atm:228, vx:370,
+    lab:{s:[120,95],l:[338,64],v:[360,270]},
+    kv:[['triple point','−56.6 °C, 5.11 atm'],['critical point','31.0 °C, 72.8 atm'],['sublimes at 1 atm','−78.5 °C'],['liquefies at 20 °C','at about 56 atm']],
+    hpts:{a:'−78.5 °C'}, vlab:'20 °C'}
+};
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const neg=s=>String(s).replace(/-/g,'−');
+const f0=v=>neg(Math.round(v).toString()), f1=v=>neg(v.toFixed(1)), f2=v=>neg(v.toFixed(2));
+function sig(v,n){ if(!isFinite(v)) return '—'; if(v===0) return '0'; const a=Math.abs(v);
+  if(a>=1e5||a<1e-3){const e=Math.floor(Math.log10(a)), m=v/Math.pow(10,e);return neg(m.toFixed(n-1))+' × 10'+sup(e);}
+  const d=Math.max(0,n-1-Math.floor(Math.log10(a))); return neg(v.toFixed(d)); }
+function sup(e){const m={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};return String(e).split('').map(c=>m[c]).join('');}
+const kJ=J=>(Math.abs(J)>=1e4?f0(J/1000):f1(J/1000))+' kJ';
+function arrow(x1,y1,x2,y2,col,w,head){
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy); if(L<1.5) return '';
+  const h=Math.min(head||9,L*0.6), ux=dx/L, uy=dy/L, bx=x2-ux*h, by=y2-uy*h, px=-uy*h*0.5, py=ux*h*0.5;
+  return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="${w||2}"/><polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px).toFixed(1)},${(by+py).toFixed(1)} ${(bx-px).toFixed(1)},${(by-py).toFixed(1)}" fill="${col}"/>`;
+}
+function jet(t){t=Math.max(0,Math.min(1,t));const c=x=>Math.round(255*Math.max(0,Math.min(1,1.5-Math.abs(4*t-x))));return `rgb(${c(3)},${c(2)},${c(1)})`;}
+const jT=T=>jet(0.06+0.88*clamp(T,0,100)/100); /* liquid water 0–100 °C */
+function press(el,k){el.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===String(k)));}
+function onChip(el,fn){el.addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)fn(c.dataset.k);});}
+function svgXY(svg,e){const r=svg.getBoundingClientRect(), vb=svg.viewBox.baseVal;return [(e.clientX-r.left)/r.width*vb.width,(e.clientY-r.top)/r.height*vb.height];}
+function dragger(svg,onMove){
+  let on=false;
+  svg.addEventListener('pointerdown',e=>{on=true;try{svg.setPointerCapture(e.pointerId);}catch(_){} onMove(...svgXY(svg,e)); e.preventDefault();});
+  svg.addEventListener('pointermove',e=>{if(on)onMove(...svgXY(svg,e));});
+  const end=()=>{on=false;}; svg.addEventListener('pointerup',end); svg.addEventListener('pointercancel',end);
+}
+function slide(id,fmt,fn){const i=$(id),o=$(id+'o');const u=()=>{o.textContent=fmt(+i.value);fn&&fn(+i.value);};i.addEventListener('input',u);o.textContent=fmt(+i.value);return i;}
+function setSlide(id,v,fmt){const i=$(id);i.value=v;$(id+'o').textContent=fmt(+i.value);}
+const sOf=n=>SH.find(m=>m.n===n);
+function nice(span,n){const r=span/n, p=Math.pow(10,Math.floor(Math.log10(r))), m=r/p;return (m<1.5?1:m<3?2:m<7?5:10)*p;}
+function interp(tab,x,col){ if(x<=tab[0][0]) return tab[0][col]; for(let i=1;i<tab.length;i++){ if(x<=tab[i][0]){const a=tab[i-1],b=tab[i],f=(x-a[0])/(b[0]-a[0]);return a[col]+f*(b[col]-a[col]);} } return tab[tab.length-1][col]; }
+const iceCube=(x,y,s)=>`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${s}" height="${s}" rx="2" fill="var(--ice)" stroke="var(--iceln)" stroke-width="1.2"/>`;
+const hatch=id=>`<pattern id="${id}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="var(--muted)" stroke-width="1.4" opacity=".5"/></pattern>`;
+
+/* =================== 1 · SPECIFIC HEAT =================== */
+const S1={sel:['Water','Aluminium','Copper','Lead'], view:'s'};
+{ const g=$('s1sel');
+  g.innerHTML=S1.sel.map((n,i)=>`<select data-i="${i}" aria-label="Material ${i+1}">${SH.map(m=>`<option${m.n===n?' selected':''}>${m.n}</option>`).join('')}</select>`).join('');
+  g.addEventListener('change',e=>{S1.sel[+e.target.dataset.i]=e.target.value;drawT();drawV();});
+}
+slide('sQ',v=>v.toFixed(1)+' kJ',()=>drawT());
+slide('sm',v=>v.toFixed(2)+' kg',()=>{drawT();drawV();});
+$('wAl').textContent=(4186/900).toFixed(1); $('wCu').textContent=(4186/386.4).toFixed(0);
+function drawT(){
+  const Q=+$('sQ').value*1000, m=+$('sm').value, y=r=>232-r*1.9;
+  let h='';
+  [0,25,50,75,100].forEach(r=>{h+=`<line x1="44" x2="505" y1="${y(r)}" y2="${y(r)}" stroke="var(--line)"/><text x="38" y="${y(r)+4}" font-size="11" text-anchor="end" fill="var(--muted)">+${r}</text>`;});
+  h+=`<text x="6" y="22" font-size="11.5" fill="var(--muted)">rise (°C)</text>`;
+  S1.sel.forEach((n,i)=>{
+    const x=95+i*115, s=sOf(n).s, r=Q/(m*s), over=r>100, top=y(Math.min(r,100));
+    h+=`<rect x="${x-8}" y="36" width="16" height="200" rx="8" fill="var(--surface)" stroke="var(--muted)" stroke-width="1.5"/>`;
+    h+=`<circle cx="${x}" cy="252" r="17" fill="var(--hot)" stroke="var(--muted)" stroke-width="1.5"/>`;
+    h+=`<rect x="${x-4}" y="${top.toFixed(1)}" width="8" height="${(252-top).toFixed(1)}" fill="var(--hot)"/>`;
+    if(over) h+=arrow(x,44,x,26,'var(--hot)',2.5,8);
+    const lab=over?`+${f0(r)} °C`:`+${r<10?f1(r):f0(r)} °C`, ly=over?30:Math.max(top+4,40);
+    h+=`<text x="${x+13}" y="${ly}" font-size="12.5" font-weight="600" text-anchor="start" fill="var(--ink)" font-family="var(--f-mono)">${lab}</text>`;
+    h+=`<text x="${x}" y="291" font-size="13" text-anchor="middle" fill="var(--ink)">${n}</text>`;
+  });
+  $('tsvg').innerHTML=h;
+}
+const VCAP={
+ S:'<b>Heat capacity S</b> belongs to one object: double the block and you double S. Slide the mass and watch every bar grow together. It answers “how many joules to warm <i>this</i> thing by 1 K?”.',
+ s:'<b>Specific heat s</b> is per kilogram, so it depends only on the material (and a little on temperature), not on how much you have. Moving the mass slider changes nothing here.',
+ C:'<b>Molar heat C</b> is per mole: per fixed number of atoms or molecules. Now the metals almost line up near 25 J mol⁻¹ K⁻¹ (about 3R): lead has a tiny s only because its atoms are heavy, so a kilogram contains few of them. Water and ice stand out because each molecule has more ways to store energy; carbon is low because its stiff bonds cannot take up their full share at room temperature. Both stories are on <a href="degrees-of-freedom.html#solid">Degrees of Freedom</a>.'
+};
+function drawV(){
+  const m=+$('sm').value, v=S1.view;
+  const val=n=>{const d=sOf(n);return v==='S'?m*d.s:v==='s'?d.s:(d.M?d.s*d.M/1000:null);};
+  const unit=v==='S'?'J K⁻¹':v==='s'?'J kg⁻¹ K⁻¹':'J mol⁻¹ K⁻¹';
+  const vals=S1.sel.map(val), mx=Math.max(...vals.filter(x=>x!=null),1e-9);
+  const scaleMax=v==='S'?2*4186:v==='s'?4186:80;
+  const W=290, x0=110;
+  let h=`<text x="${x0}" y="16" font-size="11.5" fill="var(--muted)">${unit}${v==='S'?' (mass '+m.toFixed(2)+' kg)':''}</text>`;
+  if(v==='C'){const xr=x0+W*3*RGAS/scaleMax;h+=`<line x1="${xr}" x2="${xr}" y1="24" y2="178" stroke="var(--muted)" stroke-dasharray="4 3"/><text x="${xr+4}" y="186" font-size="11" fill="var(--muted)">3R = 24.9</text>`;}
+  S1.sel.forEach((n,i)=>{
+    const y=30+i*38, x=vals[i];
+    h+=`<text x="${x0-8}" y="${y+16}" font-size="13" text-anchor="end" fill="var(--ink)">${n}</text>`;
+    if(x==null){h+=`<text x="${x0}" y="${y+16}" font-size="12.5" fill="var(--muted)">not one substance: no molar value</text>`;return;}
+    const w=Math.max(1,W*x/scaleMax);
+    h+=`<rect x="${x0}" y="${y}" width="${w.toFixed(1)}" height="22" rx="3" fill="var(--heat)" opacity=".85"/>`;
+    h+=`<text x="${(x0+w+6).toFixed(1)}" y="${y+16}" font-size="12.5" fill="var(--ink)" font-family="var(--f-mono)">${x>=1000?f0(x):x>=100?f0(x):f1(x)}</text>`;
+  });
+  $('vsvg').innerHTML=h; $('vcap').innerHTML=VCAP[v];
+}
+onChip($('vmode'),k=>{S1.view=k;press($('vmode'),k);store('cal-view',k);drawV();});
+{const k=load('cal-view'); if(k&&VCAP[k]) S1.view=k;} press($('vmode'),S1.view);
+function drawG(){
+  const x0=60, sc=300/40; let h='';
+  [0,10,20,30,40].forEach(t=>{const x=x0+t*sc;h+=`<line x1="${x}" x2="${x}" y1="14" y2="182" stroke="var(--line)" opacity=".6"/><text x="${x}" y="198" font-size="11" text-anchor="${t===40?'start':'middle'}" dx="${t===40?-6:0}" fill="var(--muted)">${t===40?'40 J mol⁻¹ K⁻¹':t}</text>`;});
+  GAS.forEach((g,i)=>{
+    const y=20+i*33, wv=g.cv*sc, wr=(g.cp-g.cv)*sc;
+    h+=`<text x="${x0-8}" y="${y+15}" font-size="13" text-anchor="end" fill="var(--ink)">${g.n}</text>`;
+    h+=`<rect x="${x0}" y="${y}" width="${wv}" height="20" fill="var(--du)" opacity=".85"/><rect x="${x0+wv}" y="${y}" width="${wr}" height="20" fill="var(--work)" opacity=".9"/>`;
+    h+=`<text x="${x0+wv-5}" y="${y+14.5}" font-size="11" text-anchor="end" fill="#fff" font-family="var(--f-mono)">${g.cv}</text>`;
+    h+=`<text x="${x0+wv+wr+6}" y="${y+14.5}" font-size="11.5" fill="var(--ink)" font-family="var(--f-mono)">C<tspan font-size="8" dy="2">p</tspan><tspan dy="-2"> ${g.cp.toFixed(1)}, gap ${(g.cp-g.cv).toFixed(1)}</tspan></text>`;
+  });
+  $('gsvg').innerHTML=h;
+}
+
+/* =================== 2 · CALORIMETRY =================== */
+/* NCERT Example 10.3: Al sphere 0.047 kg at 100 °C; Cu calorimeter 0.14 kg; water 0.25 kg at 20 °C; measured final 23 °C */
+const C={mat:'Aluminium', guess:null, shown:false};
+const CMATS=['Aluminium','Copper','Iron','Lead','Silver','Tungsten','Glass'];
+$('cmat').innerHTML=CMATS.map(n=>`<option>${n}</option>`).join('');
+$('cmat').addEventListener('change',e=>{C.mat=e.target.value;cFree();});
+const CF={cmb:v=>(v*1000).toFixed(0)+' g',cTb:v=>v.toFixed(0)+' °C',cmw:v=>(v*1000).toFixed(0)+' g',cTw:v=>v.toFixed(0)+' °C',cmc:v=>(v*1000).toFixed(0)+' g'};
+Object.keys(CF).forEach(k=>slide(k,CF[k],()=>cFree()));
+function cFree(){press($('cpre'),'free');C.guess=null;C.shown=false;drawC();}
+function cPre(k){
+  press($('cpre'),k);
+  if(k==='ex'){C.mat='Aluminium';$('cmat').value='Aluminium';setSlide('cmb',0.047,CF.cmb);setSlide('cTb',100,CF.cTb);setSlide('cmw',0.25,CF.cmw);setSlide('cTw',20,CF.cTw);setSlide('cmc',0.14,CF.cmc);}
+  C.guess=null;C.shown=false;drawC();
+}
+onChip($('cpre'),cPre);
+function cState(){
+  const mb=+$('cmb').value, Tb=+$('cTb').value, mw=+$('cmw').value, Tw=+$('cTw').value, mc=+$('cmc').value, sb=sOf(C.mat).s, sc=386.4, sw=WAT.cw;
+  const Cb=mb*sb, Cw=mw*sw, Cc=mc*sc, Tf=(Cb*Tb+(Cw+Cc)*Tw)/(Cb+Cw+Cc);
+  return {mb,Tb,mw,Tw,mc,sb,sc,sw,Cb,Cw,Cc,Tf,W:mc*sc/sw};
+}
+const CG={x0:262,x1:540,y0:250,y1:34};
+function drawC(){
+  const s=cState(), g=C.guess==null?s.Tw+(s.Tb-s.Tw)*0.5:C.guess;
+  const Ql=T=>s.Cb*(s.Tb-T), Qg=T=>(s.Cw+s.Cc)*(T-s.Tw), Qw=T=>s.Cw*(T-s.Tw);
+  const qmax=Math.min(Ql(s.Tw),Qg(s.Tb))*1.25;
+  const X=T=>CG.x0+(T-s.Tw)/(s.Tb-s.Tw)*(CG.x1-CG.x0), Y=q=>CG.y0-q/qmax*(CG.y0-CG.y1);
+  const balanced=Math.abs(g-s.Tf)<Math.max(0.15,(s.Tb-s.Tw)*0.006);
+  let h=`<defs>${hatch('chat')}</defs>`;
+  /* calorimeter picture: block and water shown at the guessed temperature once you drag, else at their start temperatures */
+  const Tw_=C.guess==null?s.Tw:g, Tb_=C.guess==null?s.Tb:g;
+  h+=`<rect x="14" y="70" width="176" height="218" rx="6" fill="url(#chat)" stroke="var(--muted)" stroke-width="1.5"/>`;
+  h+=`<rect x="40" y="96" width="124" height="174" fill="var(--surface)" stroke="var(--force)" stroke-width="3.5"/>`;
+  h+=`<rect x="42" y="142" width="120" height="126" fill="${jT(Tw_)}" opacity=".45"/>`;
+  h+=`<rect x="86" y="206" width="36" height="36" rx="3" fill="${jT(Tb_)}" stroke="var(--ink)" stroke-width="1.2"/>`;
+  h+=`<line x1="58" y1="48" x2="58" y2="252" stroke="var(--force)" stroke-width="2.5"/><line x1="48" y1="252" x2="74" y2="252" stroke="var(--force)" stroke-width="2.5"/>`;
+  h+=`<rect x="139" y="34" width="9" height="200" rx="4.5" fill="var(--surface)" stroke="var(--muted)"/><circle cx="143.5" cy="238" r="8" fill="var(--hot)"/>`;
+  h+=`<rect x="14" y="62" width="176" height="12" fill="var(--force)" opacity=".25"/>`;
+  h+=`<text x="102" y="296" font-size="11" text-anchor="middle" fill="var(--muted)">insulating jacket</text>`;
+  h+=`<text x="104" y="20" font-size="12.5" text-anchor="middle" fill="var(--ink)" font-family="var(--f-mono)">${C.guess==null?'start':'guess '+f1(g)+' °C'}</text>`;
+  /* graph */
+  h+=`<line x1="${CG.x0}" y1="${CG.y0}" x2="${CG.x1}" y2="${CG.y0}" stroke="var(--muted)"/><line x1="${CG.x0}" y1="${CG.y0}" x2="${CG.x0}" y2="${CG.y1-6}" stroke="var(--muted)"/>`;
+  h+=`<text x="${CG.x0-6}" y="${CG.y1-12}" font-size="11.5" fill="var(--muted)">heat</text>`;
+  h+=`<text x="${CG.x0}" y="${CG.y0+16}" font-size="11.5" text-anchor="middle" fill="var(--cold)">${f0(s.Tw)} °C</text><text x="${CG.x1}" y="${CG.y0+16}" font-size="11.5" text-anchor="middle" fill="var(--hot)">${f0(s.Tb)} °C</text>`;
+  h+=`<text x="${(CG.x0+CG.x1)/2}" y="${CG.y0+34}" font-size="12" text-anchor="middle" fill="var(--muted)">final temperature →</text>`;
+  h+=`<clipPath id="cclip"><rect x="${CG.x0}" y="${CG.y1-4}" width="${CG.x1-CG.x0+2}" height="${CG.y0-CG.y1+6}"/></clipPath><g clip-path="url(#cclip)">`;
+  h+=`<line x1="${X(s.Tw)}" y1="${Y(Qw(s.Tw))}" x2="${X(s.Tb)}" y2="${Y(Qw(s.Tb))}" stroke="var(--cold)" stroke-width="1.5" stroke-dasharray="5 4" opacity=".8"/>`;
+  h+=`<line x1="${X(s.Tw)}" y1="${Y(Ql(s.Tw))}" x2="${X(s.Tb)}" y2="${Y(0)}" stroke="var(--hot)" stroke-width="2.5"/>`;
+  h+=`<line x1="${X(s.Tw)}" y1="${Y(0)}" x2="${X(s.Tb)}" y2="${Y(Qg(s.Tb))}" stroke="var(--cold)" stroke-width="2.5"/>`;
+  h+=`</g>`;
+  { const ql=0.88*Math.min(Ql(s.Tw),qmax), tl=s.Tb-ql/s.Cb; h+=`<text x="${X(tl)+8}" y="${Y(ql)-8}" font-size="12" fill="var(--hot)">lost by block</text>`;
+    const qg=0.85*Math.min(Qg(s.Tb),qmax), tg=s.Tw+qg/(s.Cw+s.Cc), xg_=X(tg); const right=xg_<CG.x1-170;
+    h+=`<text x="${right?xg_+10:xg_-10}" y="${Y(qg)+(right?4:-8)}" font-size="12" text-anchor="${right?'start':'end'}" fill="var(--cold)">gained by water + vessel</text>`; }
+  if(C.shown){const xt=X(s.Tf), yt=Y(Ql(s.Tf));h+=`<line x1="${xt}" y1="${CG.y0}" x2="${xt}" y2="${yt}" stroke="var(--ok)" stroke-width="1.5" stroke-dasharray="4 3"/><circle cx="${xt}" cy="${yt}" r="5" fill="none" stroke="var(--ok)" stroke-width="2"/>`;}
+  const xg=X(g), yT=CG.y1-2, yl=Math.max(Y(Ql(g)),yT), yg=Math.max(Y(Qg(g)),yT);
+  h+=`<line x1="${xg}" y1="${CG.y0}" x2="${xg}" y2="${Math.min(yl,yg)}" stroke="var(--accent)" stroke-width="1.5"/>`;
+  if(!balanced) h+=`<line x1="${xg}" y1="${yl}" x2="${xg}" y2="${yg}" stroke="var(--flag)" stroke-width="4" opacity=".7"/>`;
+  [[yl,'var(--hot)'],[yg,'var(--cold)']].forEach(([yy,c])=>{h+=yy<=yT?arrow(xg,yT+14,xg,yT-8,c,2.5,8):`<circle cx="${xg}" cy="${yy}" r="5.5" fill="${c}"/>`;});
+  h+=`<rect x="${xg-7}" y="${CG.y0-7}" width="14" height="14" rx="3" fill="var(--accent)" data-h="g"/>`;
+  $('csvg').innerHTML=h;
+  const d=Ql(g)-Qg(g);
+  $('cstat').innerHTML=balanced?'<b style="color:var(--ok)">Balanced: heat lost = heat gained.</b>':(d>0?'Block still has heat to give: final T is higher.':'Water would gain more than the block lost: final T is lower.');
+  $('ckv').innerHTML=`<dt>heat lost by block</dt><dd>${kJ(Ql(g)*1)}</dd><dt>gained by water</dt><dd>${kJ(Qw(g))}</dd><dt>gained by vessel</dt><dd>${kJ(Qg(g)-Qw(g))}</dd>
+    <dt>S block : S water+vessel</dt><dd>${f0(s.Cb)} : ${f0(s.Cw+s.Cc)} J K⁻¹</dd><dt>water equivalent W</dt><dd>${f1(s.W*1000)} g</dd>${C.shown?`<dt>true final T</dt><dd>${f2(s.Tf)} °C</dd>`:''}`;
+}
+dragger($('csvg'),(x,y)=>{ if(x<CG.x0-20) return; const s=cState(); C.guess=clamp(s.Tw+(x-CG.x0)/(CG.x1-CG.x0)*(s.Tb-s.Tw),s.Tw,s.Tb); drawC(); });
+$('creveal').onclick=()=>{C.shown=true;C.guess=cState().Tf;drawC();};
+
+/* =================== 3 · HEATING CURVE =================== */
+const HM=1; /* kg */
+const HQ=(()=>{const a=HM*WAT.ci*20, b=HM*WAT.Lf, c=HM*WAT.cw*100, d=HM*WAT.Lv, e=HM*WAT.cs*20; const q=[0,a,a+b,a+b+c,a+b+c+d,a+b+c+d+e]; return q;})();
+const H={Q:HQ[1]+HQ[2]*0.25/1, view:'all'};
+H.Q=HQ[1]+0.4*(HQ[2]-HQ[1]);
+function hState(Q){
+  const q=HQ;
+  if(Q<=q[1]) return {T:-20+Q/(HM*WAT.ci),ice:HM,wat:0,st:0,ph:'Ice warming'};
+  if(Q<=q[2]){const f=(Q-q[1])/(q[2]-q[1]);return {T:0,ice:HM*(1-f),wat:HM*f,st:0,ph:'Melting: ice + water at 0 °C'};}
+  if(Q<=q[3]) return {T:(Q-q[2])/(HM*WAT.cw),ice:0,wat:HM,st:0,ph:'Water warming'};
+  if(Q<=q[4]){const f=(Q-q[3])/(q[4]-q[3]);return {T:100,ice:0,wat:HM*(1-f),st:HM*f,ph:'Boiling: water + steam at 100 °C'};}
+  return {T:100+(Q-q[4])/(HM*WAT.cs),ice:0,wat:0,st:HM,ph:'Steam warming'};
+}
+const HV={all:[0,HQ[5]],start:[0,820e3],end:[HQ[4]-110e3,HQ[5]]};
+const HG={x0:62,x1:540,y0:268,y1:24,T0:-30,T1:130};
+function drawH(){
+  const [qa,qb]=HV[H.view];
+  const X=q=>HG.x0+(q-qa)/(qb-qa)*(HG.x1-HG.x0), Y=T=>HG.y0-(T-HG.T0)/(HG.T1-HG.T0)*(HG.y0-HG.y1);
+  let h=`<defs><clipPath id="hclip"><rect x="${HG.x0}" y="0" width="${HG.x1-HG.x0}" height="320"/></clipPath></defs>`;
+  [-20,0,20,40,60,80,100,120].forEach(T=>{h+=`<line x1="${HG.x0}" x2="${HG.x1}" y1="${Y(T)}" y2="${Y(T)}" stroke="var(--line)"/><text x="${HG.x0-6}" y="${Y(T)+4}" font-size="11" text-anchor="end" fill="var(--muted)">${neg(T)}</text>`;});
+  h+=`<text x="8" y="14" font-size="11.5" fill="var(--muted)">T (°C)</text>`;
+  const st=nice(qb-qa,6); for(let q=Math.ceil(qa/st)*st;q<=qb+1;q+=st){const x=X(q);h+=`<line x1="${x}" x2="${x}" y1="${HG.y0}" y2="${HG.y0+5}" stroke="var(--muted)"/><text x="${x}" y="${HG.y0+18}" font-size="11" text-anchor="middle" fill="var(--muted)">${f0(q/1000)}</text>`;}
+  h+=`<text x="${HG.x1}" y="${HG.y0+40}" font-size="12" text-anchor="end" fill="var(--muted)">heat added (kJ) →</text>`;
+  h+=`<line x1="${HG.x0}" y1="${HG.y0}" x2="${HG.x1}" y2="${HG.y0}" stroke="var(--muted)"/>`;
+  /* phase-shaded plateaus */
+  const pts=[[0,-20],[HQ[1],0],[HQ[2],0],[HQ[3],100],[HQ[4],100],[HQ[5],120]];
+  h+=`<g clip-path="url(#hclip)">`;
+  h+=`<rect x="${X(HQ[1])}" y="${HG.y1}" width="${X(HQ[2])-X(HQ[1])}" height="${HG.y0-HG.y1}" fill="var(--cold)" opacity=".07"/>`;
+  h+=`<rect x="${X(HQ[3])}" y="${HG.y1}" width="${X(HQ[4])-X(HQ[3])}" height="${HG.y0-HG.y1}" fill="var(--hot)" opacity=".07"/>`;
+  h+=`<polyline points="${pts.map(p=>X(p[0]).toFixed(1)+','+Y(p[1]).toFixed(1)).join(' ')}" fill="none" stroke="var(--heat)" stroke-width="3" stroke-linejoin="round"/>`;
+  h+=`</g>`;
+  /* segment labels, only those inside the view */
+  const inV=q=>q>=qa&&q<=qb, mid=(a,b)=>X((Math.max(a,qa)+Math.min(b,qb))/2);
+  const lab=(x,y,t,c,anc)=>`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="12" text-anchor="${anc||'middle'}" fill="${c||'var(--ink)'}">${t}</text>`;
+  if(qb>HQ[1]&&qa<HQ[2]) h+=lab(H.view==='all'?X(HQ[1])+4:mid(HQ[1],HQ[2]),H.view==='all'?Y(0)+20:Y(0)-10,`melting: mL<tspan font-size="9" dy="2">f</tspan><tspan dy="-2"> = ${f0((HQ[2]-HQ[1])/1000)} kJ</tspan>`,'var(--cold)',H.view==='all'?'start':'middle');
+  if(qb>HQ[3]&&qa<HQ[4]&&X(Math.min(HQ[4],qb))-X(Math.max(HQ[3],qa))>150) h+=lab(H.view==='end'?X(qa)+8:mid(HQ[3],HQ[4]),Y(100)-10,`boiling: mL<tspan font-size="9" dy="2">v</tspan><tspan dy="-2"> = ${f0((HQ[4]-HQ[3])/1000)} kJ</tspan>`,'var(--hot)',H.view==='end'?'start':'middle');
+  if(H.view==='all') h+=lab(X((HQ[2]+HQ[3])/2)+10,Y(50)+4,`water warms: ${f0((HQ[3]-HQ[2])/1000)} kJ`,'var(--muted)','start');
+  if(H.view==='start') h+=lab(X(HQ[2]+0.55*(qb-HQ[2]))+10,Y(0.55*(qb-HQ[2])/WAT.cw)+4,'water warms','var(--muted)','start');
+  if(H.view==='start') h+=lab(X(HQ[1])+8,Y(-12),`ice warms: ${f0(HQ[1]/1000)} kJ`,'var(--muted)','start');
+  if(H.view==='end') h+=lab(X(HQ[5])-6,Y(120)-12,`steam warms: ${f0((HQ[5]-HQ[4])/1000)} kJ`,'var(--muted)','end');
+  if(H.view==='all'){h+=lab(X(HQ[5])-4,Y(120)-10,'steam','var(--muted)','end');}
+  /* cursor */
+  const Qc=clamp(H.Q,qa,qb), s=hState(Qc), xc=X(Qc), yc=Y(s.T);
+  h+=`<line x1="${xc}" y1="${HG.y0}" x2="${xc}" y2="${yc}" stroke="var(--accent)" stroke-width="1.5"/><line x1="${HG.x0}" y1="${yc}" x2="${xc}" y2="${yc}" stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 3"/>`;
+  h+=`<circle cx="${xc}" cy="${yc}" r="6" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`;
+  $('hsvg').innerHTML=h;
+  H.Q=Qc; drawBeaker(s);
+  $('hphase').textContent=s.ph;
+  $('hkv').innerHTML=`<dt>heat added</dt><dd>${f0(Qc/1000)} kJ</dd><dt>temperature</dt><dd>${f1(s.T)} °C</dd><dt>ice</dt><dd>${f0(s.ice*1000)} g</dd><dt>water</dt><dd>${f0(s.wat*1000)} g</dd><dt>steam</dt><dd>${f0(s.st*1000)} g</dd>`;
+}
+function drawBeaker(s){
+  let h='';
+  /* steam above */
+  const nS=Math.round(s.st*14);
+  for(let i=0;i<nS;i++){const x=70+(i%7)*14+(i%2)*4, y=40-Math.floor(i/7)*16;h+=`<circle cx="${x}" cy="${y}" r="${6+(i%3)}" fill="var(--muted)" opacity=".28"/>`;}
+  /* beaker */
+  const bx0=55,bx1=165,by1=190,inner=bx1-bx0-6, hmax=110;
+  const wh=hmax*s.wat;
+  if(s.wat>0.001) h+=`<rect x="${bx0+3}" y="${by1-3-wh}" width="${inner}" height="${wh}" fill="${jT(s.T)}" opacity=".45"/>`;
+  /* ice cubes: 12 cubes for 1 kg */
+  const nI=Math.round(s.ice*12), base=s.wat>0.02?by1-3-wh-4:by1-3-22;
+  const rowsI=Math.ceil(nI/4), floatI=wh>rowsI*21+4;
+  for(let i=0;i<nI;i++){const col=i%4,row=Math.floor(i/4);const x=bx0+8+col*25, y=floatI?by1-3-wh-8+row*21:by1-25-row*21;h+=iceCube(x,y,20);}
+  if(s.wat>0.05&&s.T>=99.99&&s.st<1) for(let i=0;i<6;i++){h+=`<circle cx="${bx0+15+i*16}" cy="${by1-12-((i*37)%(Math.max(8,wh-14)))}" r="3" fill="none" stroke="var(--surface)" stroke-width="1.5" opacity=".9"/>`;}
+  h+=`<path d="M${bx0} 70 L${bx0} ${by1} L${bx1} ${by1} L${bx1} 70" fill="none" stroke="var(--muted)" stroke-width="2.5"/>`;
+  /* flame */
+  h+=`<path d="M100 222 q10 -22 10 -26 q4 10 10 26 z" fill="var(--hot)" opacity=".8"/><path d="M106 222 q4 -10 4 -14 q3 6 4 14 z" fill="#f5c542"/>`;
+  h+=`<line x1="40" y1="200" x2="180" y2="200" stroke="var(--muted)" stroke-width="2"/>`;
+  $('bsvg').innerHTML=h;
+}
+dragger($('hsvg'),(x)=>{const [qa,qb]=HV[H.view];H.Q=clamp(qa+(x-HG.x0)/(HG.x1-HG.x0)*(qb-qa),qa,qb);drawH();});
+$('hsvg').tabIndex=0;
+$('hsvg').addEventListener('keydown',e=>{const [qa,qb]=HV[H.view], st=(qb-qa)/200;if(e.key==='ArrowRight'){H.Q=clamp(H.Q+st,qa,qb);drawH();e.preventDefault();}if(e.key==='ArrowLeft'){H.Q=clamp(H.Q-st,qa,qb);drawH();e.preventDefault();}});
+onChip($('hview'),k=>{H.view=k;press($('hview'),k);store('cal-hview',k);
+  const [qa,qb]=HV[k]; if(H.Q<qa||H.Q>qb) H.Q=k==='end'?HQ[4]+0.5*(HQ[5]-HQ[4]):k==='start'?HQ[1]*0.5:H.Q; drawH();});
+{const k=load('cal-hview'); if(k&&HV[k]) H.view=k; if(H.view==='end') H.Q=HQ[4]+0.5*(HQ[5]-HQ[4]);} press($('hview'),H.view);
+$('lratio').textContent=(WAT.Lv/WAT.Lf).toFixed(1);
+function drawL(){
+  const x0=86, sc=300/24; let h='';
+  [0,5,10,15,20].forEach(t=>{const x=x0+t*sc;h+=`<line x1="${x}" x2="${x}" y1="6" y2="226" stroke="var(--line)"/><text x="${x}" y="242" font-size="11" text-anchor="middle" fill="var(--muted)">${t}</text>`;});
+  LAT.forEach((d,i)=>{
+    const y=10+i*36;
+    h+=`<text x="${x0-8}" y="${y+17}" font-size="12.5" text-anchor="end" fill="var(--ink)">${d.n}</text>`;
+    h+=`<rect x="${x0}" y="${y}" width="${Math.max(1,d.f*sc)}" height="11" fill="var(--cold)"/><rect x="${x0}" y="${y+13}" width="${d.v*sc}" height="11" fill="var(--hot)"/>`;
+    h+=`<text x="${x0+d.f*sc+5}" y="${y+9.5}" font-size="10.5" fill="var(--muted)" font-family="var(--f-mono)">${d.f}</text><text x="${x0+d.v*sc+5}" y="${y+22.5}" font-size="10.5" fill="var(--muted)" font-family="var(--f-mono)">${d.v}</text>`;
+  });
+  $('lsvg').innerHTML=h;
+}
+
+/* =================== 4 · STEAM BURN =================== */
+const WB=(()=>{const m=0.010, sens=m*WAT.cw*(100-37), lat=m*WAT.Lv; return {sens,lat,tot:sens+lat};})();
+let wShown=false;
+function drawW(){
+  const x0=150, sc=330/WB.tot; let h='';
+  h+=`<text x="${x0-10}" y="44" font-size="13" text-anchor="end" fill="var(--ink)">10 g water, 100 °C</text>`;
+  h+=`<rect x="${x0}" y="28" width="${WB.sens*sc}" height="26" fill="var(--hot)" opacity=".9"/><text x="${x0+WB.sens*sc+6}" y="46" font-size="12.5" fill="var(--ink)" font-family="var(--f-mono)">${f2(WB.sens/1000)} kJ</text>`;
+  h+=`<text x="${x0-10}" y="104" font-size="13" text-anchor="end" fill="var(--ink)">10 g steam, 100 °C</text>`;
+  if(wShown){
+    h+=`<rect x="${x0}" y="88" width="${WB.lat*sc}" height="26" fill="var(--heat)" opacity=".9"/><rect x="${x0+WB.lat*sc}" y="88" width="${WB.sens*sc}" height="26" fill="var(--hot)" opacity=".9"/>`;
+    h+=`<text x="${x0+WB.lat*sc/2}" y="106" font-size="12" text-anchor="middle" fill="#fff">condensing: mL<tspan font-size="9" dy="2">v</tspan><tspan dy="-2"> = ${f1(WB.lat/1000)} kJ</tspan></text>`;
+    h+=`<text x="${x0+WB.tot*sc}" y="134" font-size="12.5" text-anchor="end" fill="var(--ink)" font-family="var(--f-mono)">total ${f1(WB.tot/1000)} kJ</text>`;
+  } else h+=`<rect x="${x0}" y="88" width="${330}" height="26" fill="none" stroke="var(--line)" stroke-dasharray="5 4"/><text x="${x0+165}" y="106" font-size="12.5" text-anchor="middle" fill="var(--muted)">your prediction?</text>`;
+  h+=`<text x="${x0}" y="160" font-size="11.5" fill="var(--muted)">bars to scale: heat delivered to the skin</text>`;
+  $('wsvg').innerHTML=h;
+  if(wShown) $('wcap').innerHTML=`Steam delivers about <b>${(WB.tot/WB.sens).toFixed(1)} times</b> as much heat. Water only cools from 100 °C to 37 °C: m s<sub>w</sub>ΔT = ${f2(WB.sens/1000)} kJ. Steam first condenses on the skin, releasing mL<sub>v</sub> = ${f1(WB.lat/1000)} kJ at 100 °C, and then the condensed water cools as well. Steam at 100 °C carries 22.6 × 10⁵ J kg⁻¹ more than water at 100 °C.`;
+}
+$('wgo').onclick=()=>{wShown=true;$('wgo').disabled=true;drawW();};
+
+/* =================== 5 · ICE + WATER =================== */
+const IF={imi:v=>(v*1000).toFixed(0)+' g',iTi:v=>neg(v.toFixed(0))+' °C',imw:v=>(v*1000).toFixed(0)+' g',iTw:v=>v.toFixed(0)+' °C'};
+Object.keys(IF).forEach(k=>slide(k,IF[k],()=>{press($('ipre'),'');drawI();}));
+const IPRE={ex:[0.15,0,0.30,50],half:[0.5,-10,0.4,40],cold:[0.6,-40,0.1,5]};
+onChip($('ipre'),k=>{const p=IPRE[k];setSlide('imi',p[0],IF.imi);setSlide('iTi',p[1],IF.iTi);setSlide('imw',p[2],IF.imw);setSlide('iTw',p[3],IF.iTw);press($('ipre'),k);drawI();});
+function iSolve(mi,Ti,mw,Tw){
+  /* energy relative to "everything is ice at 0 °C" */
+  const {ci,cw,Lf}=WAT, Hs=mi*ci*Ti+mw*(Lf+cw*Tw), M=mi+mw;
+  if(Hs<0) return {T:Hs/(M*ci),ice:M,wat:0};
+  if(Hs<=M*Lf) return {T:0,ice:M-Hs/Lf,wat:Hs/Lf};
+  return {T:(Hs-M*Lf)/(M*cw),ice:0,wat:M};
+}
+function drawI(){
+  const mi=+$('imi').value, Ti=+$('iTi').value, mw=+$('imw').value, Tw=+$('iTw').value, {ci,cw,Lf}=WAT;
+  const r=iSolve(mi,Ti,mw,Tw), give=mw*cw*Tw, frz=mw*Lf, warm=mi*ci*(-Ti), melt=mi*Lf;
+  let h='';
+  /* beakers */
+  const beaker=(x,label,ice,wat,T,Tice)=>{
+    let b=''; const w=140,bot=160,hmax=100, wh=hmax*wat/2;
+    if(wat>0.0005) b+=`<rect x="${x+3}" y="${bot-3-wh}" width="${w-6}" height="${wh}" fill="${jT(T)}" opacity=".45"/>`;
+    const n=Math.min(36,Math.round(ice/0.05)), rows=Math.ceil(n/6), fl=wh>rows*18+4;
+    for(let i=0;i<n;i++){const c=i%6,rw=Math.floor(i/6);const xx=x+6+c*22, yy=fl?bot-3-wh-7+rw*18:bot-22-rw*18;b+=iceCube(xx,yy,17);}
+    b+=`<path d="M${x} 40 L${x} ${bot} L${x+w} ${bot} L${x+w} 40" fill="none" stroke="var(--muted)" stroke-width="2.2"/>`;
+    b+=`<text x="${x+w/2}" y="20" font-size="13" font-weight="600" text-anchor="middle" fill="var(--ink)">${label}</text>`;
+    b+=`<text x="${x+w/2}" y="${bot+18}" font-size="12" text-anchor="middle" fill="var(--muted)" font-family="var(--f-mono)">${Tice}</text>`;
+    return b;
+  };
+  h+=beaker(30,'before',mi,mw,Tw,`ice ${neg(Ti)} °C · water ${Tw} °C`);
+  h+=arrow(186,100,232,100,'var(--muted)',2,9);
+  h+=beaker(250,'after',r.ice,r.wat,Math.max(r.T,0),`${f1(r.T)} °C`);
+  /* energy bars */
+  const top=Math.max(give+frz,warm+melt), x0=130, W=360, sc=W/top, y1=212, y2=262;
+  h+=`<text x="${x0-8}" y="${y1+15}" font-size="12.5" text-anchor="end" fill="var(--ink)">water can give</text>`;
+  h+=`<rect x="${x0}" y="${y1}" width="${give*sc}" height="20" fill="var(--hot)" opacity=".9"/><rect x="${x0+give*sc}" y="${y1}" width="${frz*sc}" height="20" fill="var(--hot)" opacity=".22" stroke="var(--hot)" stroke-dasharray="3 3"/>`;
+  h+=`<text x="${x0-8}" y="${y2+15}" font-size="12.5" text-anchor="end" fill="var(--ink)">ice needs</text>`;
+  h+=`<rect x="${x0}" y="${y2}" width="${warm*sc}" height="20" fill="var(--cold)" opacity=".9"/><rect x="${x0+warm*sc}" y="${y2}" width="${melt*sc}" height="20" fill="var(--cold)" opacity=".35"/>`;
+  const xm=x0+give*sc; h+=`<line x1="${xm}" y1="${y1-6}" x2="${xm}" y2="${y2+28}" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+  h+=`<text x="${x0}" y="${y1-8}" font-size="11" fill="var(--muted)">solid: cooling to 0 °C · faded: freezing too</text>`;
+  h+=`<text x="${x0}" y="${y2+38}" font-size="11" fill="var(--muted)">solid: warming to 0 °C · faded: melting all of it</text>`;
+  $('isvg').innerHTML=h;
+  let res,cap;
+  if(r.T>0.0001){res=`All the ice melts; final ${f1(r.T)} °C`;cap=`The water’s heat (dashed line) reaches past the end of the “ice needs” bar, so all the ice melts and the leftover heat warms everything above 0 °C. Only now is it right to solve heat lost = heat gained for a final temperature.`;}
+  else if(r.T<-0.0001){res=`All freezes; final ${f1(r.T)} °C`;cap=`The ice is so cold that even after the water has cooled to 0 °C and frozen completely, the ice still has not reached 0 °C. Everything ends as ice below 0 °C.`;}
+  else if(r.ice>=mi-1e-6){res=`Final 0 °C; ${f0((r.ice-mi)*1000)} g of water freezes`;cap=`The water’s heat runs out before the ice has even warmed to 0 °C, so some of the water freezes, giving up its latent heat. The mixture stops at 0 °C with more ice than it started with.`;}
+  else {res=`Final 0 °C; ${f0(r.ice*1000)} g of ice left`;cap=`The water’s heat (dashed line) runs out partway along the “melt” part of the ice bar. Only ${f0((mi-r.ice)*1000)} g of ice melts, and ice and water stay together at 0 °C. Any answer above 0 °C would be wrong.`;}
+  $('ires').textContent=res; $('icap').innerHTML=cap;
+  $('ikv').innerHTML=`<dt>water gives (to 0 °C)</dt><dd>${kJ(give)}</dd><dt>ice: warm to 0 °C</dt><dd>${kJ(warm)}</dd><dt>ice: melt all</dt><dd>${kJ(melt)}</dd><dt>after: ice / water</dt><dd>${f0(r.ice*1000)} g / ${f0(r.wat*1000)} g</dd>`;
+  const isEx=Math.abs(mi-0.15)<1e-9&&Ti===0&&Math.abs(mw-0.3)<1e-9&&Tw===50;
+  if(isEx) $('icap').innerHTML+=` <br>NCERT Example 10.4 measured 6.7 °C and worked backwards to L<sub>f</sub> = 3.34 × 10⁵ J kg⁻¹. With L<sub>f</sub> = 3.33 × 10⁵ J kg⁻¹ the model predicts ${f1(r.T)} °C: the two agree to within the precision of the measurement.`;
+}
+
+/* =================== 6 · PHASE DIAGRAMS =================== */
+const P={sub:'w', mode:'free', x:300, y:120};
+function pCurves(d){
+  const sub=x=>{const t=clamp((x-d.x0)/(d.tp[0]-d.x0),0,1);return d.y0-(d.y0-d.tp[1])*Math.pow(t,1.6);};
+  const vap=x=>{const t=clamp((x-d.tp[0])/(d.cp[0]-d.tp[0]),0,1);return d.tp[1]-(d.tp[1]-d.cp[1])*Math.pow(t,1.3);};
+  const fus=y=>d.tp[0]+(d.F[0]-d.tp[0])*(d.tp[1]-y)/(d.tp[1]-d.F[1]);
+  return {sub,vap,fus};
+}
+function pPhase(d,x,y){
+  const c=pCurves(d);
+  const near=(pts)=>{let m=1e9;for(let i=1;i<pts.length;i++){const [ax,ay]=pts[i-1],[bx,by]=pts[i],dx=bx-ax,dy=by-ay,t=clamp(((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy),0,1);m=Math.min(m,Math.hypot(x-ax-t*dx,y-ay-t*dy));}return m;};
+  if(Math.hypot(x-d.tp[0],y-d.tp[1])<7) return 'tp';
+  if(Math.hypot(x-d.cp[0],y-d.cp[1])<7) return 'cp';
+  const sp=[],vp=[];for(let i=0;i<=40;i++){const xs=d.x0+(d.tp[0]-d.x0)*i/40;sp.push([xs,c.sub(xs)]);const xv=d.tp[0]+(d.cp[0]-d.tp[0])*i/40;vp.push([xv,c.vap(xv)]);}
+  if(near(sp)<4) return 'sv'; if(near(vp)<4) return 'lv'; if(near([d.tp,d.F])<4) return 'sl';
+  if(x>d.cp[0]&&y<d.cp[1]) return 'sc';
+  const curveY=x<=d.tp[0]?c.sub(x):x<=d.cp[0]?c.vap(x):d.cp[1];
+  if(y>curveY) return 'v';
+  if(y>=d.tp[1]) return 's';
+  return x<c.fus(y)?'s':'l';
+}
+const PNAME={s:'Solid',l:'Liquid',v:'Vapour (gas)',sc:'Supercritical fluid',sv:'On the sublimation curve',lv:'On the vaporisation curve',sl:'On the fusion curve',tp:'Triple point',cp:'Critical point'};
+const PDESC={s:'Only the solid is stable here.',l:'Only the liquid is stable here.',v:'Only the vapour is stable here.',
+ sc:'Beyond the critical point: liquid and gas are no longer different states.',
+ sv:'Solid and vapour coexist. Crossing this curve is sublimation (solid → vapour) or deposition.',
+ lv:'Liquid and vapour coexist: the liquid is boiling (or the vapour condensing). Each point on this curve is a boiling point at that pressure.',
+ sl:'Solid and liquid coexist: melting or freezing. Each point on this curve is a melting point at that pressure.',
+ tp:'Solid, liquid and vapour all coexist, at a single temperature and pressure.',
+ cp:'The vaporisation curve ends here.'};
+function pPath(d){
+  const c=pCurves(d);
+  let s=`M${d.x0} ${d.y0}`; for(let i=1;i<=40;i++){const x=d.x0+(d.tp[0]-d.x0)*i/40;s+=` L${x.toFixed(1)} ${c.sub(x).toFixed(1)}`;}
+  let v=`M${d.tp[0]} ${d.tp[1]}`; for(let i=1;i<=40;i++){const x=d.tp[0]+(d.cp[0]-d.tp[0])*i/40;v+=` L${x.toFixed(1)} ${c.vap(x).toFixed(1)}`;}
+  return {s,v,f:`M${d.tp[0]} ${d.tp[1]} L${d.F[0]} ${d.F[1]}`};
+}
+function drawP(){
+  const d=PD[P.sub], c=pCurves(d), pp=pPath(d);
+  let h='';
+  h+=`<line x1="50" y1="310" x2="510" y2="310" stroke="var(--muted)"/><line x1="50" y1="310" x2="50" y2="10" stroke="var(--muted)"/>`;
+  h+=arrow(470,310,512,310,'var(--muted)',1.5,8)+arrow(50,40,50,8,'var(--muted)',1.5,8);
+  h+=`<text x="508" y="328" font-size="12" text-anchor="end" fill="var(--muted)">temperature →</text><text x="58" y="18" font-size="12" fill="var(--muted)">pressure ↑</text>`;
+  /* guide lines */
+  const aOn=P.mode==='h', vOn=P.mode==='v';
+  h+=`<line x1="50" x2="510" y1="${d.atm}" y2="${d.atm}" stroke="var(--accent)" stroke-width="${aOn?2:1}" stroke-dasharray="${aOn?'':'5 4'}" opacity="${aOn?0.9:0.55}"/><text x="44" y="${d.atm+4}" font-size="11.5" text-anchor="end" fill="var(--accent)">1 atm</text>`;
+  if(vOn) h+=`<line x1="${d.vx}" x2="${d.vx}" y1="20" y2="310" stroke="var(--accent)" stroke-width="2" opacity=".9"/><text x="${d.vx}" y="324" font-size="11" text-anchor="middle" fill="var(--accent)">${d.vlab}</text>`;
+  /* curves */
+  h+=`<path d="${pp.s}" fill="none" stroke="var(--p1)" stroke-width="2.5"/><path d="${pp.v}" fill="none" stroke="var(--hot)" stroke-width="2.5"/><path d="${pp.f}" fill="none" stroke="var(--cold)" stroke-width="2.5"/>`;
+  /* curve names */
+  const fm=[(d.tp[0]+d.F[0])/2,(d.tp[1]+d.F[1])/2];
+  h+=`<text x="${fm[0]-8}" y="${fm[1]-(P.sub==='w'?40:10)}" font-size="11" fill="var(--cold)" text-anchor="end">fusion</text>`;
+  const vx=d.tp[0]+(d.cp[0]-d.tp[0])*0.62; h+=`<text x="${vx+8}" y="${c.vap(vx)+16}" font-size="11" fill="var(--hot)">vaporisation</text>`;
+  const sx=d.x0+(d.tp[0]-d.x0)*0.55; h+=`<text x="${sx+6}" y="${c.sub(sx)+16}" font-size="11" fill="var(--p1)">sublimation</text>`;
+  /* region labels */
+  h+=`<text x="${d.lab.s[0]}" y="${d.lab.s[1]}" font-size="14" font-weight="600" text-anchor="middle" fill="var(--muted)" letter-spacing=".08em">SOLID</text>`;
+  h+=`<text x="${d.lab.l[0]}" y="${d.lab.l[1]}" font-size="14" font-weight="600" text-anchor="middle" fill="var(--muted)" letter-spacing=".08em">LIQUID</text>`;
+  h+=`<text x="${d.lab.v[0]}" y="${d.lab.v[1]}" font-size="14" font-weight="600" text-anchor="middle" fill="var(--muted)" letter-spacing=".08em">VAPOUR</text>`;
+  /* key points */
+  h+=`<circle cx="${d.tp[0]}" cy="${d.tp[1]}" r="5" fill="var(--ink)"/><text x="${d.tp[0]+9}" y="${d.tp[1]+16}" font-size="11.5" fill="var(--ink)">triple point</text>`;
+  h+=`<circle cx="${d.cp[0]}" cy="${d.cp[1]}" r="5" fill="var(--ink)"/>`+(P.sub==='w'?`<text x="${d.cp[0]}" y="${d.cp[1]-11}" font-size="11.5" text-anchor="middle" fill="var(--ink)">critical point</text>`:`<text x="${d.cp[0]+10}" y="${d.cp[1]+4}" font-size="11.5" fill="var(--ink)">critical point</text>`);
+  if(P.sub==='w'){
+    const xm=c.fus(d.atm); let xb=d.tp[0]; for(let x=d.tp[0];x<d.cp[0];x+=0.5){if(c.vap(x)<=d.atm){xb=x;break;}}
+    h+=`<circle cx="${xm}" cy="${d.atm}" r="4" fill="var(--cold)"/><circle cx="${xb}" cy="${d.atm}" r="4" fill="var(--hot)"/>`;
+    h+=`<text x="${xm-6}" y="${d.atm-8}" font-size="11" text-anchor="end" fill="var(--cold)">0 °C</text><text x="${xb+8}" y="${d.atm+16}" font-size="11" fill="var(--hot)">100 °C</text>`;
+  } else {
+    let xs=d.x0; for(let x=d.x0;x<d.tp[0];x+=0.5){if(c.sub(x)<=d.atm){xs=x;break;}}
+    h+=`<circle cx="${xs}" cy="${d.atm}" r="4" fill="var(--p1)"/><text x="${xs-6}" y="${d.atm-8}" font-size="11" text-anchor="end" fill="var(--p1)">−78.5 °C</text>`;
+    if(P.mode==='v'){const yv=c.vap(d.vx);h+=`<circle cx="${d.vx}" cy="${yv}" r="4" fill="var(--hot)"/><text x="${d.vx+8}" y="${yv+4}" font-size="11" fill="var(--hot)">≈ 56 atm</text>`;}
+  }
+  if(d.cp[0]<500) h+=`<text x="${d.cp[0]+40}" y="${d.cp[1]-28}" font-size="10.5" fill="var(--muted)" text-anchor="middle">supercritical</text>`;
+  /* the point */
+  const ph=pPhase(d,P.x,P.y);
+  h+=`<circle cx="${P.x}" cy="${P.y}" r="9" fill="var(--accent)" stroke="var(--surface)" stroke-width="2.5" data-h="p"/>`;
+  $('psvg').innerHTML=h;
+  $('pphase').textContent=PNAME[ph];
+  let cap=PDESC[ph];
+  if(P.mode==='h') cap+=P.sub==='w'?' <b>Heating at 1 atm</b> (drag along the line): solid → melts at 0 °C → liquid → boils at 100 °C → vapour. Both crossings happen at constant temperature while heat goes in, exactly the two flat parts of the heating curve in section 3.'
+    :' <b>Heating at 1 atm</b>: 1 atm is below CO₂’s triple-point pressure (5.11 atm), so this line never enters the liquid region. Solid CO₂ turns straight into gas at −78.5 °C: that is why it is called <i>dry</i> ice.';
+  if(P.mode==='v') cap+=P.sub==='w'?' <b>Squeezing just below 0 °C</b> (drag up the line): vapour → deposits as ice → and then, at high enough pressure, the <i>ice melts</i>. Pressure can turn ice into water because water’s fusion curve leans backwards. This is what happens under the wire in section 8.'
+    :' <b>Squeezing at 20 °C</b>: CO₂ gas condenses to a liquid at about 56 atm. Above the critical temperature (31.0 °C) no pressure would do that.';
+  $('pcap').innerHTML=cap;
+  $('pkv').innerHTML=d.kv.map(r=>`<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('');
+}
+function pSnap(){const d=PD[P.sub];if(P.mode==='h')P.y=d.atm;if(P.mode==='v')P.x=d.vx;}
+dragger($('psvg'),(x,y)=>{P.x=clamp(x,56,505);P.y=clamp(y,14,306);pSnap();drawP();});
+onChip($('psub'),k=>{P.sub=k;press($('psub'),k);store('cal-sub',k);pSnap();drawP();});
+onChip($('pmode'),k=>{P.mode=k;press($('pmode'),k);const d=PD[P.sub];if(k==='h'){P.x=d.x0+30;}if(k==='v'){P.y=300;}pSnap();drawP();});
+{const k=load('cal-sub'); if(k&&PD[k]) P.sub=k;} press($('psub'),P.sub); press($('pmode'),P.mode);
+
+/* =================== 7 · BOILING POINT vs PRESSURE =================== */
+const BPL=[{k:'ev',l:'Everest summit (8849 m)',P:PATM(8849)},{k:'h5',l:'5000 m',P:PATM(5000)},{k:'h3',l:'3000 m',P:PATM(3000)},{k:'sea',l:'Sea level',P:1},{k:'pc',l:'Pressure cooker',P:2.0}];
+$('bpre').innerHTML=BPL.map(b=>`<button class="chip" data-k="${b.k}">${b.l}</button>`).join('');
+const BPS={P:1,k:'sea'};
+const BG={x0:62,x1:540,y0:270,y1:20,P0:0.2,P1:2.5,T0:55,T1:130};
+const bX=p=>BG.x0+(p-BG.P0)/(BG.P1-BG.P0)*(BG.x1-BG.x0), bY=T=>BG.y0-(T-BG.T0)/(BG.T1-BG.T0)*(BG.y0-BG.y1);
+function bCurve(){let s='';for(let i=0;i<=120;i++){const p=BG.P0+(BG.P1-BG.P0)*i/120;s+=(i?' L':'M')+bX(p).toFixed(1)+' '+bY(interp(BPT,p,1)).toFixed(1);}return s;}
+function drawBP(){
+  let h='';
+  [60,70,80,90,100,110,120,130].forEach(T=>{h+=`<line x1="${BG.x0}" x2="${BG.x1}" y1="${bY(T)}" y2="${bY(T)}" stroke="var(--line)"/><text x="${BG.x0-6}" y="${bY(T)+4}" font-size="11" text-anchor="end" fill="var(--muted)">${T}</text>`;});
+  [0.5,1,1.5,2,2.5].forEach(p=>{h+=`<line x1="${bX(p)}" x2="${bX(p)}" y1="${BG.y0}" y2="${BG.y0+5}" stroke="var(--muted)"/><text x="${bX(p)}" y="${BG.y0+18}" font-size="11" text-anchor="middle" fill="var(--muted)">${p}</text>`;});
+  h+=`<line x1="${BG.x0}" y1="${BG.y0}" x2="${BG.x1}" y2="${BG.y0}" stroke="var(--muted)"/>`;
+  h+=`<text x="8" y="12" font-size="11.5" fill="var(--muted)">boiling point (°C)</text><text x="${BG.x1}" y="${BG.y0+38}" font-size="12" text-anchor="end" fill="var(--muted)">pressure on the water (atm) →</text>`;
+  h+=`<path d="${bCurve()} L${BG.x1} ${BG.y1} L${BG.x0} ${BG.y1} Z" fill="var(--hot)" opacity=".06"/>`;
+  h+=`<text x="${bX(0.45)}" y="${bY(118)}" font-size="12" fill="var(--hot)">water boils</text><text x="${bX(1.9)}" y="${bY(88)}" font-size="12" fill="var(--cold)">water does not boil</text>`;
+  h+=`<path d="${bCurve()}" fill="none" stroke="var(--hot)" stroke-width="3"/>`;
+  /* place markers */
+  BPL.forEach(b=>{h+=`<line x1="${bX(b.P)}" x2="${bX(b.P)}" y1="${BG.y0}" y2="${BG.y0-6}" stroke="var(--ink)" stroke-width="1.5"/>`;});
+  const T=interp(BPT,BPS.P,1), x=bX(BPS.P), y=bY(T);
+  h+=`<line x1="${x}" y1="${BG.y0}" x2="${x}" y2="${y}" stroke="var(--accent)" stroke-width="1.5"/><line x1="${BG.x0}" y1="${y}" x2="${x}" y2="${y}" stroke="var(--accent)" stroke-dasharray="3 3"/>`;
+  h+=`<circle cx="${x}" cy="${y}" r="7" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`;
+  $('bpsvg').innerHTML=h;
+  const b=BPL.find(q=>q.k===BPS.k);
+  $('bpbig').textContent=`Water boils at ${f1(T)} °C`;
+  $('bpkv').innerHTML=`<dt>pressure</dt><dd>${f2(BPS.P)} atm (${f0(BPS.P*101.325)} kPa)</dd><dt>boiling point</dt><dd>${f1(T)} °C</dd><dt>latent heat L<sub>v</sub></dt><dd>${sig(interp(BPT,BPS.P,2)*1000,3)} J kg⁻¹</dd>`;
+  let cap;
+  if(BPS.P<0.97) cap=`<b>${b?b.l:'Low pressure'}:</b> the air pressing on the water is lower, so water boils at only ${f0(T)} °C. Food in boiling water cannot get hotter than this, so it cooks slowly: this is why cooking is difficult on hills.`;
+  else if(BPS.P>1.03) cap=`<b>${b?b.l:'High pressure'}:</b> a sealed cooker traps the steam until the pressure inside is about 1 atm above the outside, about 2 atm in all. Water then boils only at about ${f0(T)} °C, and food in it cooks faster.`;
+  else cap=`<b>Sea level, 1 atm:</b> the normal boiling point of water, 100 °C.`;
+  cap+=` Note that L<sub>v</sub> also changes with pressure: latent heats are quoted at 1 atm for this reason.`;
+  $('bpcap').innerHTML=cap;
+  press($('bpre'),BPS.k);
+}
+onChip($('bpre'),k=>{const b=BPL.find(q=>q.k===k);BPS.P=b.P;BPS.k=k;drawBP();});
+dragger($('bpsvg'),(x)=>{BPS.P=clamp(BG.P0+(x-BG.x0)/(BG.x1-BG.x0)*(BG.P1-BG.P0),0.25,2.5);const hit=BPL.find(b=>Math.abs(bX(b.P)-x)<6);if(hit){BPS.P=hit.P;BPS.k=hit.k;}else BPS.k='';drawBP();});
+
+/* NCERT flask activity: [title, P atm, T °C, upside down?, burner?, outlet open?, cold water?, caption] — pressures illustrative */
+const FST=[
+ ['1 · Heat the open flask',1.0,100,false,true,true,false,'With the steam outlet open, the pressure inside stays at 1 atm. When all the water reaches 100 °C, bubbles of steam reach the surface: it boils. (Earlier, small bubbles of dissolved air come out first, and steam bubbles that form at the bottom collapse in the cooler water above.)'],
+ ['2 · Close the outlet',1.3,100,false,true,false,false,'Steam is trapped, so the pressure inside rises. The water is still at 100 °C, but its boiling point is now higher: the dot is below the curve and boiling stops. It starts again only once the water is heated to the new, higher boiling point. Boiling point rises with pressure.'],
+ ['3 · Cool, seal, turn over',1.0,80,true,false,false,false,'Remove the burner and let the water cool to about 80 °C, then seal the flask airtight and turn it upside down. At about 1 atm, 80 °C is well below the boiling point: no boiling.'],
+ ['4 · Pour ice-cold water on it',0.4,80,true,false,false,true,'Cold water on the flask condenses the vapour inside, so the pressure on the water surface drops. The boiling point falls below 80 °C, the dot is now above the curve, and the water boils again, at a lower temperature. Boiling point falls when pressure falls.']
+];
+let fStep=0;
+$('fsteps').innerHTML=FST.map((s,i)=>`<button class="chip" data-k="${i}">${i+1}</button>`).join('')+'<button class="btn" id="fnext">Next step</button>';
+$('fsteps').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c){fStep=+c.dataset.k;drawF();}if(e.target.id==='fnext'){fStep=(fStep+1)%FST.length;drawF();}});
+function drawF(){
+  const s=FST[fStep], [_,Pp,T,inv,burn,open,cold]=s, Tb=interp(BPT,Pp,1), boils=T>=Tb-0.05;
+  let h='';
+  /* flask */
+  const cx=120, cy=inv?100:140, r=58;
+  h+=`<g transform="${inv?`rotate(180 ${cx} ${cy})`:''}">`;
+  h+=`<path d="M${cx-14} ${cy-r+4} L${cx-14} ${cy-r-40} L${cx+14} ${cy-r-40} L${cx+14} ${cy-r+4}" fill="var(--surface)" stroke="var(--muted)" stroke-width="2"/>`;
+  h+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="var(--surface)" stroke="var(--muted)" stroke-width="2"/>`;
+  h+=`<rect x="${cx-17}" y="${cy-r-50}" width="34" height="12" rx="3" fill="var(--force)" opacity=".7"/>`;
+  if(!inv){h+=`<path d="M${cx+7} ${cy-r-50} L${cx+7} ${cy-r-64} L${cx+40} ${cy-r-64}" fill="none" stroke="var(--muted)" stroke-width="2.5"/>`;
+    if(!open) h+=`<rect x="${cx+36}" y="${cy-r-69}" width="8" height="10" fill="var(--flag)"/>`;}
+  h+=`</g>`;
+  /* water sits at the bottom whichever way up the flask is */
+  h+=`<clipPath id="fcl"><circle cx="${cx}" cy="${cy}" r="${r-2}"/>${inv?`<rect x="${cx-12}" y="${cy+r-8}" width="24" height="48"/>`:''}</clipPath>`;
+  const wTop=inv?cy+r*0.1:cy-r*0.15;
+  h+=`<rect x="${cx-r}" y="${wTop}" width="${2*r}" height="${cy+r+50-wTop}" fill="${jT(T)}" opacity=".45" clip-path="url(#fcl)"/>`;
+  if(!inv) h+=`<line x1="${cx-5}" y1="${cy-r-56}" x2="${cx-5}" y2="${cy+20}" stroke="var(--muted)" stroke-width="2.5"/><circle cx="${cx-5}" cy="${cy+22}" r="4" fill="var(--hot)"/>`;
+  if(boils) for(let i=0;i<7;i++){const bx=cx-30+i*10, by=wTop+10+((i*17)%28);h+=`<circle cx="${bx}" cy="${by}" r="3.5" fill="none" stroke="var(--surface)" stroke-width="1.6"/>`;}
+  if(burn) h+=`<path d="M110 228 q8 -18 10 -24 q3 10 10 24 z" fill="var(--hot)" opacity=".8"/>`;
+  if(cold) for(let i=0;i<5;i++) h+=arrow(84+i*18,4,84+i*18,22,'var(--cold)',2,6);
+  h+=`<text x="${cx}" y="248" font-size="12" text-anchor="middle" fill="var(--muted)" font-family="var(--f-mono)">${T} °C · ${Pp} atm</text>`;
+  /* mini boiling curve */
+  const gx0=290,gx1=505,gy0=210,gy1=30, p0=0.2,p1=1.6,t0=55,t1=120;
+  const X=p=>gx0+(p-p0)/(p1-p0)*(gx1-gx0), Y=t=>gy0-(t-t0)/(t1-t0)*(gy0-gy1);
+  h+=`<line x1="${gx0}" y1="${gy0}" x2="${gx1}" y2="${gy0}" stroke="var(--muted)"/><line x1="${gx0}" y1="${gy0}" x2="${gx0}" y2="${gy1}" stroke="var(--muted)"/>`;
+  [60,80,100,120].forEach(t=>{h+=`<text x="${gx0-5}" y="${Y(t)+4}" font-size="10.5" text-anchor="end" fill="var(--muted)">${t}</text>`;});
+  [0.5,1,1.5].forEach(p=>{h+=`<text x="${X(p)}" y="${gy0+15}" font-size="10.5" text-anchor="middle" fill="var(--muted)">${p}</text>`;});
+  h+=`<text x="${gx1}" y="${gy0+32}" font-size="11" text-anchor="end" fill="var(--muted)">P (atm)</text><text x="${gx0-4}" y="${gy1-8}" font-size="11" fill="var(--muted)">T (°C)</text>`;
+  let d='';for(let i=0;i<=60;i++){const p=p0+(p1-p0)*i/60;d+=(i?' L':'M')+X(p).toFixed(1)+' '+Y(interp(BPT,p,1)).toFixed(1);}
+  h+=`<path d="${d}" fill="none" stroke="var(--hot)" stroke-width="2.5"/>`;
+  if(fStep>0){const q=FST[fStep-1];h+=arrow(X(q[1]),Y(q[2]),X(Pp),Y(T),'var(--muted)',1.3,7);}
+  h+=`<circle cx="${X(Pp)}" cy="${Y(T)}" r="6.5" fill="${boils?'var(--hot)':'var(--cold)'}" stroke="var(--surface)" stroke-width="2"/>`;
+  h+=`<text x="${X(Pp)+10}" y="${Y(T)+18}" font-size="11.5" fill="var(--ink)">${boils?'boils':'no boiling'}</text>`;
+  $('fsvg').innerHTML=h;
+  $('ftitle').textContent=s[0]; $('fcap').innerHTML=s[7]+` (Boiling point at ${Pp} atm: ${f1(Tb)} °C.)`;
+  $('fsteps').querySelectorAll('.chip').forEach((c,i)=>c.setAttribute('aria-pressed',i===fStep));
+}
+
+/* =================== 8 · REGELATION =================== */
+slide('rt',v=>v.toFixed(0)+' %',()=>drawR());
+function drawR(){
+  const t=+$('rt').value/100;
+  const top=110, bot=190, x0=70, x1=450, cx=260;
+  const wy=t<0.9?top-4+(bot-top+8)*(t/0.9):bot+4+(t-0.9)/0.1*60; /* wire centre */
+  const inIce=wy>top-2&&wy<bot+2;
+  let h='';
+  /* supports */
+  h+=`<rect x="${x0}" y="${bot}" width="46" height="90" fill="var(--line)"/><rect x="${x1-46}" y="${bot}" width="46" height="90" fill="var(--line)"/>`;
+  h+=`<line x1="20" x2="500" y1="280" y2="280" stroke="var(--muted)"/>`;
+  /* slab */
+  h+=`<rect x="${x0}" y="${top}" width="${x1-x0}" height="${bot-top}" fill="var(--ice)" stroke="var(--iceln)" stroke-width="1.5"/>`;
+  /* refrozen track above the wire */
+  const ty=Math.min(wy,bot);
+  if(wy>top) h+=`<rect x="${cx-5}" y="${top}" width="10" height="${(ty-top).toFixed(1)}" fill="var(--iceln)" opacity=".35"/><line x1="${cx-5}" x2="${cx-5}" y1="${top}" y2="${ty}" stroke="var(--iceln)" stroke-dasharray="3 3"/><line x1="${cx+5}" x2="${cx+5}" y1="${top}" y2="${ty}" stroke="var(--iceln)" stroke-dasharray="3 3"/>`;
+  /* water film under the wire, and heat arrows */
+  if(inIce){
+    h+=`<path d="M${cx-9} ${wy+3} Q${cx} ${wy+12} ${cx+9} ${wy+3}" fill="none" stroke="var(--cold)" stroke-width="3"/>`;
+    h+=`<path d="M${cx-9} ${wy-3} Q${cx} ${wy-11} ${cx+9} ${wy-3}" fill="none" stroke="var(--iceln)" stroke-width="2.5"/>`;
+    h+=arrow(cx+24,wy-26,cx+24,wy+24,'var(--heat)',2,7);
+    h+=`<text x="${cx+32}" y="${wy-4}" font-size="11.5" fill="var(--heat)"><tspan>latent heat flows</tspan><tspan x="${cx+32}" dy="14">down the wire</tspan></text>`;
+    h+=`<text x="${cx-22}" y="${wy+20}" font-size="11.5" text-anchor="end" fill="var(--cold)">melts under pressure</text>`;
+    h+=`<text x="${cx-22}" y="${wy-12}" font-size="11.5" text-anchor="end" fill="var(--muted)">refreezes above</text>`;
+  }
+  /* wire (seen end-on) and hanging weight */
+  const wtY=Math.min(wy+60,226);
+  h+=`<line x1="${cx}" y1="${wy}" x2="${cx}" y2="${wtY}" stroke="var(--ink)" stroke-width="1.5"/>`;
+  h+=`<rect x="${cx-20}" y="${wtY}" width="40" height="${Math.max(10,276-wtY)>40?40:Math.max(10,276-wtY)}" rx="3" fill="var(--muted)"/>`;
+  h+=`<circle cx="${cx}" cy="${wy}" r="5" fill="var(--force)" stroke="var(--ink)" stroke-width="1.2"/>`;
+  h+=`<text x="${cx}" y="${top-16}" font-size="12" text-anchor="middle" fill="var(--muted)">${t===0?'wire across the slab (seen end-on)':'wire entered here'}</text>`;
+  h+=`<text x="${cx+26}" y="${wtY+24}" font-size="11.5" fill="var(--muted)">weight</text>`;
+  $('rsvg').innerHTML=h;
+  let title,cap;
+  if(wy<=top) {title='The wire rests on the ice';cap='All the weight presses on a thin line of ice under the wire, so the pressure there is large.';}
+  else if(inIce){title='The wire sinks through the ice';cap='Ice just under the wire melts; the water flows round it and freezes again above. The track behind the wire (dashed) is solid ice once more.';}
+  else {title='Through, and the slab is still one piece';cap='The wire has passed right through, but the cut has refrozen behind it all the way. The slab does not split: this refreezing is <b>regelation</b>.';}
+  $('rtitle').textContent=title; $('rcap').innerHTML=cap;
+}
+
+/* =================== 9 · QUIZ =================== */
+/* All numbers computed here from the question data */
+const qz={};
+{ /* NCERT Example 10.3: Al 0.047 kg 100→23 °C; water 0.25 kg + Cu calorimeter 0.14 kg, 20→23 °C; sw = 4180, sCu = 386 (as in NCERT) */
+  qz.a=(0.25*4180+0.14*386)*3/(0.047*77); }
+{ /* NCERT Exercise 10.13: 2.5 kg Cu at 500 °C on ice; s = 390, Lf = 335e3 */
+  qz.b=2.5*390*500/335e3; }
+{ /* NCERT Exercise 10.14: 0.20 kg metal at 150 °C; water 0.150 kg + water equivalent 0.025 kg at 27 °C; final 40 °C */
+  qz.c=(0.150+0.025)*4186*(40-27)/(0.20*(150-40)); }
+{ /* NCERT Example 10.5: 3 kg ice −12 °C → steam 100 °C with NCERT's values */
+  const q1=3*2100*12, q2=3*3.35e5, q3=3*4186*100, q4=3*2.256e6; qz.d={q1,q2,q3,q4,t:q1+q2+q3+q4}; }
+{ /* 1 kg ice at 0 °C + 1 kg water at 50 °C */
+  const give=1*WAT.cw*50; qz.e=1-give/WAT.Lf; }
+{ /* ice at 0 °C melted by 1 kg steam at 100 °C, all ending as water at 0 °C */
+  qz.f=(WAT.Lv+WAT.cw*100)/WAT.Lf; }
+{ /* NCERT Exercise 10.12: 10 kW drill, 2.5 min, 50% into 8.0 kg Al, s = 910 */
+  qz.g=0.5*10e3*150/(8*910); }
+{ /* water equivalent of 0.1 kg copper calorimeter */
+  qz.h=0.1*386.4/4186*1000; }
+const QUIZ=[
+ {q:'NCERT Example 10.3: a 0.047 kg aluminium sphere at 100 °C is dropped into a 0.14 kg copper calorimeter holding 0.25 kg of water at 20 °C. The final temperature is 23 °C. Take s<sub>water</sub> = 4180 and s<sub>Cu</sub> = 386 J kg⁻¹ K⁻¹. Specific heat of aluminium?',
+  o:[`${f0(0.25*4180*3/(0.047*77))} J kg⁻¹ K⁻¹`,`${f0(qz.a*77/80)} J kg⁻¹ K⁻¹`,`${f0(qz.a)} J kg⁻¹ K⁻¹`,'4180 J kg⁻¹ K⁻¹'],a:2,
+  why:`Heat lost by sphere = 0.047 × s × 77. Heat gained = (0.25 × 4180 + 0.14 × 386) × 3 = ${f0((0.25*4180+0.14*386)*3)} J. So s = ${f0(qz.a)} J kg⁻¹ K⁻¹. ${f0(0.25*4180*3/(0.047*77))} forgets the calorimeter; ${f0(qz.a*77/80)} uses the wrong temperature drop (80 instead of 77). Load the example in section 2 to see the two lines cross near 23 °C.`},
+ {q:'NCERT Exercise 10.13: a 2.5 kg copper block at 500 °C is placed on a large block of ice at 0 °C. Maximum mass of ice that can melt? (s<sub>Cu</sub> = 0.39 J g⁻¹ K⁻¹, L<sub>f</sub> = 335 J g⁻¹)',
+  o:['2.5 kg',`${f2(qz.b)} kg`,`${f2(qz.b*335/(335+418.6))} kg`,`${f2(qz.b/5)} kg`],a:1,
+  why:`The copper can cool all the way to 0 °C: it gives 2500 g × 0.39 × 500 = ${f0(2.5*390*500/1000)} kJ. Each gram of ice needs 335 J to melt, so ${f0(qz.b*1000)} g ≈ ${f2(qz.b)} kg. “Maximum” because no heat is lost elsewhere and the meltwater is not warmed.`},
+ {q:'NCERT Exercise 10.14: a 0.20 kg metal block at 150 °C goes into a copper calorimeter (water equivalent 0.025 kg) with 150 cm³ of water at 27 °C. Final temperature 40 °C. Specific heat of the metal, and if heat losses were not negligible, is the true value larger or smaller?',
+  o:[`≈ ${f0(0.150*4186*13/22)} J kg⁻¹ K⁻¹; true value is larger`,`≈ ${f0(qz.c)} J kg⁻¹ K⁻¹; true value is smaller`,`≈ ${f0(qz.c)} J kg⁻¹ K⁻¹; true value is larger`,`≈ ${f0(qz.c)} J kg⁻¹ K⁻¹; losses make no difference`],a:2,
+  why:`Water + equivalent = 0.175 kg: heat gained = 0.175 × 4186 × 13 = ${f0(0.175*4186*13)} J. Heat lost = 0.20 × s × 110, so s ≈ ${f0(qz.c)} J kg⁻¹ K⁻¹ (0.43 J g⁻¹ K⁻¹). If some heat leaked out, the block really gave more heat than the water received, so the true s is larger than this estimate.`},
+ {q:'NCERT Example 10.5: 3 kg of ice at −12 °C is turned into steam at 100 °C. Of the four steps (warm ice, melt, warm water, boil), which takes the most heat?',
+  o:['Warming the ice','Melting','Warming the water from 0 to 100 °C','Boiling'],a:3,
+  why:`Warm ice: ${kJ(qz.d.q1)}; melt: ${kJ(qz.d.q2)}; warm water: ${kJ(qz.d.q3)}; boil: ${kJ(qz.d.q4)}. Boiling alone is ${f0(100*qz.d.q4/qz.d.t)}% of the total ${sig(qz.d.t,2)} J. This is the long plateau in section 3.`},
+ {q:'1 kg of ice at 0 °C is mixed with 1 kg of water at 50 °C in an insulated vessel. What is the final state? (L<sub>f</sub> = 3.33 × 10⁵ J kg⁻¹, s<sub>w</sub> = 4186 J kg⁻¹ K⁻¹)',
+  o:['All water at 25 °C','All water at about 0 °C, all ice melted',`0 °C with about ${f0(qz.e*1000)} g of ice left`,'All water at −15 °C'],a:2,
+  why:`The water can give at most 1 × 4186 × 50 = ${f0(4186*50/1000)} kJ by cooling to 0 °C. Melting all the ice needs 333 kJ. So only ${f0((1-qz.e)*1000)} g melts, and ${f0(qz.e*1000)} g of ice is left at 0 °C. (25 °C ignores the latent heat; a “final temperature” below 0 °C is the sign you assumed too much melting.)`},
+ {q:'How many kilograms of ice at 0 °C can 1 kg of steam at 100 °C melt, if everything ends as water at 0 °C?',
+  o:[`about ${f1(WAT.Lv/WAT.Lf)} kg`,`about ${f1(qz.f)} kg`,'about 1 kg',`about ${f1(WAT.cw*100/WAT.Lf)} kg`],a:1,
+  why:`The steam condenses (22.6 × 10⁵ J) and the water then cools from 100 to 0 °C (4.186 × 10⁵ J): ${sig(WAT.Lv+WAT.cw*100,3)} J in all. Divided by 3.33 × 10⁵ J kg⁻¹ gives about ${f1(qz.f)} kg. Forgetting the cooling step gives ${f1(WAT.Lv/WAT.Lf)} kg.`},
+ {q:'NCERT Exercise 10.12: a 10 kW drill bores into an 8.0 kg aluminium block for 2.5 minutes; 50% of the power is lost. Rise in temperature of the block? (s = 0.91 J g⁻¹ K⁻¹)',
+  o:[`≈ ${f0(qz.g*2)} °C`,`≈ ${f0(qz.g/2)} °C`,`≈ ${f0(qz.g)} °C`,`≈ ${f1(qz.g/60)} °C`],a:2,
+  why:`Heat into the block = 0.5 × 10 000 W × 150 s = 7.5 × 10⁵ J. ΔT = Q/(m s) = 7.5 × 10⁵/(8.0 × 910) ≈ ${f0(qz.g)} °C. Forgetting the 50% doubles it; using minutes instead of seconds divides it by 60.`},
+ {q:'A copper calorimeter has a mass of 100 g. What is its water equivalent? (s<sub>Cu</sub> = 386.4, s<sub>w</sub> = 4186 J kg⁻¹ K⁻¹)',
+  o:[`${f1(qz.h)} g`,'100 g','386 g',`${f0(100*4186/386.4)} g`],a:0,
+  why:`W = m<sub>c</sub>s<sub>c</sub>/s<sub>w</sub> = 100 × 386.4/4186 ≈ ${f1(qz.h)} g. The 100 g copper vessel soaks up as much heat per degree as only about 9 g of water would, because copper’s specific heat is so much smaller.`},
+ {q:'A block of dry ice (solid CO₂) is left on a table at 1 atm. Why does it never form a puddle?',
+  o:['Liquid CO₂ evaporates instantly at room temperature','Its melting point is above room temperature','CO₂ has no latent heat of fusion','1 atm is below CO₂’s triple-point pressure, so liquid CO₂ cannot exist at 1 atm'],a:3,
+  why:'Liquid CO₂ is stable only above the triple-point pressure, 5.11 atm. At 1 atm the horizontal line on the phase diagram passes straight from solid to vapour, crossing the sublimation curve at −78.5 °C. Try “Heat at 1 atm” for CO₂ in section 6.'}
+];
+function quiz(el,Q){
+  const render=()=>{el.innerHTML=Q.map((q,i)=>`<div class="panel"><p class="qn">Q${i+1}</p><p>${q.q}</p>
+    <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');};
+  el.addEventListener('click',e=>{
+    const b=e.target.closest('.opt'); if(!b||b.disabled) return;
+    const box=b.parentElement, q=Q[+box.dataset.i], j=+b.dataset.j;
+    box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+    const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+  });
+  render(); return render;
+}
+const rq=quiz($('quiz'),QUIZ); $('qreset').onclick=rq;
+
+C.mat='Copper';$('cmat').value='Copper';setSlide('cmb',0.5,CF.cmb);setSlide('cmw',0.05,CF.cmw);setSlide('cmc',0.05,CF.cmc);cPre('free'); press($('ipre'),'ex'); drawT(); drawV(); drawG(); drawH(); drawL(); drawW(); drawI(); pSnap(); drawP(); drawBP(); drawF(); drawR();
+</script>
+</body>
+</html>

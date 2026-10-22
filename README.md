@@ -24,6 +24,8 @@ Interactive pages for building intuition across the JEE syllabus (CBSE + JEE). P
 | 05 | [Kinetic Theory](physics/thermodynamics/kinetic-theory.html) | Thermodynamics | Molecule box → pressure and gas laws; KE ∝ T; Maxwell curve with v_mp, v_avg, v_rms; Graham; mean free path; real gases |
 | 06 | [Degrees of Freedom and Equipartition](physics/thermodynamics/degrees-of-freedom.html) | Thermodynamics | Molecule viewer toggling each DOF; ½kT buckets → Cv, Cp, γ; mixtures; solids 3R; frozen modes |
 | 07 | [Heat Transfer](physics/thermodynamics/heat-transfer.html) | Thermodynamics | Conduction (series/parallel, thermal resistance, ice growth); convection; black-body radiation; Newton's law of cooling |
+| 08 | [Temperature and Thermal Expansion](physics/thermodynamics/temperature-expansion.html) | Thermodynamics | Linked °C/°F/K/own scales; gas thermometer → absolute zero; 2α and 3α from pictures; water at 4 °C; thermal stress; bimetal, liquid, pendulum |
+| 09 | [Heat, Calorimetry and Change of State](physics/thermodynamics/calorimetry-phase.html) | Thermodynamics | Specific heat; heat lost = heat gained by dragging; heating curve to scale; ice + water; phase diagrams; boiling point vs pressure; regelation |
 
 ### Mathematics — [`maths/`](maths/index.html)
 

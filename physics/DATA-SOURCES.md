@@ -70,3 +70,35 @@ The current NCERT reprint has no water ≈ 9R passage and no "frozen modes" subs
 | Ice growth t = ρL(x₂² − x₁²)/(2Kθ); Newton's law as the small-ΔT limit of Stefan's law (k = 4eσAT<sub>s</sub>³/ms) | H. C. Verma Vol. 2, "Heat Transfer" (re-derived) |
 
 The glow-colour swatch is approximate (Planck's law sampled at three wavelengths), and the ice-growth and rod warm-up pictures are simplified models; all are labelled on the page.
+
+## Module 08 — Temperature and Thermal Expansion (`thermodynamics/temperature-expansion.html`)
+
+| Content | Source |
+|---|---|
+| α<sub>l</sub>: Al 2.5, brass 1.8, iron 1.2, Cu 1.7, Ag 1.9, Au 1.4, pyrex 0.32 (×10⁻⁵ K⁻¹) | NCERT Class 11, "Thermal Properties of Matter", Table 10.1 |
+| α<sub>V</sub>: invar 2×10⁻⁶, pyrex 1×10⁻⁵, glass 2.5×10⁻⁵, iron 3.55×10⁻⁵, brass 6×10⁻⁵, Al 7×10⁻⁵, hard rubber 2.4×10⁻⁴, mercury 18.2×10⁻⁵, water 20.7×10⁻⁵ (near 20 °C), ethanol 110×10⁻⁵; α<sub>V</sub> = 1/T for an ideal gas (Eq. 10.6) | NCERT Table 10.2. Invar and ethanol differ from Wikipedia's table (3.6×10⁻⁶; 75×10⁻⁵); NCERT kept |
+| Steel rail (α 1.2×10⁻⁵, Y 2×10¹¹ N m⁻², 5 m, 40 cm²); Example 10.2; Exercises 10.1, 10.2, 10.6, 10.8, 10.9, 10.11 | NCERT §10.5 |
+| Water density 0–12 °C (maximum at 3.98 °C) | Tanaka et al., *Metrologia* 38 (2001) 301 formula; cross-checked with Wikipedia "Water (data page)" (CRC) |
+| Triple point of water 273.16 K, 611.657 Pa | Guildner, Johnson & Jones 1976 (via Wikipedia "Water (data page)") |
+
+Errors in NCERT, not carried over:
+- The phase-diagram box gives the triple-point pressure of water as 6.11 × 10⁻³ Pa. Correct: 611.657 Pa (≈ 6.04 × 10⁻³ atm; 6.11 is the value in mbar).
+- Table 10.1 gives lead's α<sub>l</sub> as 0.29 × 10⁻⁵ K⁻¹; the real value is 2.9 × 10⁻⁵. Lead is left off the page.
+- "Points to ponder" calls 273.16 K exact by definition; that ended with the 2019 SI redefinition. The page says it "is assigned".
+
+Schematic, labelled on the page: gas-sample pressures, lake layer temperatures, bond-energy curve, copper α<sub>V</sub> curve, bimetal bend.
+
+## Module 09 — Heat, Calorimetry and Change of State (`thermodynamics/calorimetry-phase.html`)
+
+| Content | Source |
+|---|---|
+| Specific heats (incl. ice 2060 J kg⁻¹ K⁻¹), gas C<sub>p</sub> and C<sub>v</sub>, latent heats (water L<sub>f</sub> 3.33×10⁵, L<sub>v</sub> 22.6×10⁵ J kg⁻¹) | NCERT Tables 10.3, 10.4, 10.5 |
+| Worked items | NCERT Examples 10.3–10.5; Exercises 10.12–10.14 |
+| Boiling point and L<sub>v</sub> vs pressure (0.2–2.5 atm; 99.97 °C and 2256.4 kJ kg⁻¹ at 1 atm; 120.63 °C at 2 atm); water triple point 0.01 °C, 611.657 Pa; critical point 373.95 °C, 22.064 MPa; steam c<sub>p</sub> ≈ 2040 J kg⁻¹ K⁻¹ (100–120 °C average) | NIST Chemistry WebBook (IAPWS-95) |
+| CO₂ triple point −56.56 °C, 5.11 atm; critical point 30.98 °C, 72.81 atm | NIST Chemistry WebBook |
+| Dry ice sublimes at −78.5 °C at 1 atm; ice melting point falls 0.0073 °C per atm; iodine melts at 113.7 °C (triple point 12.1 kPa); Everest 8848.86 m; pressure cooker ≈ 2 atm absolute; skating explanation | Wikipedia "Dry ice", "Properties of water", "Iodine", "Mount Everest", "Pressure cooking", "Ice skating" |
+| Pressure vs altitude P = P₀(1 − 2.25577×10⁻⁵ h)^5.25588 | US Standard Atmosphere 1976 |
+
+Errors / outdated values in NCERT, not carried over: the triple-point pressure (as above); gold in Table 10.5 (boiling point 2660 °C, L<sub>v</sub> 15.8×10⁵ — modern values 2970 °C, ≈ 17.4×10⁵ J kg⁻¹; gold left off); lead's melting and boiling points differ slightly from modern values (not shown). NCERT explains skating by pressure melting alone; the page labels that a simplified picture.
+
+The phase diagrams are schematic with correct key points; the flask-activity pressures (1.3 and 0.4 atm) and the steam-burn model (skin at 37 °C) are illustrative and labelled.

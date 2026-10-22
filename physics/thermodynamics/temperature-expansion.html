@@ -1,0 +1,1015 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Temperature and Thermal Expansion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) temperature vs heat  (2) scales + tF–tC line + own scale  (3) gas thermometer, absolute zero, Kelvin
+   (4) why solids expand: asymmetric well  (5) rod / plate / cube, hole  (6) how much: αV chart, copper curve, gas
+   (7) anomalous water + lake  (8) thermal stress, blacksmith ring  (9) JEE: bimetal, apparent expansion, pendulum, scale
+   (10) predict-then-check.  Quantity colours shared with laws-and-pv.html: --heat (Q), --hot, --cold, --force. Temperatures use jet. */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --axis:#d0402f; --vel:#2c56cc; --force:#c7741a; --spin:#7a52c7;
+  --heat:#c2306a; --work:#1f8f87; --du:#8a6d1f; --hot:#d0452c; --cold:#1f7fc4;
+  --p1:#7a52c7; --p2:#2c56cc;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --heat:#f06d9f; --work:#3cb8ad; --du:#d4b44a; --hot:#ff7b62; --cold:#5cb3f0;
+  --p1:#a585f0; --p2:#7d9dff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --axis:#ff7b62; --vel:#7d9dff; --force:#f0a04b; --spin:#a585f0;
+  --heat:#f06d9f; --work:#3cb8ad; --du:#d4b44a; --hot:#ff7b62; --cold:#5cb3f0;
+  --p1:#a585f0; --p2:#7d9dff; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+svg.drag{touch-action:none;cursor:crosshair}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.btn[disabled]{opacity:.45;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:10em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:7.5em;text-align:right;white-space:nowrap}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+svg .mono{font-family:var(--f-mono)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+a{color:var(--accent)}
+.q{color:var(--heat);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Physics</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Temperature and Thermal Expansion</h1>
+    <p class="lede">How hot something is gets a number from a thermometer, and every thermometer relies on something that changes with temperature. This page builds the temperature scales, finds absolute zero from a gas thermometer, then shows why almost everything grows when heated, why water is the odd one out, and what happens when expansion is blocked.</p>
+  </header>
+
+  <!-- 1 · temperature vs heat -->
+  <section class="stack" id="heat">
+    <div>
+      <h2>1 · Temperature is not heat</h2>
+      <p class="lede">A small cup of hot tea touches a big bucket of warm water. The bucket holds far more energy. Before you press the button: which way does heat flow, and when does it stop?</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="hsvg" viewBox="0 0 520 230" role="img" aria-label="A small hot body touching a large warm body" style="min-width:340px"></svg></div>
+        <div class="slider"><label for="hta">cup temperature</label><input type="range" id="hta" min="0" max="100" step="1" value="80"><output id="htao"></output></div>
+        <div class="slider"><label for="htb">bucket temperature</label><input type="range" id="htb" min="0" max="100" step="1" value="30"><output id="htbo"></output></div>
+        <div class="slider"><label for="hmb">bucket size</label><input type="range" id="hmb" min="1" max="6" step="0.5" value="5"><output id="hmbo"></output></div>
+        <div class="row"><button class="btn primary" id="hgo">Let them touch</button><span class="muted" id="hstat"></span></div>
+      </div>
+      <div class="panel stack">
+        <p class="cap key"><b>Temperature</b> says how hot a body is. <b>Heat</b> is energy that moves from one body to another <i>because</i> their temperatures differ. It always flows from the higher temperature to the lower one, however big or small the bodies are, and stops when the temperatures are equal (thermal equilibrium).</p>
+        <p class="cap">So the small hot cup warms the big bucket, even though the bucket has much more energy in it. The bigger body’s temperature changes less. Heat is measured in joules (J); temperature in kelvin (K) or degrees Celsius (°C).</p>
+        <p class="muted">The final temperature here assumes both are water with no losses. How to calculate it: <a href="calorimetry-phase.html">Calorimetry and change of state</a>. Why a thermometer can be trusted at all: the zeroth law in <a href="laws-and-pv.html">Laws of thermodynamics</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · scales -->
+  <section class="stack" id="scales">
+    <div>
+      <h2>2 · Thermometers and temperature scales</h2>
+      <p class="lede">A thermometer uses a property that changes steadily with temperature, such as the volume of mercury or alcohol in a glass tube. To put numbers on it you need two <b>fixed points</b> that always happen at the same temperature: the <b>ice point</b> (pure water freezing) and the <b>steam point</b> (pure water boiling), both at standard atmospheric pressure. Drag the marker up and down: one temperature, four names for it.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="scsvg" class="drag" viewBox="0 0 560 370" role="img" aria-label="Celsius, Fahrenheit, Kelvin and a home-made scale side by side with a shared marker" style="min-width:460px"></svg></div>
+        <h3>Make your own scale <span class="hw">JEE</span></h3>
+        <div class="slider"><label for="xi">X at ice point</label><input type="range" id="xi" min="-50" max="50" step="1" value="20"><output id="xio"></output></div>
+        <div class="slider"><label for="xs">X at steam point</label><input type="range" id="xs" min="60" max="300" step="1" value="220"><output id="xso"></output></div>
+        <p class="cap key" id="xcap"></p>
+      </div>
+      <div class="panel stack">
+        <div class="row" style="gap:14px;align-items:flex-start;flex-wrap:nowrap">
+          <svg id="thsvg" viewBox="0 0 130 280" role="img" aria-label="Liquid-in-glass thermometer" style="width:110px;flex:none;height:auto"></svg>
+          <p class="cap" style="font-size:13.5px">Calibrating: put the bulb in melting ice and mark the liquid level; put it in steam and mark again. Divide the gap into <b>100</b> equal steps for Celsius or <b>180</b> for Fahrenheit (which calls the two marks 32 and 212). A liquid thermometer only works while its liquid stays a liquid, so no single liquid covers every temperature.</p>
+        </div>
+        <h3>Fahrenheit against Celsius: a straight line</h3>
+        <div class="svgbox"><svg id="cfsvg" class="drag" viewBox="0 0 420 290" role="img" aria-label="Graph of Fahrenheit temperature against Celsius temperature" style="min-width:300px"></svg></div>
+        <p class="cap key">The same 100 °C interval is 180 °F, so the slope is 180/100 = 9/5, and the line passes through (0, 32): <b>(t<sub>F</sub> − 32)/180 = t<sub>C</sub>/100</b>, i.e. t<sub>F</sub> = (9/5)t<sub>C</sub> + 32.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · gas thermometer -->
+  <section class="stack" id="absolute-zero">
+    <div>
+      <h2>3 · A gas thermometer finds absolute zero</h2>
+      <p class="lede">Liquid thermometers made with different liquids disagree slightly between the fixed points, because each liquid expands in its own way. Gases at low density all behave alike. Keep a gas at constant volume and read the temperature from its pressure. Below are three samples (different gases or different amounts, all at low density). Change the bath temperature, then extend the lines.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="gsvg" viewBox="0 0 560 330" role="img" aria-label="Pressure against temperature for three gas samples at constant volume" style="min-width:440px"></svg></div>
+        <div class="slider"><label for="gt">bath temperature</label><input type="range" id="gt" min="-50" max="200" step="1" value="25"><output id="gto"></output></div>
+        <div class="row"><button class="btn primary" id="gext">Extend the lines backwards</button><span class="muted">solid: range a real gas thermometer can measure; dashed: extrapolation</span></div>
+      </div>
+      <div class="panel stack">
+        <svg id="gap" viewBox="0 0 260 170" role="img" aria-label="Constant-volume gas thermometer: bulb in a bath connected to a pressure column" style="width:100%;max-width:300px;height:auto;display:block;margin:0 auto"></svg>
+        <dl class="kv" id="gkv"></dl>
+        <p class="cap key" id="gcap"></p>
+      </div>
+    </div>
+    <div class="two">
+      <p class="cap key"><b>The Kelvin (absolute) scale</b> starts at absolute zero and uses the Celsius-sized degree: <b>T = t<sub>C</sub> + 273.15</b>. On this scale every line above passes through the origin, so at constant volume P ∝ T. That is the ideal-gas equation <b>PV = µRT</b> (µ moles, R = 8.31 J mol⁻¹ K⁻¹) with V held fixed, and it is why a gas thermometer measures absolute temperature directly. Real gases stop following the line at low temperature (they liquefy), which is why the dashed part is an extrapolation. More on the gas law: <a href="kinetic-theory.html">Kinetic theory</a>.</p>
+      <p class="cap"><b>One fixed point is enough.</b> Once zero is fixed at absolute zero, a single reference sets the size of the degree. The Kelvin scale uses the <b>triple point of water</b>, the one temperature and pressure (611.657 Pa, about 0.006 atm) at which ice, liquid water and water vapour coexist, and assigns it <b>273.16 K</b> (0.01 °C). It is easier to reproduce than the ice point and steam point, which shift with air pressure. With this choice, ice melts at very nearly 0 °C and water boils at very nearly 100 °C at 1 atm, which is why T = t<sub>C</sub> + 273.15 uses 273.15, not 273.16.</p>
+    </div>
+  </section>
+
+  <!-- 4 · why expand -->
+  <section class="stack" id="why">
+    <div>
+      <h2>4 · Why a solid grows when heated <span class="hw">JEE</span></h2>
+      <p class="lede">The atoms of a solid sit in a row, each vibrating about its place. The graph shows the potential energy of two neighbours against their separation r. Heating gives them more vibration energy, which raises the horizontal energy line. Watch the middle of the swing (the dot).</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="wmode" role="group" aria-label="Shape of the energy curve"><button class="chip" data-k="real">Real bond (lopsided)</button><button class="chip" data-k="spring">Ideal spring (symmetric)</button></div>
+        <div class="svgbox"><svg id="wsvg" viewBox="0 0 520 375" role="img" aria-label="Potential energy against atomic separation, with the vibration range at the chosen energy" style="min-width:360px"></svg></div>
+        <div class="slider"><label for="we">temperature</label><input type="range" id="we" min="3" max="80" step="1" value="20"><output id="weo"></output></div>
+      </div>
+      <div class="panel stack">
+        <p class="cap key" id="wcap"></p>
+        <p class="cap">The curve is steep on the left (atoms pushed together repel strongly) and gentle on the right (pulling them apart is easier). At higher energy the atoms swing further, and because the right wall is gentler, the swing extends more to the right than to the left. The average separation grows, and a whole crystal of such pairs gets bigger.</p>
+        <p class="muted"><span class="hw">qualitative, simplified model</span> The curve is a generic bond shape (not a particular material), the energy scale is not to scale, and the dot is the midpoint of the swing, used as a stand-in for the average separation.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · linear, area, volume -->
+  <section class="stack" id="expansion">
+    <div>
+      <h2>5 · Longer, wider, bigger: linear, area and volume expansion</h2>
+      <p class="lede">For a small temperature rise ΔT, a rod’s length grows by a fixed fraction: <b>ΔL/L = α<sub>l</sub>ΔT</b>. The real change is tiny (a 1 m copper rod heated by 100 K grows by under 2 mm), so the picture magnifies the growth. Turn the magnification down to 1 and see how small it really is.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="eshape" role="group" aria-label="Shape"><button class="chip" data-k="rod">Rod: length</button><button class="chip" data-k="plate">Plate: area</button><button class="chip" data-k="cube">Cube: volume</button></div>
+        <div class="chips" id="emat" role="group" aria-label="Material"></div>
+        <div class="svgbox"><svg id="esvg" viewBox="0 0 520 300" role="img" aria-label="Shape before and after heating, growth magnified" style="min-width:340px"></svg></div>
+        <div class="slider"><label for="edt">temperature rise ΔT</label><input type="range" id="edt" min="0" max="200" step="1" value="100"><output id="edto"></output></div>
+        <div class="slider"><label for="emag">magnify growth</label><input type="range" id="emag" min="0" max="100" step="1" value="100"><output id="emago"></output></div>
+        <div class="row" id="eholerow"><button class="chip" id="ehole" aria-pressed="false">Cut a hole in the plate</button></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="ekv"></dl>
+        <p class="cap key" id="ecap"></p>
+        <p class="muted">α<sub>l</sub> values are typical averages for 0–100 °C. Results assume α<sub>l</sub> stays constant over the chosen range.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · how much -->
+  <section class="stack" id="materials">
+    <div>
+      <h2>6 · Who expands most: solids, liquids, gases</h2>
+      <p class="lede">The volume expansion coefficient α<sub>V</sub> = (ΔV/V)/ΔT for common substances. Each grid line is ×10. Before you look: where would a gas sit compared with water?</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="asvg" viewBox="0 0 520 395" role="img" aria-label="Coefficients of volume expansion on a logarithmic scale" style="min-width:340px"></svg></div>
+        <div class="legend"><span><i style="background:var(--p1);height:10px;width:10px"></i>solids</span><span><i style="background:var(--cold);height:10px;width:10px"></i>liquids</span><span><i style="background:var(--force);height:10px;width:10px"></i>gas</span><span>log scale: each grid line is ×10</span></div>
+      </div>
+      <div class="panel stack">
+        <p class="cap key"><b>Solids &lt; liquids &lt; gases.</b> Metals expand more than glass; <b>invar</b>, an iron–nickel alloy, barely expands at all, which is why it is used in measuring tapes and clock pendulums. Pyrex glass expands much less than ordinary glass, so it survives sudden heating. Liquids expand more than solids (alcohol more than mercury). A gas expands most of all.</p>
+        <p class="cap"><b>Ideal gas at constant pressure:</b> PV = µRT gives PΔV = µRΔT, so ΔV/V = ΔT/T and <b>α<sub>V</sub> = 1/T</b>. At 0 °C that is <span id="agas0"></span>; at 27 °C it is <span id="agas27"></span>. It falls as the gas gets hotter.</p>
+        <h3>α<sub>V</sub> is not quite a constant</h3>
+        <svg id="cusvg" viewBox="0 0 300 170" role="img" aria-label="Schematic: coefficient of volume expansion of copper rises from zero at absolute zero and levels off" style="width:100%;max-width:340px;height:auto;display:block"></svg>
+        <p class="muted"><span class="hw">schematic, shape only</span> For copper, α<sub>V</sub> falls towards zero as T approaches 0 K and becomes nearly constant at high temperature. Over 0–100 °C it changes little, which is why a single average value works for everyday problems.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · water -->
+  <section class="stack" id="water">
+    <div>
+      <h2>7 · Water, the exception: densest at 4 °C</h2>
+      <p class="lede">Cool almost any liquid and it shrinks. Water shrinks too, down to about 4 °C. Below that it <b>expands</b> as it cools further, all the way to freezing. Drag along the curve.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="dmode" role="group" aria-label="Quantity"><button class="chip" data-k="rho">Density</button><button class="chip" data-k="vol">Volume of 1 kg</button></div>
+        <div class="svgbox"><svg id="dsvg" class="drag" viewBox="0 0 520 320" role="img" aria-label="Density of water from 0 to 12 degrees Celsius" style="min-width:340px"></svg></div>
+        <p class="muted">Measured values for pure water at 1 atm (recommended density table for 0–40 °C). The vertical axis covers only the top 0.06 % of the density, so the curve looks far more dramatic than it is.</p>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="dkv"></dl>
+        <p class="cap key" id="dcap"></p>
+      </div>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row"><button class="btn" id="lprev">◀ Back</button><button class="btn primary" id="lnext">Colder ▶</button><span class="muted" id="lstep"></span></div>
+        <div class="svgbox"><svg id="lsvg" viewBox="0 0 520 260" role="img" aria-label="Cross-section of a lake as winter sets in" style="min-width:340px"></svg></div>
+        <p class="muted"><span class="hw">schematic, not to scale</span> Layer temperatures are illustrative; colour shows temperature on the scale at right.</p>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="ltitle"></p>
+        <p class="cap key" id="lcap"></p>
+        <p class="cap">If water behaved like other liquids, the coldest water would sink, lakes would freeze from the bottom up, and much of the plant and animal life in them would die. Ice also conducts heat poorly, so the ice layer slows further freezing: see the pond in <a href="heat-transfer.html">Heat transfer</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · thermal stress -->
+  <section class="stack" id="stress">
+    <div>
+      <h2>8 · Blocked expansion: thermal stress</h2>
+      <p class="lede">A steel rail 5 m long with a 40 cm² cross-section is heated. Free, it simply gets longer. Clamp it between rigid walls and it cannot: the walls must push it back to its old length, and that push is the thermal stress.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="smode" role="group" aria-label="Ends"><button class="chip" data-k="free">Free end</button><button class="chip" data-k="clamp">Clamped between walls</button></div>
+        <div class="svgbox"><svg id="ssvg" viewBox="0 0 560 200" role="img" aria-label="A steel rail, free or clamped, with the forces from the walls" style="min-width:360px"></svg></div>
+        <div class="slider"><label for="sdt">temperature change</label><input type="range" id="sdt" min="-40" max="40" step="1" value="10"><output id="sdto"></output></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="skv"></dl>
+        <p class="cap key" id="scap"></p>
+      </div>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <h3>Fitting an iron ring on a cart wheel</h3>
+        <div class="svgbox"><svg id="rsvg" viewBox="0 0 520 290" role="img" aria-label="An iron ring being heated until it fits over a wooden rim" style="min-width:340px"></svg></div>
+        <div class="slider"><label for="rt">ring temperature</label><input type="range" id="rt" min="27" max="300" step="1" value="27"><output id="rto"></output></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="rkv"></dl>
+        <p class="cap key" id="rcap"></p>
+        <p class="cap"><b>Where it matters.</b> Railway lines are laid with small gaps between rails so they can expand on hot days without buckling. Bridges have expansion joints. A tight metal lid on a glass jar loosens in hot water because the metal expands more than the glass.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · JEE applications -->
+  <section class="stack" id="jee">
+    <div>
+      <h2>9 · Expansion at work <span class="hw">JEE</span></h2>
+      <p class="lede">Four set-ups that turn up in JEE problems. Each is the same idea, ΔL = α<sub>l</sub>LΔT, meeting something else.</p>
+    </div>
+    <div class="two">
+      <div class="panel stack">
+        <h3>Bimetallic strip</h3>
+        <div class="svgbox"><svg id="bsvg" viewBox="0 0 420 250" role="img" aria-label="Brass and iron strip bonded together, bending as temperature changes" style="min-width:320px"></svg></div>
+        <div class="slider"><label for="bdt">above set point</label><input type="range" id="bdt" min="-40" max="200" step="1" value="80"><output id="bdto"></output></div>
+        <p class="cap key" id="bcap"></p>
+      </div>
+      <div class="panel stack">
+        <h3>Real and apparent expansion of a liquid</h3>
+        <div class="chips" id="fliq" role="group" aria-label="Liquid"></div>
+        <div class="chips" id="fves" role="group" aria-label="Flask"></div>
+        <div class="svgbox"><svg id="fsvg" viewBox="0 0 420 300" role="img" aria-label="A flask of liquid heated, showing real and apparent rise in the neck" style="min-width:320px"></svg></div>
+        <div class="slider"><label for="fdt">temperature rise</label><input type="range" id="fdt" min="0" max="80" step="1" value="60"><output id="fdto"></output></div>
+        <p class="cap key" id="fcap"></p>
+      </div>
+      <div class="panel stack">
+        <h3>Pendulum clock in summer and winter</h3>
+        <div class="svgbox"><svg id="psvg" class="drag" viewBox="0 0 420 260" role="img" aria-label="Pendulum length and seconds lost per day against room temperature" style="min-width:320px"></svg></div>
+        <div class="slider"><label for="pth">room temperature</label><input type="range" id="pth" min="0" max="45" step="1" value="35"><output id="ptho"></output></div>
+        <p class="cap key" id="pcap"></p>
+      </div>
+      <div class="panel stack">
+        <h3>A steel tape on a hot day</h3>
+        <div class="svgbox"><svg id="msvg" viewBox="0 0 420 200" role="img" aria-label="A steel measuring tape whose marks spread apart when heated" style="min-width:320px"></svg></div>
+        <div class="slider"><label for="mth">day temperature</label><input type="range" id="mth" min="0" max="60" step="1" value="45"><output id="mtho"></output></div>
+        <p class="cap key" id="mcap"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · quiz -->
+  <section class="stack">
+    <div>
+      <h2>10 · Predict, then check</h2>
+      <p class="lede">CBSE- and JEE-style questions. Choose first; the reasoning appears after.</p>
+    </div>
+    <div class="qgrid" id="quiz"></div>
+    <div><button class="btn" id="qreset">Reset answers</button></div>
+  </section>
+
+  <footer>
+    <p><b>Models used:</b> expansion coefficients taken as constant over the range shown (average values for 0–100 °C); growth in the drawings is magnified, as labelled. Gas-thermometer lines are ideal-gas lines for low-density gases. The bond-energy curve is a generic qualitative shape. The two touching bodies in section 1 are taken as water with no heat lost. Lake layers, the copper α<sub>V</sub> curve and the bimetal bend are schematic. Pendulum: simple pendulum with small swings, period ∝ √L.</p>
+    <p><b>Based on:</b> NCERT Physics Class 11, “Thermal Properties of Matter” (temperature and its measurement, ideal-gas equation and absolute temperature, thermal expansion; expansion coefficients from its tables of linear and volume expansion); H. C. Verma, <i>Concepts of Physics</i> Vol. 2, “Heat and Temperature”. Density of water: standard reference table for pure water. Triple point of water: standard reference value.</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+/* Coefficient of linear expansion, 10^-5 K^-1, average 0–100 °C: NCERT Class 11 Physics, Table 10.1 (lead omitted) */
+const AL=[{n:'Aluminium',a:2.5},{n:'Silver',a:1.9},{n:'Brass',a:1.8},{n:'Copper',a:1.7},{n:'Gold',a:1.4},{n:'Iron',a:1.2},{n:'Glass (pyrex)',a:0.32}];
+/* Coefficient of volume expansion, K^-1, 0–100 °C: NCERT Class 11 Physics, Table 10.2. Gas: 1/T at 0 °C (NCERT Eq. 10.6) */
+const AV=[
+ {n:'Invar',v:2e-6,g:'s'},{n:'Glass (pyrex)',v:1e-5,g:'s'},{n:'Glass (ordinary)',v:2.5e-5,g:'s'},{n:'Iron',v:3.55e-5,g:'s'},
+ {n:'Brass',v:6e-5,g:'s'},{n:'Aluminium',v:7e-5,g:'s'},{n:'Hard rubber',v:2.4e-4,g:'s'},
+ {n:'Mercury',v:18.2e-5,g:'l'},{n:'Water (near 20 °C)',v:20.7e-5,g:'l'},{n:'Alcohol (ethanol)',v:110e-5,g:'l'},
+ {n:'Ideal gas at 0 °C',v:1/273.15,g:'g'}];
+/* Steel rail: NCERT §10.5 (α = 1.2e-5 K^-1, Y = 2e11 N m^-2, L = 5 m, A = 40 cm^2) */
+const RAIL={a:1.2e-5,Y:2e11,L:5,A:40e-4};
+/* Blacksmith's ring: NCERT Example 10.2 (iron, α = 1.20e-5 K^-1) */
+const RING={drim:5.243,dring:5.231,t0:27,a:1.20e-5};
+/* Steel tape: NCERT Exercise 10.6 (α = 1.20e-5 K^-1, calibrated at 27.0 °C) */
+const TAPE={a:1.20e-5,t0:27};
+/* Liquids for apparent expansion: mercury, ethanol (Table 10.2), glycerine (NCERT Exercise 10.11); flasks: Table 10.2 */
+const LIQ=[{id:'hg',l:'Mercury',g:18.2e-5},{id:'gly',l:'Glycerine',g:49e-5},{id:'eth',l:'Alcohol',g:110e-5}];
+const VES=[{id:'glass',l:'Ordinary glass flask',g:2.5e-5},{id:'pyrex',l:'Pyrex flask',g:1e-5}];
+/* Density of pure water (SMOW, 101 325 Pa), kg m^-3, valid 0–40 °C: Tanaka et al., Metrologia 38 (2001) 301 */
+const TAN={a1:-3.983035,a2:301.797,a3:522528.9,a4:69.34881,a5:999.974950};
+const rhoW=t=>TAN.a5*(1-(t+TAN.a1)*(t+TAN.a1)*(t+TAN.a2)/(TAN.a3*(t+TAN.a4)));
+const T0K=273.15, TTP=273.16, PTP=611.657; /* K, K, Pa (triple point of water) */
+const R_GAS=8.31; /* J mol^-1 K^-1, NCERT */
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const neg=s=>String(s).replace(/-/g,'−');
+function sup(e){const m={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};return String(e).split('').map(c=>m[c]).join('');}
+function sig(v,n){ if(!isFinite(v)) return '—'; if(v===0) return '0'; const a=Math.abs(v);
+  if(a>=1e5||a<1e-3){const e=Math.floor(Math.log10(a)), m=v/Math.pow(10,e);return neg(m.toFixed(n-1))+' × 10'+sup(e);}
+  const d=Math.max(0,n-1-Math.floor(Math.log10(a))); return neg(v.toFixed(d)); }
+const fx=(v,d)=>neg((Math.abs(v)<0.5*Math.pow(10,-d)?0:v).toFixed(d));
+const fv=v=>neg(String(Math.round(v*100)/100));
+/* a × 10^e with up to 3 significant figures, trailing zeros dropped */
+function ex(v){const e=Math.floor(Math.log10(v)+1e-9);return String(+(v/Math.pow(10,e)).toPrecision(3))+' × 10'+sup(e);}
+function arrow(x1,y1,x2,y2,col,w,head){
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy); if(L<1.5) return '';
+  const h=Math.min(head||9,L*0.6), ux=dx/L, uy=dy/L, bx=x2-ux*h, by=y2-uy*h, px=-uy*h*0.5, py=ux*h*0.5;
+  return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="${w||2}"/><polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${(bx+px).toFixed(1)},${(by+py).toFixed(1)} ${(bx-px).toFixed(1)},${(by-py).toFixed(1)}" fill="${col}"/>`;
+}
+function jet(t){t=Math.max(0,Math.min(1,t));const c=x=>Math.round(255*Math.max(0,Math.min(1,1.5-Math.abs(4*t-x))));return `rgb(${c(3)},${c(2)},${c(1)})`;}
+function chips(el,list,key){el.innerHTML=list.map(x=>`<button class="chip" data-k="${x[key||'id']}">${x.l}</button>`).join('');}
+function press(el,k){el.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===String(k)));}
+function onChip(el,fn){el.addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)fn(c.dataset.k);});}
+function svgXY(svg,e){const r=svg.getBoundingClientRect(), vb=svg.viewBox.baseVal;return [(e.clientX-r.left)/r.width*vb.width,(e.clientY-r.top)/r.height*vb.height];}
+function dragger(svg,onMove,pick){
+  let act=null;
+  svg.addEventListener('pointerdown',e=>{
+    act=pick(...svgXY(svg,e)); if(act==null) return;
+    try{svg.setPointerCapture(e.pointerId);}catch(_){} onMove(act,...svgXY(svg,e)); e.preventDefault();
+  });
+  svg.addEventListener('pointermove',e=>{if(act==null)return;onMove(act,...svgXY(svg,e));});
+  const end=()=>{act=null;}; svg.addEventListener('pointerup',end); svg.addEventListener('pointercancel',end);
+}
+const txt=(x,y,s,o)=>`<text x="${x}" y="${y}" font-size="${(o&&o.fs)||11}" fill="${(o&&o.c)||'var(--muted)'}" text-anchor="${(o&&o.a)||'start'}"${o&&o.w?` font-weight="${o.w}"`:''}${o&&o.mono?' class="mono"':''}>${s}</text>`;
+const kvHTML=rows=>rows.map(r=>`<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('');
+const hatch=id=>`<pattern id="${id}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="var(--muted)" stroke-width="1.6" opacity=".55"/></pattern>`;
+
+/* =================== 1 · TEMPERATURE VS HEAT =================== */
+const HB={ta:80,tb:30,mb:5,A:null,B:null,run:false};
+function hIn(){HB.ta=+$('hta').value;HB.tb=+$('htb').value;HB.mb=+$('hmb').value;HB.A=HB.B=null;HB.run=false;drawH();}
+['hta','htb','hmb'].forEach(id=>$(id).addEventListener('input',hIn));
+const hFinal=()=>(HB.ta+HB.mb*HB.tb)/(1+HB.mb);
+$('hgo').addEventListener('click',()=>{
+  if(HB.run) return; HB.A=HB.ta; HB.B=HB.tb;
+  if(RM){HB.A=HB.B=hFinal();drawH();return;}
+  HB.run=true; requestAnimationFrame(hLoop);
+});
+function hLoop(){
+  if(!HB.run) return;
+  const d=HB.A-HB.B, k=0.03; HB.A-=k*d*HB.mb/(1+HB.mb); HB.B+=k*d/(1+HB.mb);
+  if(Math.abs(HB.A-HB.B)<0.05){HB.A=HB.B=hFinal();HB.run=false;}
+  drawH(); if(HB.run) requestAnimationFrame(hLoop);
+}
+function drawH(){
+  $('htao').textContent=HB.ta+' °C'; $('htbo').textContent=HB.tb+' °C'; $('hmbo').textContent='×'+HB.mb.toFixed(1);
+  const TA=HB.A??HB.ta, TB=HB.B??HB.tb, touch=HB.A!=null;
+  const sA=56, sB=56*Math.sqrt(HB.mb), base=200, cx=touch?250:236, col=t=>jet(0.06+0.88*t/100);
+  let g='';
+  g+=`<line x1="20" y1="${base}" x2="500" y2="${base}" stroke="var(--line)" stroke-width="2"/>`;
+  g+=`<rect x="${cx-sA-(touch?0:0)}" y="${base-sA}" width="${sA}" height="${sA}" rx="4" fill="${col(TA)}" opacity=".85"/>`;
+  const bx=touch?250:264;
+  g+=`<rect x="${bx}" y="${base-sB}" width="${sB}" height="${sB}" rx="4" fill="${col(TB)}" opacity=".85"/>`;
+  g+=txt(cx-sA/2,base-sA-24,'cup',{a:'middle',c:'var(--ink)',w:600,fs:12})+txt(cx-sA/2,base-sA-9,fx(TA,1)+' °C',{a:'middle',c:'var(--ink)',mono:1,fs:12});
+  g+=txt(bx+sB/2,base-sB-24,'bucket',{a:'middle',c:'var(--ink)',w:600,fs:12})+txt(bx+sB/2,base-sB-9,fx(TB,1)+' °C',{a:'middle',c:'var(--ink)',mono:1,fs:12});
+  const d=TA-TB, yA=base-sA/2;
+  if(touch&&Math.abs(d)>0.06){
+    const w=1.5+Math.abs(d)/10, L=34, dir=Math.sign(d);
+    g+=arrow(250-dir*L,yA,250+dir*L,yA,'var(--heat)',w,8+w);
+    g+=txt(250,yA+(sA/2)+18,'heat Q',{a:'middle',c:'var(--heat)',w:600,fs:12});
+  }
+  g+=txt(20,24,'area of each block ∝ amount of water',{fs:10.5});
+  $('hsvg').innerHTML=g;
+  let s;
+  if(!touch) s='Not touching yet. Predict the direction of heat flow.';
+  else if(HB.run) s=d>0?'Heat flows cup → bucket.':'Heat flows bucket → cup.';
+  else s=`Equilibrium at ${fx(TA,1)} °C: same temperature, so no more heat flows.`;
+  if(!touch&&HB.ta===HB.tb) s='Same temperature already: nothing will flow.';
+  $('hstat').textContent=s;
+}
+
+/* =================== 2 · SCALES =================== */
+let TC=+(load('tx-tc')||25); if(!isFinite(TC)) TC=25;
+const SC={xi:20,xs:220};
+const ysc=t=>350-(t+280)/500*300;
+const tcOfY=y=>(350-y)/300*500-280;
+const COLS=[
+  {x:150,u:'°C',f:t=>t,d:1},
+  {x:262,u:'°F',f:t=>t*9/5+32,d:1},
+  {x:374,u:'K',f:t=>t+T0K,d:2},
+  {x:486,u:'X',f:t=>SC.xi+(SC.xs-SC.xi)*t/100,d:1}];
+const FIXP=[{t:100,n:'steam point'},{t:0,n:'ice point'},{t:-40,n:'°C = °F'},{t:-T0K,n:'absolute zero'}];
+function setTC(t){TC=clamp(t,-T0K,220);store('tx-tc',String(Math.round(TC*100)/100));drawSC();drawCF();drawTh();}
+dragger($('scsvg'),(a,x,y)=>{let t=tcOfY(y);for(const f of FIXP) if(Math.abs(t-f.t)<2.5) t=f.t;setTC(t);},()=>1);
+['xi','xs'].forEach(id=>$(id).addEventListener('input',()=>{SC.xi=+$('xi').value;SC.xs=+$('xs').value;drawSC();}));
+function drawSC(){
+  $('xio').textContent=neg(SC.xi)+' X'; $('xso').textContent=neg(SC.xs)+' X';
+  let g='';
+  const ytop=ysc(220), ybot=ysc(-T0K);
+  /* fixed-point lines */
+  for(const f of FIXP){const y=ysc(f.t);g+=`<line x1="6" y1="${y}" x2="545" y2="${y}" stroke="var(--line)" stroke-dasharray="4 3"/>`+txt(6,y-4,f.n,{fs:11,c:'var(--ink)'});}
+  for(const c of COLS){
+    const sl=c.f(1)-c.f(0);
+    g+=`<line x1="${c.x}" y1="${ytop}" x2="${c.x}" y2="${ybot}" stroke="var(--ink)" stroke-width="1.6"/>`;
+    /* minor ticks in the scale's own unit */
+    const step=[5,10,20,25,50,100].find(s=>s/Math.abs(sl)*0.6>=5)||100;
+    const v0=c.f(-T0K), v1=c.f(220), lo=Math.min(v0,v1), hi=Math.max(v0,v1);
+    for(let v=Math.ceil(lo/step)*step; v<=hi; v+=step){const t=(v-c.f(0))/sl, y=ysc(t);g+=`<line x1="${c.x-4}" y1="${y.toFixed(1)}" x2="${c.x}" y2="${y.toFixed(1)}" stroke="var(--muted)"/>`;}
+    for(const f of FIXP){const y=ysc(f.t);g+=txt(c.x+6,y-4,fv(c.f(f.t)),{fs:10.5,mono:1,c:'var(--ink)'});}
+    g+=txt(c.x,18,c.u,{a:'middle',fs:13,w:700,c:'var(--ink)'});
+    g+=txt(c.x,36,fx(c.f(TC),c.d),{a:'middle',fs:12.5,mono:1,c:'var(--accent)'});
+  }
+  /* marker */
+  const y=ysc(TC);
+  g+=`<line x1="${COLS[0].x-14}" y1="${y}" x2="${COLS[3].x+14}" y2="${y}" stroke="var(--accent)" stroke-width="2.5"/>`;
+  for(const c of COLS) g+=`<circle cx="${c.x}" cy="${y}" r="6.5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`;
+  g+=txt(545,364,'drag up or down',{a:'end',fs:10.5});
+  $('scsvg').innerHTML=g;
+  const X=COLS[3].f(TC);
+  $('xcap').innerHTML=`Scale X calls the ice point <b>${neg(SC.xi)}</b> and the steam point <b>${neg(SC.xs)}</b>, so ${SC.xs-SC.xi} X steps span the same interval as 100 °C. Any two linear scales are linked by the fraction of the way from ice to steam: <b>(X ${SC.xi<0?'+ '+(-SC.xi):'− '+SC.xi})/${SC.xs-SC.xi} = t<sub>C</sub>/100</b>. Here ${fx(TC,1)} °C reads ${fx(X,1)} X.`;
+}
+function drawTh(){
+  const lo=-20, hi=110, yOf=t=>232-(t-lo)/(hi-lo)*200, inR=TC>=lo&&TC<=hi;
+  const top=yOf(clamp(TC,lo,hi));
+  let g=`<rect x="42" y="20" width="16" height="222" rx="8" fill="none" stroke="var(--muted)" stroke-width="1.5"/>`;
+  g+=`<circle cx="50" cy="252" r="15" fill="var(--hot)" opacity=".85" stroke="var(--muted)" stroke-width="1.5"/>`;
+  g+=`<rect x="46.5" y="${top}" width="7" height="${252-top}" fill="var(--hot)" opacity=".85"/>`;
+  for(let t=0;t<=100;t+=10){const y=yOf(t);g+=`<line x1="58" y1="${y}" x2="${t%50?64:70}" y2="${y}" stroke="var(--muted)"/>`;}
+  g+=txt(74,yOf(100)+4,'steam',{fs:10.5,c:'var(--ink)'})+txt(74,yOf(0)+4,'ice',{fs:10.5,c:'var(--ink)'});
+  g+=txt(74,yOf(50)+4,'50',{fs:10,mono:1});
+  if(!inR) g+=txt(65,274,TC>hi?'off the top':'below range',{a:'middle',fs:10,c:'var(--flag)'});
+  $('thsvg').innerHTML=g;
+}
+/* tF vs tC graph */
+const cfx=t=>50+(t+60)/180*350, cfy=f=>255-(f+80)/340*235;
+dragger($('cfsvg'),(a,x)=>{let t=(x-50)/350*180-60;for(const p of [0,100,-40]) if(Math.abs(t-p)<2) t=p;setTC(clamp(t,-60,120));},()=>1);
+function drawCF(){
+  let g='';
+  for(const t of [-40,0,50,100]){g+=`<line x1="${cfx(t)}" y1="20" x2="${cfx(t)}" y2="255" stroke="var(--line)"/>`+txt(cfx(t),270,neg(t),{a:'middle',fs:10.5,mono:1});}
+  for(const f of [-40,32,100,212]){g+=`<line x1="50" y1="${cfy(f)}" x2="400" y2="${cfy(f)}" stroke="var(--line)"/>`+txt(45,cfy(f)+4,neg(f),{a:'end',fs:10.5,mono:1});}
+  g+=`<line x1="50" y1="255" x2="400" y2="255" stroke="var(--ink)"/><line x1="50" y1="20" x2="50" y2="255" stroke="var(--ink)"/>`;
+  g+=txt(400,286,'t<tspan baseline-shift="sub" font-size="8">C</tspan> (°C)',{a:'end',fs:11})+txt(54,14,'t<tspan baseline-shift="sub" font-size="8">F</tspan> (°F)',{fs:11});
+  /* rise/run between fixed points */
+  g+=`<path d="M${cfx(0)} ${cfy(32)} H${cfx(100)} V${cfy(212)}" fill="none" stroke="var(--force)" stroke-width="1.5" stroke-dasharray="5 3"/>`;
+  g+=txt((cfx(0)+cfx(100))/2,cfy(32)+14,'100 C°',{a:'middle',fs:11,c:'var(--force)',w:600});
+  g+=txt(cfx(100)+5,(cfy(32)+cfy(212))/2,'180 F°',{fs:11,c:'var(--force)',w:600});
+  g+=`<line x1="${cfx(-60)}" y1="${cfy(-60*1.8+32)}" x2="${cfx(120)}" y2="${cfy(120*1.8+32)}" stroke="var(--accent)" stroke-width="2.4"/>`;
+  const t=clamp(TC,-60,120), f=t*1.8+32;
+  g+=`<line x1="${cfx(t)}" y1="255" x2="${cfx(t)}" y2="${cfy(f)}" stroke="var(--accent)" stroke-dasharray="3 3"/><line x1="50" y1="${cfy(f)}" x2="${cfx(t)}" y2="${cfy(f)}" stroke="var(--accent)" stroke-dasharray="3 3"/>`;
+  g+=`<circle cx="${cfx(t)}" cy="${cfy(f)}" r="6.5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`;
+  const up=cfy(f)>60;
+  g+=txt(cfx(t)+(up?-10:12),cfy(f)+(up?-10:16),`(${fx(t,1)}, ${fx(f,1)})`,{a:up?'end':'start',fs:11,mono:1,c:'var(--ink)'});
+  if(TC<-60) g+=txt(395,240,'marker is off this graph',{a:'end',fs:10,c:'var(--flag)'});
+  $('cfsvg').innerHTML=g;
+}
+
+/* =================== 3 · GAS THERMOMETER =================== */
+const GAS=[{p0:40,l:'sample A'},{p0:80,l:'sample B'},{p0:120,l:'sample C'}]; /* kPa at 0 °C, illustrative */
+const GS={t:25,ext:false};
+const gx=t=>60+(t+300)/520*440, gy=P=>280-P/220*250;
+$('gt').addEventListener('input',e=>{GS.t=+e.target.value;drawG();});
+$('gext').addEventListener('click',()=>{GS.ext=!GS.ext;drawG();});
+function drawG(){
+  $('gto').textContent=neg(GS.t)+' °C';
+  $('gext').textContent=GS.ext?'Hide the extension':'Extend the lines backwards';
+  let g='';
+  for(const t of [-273.15,-200,-100,0,100,200]){const x=gx(t);g+=`<line x1="${x}" y1="30" x2="${x}" y2="280" stroke="var(--line)"/>`;
+    g+=txt(x,296,t===-273.15?'−273.15':neg(t),{a:'middle',fs:10.5,mono:1,c:t===-273.15&&GS.ext?'var(--flag)':'var(--muted)'});
+    g+=txt(x,312,fv(t+T0K),{a:'middle',fs:10,mono:1,c:'var(--cold)'});}
+  g+=txt(18,296,'°C',{fs:10.5})+txt(18,312,'K',{fs:10.5,c:'var(--cold)'});
+  for(const P of [0,50,100,150,200]){const y=gy(P);g+=`<line x1="60" y1="${y}" x2="500" y2="${y}" stroke="var(--line)"/>`+txt(55,y+4,P,{a:'end',fs:10.5,mono:1});}
+  g+=`<line x1="60" y1="280" x2="500" y2="280" stroke="var(--ink)"/><line x1="60" y1="30" x2="60" y2="280" stroke="var(--ink)"/>`;
+  g+=txt(64,24,'P (kPa), volume fixed',{fs:11});
+  const cols=['var(--p1)','var(--accent)','var(--heat)'];
+  GAS.forEach((s,i)=>{
+    const P=t=>s.p0*(t+T0K)/T0K;
+    g+=`<line x1="${gx(-50)}" y1="${gy(P(-50))}" x2="${gx(200)}" y2="${gy(P(200))}" stroke="${cols[i]}" stroke-width="2.4"/>`;
+    for(let t=-50;t<=200;t+=50) g+=`<circle cx="${gx(t)}" cy="${gy(P(t))}" r="3" fill="${cols[i]}"/>`;
+    if(GS.ext) g+=`<line x1="${gx(-T0K)}" y1="${gy(0)}" x2="${gx(-50)}" y2="${gy(P(-50))}" stroke="${cols[i]}" stroke-width="2" stroke-dasharray="6 4"/>`;
+    g+=txt(gx(200)+4,gy(P(200))+4,s.l,{fs:10.5,c:cols[i],w:600});
+    g+=`<circle cx="${gx(GS.t)}" cy="${gy(P(GS.t))}" r="6" fill="${cols[i]}" stroke="var(--surface)" stroke-width="2"/>`;
+  });
+  g+=`<line x1="${gx(GS.t)}" y1="30" x2="${gx(GS.t)}" y2="280" stroke="var(--ink)" stroke-width="1" stroke-dasharray="2 3"/>`;
+  if(GS.ext){g+=`<circle cx="${gx(-T0K)}" cy="${gy(0)}" r="5" fill="var(--flag)"/>`+`<line x1="${gx(-T0K)}" y1="${gy(0)-6}" x2="${gx(-T0K)}" y2="${gy(150)}" stroke="var(--flag)" stroke-width="1"/>`+txt(gx(-T0K)+6,gy(160),'all meet at −273.15 °C',{fs:11.5,c:'var(--flag)',w:600})+txt(gx(-T0K)+6,gy(160)+15,'where P would be 0',{fs:11,c:'var(--flag)'});}
+  $('gsvg').innerHTML=g;
+  /* apparatus: bulb in bath, pressure column for sample B */
+  const PB=GAS[1].p0*(GS.t+T0K)/T0K, h=PB/260*120;
+  let a=`<rect x="10" y="60" width="100" height="100" rx="6" fill="${jet(0.06+0.88*(GS.t+50)/250)}" opacity=".35"/>`;
+  a+=txt(60,155,'bath '+neg(GS.t)+' °C',{a:'middle',fs:10.5,c:'var(--ink)'});
+  a+=`<circle cx="60" cy="100" r="26" fill="var(--surface)" stroke="var(--accent)" stroke-width="2"/>`+txt(60,104,'gas',{a:'middle',fs:11,c:'var(--accent)'});
+  a+=`<path d="M60 74 V30 H160 V160" fill="none" stroke="var(--line)" stroke-width="7" stroke-linejoin="round"/>`;
+  a+=`<rect x="156.5" y="${160-h}" width="7" height="${h}" fill="var(--accent)"/>`;
+  a+=`<line x1="166" y1="${160-h}" x2="182" y2="${160-h}" stroke="var(--accent)"/>`+txt(186,160-h+4,fx(PB,0)+' kPa',{fs:10.5,mono:1,c:'var(--ink)'});
+  a+=txt(110,22,'volume kept fixed',{a:'middle',fs:10});
+  $('gap').innerHTML=a;
+  const T=GS.t+T0K;
+  $('gkv').innerHTML=kvHTML([['t',fx(GS.t,0)+' °C'],['T = t + 273.15',fx(T,2)+' K'],['P (sample B)',fx(PB,1)+' kPa'],['P/T (sample B)',fx(PB/T,4)+' kPa/K, constant']]);
+  $('gcap').innerHTML=GS.ext?'Every sample, whatever the gas and however much there is, points to the same temperature where its pressure would vanish: <b>−273.15 °C, absolute zero</b>. Nothing can be colder.':'Each line is straight: pressure rises by the same amount for every degree. Different samples have different slopes. Press the button and follow them backwards.';
+}
+
+/* =================== 4 · POTENTIAL WELL =================== */
+const WS={e:0.2,mode:'real'};
+const WA=2.2; /* Morse width parameter, per r0: shape only */
+onChip($('wmode'),k=>{WS.mode=k;drawW();});
+$('we').addEventListener('input',e=>{WS.e=+e.target.value/100;drawW();});
+const wx=r=>60+(r-0.6)/2.0*440, wy=U=>40+(0.6-U)/1.65*230;
+function Uof(r){return WS.mode==='real'?Math.pow(1-Math.exp(-WA*(r-1)),2)-1:WA*WA*(r-1)*(r-1)-1;}
+function drawW(){
+  press($('wmode'),WS.mode);
+  $('weo').textContent=WS.e<0.1?'low':WS.e<0.4?'medium':'high';
+  const s=Math.sqrt(WS.e), E=-1+WS.e;
+  const r1=WS.mode==='real'?1-Math.log(1+s)/WA:1-s/WA, r2=WS.mode==='real'?1-Math.log(1-s)/WA:1+s/WA, rm=(r1+r2)/2;
+  let g=`<line x1="60" y1="${wy(0)}" x2="505" y2="${wy(0)}" stroke="var(--line)"/>`;
+  g+=`<line x1="60" y1="30" x2="60" y2="${wy(-1.05)}" stroke="var(--ink)"/><line x1="60" y1="${wy(-1.05)}" x2="505" y2="${wy(-1.05)}" stroke="var(--ink)"/>`;
+  g+=txt(66,30,'potential energy U',{fs:11})+txt(505,wy(-1.05)+16,'separation r →',{a:'end',fs:11});
+  let d='';for(let r=0.6;r<=2.6;r+=0.01){const U=Uof(r);if(U>0.6)continue;d+=(d?'L':'M')+wx(r).toFixed(1)+' '+wy(U).toFixed(1);}
+  g+=`<path d="${d}" fill="none" stroke="var(--ink)" stroke-width="2.2"/>`;
+  /* r0 reference */
+  g+=`<line x1="${wx(1)}" y1="${wy(-1)}" x2="${wx(1)}" y2="${wy(-1.05)}" stroke="var(--muted)"/>`;
+  g+=`<line x1="${wx(1)}" y1="${wy(-1)}" x2="${wx(1)}" y2="${wy(0.45)}" stroke="var(--muted)" stroke-dasharray="3 3"/>`+txt(wx(1),wy(0.45)-6,'r₀ (at rest)',{a:'middle',fs:10.5});
+  /* energy line, ends on curve */
+  g+=`<line x1="${wx(r1)}" y1="${wy(E)}" x2="${wx(r2)}" y2="${wy(E)}" stroke="var(--hot)" stroke-width="2.4"/>`;
+  g+=`<circle cx="${wx(r1)}" cy="${wy(E)}" r="3.5" fill="var(--hot)"/><circle cx="${wx(r2)}" cy="${wy(E)}" r="3.5" fill="var(--hot)"/>`;
+  g+=txt(wx(r2)+8,wy(E)+4,'energy of vibration',{fs:10.5,c:'var(--hot)'});
+  g+=`<line x1="${wx(rm)}" y1="${wy(E)}" x2="${wx(rm)}" y2="${wy(-1.05)}" stroke="var(--accent)" stroke-dasharray="4 3"/>`;
+  g+=`<circle cx="${wx(rm)}" cy="${wy(E)}" r="6" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`;
+  g+=txt(wx(rm),wy(-1.05)+16,'middle of swing',{a:'middle',fs:10.5,c:'var(--accent)'});
+  /* row of atoms spaced by the mean separation (exaggerated) */
+  const y0=360, sp=48*rm;
+  g+=txt(60,y0-44,'row of atoms, spacing = middle of swing',{fs:10.5});
+  g+=txt(8,y0-22+4,'at rest',{fs:10})+txt(8,y0+4,'now',{fs:10});
+  for(let i=0;i<7;i++) g+=`<circle cx="${70+i*48}" cy="${y0-22}" r="8" fill="none" stroke="var(--muted)" stroke-dasharray="2 2"/>`;
+  for(let i=0;i<7;i++){const x=70+i*sp;if(x>510)break;
+    g+=`<line x1="${x-(r2-r1)*24}" y1="${y0}" x2="${x+(r2-r1)*24}" y2="${y0}" stroke="var(--hot)" stroke-width="1.5" opacity=".6"/>`;
+    g+=`<circle cx="${x}" cy="${y0}" r="8" fill="var(--p1)" opacity=".85"/>`;}
+  $('wsvg').innerHTML=g;
+  const shift=(rm-1)*100;
+  $('wcap').innerHTML=WS.mode==='real'
+    ?`The swing runs from ${fx(r1,2)} r₀ to ${fx(r2,2)} r₀. Its middle sits at <b>${fx(rm,3)} r₀</b>, ${fx(shift,1)} % beyond the resting separation (in this exaggerated picture). Raise the temperature: the middle moves right, so the atoms are farther apart on average. <b>That is thermal expansion.</b>`
+    :`With a symmetric (ideal spring) curve the swing grows equally on both sides. Its middle stays at <b>r₀</b> however hot it gets: no expansion at all. Expansion needs the lopsided shape of a real bond.`;
+}
+
+/* =================== 5 · LINEAR / AREA / VOLUME =================== */
+const ES={shape:load('tx-shape')||'plate',mat:load('tx-mat')||'Aluminium',dT:100,mag:100,hole:false};
+if(!['rod','plate','cube'].includes(ES.shape)) ES.shape='plate';
+if(!AL.some(m=>m.n===ES.mat)) ES.mat='Aluminium';
+$('emat').innerHTML=AL.map(m=>`<button class="chip" data-k="${m.n}">${m.n}</button>`).join('');
+onChip($('emat'),k=>{ES.mat=k;store('tx-mat',k);drawE();});
+onChip($('eshape'),k=>{ES.shape=k;store('tx-shape',k);drawE();});
+$('edt').addEventListener('input',e=>{ES.dT=+e.target.value;drawE();});
+$('emag').addEventListener('input',e=>{ES.mag=Math.round(Math.pow(10,+e.target.value/50));drawE();});
+$('ehole').addEventListener('click',()=>{ES.hole=!ES.hole;drawE();});
+function drawE(){
+  press($('eshape'),ES.shape); press($('emat'),ES.mat);
+  $('ehole').setAttribute('aria-pressed',ES.hole); $('eholerow').hidden=ES.shape!=='plate';
+  $('edto').textContent=ES.dT+' K'; $('emago').textContent='×'+ES.mag;
+  const a=AL.find(m=>m.n===ES.mat).a*1e-5, x=a*ES.dT, xd=x*ES.mag;
+  let g=`<defs>${hatch('eh')}</defs>`;
+  const strip='var(--heat)', corner='var(--flag)';
+  if(ES.shape==='rod'){
+    const L=300, x0=30, y=120, h=34, Ld=L*(1+xd);
+    g+=`<rect x="${x0}" y="${y}" width="${Ld}" height="${h}" fill="${strip}" opacity=".85"/>`;
+    g+=`<rect x="${x0}" y="${y}" width="${L}" height="${h}" fill="var(--p1)" opacity=".85"/>`;
+    g+=`<line x1="${x0+L}" y1="${y-14}" x2="${x0+L}" y2="${y+h+14}" stroke="var(--ink)" stroke-dasharray="3 3"/>`;
+    if(Ld-L>14) g+=arrow(x0+L,y-22,x0+Ld,y-22,strip,1.6,7);
+    g+=txt(x0+L/2,y+h/2+4,'L',{a:'middle',fs:14,c:'#fff',w:700});
+    if(Ld-L>14) g+=txt(x0+L+(Ld-L)/2,y-30,'ΔL',{a:'middle',fs:13,c:strip,w:700});
+    for(let i=0;i<=12;i++){g+=`<circle cx="${x0+12+i*(L-24)/12*(1+xd)}" cy="${y+h+28}" r="5" fill="var(--p1)" opacity=".7"/>`;}
+    g+=txt(x0,y+h+52,'every gap between atoms stretches by the same fraction, so ΔL ∝ L',{fs:10.5});
+  } else if(ES.shape==='plate'){
+    const S=150, x0=50, y0=40, Sd=S*(1+xd), dd=Sd-S;
+    g+=`<rect x="${x0+S}" y="${y0}" width="${dd}" height="${S}" fill="${strip}" opacity=".8"/>`;
+    g+=`<rect x="${x0}" y="${y0+S}" width="${S}" height="${dd}" fill="${strip}" opacity=".8"/>`;
+    g+=`<rect x="${x0+S}" y="${y0+S}" width="${dd}" height="${dd}" fill="${corner}"/>`;
+    g+=`<rect x="${x0}" y="${y0}" width="${S}" height="${S}" fill="var(--p1)" opacity=".8"/>`;
+    if(ES.hole){
+      const c0=[x0+S/2,y0+S/2], r0=36, c1=[x0+(S/2)*(1+xd),y0+(S/2)*(1+xd)], r1=r0*(1+xd);
+      /* the plate is drawn as unexpanded + strips; the hole sits in the expanded plate */
+      g+=`<circle cx="${c1[0]}" cy="${c1[1]}" r="${r1}" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>`;
+      g+=`<circle cx="${c1[0]}" cy="${c1[1]}" r="${r0}" fill="none" stroke="var(--muted)" stroke-dasharray="4 3"/>`;
+      g+=txt(c1[0],c1[1]+4,'hole',{a:'middle',fs:11,c:'var(--ink)'});
+      g+=`<circle cx="${c0[0]}" cy="${c0[1]}" r="1" fill="none"/>`;
+    }
+    g+=txt(x0+S/2,y0-8,'a',{a:'middle',fs:13,c:'var(--ink)',w:700})+txt(x0-10,y0+S/2,'a',{a:'end',fs:13,c:'var(--ink)',w:700});
+    const lx=Math.max(x0+Sd+18,300);
+    g+=`<rect x="${lx}" y="70" width="14" height="14" fill="var(--p1)" opacity=".8"/>`+txt(lx+20,82,'original area a²',{fs:11.5,c:'var(--ink)'});
+    g+=`<rect x="${lx}" y="96" width="14" height="14" fill="${strip}" opacity=".8"/>`+txt(lx+20,108,'two strips, a·Δa each',{fs:11.5,c:'var(--ink)'});
+    g+=`<rect x="${lx}" y="122" width="14" height="14" fill="${corner}"/>`+txt(lx+20,134,'corner (Δa)²',{fs:11.5,c:'var(--ink)'});
+    if(ES.hole) g+=txt(lx,166,'dashed: hole before heating',{fs:11});
+  } else {
+    const S=120, x0=60, y0=120, k=0.45, ox=S*k, oy=-S*k, Sd=S*(1+xd);
+    const cube=(s,fill,op,stroke)=>{const ex=s*k, ey=-s*k;
+      return `<path d="M${x0} ${y0} h${s} v${s} h${-s} Z" fill="${fill}" opacity="${op}" stroke="${stroke}"/>`+
+      `<path d="M${x0} ${y0} l${ex} ${ey} h${s} l${-ex} ${-ey} Z" fill="${fill}" opacity="${op*0.8}" stroke="${stroke}"/>`+
+      `<path d="M${x0+s} ${y0} l${ex} ${ey} v${s} l${-ex} ${-ey} Z" fill="${fill}" opacity="${op*0.65}" stroke="${stroke}"/>`;};
+    g+=cube(Sd,strip,0.55,'var(--heat)');
+    g+=cube(S,'var(--p1)',0.9,'var(--surface)');
+    g+=txt(x0+S/2,y0+S/2+4,'l³',{a:'middle',fs:14,c:'#fff',w:700});
+    const lx=Math.max(x0+Sd*(1+k)+20,330);
+    g+=`<rect x="${lx}" y="70" width="14" height="14" fill="var(--p1)" opacity=".9"/>`+txt(lx+20,82,'original cube l³',{fs:11.5,c:'var(--ink)'});
+    g+=`<rect x="${lx}" y="96" width="14" height="14" fill="${strip}" opacity=".55"/>`+txt(lx+20,108,'three slabs l²·Δl',{fs:11.5,c:'var(--ink)'});
+    g+=txt(lx+20,124,'(+ thin edges and',{fs:11})+txt(lx+20,138,'a tiny corner)',{fs:11});
+  }
+  g+=txt(510,290,`growth drawn ×${ES.mag}`,{a:'end',fs:11,c:'var(--flag)'});
+  $('esvg').innerHTML=g;
+  const pct=v=>sig(v*100,3)+' %';
+  let rows=[['material',ES.mat],['α<sub>l</sub>',sig(a,2)+' K⁻¹'],['α<sub>l</sub> ΔT',sig(x,3)]], cap='';
+  if(ES.shape==='rod'){
+    rows.push(['ΔL for a 1 m rod',sig(x*1000,3)+' mm']);
+    cap=`<b>ΔL = α<sub>l</sub>LΔT.</b> The growth is proportional to the original length and to the temperature rise. A 1 m ${ES.mat.toLowerCase()} rod heated by ${ES.dT} K grows by ${sig(x*1000,3)} mm.`;
+  } else if(ES.shape==='plate'){
+    const sx=2*x, cx=x*x;
+    rows.push(['strips 2α<sub>l</sub>ΔT',pct(sx)],['corner (α<sub>l</sub>ΔT)²',pct(cx)],['ΔA/A',pct(sx+cx)],['corner ÷ strips',sig(cx/sx,2)]);
+    cap=`Each side grows by Δa = α<sub>l</sub>aΔT. The new area adds <b>two strips</b> (a·Δa each) and a <b>corner</b> (Δa)². The corner is α<sub>l</sub>ΔT/2 ≈ ${sig(cx/sx,2)} of the strips, far too small to matter, so <b>ΔA/A = 2α<sub>l</sub>ΔT: α<sub>a</sub> = 2α<sub>l</sub></b>. It looks large here only because of the magnification; turn it down.`;
+    if(ES.hole) cap+=` <b>The hole grows too</b>, by the same fraction as the plate, exactly as if it were still filled with plate material. Heating scales the whole sheet up like a photo enlargement; nothing squeezes inward.`;
+  } else {
+    rows.push(['3 slabs 3α<sub>l</sub>ΔT',pct(3*x)],['ΔV/V exact',pct(Math.pow(1+x,3)-1)]);
+    cap=`Each edge grows by Δl. The new volume adds <b>three slabs</b> l²Δl, plus thin edges and a corner that involve (Δl)² and (Δl)³ and can be dropped. So ΔV = 3l²Δl and <b>ΔV/V = 3α<sub>l</sub>ΔT: α<sub>V</sub> = 3α<sub>l</sub></b>. In general <b>α<sub>l</sub> : α<sub>a</sub> : α<sub>V</sub> = 1 : 2 : 3</b>.`;
+  }
+  $('ekv').innerHTML=kvHTML(rows); $('ecap').innerHTML=cap;
+}
+
+/* =================== 6 · αV CHART =================== */
+function drawA(){
+  const ax=v=>170+(Math.log10(v)+6)/4*280, rh=30, y0=20;
+  let g='';
+  for(let e=-6;e<=-2;e++){const x=ax(Math.pow(10,e));g+=`<line x1="${x}" y1="${y0-6}" x2="${x}" y2="${y0+AV.length*rh}" stroke="var(--line)"/>`+txt(x,y0+AV.length*rh+16,'10'+sup(e),{a:'middle',fs:10.5,mono:1});}
+  g+=txt(450,y0+AV.length*rh+34,'α<tspan baseline-shift="sub" font-size="8">V</tspan> (K⁻¹)',{a:'end',fs:11});
+  const col={s:'var(--p1)',l:'var(--cold)',g:'var(--force)'};
+  AV.forEach((m,i)=>{const y=y0+i*rh;
+    g+=txt(164,y+rh/2+4,m.n,{a:'end',fs:11.5,c:'var(--ink)'});
+    g+=`<rect x="170" y="${y+6}" width="${ax(m.v)-170}" height="${rh-12}" rx="3" fill="${col[m.g]}" opacity=".85"/>`;
+    g+=txt(ax(m.v)+5,y+rh/2+4,ex(m.v),{fs:10,mono:1});
+  });
+  $('asvg').innerHTML=g;
+  $('agas0').textContent=ex(1/T0K)+' K⁻¹'; $('agas27').textContent=ex(1/(27+T0K))+' K⁻¹';
+  /* copper schematic */
+  const f=t=>Math.pow(t,3)/(Math.pow(t,3)+0.3);
+  let c=`<line x1="30" y1="140" x2="285" y2="140" stroke="var(--ink)"/><line x1="30" y1="140" x2="30" y2="14" stroke="var(--ink)"/>`;
+  let d='';for(let i=0;i<=100;i++){const t=i/100*2.6;d+=(i?'L':'M')+(30+t/2.6*250).toFixed(1)+' '+(140-f(t)*110).toFixed(1);}
+  c+=`<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.4"/>`;
+  c+=txt(34,14,'α<tspan baseline-shift="sub" font-size="8">V</tspan> of copper',{fs:10.5})+txt(285,156,'temperature →',{a:'end',fs:10.5})+txt(30,156,'0 K',{a:'middle',fs:10.5,mono:1});
+  c+=txt(275,62,'nearly flat',{a:'end',fs:10.5,c:'var(--accent)'});
+  $('cusvg').innerHTML=c;
+}
+
+/* =================== 7 · WATER =================== */
+const DS={t:2,mode:load('tx-dmode')||'rho'}; if(!['rho','vol'].includes(DS.mode)) DS.mode='rho';
+onChip($('dmode'),k=>{DS.mode=k;store('tx-dmode',k);drawD();});
+const dx=t=>60+t/12*440;
+dragger($('dsvg'),(a,x)=>{DS.t=clamp(Math.round(((x-60)/440*12)*10)/10,0,12);drawD();},()=>1);
+const TMAX=-TAN.a1; /* temperature of maximum density from the fit */
+function drawD(){
+  press($('dmode'),DS.mode);
+  const isR=DS.mode==='rho', val=t=>isR?rhoW(t):1e6/rhoW(t);
+  const lo=isR?999.40:1000.00, hi=isR?1000.00:1000.60, dy=v=>270-(v-lo)/(hi-lo)*240;
+  let g='';
+  for(let t=0;t<=12;t+=2){g+=`<line x1="${dx(t)}" y1="30" x2="${dx(t)}" y2="270" stroke="var(--line)"/>`+txt(dx(t),286,t,{a:'middle',fs:10.5,mono:1});}
+  for(let i=0;i<=6;i++){const v=lo+i*0.1;g+=`<line x1="60" y1="${dy(v)}" x2="500" y2="${dy(v)}" stroke="var(--line)"/>`+txt(55,dy(v)+4,v.toFixed(1),{a:'end',fs:10,mono:1});}
+  g+=`<line x1="60" y1="270" x2="500" y2="270" stroke="var(--ink)"/><line x1="60" y1="30" x2="60" y2="270" stroke="var(--ink)"/>`;
+  g+=txt(64,22,isR?'density (kg m⁻³)':'volume of 1 kg (cm³)',{fs:11})+txt(500,304,'temperature (°C)',{a:'end',fs:11});
+  let d='';for(let i=0;i<=120;i++){const t=i/10;d+=(i?'L':'M')+dx(t).toFixed(1)+' '+dy(val(t)).toFixed(1);}
+  g+=`<path d="${d}" fill="none" stroke="var(--cold)" stroke-width="2.6"/>`;
+  g+=`<line x1="${dx(TMAX)}" y1="${dy(val(TMAX))}" x2="${dx(TMAX)}" y2="270" stroke="var(--ok)" stroke-dasharray="4 3"/>`;
+  g+=txt(dx(TMAX)+6,isR?dy(val(TMAX))-8:dy(val(TMAX))+18,(isR?'maximum':'minimum')+' at '+TMAX.toFixed(2)+' °C',{fs:11,c:'var(--ok)',w:600});
+  const v=val(DS.t), px=dx(DS.t), py=dy(v);
+  g+=`<line x1="${px}" y1="270" x2="${px}" y2="${py}" stroke="var(--accent)" stroke-dasharray="3 3"/><line x1="60" y1="${py}" x2="${px}" y2="${py}" stroke="var(--accent)" stroke-dasharray="3 3"/>`;
+  g+=`<circle cx="${px}" cy="${py}" r="6.5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`;
+  $('dsvg').innerHTML=g;
+  const s=Math.sign(rhoW(DS.t+0.05)-rhoW(DS.t-0.05));
+  $('dkv').innerHTML=kvHTML([['temperature',fx(DS.t,1)+' °C'],['density',rhoW(DS.t).toFixed(3)+' kg m⁻³'],['volume of 1 kg',(1e6/rhoW(DS.t)).toFixed(3)+' cm³']]);
+  $('dcap').innerHTML=DS.t<TMAX-0.05
+    ?`Here, between 0 °C and 4 °C, warming water makes it <b>denser</b> (it contracts on heating). This is the <b>anomalous expansion</b> of water. So water at ${fx(DS.t,1)} °C is lighter than water at 4 °C and floats on top of it.`
+    :DS.t<=TMAX+0.05?`At about 4 °C water is at its <b>densest</b>. In a lake, 4 °C water sinks to the bottom.`
+    :`Above 4 °C water behaves normally: warming it makes it expand and become ${s<0?'less dense':'denser'}.`;
+}
+/* lake stages, schematic */
+const LAKE=[
+ {n:'Autumn',air:15,T:[12,11,10,9.5,9,9],mix:false,ice:false,c:'The sun has warmed the surface. Warm water is lighter, so it stays on top: the lake is layered, warmest at the top.'},
+ {n:'Cold air arrives',air:4,T:[7,7.5,8,8,8,8],mix:true,ice:false,c:'Air cools the surface. Cooled water is denser, so it sinks and warmer water rises to replace it. The whole lake stirs itself and cools.'},
+ {n:'Whole lake at 4 °C',air:0,T:[4,4,4,4,4,4],mix:true,ice:false,c:'Mixing goes on until the whole lake is at 4 °C, the temperature of greatest density.'},
+ {n:'Surface below 4 °C',air:-5,T:[1,2,3,3.7,4,4],mix:false,ice:false,c:'Now surface water cooled below 4 °C is <b>lighter</b> than the 4 °C water beneath. It stays on top. Sinking stops, and the cold is trapped at the surface.'},
+ {n:'Ice on top',air:-10,T:[0.3,1.5,2.6,3.5,4,4],mix:false,ice:true,c:'The surface freezes. Ice is lighter still and floats, forming a lid. It conducts heat poorly, so the water below stays liquid, and the bottom stays near 4 °C, where fish survive the winter.'}];
+let LS=0;
+$('lprev').addEventListener('click',()=>{LS=Math.max(0,LS-1);drawL();});
+$('lnext').addEventListener('click',()=>{LS=Math.min(LAKE.length-1,LS+1);drawL();});
+function drawL(){
+  const st=LAKE[LS], col=t=>jet(0.06+0.88*clamp(t,0,12)/12);
+  $('lprev').disabled=LS===0; $('lnext').disabled=LS===LAKE.length-1;
+  $('lstep').textContent=`stage ${LS+1} of ${LAKE.length}`;
+  const top=60, bot=240, n=st.T.length, hL=(bot-top)/n;
+  let g=`<defs><clipPath id="lclip"><path d="M30 ${top} H430 L380 ${bot} H80 Z"/></clipPath></defs>`;
+  g+=txt(30,22,`air ${neg(st.air)} °C`,{fs:12,c:'var(--ink)',w:600});
+  g+=`<g clip-path="url(#lclip)">`;
+  st.T.forEach((t,i)=>{g+=`<rect x="20" y="${top+i*hL}" width="420" height="${hL+0.5}" fill="${col(t)}" opacity=".75"/>`;});
+  g+=`</g>`;
+  st.T.forEach((t,i)=>{g+=`<text x="230" y="${top+i*hL+hL/2+4}" font-size="11" font-weight="600" fill="#10141c" stroke="rgba(255,255,255,.8)" stroke-width="3" paint-order="stroke" text-anchor="middle">${fv(t)} °C</text>`;});
+  if(st.ice) g+=`<rect x="26" y="${top-12}" width="408" height="14" rx="2" fill="#e8f4fb" stroke="var(--cold)"/>`+txt(440,top-1,'ice',{fs:11,c:'var(--cold)',w:600});
+  g+=`<path d="M30 ${top} L80 ${bot} H380 L430 ${top}" fill="none" stroke="var(--muted)" stroke-width="2"/>`;
+  if(st.mix){g+=arrow(120,top+8,120,bot-16,'#fff',2.4,9)+arrow(330,bot-16,330,top+8,'#fff',2.4,9);
+    g+=`<text x="128" y="${top+30}" font-size="11" font-weight="600" fill="#10141c" stroke="rgba(255,255,255,.8)" stroke-width="3" paint-order="stroke">cold sinks</text><text x="322" y="${top+30}" font-size="11" font-weight="600" fill="#10141c" stroke="rgba(255,255,255,.8)" stroke-width="3" paint-order="stroke" text-anchor="end">warmer rises</text>`;}
+  /* fish */
+  g+=`<g transform="translate(300 ${bot-22})"><ellipse cx="0" cy="0" rx="12" ry="5.5" fill="var(--force)"/><path d="M11 0 L19 -5 L19 5 Z" fill="var(--force)"/></g>`;
+  /* colour scale */
+  for(let i=0;i<=12;i++){g+=`<rect x="455" y="${top+(12-i)*14}" width="14" height="14" fill="${col(i)}"/>`;}
+  g+=txt(474,top+11,'12 °C',{fs:10,mono:1})+txt(474,top+12*14+11,'0 °C',{fs:10,mono:1})+txt(474,top+8*14+11,'4 °C',{fs:10,mono:1});
+  $('lsvg').innerHTML=g;
+  $('ltitle').textContent=st.n; $('lcap').innerHTML=st.c;
+}
+
+/* =================== 8 · THERMAL STRESS =================== */
+const SS={mode:'clamp',dT:10};
+onChip($('smode'),k=>{SS.mode=k;drawS();});
+$('sdt').addEventListener('input',e=>{SS.dT=+e.target.value;drawS();});
+function drawS(){
+  press($('smode'),SS.mode);
+  $('sdto').textContent=(SS.dT>0?'+':'')+neg(SS.dT)+' K';
+  const strain=RAIL.a*SS.dT, stress=RAIL.Y*strain, F=stress*RAIL.A, dL=strain*RAIL.L;
+  const MAG=400, x0=60, L=400, y=90, h=30, dLd=L*strain*MAG;
+  let g=`<defs>${hatch('sh')}</defs>`;
+  g+=`<rect x="${x0-24}" y="40" width="24" height="130" fill="url(#sh)" stroke="var(--muted)"/>`;
+  if(SS.mode==='clamp') g+=`<rect x="${x0+L}" y="40" width="24" height="130" fill="url(#sh)" stroke="var(--muted)"/>`;
+  else g+=`<rect x="${x0+L}" y="40" width="24" height="130" fill="none" stroke="var(--line)" stroke-dasharray="4 3"/>`;
+  if(SS.mode==='free'){
+    g+=`<rect x="${x0}" y="${y}" width="${L+dLd}" height="${h}" fill="var(--muted)" opacity=".55"/>`;
+    g+=`<line x1="${x0+L}" y1="${y-12}" x2="${x0+L}" y2="${y+h+12}" stroke="var(--ink)" stroke-dasharray="3 3"/>`;
+    if(Math.abs(dLd)>6) g+=arrow(x0+L,y-18,x0+L+dLd,y-18,'var(--heat)',2,7);
+    g+=txt(x0+L/2,y+h+28,SS.dT>=0?'free to grow: no stress':'free to shrink: no stress',{a:'middle',fs:12,c:'var(--ink)'});
+  } else {
+    const shade=Math.min(0.85,0.25+Math.abs(SS.dT)/60);
+    g+=`<rect x="${x0}" y="${y}" width="${L}" height="${h}" fill="${SS.dT>=0?'var(--flag)':'var(--cold)'}" opacity="${SS.dT===0?0.3:shade}"/>`;
+    if(SS.dT!==0) g+=`<rect x="${x0}" y="${y}" width="${L+dLd}" height="${h}" fill="none" stroke="var(--ink)" stroke-dasharray="5 4"/>`+txt(x0+L-30,y-8,'dashed: the length it wants',{a:'end',fs:10.5});
+    const fl=Math.min(50,Math.abs(F)/1e5*40);
+    if(fl>4){
+      if(SS.dT>0){g+=arrow(x0+L+fl+4,y+h+24,x0+L-4,y+h+24,'var(--force)',3,10)+arrow(x0-fl-4,y+h+24,x0+4,y+h+24,'var(--force)',3,10);}
+      else{g+=arrow(x0+L-4,y+h+24,x0+L+fl+4,y+h+24,'var(--force)',3,10)+arrow(x0+4,y+h+24,x0-fl-4,y+h+24,'var(--force)',3,10);}
+      g+=txt(x0+L/2,y+h+28,SS.dT>0?'walls push in: compression':'walls pull out: tension',{a:'middle',fs:12,c:'var(--force)',w:600});
+    }
+  }
+  g+=txt(x0,30,'steel rail, 5 m',{fs:11})+txt(530,190,`length change drawn ×${MAG}`,{a:'end',fs:10.5,c:'var(--flag)'});
+  $('ssvg').innerHTML=g;
+  $('skv').innerHTML=SS.mode==='free'
+    ?kvHTML([['ΔL = α<sub>l</sub> LΔT',sig(dL*1000,3)+' mm'],['stress','0']])
+    :kvHTML([['strain α<sub>l</sub>ΔT',sig(Math.abs(strain),2)],['stress Yα<sub>l</sub>ΔT',sig(Math.abs(stress),2)+' N m⁻²'],['force on wall',sig(Math.abs(F),2)+' N'],['type',SS.dT>0?'compressive':SS.dT<0?'tensile':'none']]);
+  $('scap').innerHTML=SS.mode==='free'
+    ?`Free, the rail changes length by α<sub>l</sub>LΔT = ${sig(Math.abs(dL)*1000,2)} mm and nothing pushes on it. This is the gap a track needs between rails.`
+    :`The walls squeeze the rail back by exactly the length it wanted to gain, so the strain is ΔL/L = α<sub>l</sub>ΔT. By Hooke’s law the <b>thermal stress = Yα<sub>l</sub>ΔT</b> (Y = Young’s modulus, 2 × 10¹¹ N m⁻² for steel), and the force is YAα<sub>l</sub>ΔT. The length L cancels: a short rod is stressed just as much. For only 10 K the force is about 10⁵ N, enough to bend two rails pushing against each other.`;
+}
+/* blacksmith ring */
+let RT=27;
+$('rt').addEventListener('input',e=>{RT=+e.target.value;drawR();});
+const RFIT=RING.t0+(RING.drim/RING.dring-1)/RING.a;
+function drawR(){
+  $('rto').textContent=RT+' °C';
+  const d=RING.dring*(1+RING.a*(RT-RING.t0)), cx=150, cy=145, Rr=100, K=2000; /* px per m of radius difference */
+  const rr=Rr+(d-RING.drim)/2*K, mag=K/(Rr/(RING.drim/2));
+  const fits=d>=RING.drim;
+  let g=`<circle cx="${cx}" cy="${cy}" r="${Rr}" fill="var(--force)" opacity=".18" stroke="var(--force)" stroke-width="10"/>`;
+  g+=`<circle cx="${cx}" cy="${cy}" r="${rr}" fill="none" stroke="${jet(0.1+0.85*(RT-27)/273)}" stroke-width="5"/>`;
+  for(let i=0;i<8;i++){const t=i*Math.PI/4;g+=`<line x1="${cx}" y1="${cy}" x2="${cx+Rr*Math.cos(t)}" y2="${cy+Rr*Math.sin(t)}" stroke="var(--force)" opacity=".5" stroke-width="5"/>`;}
+  g+=`<circle cx="${cx}" cy="${cy}" r="14" fill="var(--force)" opacity=".6"/>`;
+  const lx=290;
+  g+=`<line x1="${lx}" y1="60" x2="${lx+20}" y2="60" stroke="var(--force)" stroke-width="8" opacity=".6"/>`+txt(lx+28,64,'wooden rim, 5.243 m',{fs:11.5,c:'var(--ink)'});
+  g+=`<line x1="${lx}" y1="84" x2="${lx+20}" y2="84" stroke="${jet(0.1+0.85*(RT-27)/273)}" stroke-width="5"/>`+txt(lx+28,88,'iron ring, '+d.toFixed(4)+' m',{fs:11.5,c:'var(--ink)',mono:1});
+  g+=txt(lx,124,fits?'Ring is wider than the rim:':'Ring is smaller than the rim:',{fs:12,c:fits?'var(--ok)':'var(--flag)',w:600});
+  g+=txt(lx,142,fits?'it slips on.':'it will not go on.',{fs:12,c:fits?'var(--ok)':'var(--flag)',w:600});
+  g+=txt(lx,270,`difference in size drawn ×${Math.round(mag)}`,{fs:10.5,c:'var(--flag)'});
+  $('rsvg').innerHTML=g;
+  $('rkv').innerHTML=kvHTML([['ring diameter',d.toFixed(4)+' m'],['rim diameter',RING.drim.toFixed(4)+' m'],['fits at',fx(RFIT,0)+' °C']]);
+  $('rcap').innerHTML=`At 27 °C the ring is 12 mm too small. Heated, every length of the iron grows by the same fraction, including the circumference and the diameter: 5.243 = 5.231[1 + 1.20 × 10⁻⁵(T − 27)] gives <b>T ≈ ${fx(RFIT,0)} °C</b>. Slip it on hot; as it cools it tries to shrink back, and the thermal stress grips the wheel tightly.`;
+}
+
+/* =================== 9 · JEE APPLICATIONS =================== */
+/* bimetal: brass (top) on iron (bottom), NCERT Table 10.1 */
+const BM={dT:80, ab:1.8e-5, ai:1.2e-5};
+$('bdt').addEventListener('input',e=>{BM.dT=+e.target.value;drawB();});
+function stripPath(x0,y0,Ls,kap,off){
+  /* centreline arc with curvature kap (+ bends down), offset along the normal */
+  const pts=[];for(let i=0;i<=40;i++){const s=Ls*i/40, th=kap*s;
+    const x=Math.abs(kap)<1e-9?x0+s:x0+Math.sin(th)/kap, y=Math.abs(kap)<1e-9?y0:y0+(1-Math.cos(th))/kap;
+    pts.push([x-Math.sin(th)*off,y+Math.cos(th)*off]);}
+  return pts;
+}
+function band(x0,y0,Ls,kap,o1,o2,fill){
+  const a=stripPath(x0,y0,Ls,kap,o1), b=stripPath(x0,y0,Ls,kap,o2).reverse();
+  return `<path d="M${a.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L')} L${b.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L')} Z" fill="${fill}"/>`;
+}
+function drawB(){
+  $('bdto').textContent=(BM.dT>0?'+':'')+neg(BM.dT)+' K';
+  const x0=50, y0=80, Ls=300, w=7, k=Math.max(0,BM.dT)*(BM.ab-BM.ai)*3.1; /* curvature per px, exaggerated: 200 K → about 1.1 rad over the strip */
+  let g=`<defs>${hatch('bh')}</defs><rect x="${x0-30}" y="${y0-30}" width="30" height="60" fill="url(#bh)" stroke="var(--muted)"/>`;
+  g+=band(x0,y0,Ls,k,-w,0,'#c9a227')+band(x0,y0,Ls,k,0,w,'var(--muted)');
+  /* contact above the tip at the set point */
+  g+=`<rect x="${x0+Ls-14}" y="${y0-w-18}" width="10" height="18" fill="var(--ink)" opacity=".7"/>`;
+  const on=BM.dT<=0;
+  g+=txt(x0+Ls-9,y0-w-24,'contact',{a:'middle',fs:10.5});
+  g+=`<circle cx="40" cy="226" r="9" fill="${on?'var(--hot)':'var(--line)'}"/>`+txt(56,230,on?'heater ON':'heater OFF',{fs:11.5,w:600,c:on?'var(--hot)':'var(--muted)'});
+  g+=txt(x0+6,y0-w-6,'brass',{fs:11,c:'var(--ink)',w:600})+txt(x0+6,y0+w+14,'iron',{fs:11,c:'var(--ink)',w:600});
+  if(BM.dT<0) g+=txt(x0+Ls/2,y0+44,'colder: strip presses up harder on the contact',{a:'middle',fs:11});
+  g+=txt(410,240,'bend exaggerated',{a:'end',fs:10.5,c:'var(--flag)'});
+  $('bsvg').innerHTML=g;
+  $('bcap').innerHTML=`Brass (α<sub>l</sub> = 1.8 × 10⁻⁵ K⁻¹) and iron (1.2 × 10⁻⁵ K⁻¹) are bonded along their length. When heated the brass grows more, so the strip curls with <b>brass on the outside and iron (the lower α) on the inside</b>. Cooled, it curls the other way. As a <b>thermostat</b>: at the set temperature the strip just touches the contact and the heater runs; warmer, it bends away, the circuit opens, and the heater switches off.`;
+}
+/* apparent expansion */
+const FS={liq:load('tx-liq')||'hg',ves:'glass',dT:60};
+if(!LIQ.some(l=>l.id===FS.liq)) FS.liq='hg';
+chips($('fliq'),LIQ); chips($('fves'),VES);
+onChip($('fliq'),k=>{FS.liq=k;store('tx-liq',k);drawF();});
+onChip($('fves'),k=>{FS.ves=k;drawF();});
+$('fdt').addEventListener('input',e=>{FS.dT=+e.target.value;drawF();});
+function drawF(){
+  press($('fliq'),FS.liq); press($('fves'),FS.ves);
+  $('fdto').textContent=FS.dT+' K';
+  const gl=LIQ.find(l=>l.id===FS.liq).g, gv=VES.find(v=>v.id===FS.ves).g;
+  const K=1300, mark=150, real=gl*FS.dT*K, ves=gv*FS.dT*K, app=real-ves;
+  const cx=110, cy=220, R=62, nx0=cx-7, nx1=cx+7;
+  let g='';
+  g+=`<path d="M${nx0} ${cy-R+4} A${R} ${R} 0 1 0 ${nx1} ${cy-R+4} Z" fill="var(--cold)" opacity=".55"/>`;
+  g+=`<rect x="${nx0}" y="${mark-app}" width="14" height="${cy-R+4-(mark-app)}" fill="var(--cold)" opacity=".55"/>`;
+  g+=`<path d="M${nx0} 20 V${cy-R+4} A${R} ${R} 0 1 0 ${nx1} ${cy-R+4} V20" fill="none" stroke="var(--ink)" stroke-width="2"/>`;
+  g+=`<line x1="${nx0-8}" y1="${mark}" x2="${nx1+8}" y2="${mark}" stroke="var(--ink)"/>`+txt(nx0-12,mark+4,'start',{a:'end',fs:10.5});
+  if(real>2) g+=`<line x1="${nx0-4}" y1="${mark-real}" x2="${nx1+4}" y2="${mark-real}" stroke="var(--cold)" stroke-dasharray="3 2"/>`;
+  /* bars beside the neck: real rise = apparent rise + flask's share */
+  const b1=200, b2=232;
+  g+=`<line x1="${nx1+4}" y1="${mark}" x2="${b2+26}" y2="${mark}" stroke="var(--line)"/>`;
+  g+=`<rect x="${b1}" y="${mark-real}" width="18" height="${real}" fill="var(--cold)" opacity=".8"/>`;
+  g+=`<rect x="${b2}" y="${mark-app}" width="18" height="${app}" fill="var(--accent)" opacity=".85"/>`;
+  g+=`<rect x="${b2}" y="${mark-real}" width="18" height="${ves}" fill="var(--force)" opacity=".85"/>`;
+  g+=txt(b1+9,mark+14,'real',{a:'middle',fs:10.5})+txt(b2+9,mark+14,'seen',{a:'middle',fs:10.5});
+  const lg=(y,col,l,v)=>`<rect x="190" y="${y-9}" width="11" height="11" fill="${col}"/>`+txt(207,y,l,{fs:11,c:'var(--ink)'})+txt(410,y,v,{a:'end',fs:10.5,mono:1});
+  g+=lg(196,'var(--cold)','real rise',ex(gl))+lg(218,'var(--accent)','seen in the neck',ex(gl-gv))+lg(240,'var(--force)','flask’s share',ex(gv));
+  g+=txt(410,292,'neck drawn very narrow',{a:'end',fs:10.5,c:'var(--flag)'});
+  $('fsvg').innerHTML=g;
+  $('fcap').innerHTML=`The liquid really grows by γ<sub>real</sub>ΔT, but the flask’s inside grows too (as if it were solid glass), so the level in the neck only shows the difference. <b>γ<sub>real</sub> = γ<sub>apparent</sub> + γ<sub>vessel</sub></b>. Here γ<sub>apparent</sub> = ${ex(gl)} − ${ex(gv)} = <b>${ex(gl-gv)} K⁻¹</b>. The flask’s share matters most for a liquid that expands little, like mercury.`;
+}
+/* pendulum clock: steel, α = 1.2e-5 K^-1 (NCERT); correct at 20 °C */
+const PC={a:1.2e-5,t0:20,th:35};
+$('pth').addEventListener('input',e=>{PC.th=+e.target.value;drawP();});
+const lossDay=th=>86400*(1-1/Math.sqrt(1+PC.a*(th-PC.t0)));
+const px2=t=>220+t/45*180, py2=s=>130-s/15*95;
+dragger($('psvg'),(a,x)=>{PC.th=clamp(Math.round((x-220)/180*45),0,45);$('pth').value=PC.th;drawP();},(x)=>x>200?1:null);
+function drawP(){
+  $('ptho').textContent=PC.th+' °C';
+  const MAG=1000, L0=150, L=L0*(1+PC.a*(PC.th-PC.t0)*MAG), pvx=90, pvy=24, ang=0.18;
+  let g=`<line x1="40" y1="${pvy}" x2="140" y2="${pvy}" stroke="var(--ink)" stroke-width="3"/>`;
+  g+=`<line x1="${pvx}" y1="${pvy}" x2="${pvx}" y2="${pvy+L0}" stroke="var(--muted)" stroke-dasharray="4 3"/><circle cx="${pvx}" cy="${pvy+L0}" r="12" fill="none" stroke="var(--muted)" stroke-dasharray="4 3"/>`;
+  const bx=pvx+L*Math.sin(ang), by=pvy+L*Math.cos(ang);
+  g+=`<line x1="${pvx}" y1="${pvy}" x2="${bx}" y2="${by}" stroke="var(--ink)" stroke-width="2"/><circle cx="${bx}" cy="${by}" r="12" fill="var(--p1)"/>`;
+  g+=txt(20,250,'dashed: length at 20 °C',{fs:10})+txt(20,236,'length change ×1000',{fs:10,c:'var(--flag)'});
+  /* graph */
+  for(const t of [0,20,45]) g+=`<line x1="${px2(t)}" y1="${py2(15)}" x2="${px2(t)}" y2="${py2(-15)}" stroke="var(--line)"/>`+txt(px2(t),py2(-15)+14,t+' °C',{a:'middle',fs:10,mono:1});
+  for(const s of [-10,0,10]) g+=`<line x1="220" y1="${py2(s)}" x2="400" y2="${py2(s)}" stroke="${s?'var(--line)':'var(--ink)'}"/>`+txt(215,py2(s)+4,neg(s),{a:'end',fs:10,mono:1});
+  g+=txt(220,py2(15)-8,'seconds lost per day (below 0: gained)',{fs:10.5});
+  g+=`<line x1="${px2(0)}" y1="${py2(lossDay(0))}" x2="${px2(45)}" y2="${py2(lossDay(45))}" stroke="var(--accent)" stroke-width="2.2"/>`;
+  const s=lossDay(PC.th);
+  g+=`<circle cx="${px2(PC.th)}" cy="${py2(s)}" r="6" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`;
+  g+=txt(px2(PC.th)+(PC.th>30?-9:9),py2(s)+(s>0?-9:16),fx(Math.abs(s),1)+' s '+(s>=0?'lost':'gained'),{a:PC.th>30?'end':'start',fs:11,mono:1,c:'var(--ink)'});
+  $('psvg').innerHTML=g;
+  $('pcap').innerHTML=`The clock keeps correct time at 20 °C. The period is T = 2π√(L/g), so a fractional change in L gives half that change in T: <b>ΔT/T ≈ ½α<sub>l</sub>Δθ</b>. In summer the pendulum is longer, each swing slower, and the clock <b>loses</b> about ½α<sub>l</sub>Δθ × 86 400 s per day; in winter it gains. At ${PC.th} °C a steel pendulum ${s>=0?'loses':'gains'} ${fx(Math.abs(s),1)} s a day.`;
+}
+/* steel tape: NCERT Exercise 10.6 */
+let MT=45;
+$('mth').addEventListener('input',e=>{MT=+e.target.value;drawM();});
+function drawM(){
+  $('mtho').textContent=MT+' °C';
+  const f=1+TAPE.a*(MT-TAPE.t0), MAG=300, fd=1+(f-1)*MAG, x0=20, pc=5.4; /* px per cm */
+  const trueL=63.0, reading=trueL/f;
+  let g='';
+  g+=`<rect x="${x0}" y="40" width="${trueL*pc}" height="22" rx="2" fill="var(--p1)" opacity=".8"/>`+txt(x0+4,55,'object, true length 63.0 cm',{fs:11,c:'#fff',w:600});
+  g+=`<rect x="${x0}" y="70" width="${74*pc*fd}" height="34" fill="#c9a227" opacity=".35"/>`;
+  for(let c=0;c<=74;c+=1){const x=x0+c*pc*fd;if(x>415)break;const big=c%10===0;g+=`<line x1="${x}" y1="70" x2="${x}" y2="${big?88:(c%5?77:82)}" stroke="var(--ink)" stroke-width="${big?1.4:0.8}"/>`;if(big)g+=txt(x,100,c,{a:'middle',fs:10,mono:1,c:'var(--ink)'});}
+  g+=`<line x1="${x0+trueL*pc}" y1="36" x2="${x0+trueL*pc}" y2="112" stroke="var(--flag)" stroke-dasharray="3 3"/>`;
+  g+=txt(x0,128,'steel tape, marked correctly at 27 °C',{fs:11});
+  g+=txt(x0,150,`tape reads ${reading.toFixed(3)} cm`,{fs:12.5,mono:1,c:'var(--ink)',w:600});
+  g+=txt(400,190,'tape stretch ×300',{a:'end',fs:10.5,c:'var(--flag)'});
+  $('msvg').innerHTML=g;
+  const err=reading-trueL;
+  $('mcap').innerHTML=`On a ${MT} °C day the tape’s marks are ${MT>=TAPE.t0?'farther apart':'closer together'} than they should be, so it reads <b>${MT>=TAPE.t0?'too little':'too much'}</b>: reading = true length/(1 + α<sub>l</sub>Δθ), an error of ${fx(err*10,2)} mm here. Turned round: if the hot tape reads 63.0 cm, the true length is 63.0 × (1 + α<sub>l</sub>Δθ). If the object is also steel, it expands exactly as much as the tape and the reading does not change.`;
+}
+
+/* =================== QUIZ =================== */
+const qz={};
+{ /* NCERT Exercise 10.1: triple point of CO2, 216.55 K */
+  qz.co2C=216.55-T0K; qz.co2F=qz.co2C*9/5+32; }
+{ /* own scale: ice −20 X, steam 130 X; 60 °C */
+  qz.X=-20+(130+20)*60/100; }
+{ /* NCERT Example 10.2 */ qz.ring=RFIT; }
+{ /* NCERT Exercise 10.8: hole 4.24 cm, copper 1.70e-5, 27 → 227 °C */ qz.hole=4.24*1.70e-5*200; }
+{ /* NCERT Exercise 10.9: brass wire, d 2.0 mm, Y 0.91e11, α 2.0e-5, 27 → −39 °C */
+  qz.wire=0.91e11*Math.PI*1e-6*2.0e-5*66; }
+{ /* NCERT Exercise 10.11: glycerine 49e-5, 30 K */ qz.gly=49e-5*30; }
+{ /* NCERT Exercise 10.6: steel tape */ qz.tape=63.0*(1+1.20e-5*18); }
+{ /* pendulum: steel, correct at 20 °C, room 40 °C */ qz.pend=0.5*1.2e-5*20*86400; }
+const QUIZ=[
+ {q:'The triple point of carbon dioxide is 216.55 K. What is it on the Fahrenheit scale?',
+  o:[`${fx(qz.co2C,2)} °F`,`${fx(qz.co2F,2)} °F`,`${fx(216.55*9/5+32,2)} °F`,`${fx((qz.co2C-32)*5/9,2)} °F`],a:1,
+  why:`First to Celsius: t<sub>C</sub> = 216.55 − 273.15 = ${fx(qz.co2C,2)} °C. Then t<sub>F</sub> = (9/5)(${fx(qz.co2C,2)}) + 32 = ${fx(qz.co2F,2)} °F. Putting the kelvin value straight into the Fahrenheit formula gives the wrong ${fx(216.55*9/5+32,2)}.`},
+ {q:'Two absolute scales A and B give the triple point of water the values 200 A and 350 B. How are T<sub>A</sub> and T<sub>B</sub> related?',
+  o:['T<sub>A</sub> = T<sub>B</sub> − 150','T<sub>A</sub> = (7/4) T<sub>B</sub>','T<sub>A</sub> = T<sub>B</sub>','T<sub>A</sub> = (4/7) T<sub>B</sub>'],a:3,
+  why:'Both scales are absolute, so both start at the same zero; only the size of the degree differs. Readings are then proportional: T<sub>A</sub>/T<sub>B</sub> = 200/350 = 4/7. (No offset term, unlike Celsius and Fahrenheit.)'},
+ {q:'A thermometer on scale X reads −20 X in melting ice and 130 X in steam. What does it read when a Celsius thermometer shows 60 °C?',
+  o:['60 X','78 X',`${fx(qz.X,0)} X`,'90 X'],a:2,
+  why:`60 °C is 60/100 of the way from ice to steam. On X that interval is 130 − (−20) = 150 X, so the reading is −20 + 0.6 × 150 = ${fx(qz.X,0)} X. Set the sliders in section 2 to check.`},
+ {q:'A blacksmith’s iron ring is 5.231 m across and the wooden rim it must fit is 5.243 m, both at 27 °C (α<sub>iron</sub> = 1.20 × 10⁻⁵ K⁻¹). To roughly what temperature must the ring be heated?',
+  o:['about 46 °C','about 191 °C',`about ${fx(qz.ring,0)} °C`,'about 1000 °C'],a:2,
+  why:`The diameter must grow by 0.012 m: 0.012 = 5.231 × 1.20 × 10⁻⁵ × ΔT gives ΔT ≈ ${fx(qz.ring-27,0)} K, so T ≈ 27 + ${fx(qz.ring-27,0)} = ${fx(qz.ring,0)} °C. (191 is the rise, not the final temperature.)`},
+ {q:'A hole 4.24 cm across is drilled in a copper sheet at 27 °C (α = 1.70 × 10⁻⁵ K⁻¹). The sheet is heated to 227 °C. The hole’s diameter:',
+  o:['decreases by 0.0144 cm','stays the same',`increases by ${sig(qz.hole,3)} cm`,'increases by 0.0288 cm'],a:2,
+  why:`The hole expands as if it were made of copper: Δd = dα ΔT = 4.24 × 1.70 × 10⁻⁵ × 200 = ${sig(qz.hole,3)} cm. Heating enlarges the whole sheet like a photo enlargement, so the hole gets bigger, not smaller.`},
+ {q:'A brass wire (diameter 2.0 mm) is held taut, with almost no tension, between rigid supports at 27 °C. It is cooled to −39 °C. Tension? (α = 2.0 × 10⁻⁵ K⁻¹, Y = 0.91 × 10¹¹ Pa)',
+  o:[`about ${sig(qz.wire,2)} N`,'about 3.8 N','about 1.5 × 10³ N','zero: it just sags'],a:0,
+  why:`The wire wants to shrink by α<sub>l</sub>LΔT but cannot, so it is stretched by that strain: F = YAα<sub>l</sub>ΔT = 0.91 × 10¹¹ × π(1.0 × 10⁻³)² × 2.0 × 10⁻⁵ × 66 ≈ ${sig(qz.wire,2)} N. The length does not matter. (1.5 × 10³ N comes from using the diameter instead of the radius.)`},
+ {q:'Glycerine has α<sub>V</sub> = 49 × 10⁻⁵ K⁻¹. When it is heated by 30 °C, its density:',
+  o:[`rises by about ${sig(qz.gly*100,2)} %`,`falls by about ${sig(qz.gly*100,2)} %`,'falls by about 0.49 %','does not change'],a:1,
+  why:`The same mass now fills a larger volume, so ρ ∝ 1/V. For small changes Δρ/ρ ≈ −α<sub>V</sub>ΔT = −49 × 10⁻⁵ × 30 = −${sig(qz.gly,2)}, a fall of about ${sig(qz.gly*100,2)} %.`},
+ {q:'A steel tape calibrated at 27.0 °C reads 63.0 cm for a rod on a 45.0 °C day (α = 1.20 × 10⁻⁵ K⁻¹). The rod’s actual length that day is:',
+  o:['62.986 cm','63.0 cm',`${qz.tape.toFixed(3)} cm`,'63.136 cm'],a:2,
+  why:`On the hot day each of the tape’s “cm” is really 1 + α<sub>l</sub>Δθ cm long, so the true length = 63.0 × (1 + 1.20 × 10⁻⁵ × 18) = ${qz.tape.toFixed(3)} cm. A hot tape under-reads.`},
+ {q:'A pendulum clock with a steel rod (α = 1.2 × 10⁻⁵ K⁻¹) keeps correct time at 20 °C. At 40 °C, about how much time does it lose or gain per day?',
+  o:[`gains about ${fx(qz.pend,0)} s`,`loses about ${fx(2*qz.pend,0)} s`,`loses about ${fx(qz.pend,0)} s`,'no change'],a:2,
+  why:`Hotter means a longer pendulum and a longer period, so the clock runs slow and <b>loses</b> time. ΔT/T ≈ ½α<sub>l</sub>Δθ = ½ × 1.2 × 10⁻⁵ × 20 = 1.2 × 10⁻⁴; over 86 400 s that is about ${fx(qz.pend,1)} s a day. (Forgetting the ½ doubles it.)`}
+];
+function quiz(el,Q){
+  const render=()=>{el.innerHTML=Q.map((q,i)=>`<div class="panel"><p class="qn">Q${i+1}</p><p>${q.q}</p>
+    <div class="opts" data-i="${i}">${q.o.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');};
+  el.addEventListener('click',e=>{
+    const b=e.target.closest('.opt'); if(!b||b.disabled) return;
+    const box=b.parentElement, q=Q[+box.dataset.i], j=+b.dataset.j;
+    box.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+    const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+  });
+  render(); return render;
+}
+const rq=quiz($('quiz'),QUIZ); $('qreset').onclick=rq;
+
+drawH(); drawSC(); drawTh(); drawCF(); drawG(); drawW(); drawE(); drawA(); drawD(); drawL(); drawS(); drawR(); drawB(); drawF(); drawP(); drawM();
+</script>
+</body>
+</html>

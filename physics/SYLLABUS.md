@@ -52,9 +52,45 @@ Module: `thermodynamics/heat-transfer.html` (07)
 - [x] Average-temperature form for problems ((T₁ − T₂)/t = k(T̄ − T<sub>s</sub>)) **[JEE]**
 - [x] Newton's law of cooling as the small-difference limit of Stefan's law **[JEE]**
 
-## Rest of "Thermal Properties of Matter" (not yet covered)
+## Temperature and thermal expansion — NCERT Class 11, "Thermal Properties of Matter" (temperature, thermometry, expansion)
 
-- [ ] Temperature and heat; thermometric scales; ideal-gas (absolute) temperature
-- [ ] Thermal expansion: linear, area, volume; α, β, γ relations; anomalous expansion of water; thermal stress
-- [ ] Specific heat capacity; calorimetry (principle of mixtures)
-- [ ] Change of state: latent heat, heating curve, triple point, phase diagrams (water, CO₂), regelation, boiling point vs pressure
+Module: `thermodynamics/temperature-expansion.html` (08)
+
+- [x] Temperature vs heat (heat = energy in transit because of a temperature difference)
+- [x] Thermometers use a property that changes with temperature; two fixed points (ice point, steam point)
+- [x] Celsius and Fahrenheit scales, conversion t<sub>F</sub> = (9/5)t<sub>C</sub> + 32 (straight-line graph); any linear scale conversion **[JEE]**
+- [x] Constant-volume gas thermometer: P ∝ T at low density, extrapolation of all gases to the same absolute zero (−273.15 °C)
+- [x] Kelvin scale T = t<sub>C</sub> + 273.15; triple point of water 273.16 K as the fixed point
+- [x] Ideal-gas equation PV = µRT as the link between gas thermometry and absolute temperature
+- [x] Thermal expansion: linear (α<sub>l</sub>), area (α<sub>a</sub>), volume (α<sub>v</sub>); ΔL = α<sub>l</sub>LΔT
+- [x] Relations α<sub>a</sub> = 2α<sub>l</sub>, α<sub>v</sub> = 3α<sub>l</sub> (from the square / cube picture)
+- [x] Typical values: metals vs glass vs invar; liquids expand more than solids; gases most (α<sub>v</sub> = 1/T for an ideal gas)
+- [x] α<sub>v</sub> depends on temperature (copper curve, qualitative)
+- [x] Molecular reason for expansion (asymmetric interatomic potential, qualitative) **[JEE]**
+- [x] Anomalous expansion of water: densest at 4 °C; why lakes freeze from the top and life survives
+- [x] Thermal stress: rod clamped between walls, stress = YαΔT; railway tracks, rings on wheels
+- [x] A hole expands like the material around it **[JEE]**
+- [x] Bimetallic strip (bending, thermostats) **[JEE]**
+- [x] Apparent vs real expansion of a liquid in an expanding container **[JEE]**
+- [x] Pendulum clock losing/gaining time with temperature; error of a metal scale **[JEE]**
+
+## Heat, calorimetry and change of state — NCERT Class 11, "Thermal Properties of Matter" (specific heat, calorimetry, change of state)
+
+Module: `thermodynamics/calorimetry-phase.html` (09)
+
+- [x] Heat capacity S = ΔQ/ΔT; specific heat capacity s = ΔQ/(mΔT); molar specific heat C
+- [x] Molar specific heats at constant pressure and constant volume for gases (Table 10.4; link to modules 03, 06)
+- [x] Water's high specific heat and its consequences (coolant, climate; link to sea breeze in 07)
+- [x] Calorimetry: principle of heat exchange (heat lost = heat gained in an isolated system); the calorimeter
+- [x] Finding a specific heat by the method of mixtures (NCERT example)
+- [x] Water equivalent of a calorimeter **[JEE]**
+- [x] Change of state: melting, freezing, vaporisation, condensation, sublimation; states coexist at constant temperature
+- [x] Heating curve of water (temperature vs heat): sloped parts and plateaus; slopes differ because specific heats differ
+- [x] Latent heat Q = mL; L<sub>f</sub> and L<sub>v</sub> of water; latent heat depends on pressure; Table 10.5
+- [x] Why steam burns are worse than boiling-water burns
+- [x] Mixing ice and water: final state when not all the ice melts **[JEE]**
+- [x] Melting point and boiling point depend on pressure; normal melting/boiling points
+- [x] Boiling point vs pressure: cooking on hills, pressure cooker; boiling under reduced pressure (NCERT activity)
+- [x] Regelation and skating (melting point lowered by pressure)
+- [x] Sublimation: dry ice, iodine
+- [x] Phase (P–T) diagrams of water and CO₂: fusion, vaporisation and sublimation curves; triple point; why water's fusion curve slopes backwards
