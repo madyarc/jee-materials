@@ -85,7 +85,7 @@ footer{font-size:12px;color:var(--muted);max-width:92ch}
   <nav class="back"><a href="../index.html">← Chemistry</a></nav>
   <header style="display:flex;flex-direction:column;gap:8px">
     <h1>Mechanism Player</h1>
-    <p class="lede">Step through each mechanism one electron move at a time. A red curved arrow always runs <b>from</b> an electron pair (lone pair or bond) <b>to</b> where that pair ends up. Each step links back to the effects from Module 2: a step happens because its intermediate is stabilised by them.</p>
+    <p class="lede">Step through each mechanism one electron move at a time. A red curved arrow always runs <b>from</b> an electron pair (lone pair or bond) <b>to</b> where that pair ends up. Each step links back to the effects on the <a href="effects-ladder.html">Electronic Effects Ladder</a>: a step happens because its intermediate is stabilised by them.</p>
   </header>
 
   <div class="chips" id="mchips" role="group" aria-label="Choose mechanism"></div>
@@ -181,7 +181,7 @@ M.sn1={name:'SN1: (CH₃)₃C–Br + H₂O',chip:'SN1',
    r:[[350,123,394,134,20]],t:[[320,232,'slow step: C–Br breaks on its own, no nucleophile involved',12]],
    cap:'Step 1 (slow): the C–Br bond pair leaves with Br. Only the substrate is involved, so rate = k[R–X].'},
   {a:[...tBu(300,true),['Br',480,120,{q:'−',lp:[0,90,180,270],r:18}]],b:[[0,1],[0,2],[0,3]],
-   t:[[320,225,'planar sp² carbocation with an empty p orbital',12],[320,241,'9 α C–H bonds feed it by hyperconjugation (Module 2, ladder 6)',12]],
+   t:[[320,225,'planar sp² carbocation with an empty p orbital',12],[320,241,'9 α C–H bonds feed it by hyperconjugation (Effects Ladder, ladder 6)',12]],
    cap:'Intermediate: a flat 3° carbocation. It forms because 3° cations are well stabilised. A 1° cation would be too unstable, so 1° halides don’t go SN1.'},
   {a:[...tBu(300,true),['H₂O',130,120,{lp:[0],r:22}]],b:[[0,1],[0,2],[0,3]],
    r:[[154,120,286,117,-38]],t:[[320,232,'water can attack either face of the flat cation',12]],
@@ -307,7 +307,7 @@ M.ea={name:'Electrophilic addition: CH₃CH=CH₂ + HBr',chip:'Addition to C=C',
      '<b>Activating, o/p-directing:</b> +R donors (–OH, –OR, –NH₂) and alkyls (+I, hyperconjugation).',
      '<b>Deactivating, m-directing:</b> –NO₂, –CN, –CHO, –COOH (−R and −I); –N⁺R₃ (−I only).',
      '<b>Halogens:</b> deactivating (−I wins) but o/p-directing (the +R lone pair stabilises the o/p arenium).',
-     'Module 2’s σ map gives these I/R splits as numbers.'],
+     'The Effects Ladder’s σ map gives these I/R splits as numbers.'],
    quiz:{q:'Nitration of anisole (C₆H₅–OCH₃). The main products are:',o:['meta-nitroanisole','ortho- and para-nitroanisole','no reaction'],a:1,
      why:'In o/p attack one arenium form puts + on the carbon bearing OCH₃. The O lone pair (+R) stabilises it, so o/p attack is faster.'}};
 })();

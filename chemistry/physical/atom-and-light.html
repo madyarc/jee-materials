@@ -1,0 +1,1345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inside the Atom, and What Light Is</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&family=Noto+Sans+Symbols+2&text=%E2%86%90%E2%86%91%E2%86%92%E2%86%93%E2%86%94%E2%86%97%E2%87%8C%E2%87%92%E2%87%94%E2%88%82%E2%88%88%E2%88%92%E2%88%93%E2%88%9A%E2%88%9D%E2%88%9E%E2%88%AB%E2%89%88%E2%89%A0%E2%89%A1%E2%89%A4%E2%89%A5%E2%89%AA%E2%89%AB%E2%8A%95%E2%8A%97%E2%8A%99%E2%8A%A5%E2%96%B2%E2%96%B6%E2%97%80%E2%97%8B%E2%97%8F%E2%9C%93%E2%9C%97%E2%9D%9A%E2%9F%82%E2%9F%A8%E2%9F%A9&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) cathode rays, e/m  (2) Millikan  (3) protons, neutrons, radiations  (4) Thomson vs Rutherford
+   (5) Z, A, isotopes  (6) why Rutherford's atom should collapse  (7) light as a wave  (8) EM spectrum
+   (9) black body and Planck  (10) photoelectric effect  (11) dual nature  (12) continuous and line spectra */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --e:#2c56cc; --nuc:#cf3f33; --neu:#5a6375; --photon:#b8860b;
+  --ph1:#2c56cc; --ph2:#c7741a;
+  --s:#1f8f87; --p:#7a52c7; --d:#c7741a; --f:#b0377a;
+  --c1:#4d8a22; --c2:#94502a; /* page-local categorical: E field (green), B field (sienna) */
+  --f-display:"Bricolage Grotesque","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","Noto Sans Math","Noto Sans Symbols 2",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --e:#7d9dff; --nuc:#ff7b6f; --neu:#97a0b0; --photon:#e0b84a;
+  --ph1:#7d9dff; --ph2:#f0a04b;
+  --s:#3cb8ad; --p:#a585f0; --d:#f0a04b; --f:#e86fae;
+  --c1:#93cf62; --c2:#d9926a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --e:#7d9dff; --nuc:#ff7b6f; --neu:#97a0b0; --photon:#e0b84a;
+  --ph1:#7d9dff; --ph2:#f0a04b;
+  --s:#3cb8ad; --p:#a585f0; --d:#f0a04b; --f:#e86fae;
+  --c1:#93cf62; --c2:#d9926a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:620px){.three{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.btn[disabled]{opacity:.45;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
+.slider label{color:var(--muted);min-width:8.2em}
+.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider output{font:500 13px var(--f-mono);min-width:13ch;text-align:right}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.legend b.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+.mono{font-family:var(--f-mono)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+.drag{cursor:ew-resize;touch-action:none}
+.step{display:inline-flex;align-items:center;gap:6px}
+.step .btn{min-width:30px;font:600 15px var(--f-mono);padding:3px 7px}
+.step output{font:500 14px var(--f-mono);min-width:3ch;text-align:center}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;font-size:13.5px}
+.card .ball{flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;font:600 13px var(--f-mono)}
+.sym{font:600 26px var(--f-display);display:inline-flex;align-items:center;gap:2px}
+.sym .pre{display:inline-flex;flex-direction:column;align-items:flex-end;font:500 13px var(--f-mono);line-height:1.15}
+.sym .chg{font:500 13px var(--f-mono);align-self:flex-start}
+.blds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:560px){.blds{grid-template-columns:minmax(0,1fr)}}
+.bld{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;align-items:center}
+.iso{display:inline-flex;flex-direction:column;align-items:flex-end;font-size:.62em;line-height:1.05;vertical-align:middle;margin-right:1px}
+.bld .ctl{display:flex;flex-wrap:wrap;gap:8px 12px;justify-content:center;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Chemistry</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Inside the Atom, and What Light Is</h1>
+    <p class="lede">How do you find out what is inside something far too small to see? You shoot things at it and watch how they bend. Here you can redo the experiments that found the electron, measured its charge, found the nucleus and showed that light comes in packets. Then you will see why these results forced a new model of the atom.</p>
+  </header>
+
+  <!-- 1 · cathode rays -->
+  <section class="stack">
+    <div>
+      <h2>1 · Cathode rays: the electron and its e/m</h2>
+      <p class="lede">At low pressure and high voltage, a beam leaves the cathode (−) and flies toward the anode (+). Some of it passes through a hole in the anode and makes a spot glow on a zinc-sulphide screen. Thomson put an electric field (between two plates) and a magnetic field across its path. Switch them on and off and watch the spot.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row">
+          <div class="chips" id="crtP" role="group" aria-label="Particle"><button class="chip" data-k="e">Electron (cathode ray)</button><button class="chip" data-k="p">Proton (H⁺)</button></div>
+          <label class="muted"><input type="checkbox" id="crtEon" checked> E field on</label>
+          <label class="muted"><input type="checkbox" id="crtBon"> B field on</label>
+        </div>
+        <div class="svgbox"><svg id="crt" viewBox="0 0 680 250" role="img" aria-label="Cathode ray tube with crossed electric and magnetic fields" style="min-width:560px"></svg></div>
+        <div class="legend"><span><b class="dot" style="background:var(--e)"></b>electron beam</span><span><i style="background:var(--c1)"></i>E field (top plate +)</span><span><b style="color:var(--c2)">⊗</b> B field into the page</span><span>Plates 3 cm long, 1 cm apart; screen 8 cm beyond (schematic)</span></div>
+      </div>
+      <div class="panel stack">
+        <div class="slider"><label for="crtE">electric field E</label><input type="range" id="crtE" min="0" max="40" step="0.5" value="20"><output id="crtEo"></output></div>
+        <div class="slider"><label for="crtB">magnetic field B</label><input type="range" id="crtB" min="0" max="2" step="0.01" value="0.60"><output id="crtBo"></output></div>
+        <div class="slider"><label for="crtV">beam speed v</label><input type="range" id="crtV" min="1" max="5" step="0.05" value="2.5"><output id="crtVo"></output></div>
+        <dl class="kv" id="crtKv"></dl>
+        <p class="cap key" id="crtCap"></p>
+        <div class="row"><button class="btn" id="crtM">Measure e/m the way Thomson did</button></div>
+        <p class="cap" id="crtMo" hidden></p>
+      </div>
+    </div>
+    <p class="cap">What the beam showed: it travels in straight lines with no field; it bends like a stream of <b>negative</b> particles; and it is the same whatever metal the cathode is made of and whatever gas is in the tube. So the same particle, the <b>electron</b>, is part of every atom. A bigger charge or a stronger field means more bending; a heavier particle bends less. Only the ratio e/m can be found this way: e/mₑ = <span class="mono" id="emVal"></span> C kg⁻¹.</p>
+    <div class="qgrid" id="q1"></div>
+  </section>
+
+  <!-- 2 · Millikan -->
+  <section class="stack">
+    <div>
+      <h2>2 · Millikan: charge comes in whole electrons</h2>
+      <p class="lede">A tiny oil drop falls between two plates. X-rays knock electrons off air molecules, and the drop picks up a few of them. Turn up the voltage: the electric pull on its charge grows until it balances the drop's weight, and the drop <b>hovers</b>. Then qE = mg, so the charge is q = mgd/V.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="mil" viewBox="0 0 520 260" role="img" aria-label="Oil drop between charged plates" style="min-width:420px"></svg></div>
+        <div class="slider"><label for="milV">plate voltage V</label><input type="range" id="milV" min="0" max="6000" step="1" value="1500"><output id="milVo"></output></div>
+        <div class="row"><span class="muted">fine:</span><button class="btn" data-dv="-10">−10 V</button><button class="btn" data-dv="-1">−1 V</button><button class="btn" data-dv="1">+1 V</button><button class="btn" data-dv="10">+10 V</button></div>
+        <div class="row"><button class="btn primary" id="milRec" disabled>Record this drop's charge</button><button class="btn" id="milNew">New drop</button><button class="btn" id="milPlay">Pause</button></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="milKv"></dl>
+        <p class="cap key" id="milCap"></p>
+        <p class="cap">The drop's mass is found first, from how fast it falls with the plates switched off. Forces on the drop: its weight (down), the electric force on its negative charge (up, toward the + plate) and air drag, which always opposes its motion and vanishes when it stops. <span class="hw">simplified model</span> Speeds on screen are not to scale.</p>
+      </div>
+    </div>
+    <div class="panel stack">
+      <h3>Every charge Millikan measured</h3>
+      <p class="muted">Each hovering drop you record adds one mark. Or add 150 simulated drops, each measured with about ±3 % scatter.</p>
+      <div class="svgbox"><svg id="hist" viewBox="0 0 680 190" role="img" aria-label="Histogram of measured drop charges" style="min-width:560px"></svg></div>
+      <div class="row"><button class="btn" id="histSim">Add 150 simulated drops</button><button class="btn" id="histClr">Clear</button><span class="muted" id="histN"></span></div>
+      <p class="cap key">The charges pile up at 1e, 2e, 3e … and nowhere in between. Charge is <b>quantised</b>: q = ne, with e = 1.602176634 × 10⁻¹⁹ C. Combining e with Thomson's e/m gives the electron's mass, mₑ = e ÷ (e/mₑ) = <span class="mono" id="meVal"></span> kg.</p>
+    </div>
+    <div class="qgrid" id="q2"></div>
+  </section>
+
+  <!-- 3 · protons, neutrons -->
+  <section class="stack">
+    <div>
+      <h2>3 · Canal rays, the proton and the neutron</h2>
+      <p class="lede">With a perforated cathode, a second beam appears behind it, going the other way: <b>canal rays</b>. They bend the opposite way to cathode rays, so they are positive. Change the gas in the tube and compare the two beams' e/m.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="gas" role="group" aria-label="Gas in the tube"><button class="chip" data-k="H">Hydrogen</button><button class="chip" data-k="He">Helium</button><button class="chip" data-k="Ne">Neon</button></div>
+        <div class="svgbox"><svg id="emb" viewBox="0 0 640 190" role="img" aria-label="Charge-to-mass ratios on a log scale" style="min-width:520px"></svg></div>
+        <p class="muted">Log scale: each tick is ten times the last.</p>
+      </div>
+      <div class="panel stack">
+        <p class="cap key" id="gasCap"></p>
+        <p class="cap">The lightest positive particle, from hydrogen, is the <b>proton</b>. Some ions carry two or more units of charge (He²⁺ above), but always a whole number of e.</p>
+        <p class="cap stackme">The <b>neutron</b> (Chadwick, 1932): α particles hitting beryllium knock out a neutral particle slightly heavier than the proton. ⁹₄Be + ⁴₂He → ¹²₆C + ¹₀n. With no charge, it is not bent by any field, which is why it was found last.</p>
+      </div>
+    </div>
+    <div class="three" id="pcards"></div>
+    <div class="panel stack">
+      <h3>Other rays found at the same time</h3>
+      <div class="svgbox"><svg id="rays" viewBox="0 0 640 150" role="img" aria-label="Penetrating power of alpha, beta and gamma rays" style="min-width:520px"></svg></div>
+      <p class="cap"><b>X-rays</b> (Röntgen): made when fast electrons hit a metal target; not bent by fields; very short wavelength (about 0.1 nm) and pass easily through matter. From radioactive elements: <b>α</b> = helium nuclei (charge +2, mass 4 u), <b>β</b> = fast electrons, <b>γ</b> = neutral, high-energy radiation like X-rays. Rough penetrating power α : β : γ ≈ 1 : 100 : 1000. <span class="hw">schematic</span></p>
+    </div>
+    <div class="qgrid" id="q3"></div>
+  </section>
+
+  <!-- 4 · Rutherford -->
+  <section class="stack">
+    <div>
+      <h2>4 · Plum pudding or nucleus? Fire α particles at gold</h2>
+      <p class="lede">Thomson's model: a ball of positive charge, radius about 10⁻¹⁰ m, with electrons dotted through it like plums in a pudding, mass spread evenly. Rutherford fired fast α particles at a very thin gold foil. <b>Predict:</b> what should happen in each model? Then fire.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row"><div class="chips" id="model" role="group" aria-label="Atom model"><button class="chip" data-k="T">Thomson atom</button><button class="chip" data-k="R">Rutherford atom</button></div>
+          <button class="btn primary" id="fire">Fire 60 α</button><button class="btn" id="fclr">Clear</button></div>
+        <div class="svgbox"><svg id="foil" viewBox="0 0 680 300" role="img" aria-label="Alpha particles passing through a thin gold foil" style="min-width:560px"></svg></div>
+        <p class="muted">A foil three atoms thick, magnified. In the nuclear atom the nucleus is drawn about 10 000 times too big and its push reaches about 20 times too far, so you see far more big deflections per atom here than in the real experiment.</p>
+      </div>
+      <div class="panel stack">
+        <div class="svgbox"><svg id="fbar" viewBox="0 0 300 170" role="img" aria-label="Count of alpha particles by deflection" style="min-width:260px"></svg></div>
+        <p class="cap key" id="foilCap"></p>
+      </div>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <h3>One α, one gold nucleus: how close it passes decides everything</h3>
+        <div class="svgbox"><svg id="imp" viewBox="0 0 680 380" role="img" aria-label="Path of one alpha particle past a gold nucleus" style="min-width:560px"></svg></div>
+        <div class="slider"><label for="impB">aim (impact parameter b)</label><input type="range" id="impB" min="0" max="110" step="0.5" value="20"><output id="impBo"></output></div>
+        <div class="slider"><label for="impK">α energy</label><input type="range" id="impK" min="4" max="10" step="0.1" value="7.7"><output id="impKo"></output></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="impKv"></dl>
+        <p class="cap key" id="impCap"></p>
+        <p class="cap"><span class="hw">JEE Advanced</span> A head-on α stops at the <b>distance of closest approach</b> d, where all its kinetic energy has become electric potential energy: K = k(2e)(Ze)/d. Aimed off-centre by b, it is turned through θ with tan(θ/2) = d/(2b). Small b → big θ.</p>
+      </div>
+    </div>
+    <div class="panel stack">
+      <h3>True scale <span class="hw">the pictures above are not to scale</span></h3>
+      <p>Atom: radius about 10⁻¹⁰ m. Nucleus: about 10⁻¹⁵ m (gold's is about <span class="mono" id="rAu"></span> fm; 1 fm = 10⁻¹⁵ m). The ratio is about 10⁵. If the nucleus were a cricket ball (radius about 3.6 cm), the atom would be about <span class="mono" id="cball"></span> km in radius, and almost all of it empty. In the panel above, at 2 pixels per fm, the edge of the gold atom would be about <span class="mono" id="atomEdge"></span> m away from your screen.</p>
+    </div>
+    <p class="cap"><b>Rutherford's conclusions.</b> Most α go straight: the atom is mostly empty. A few turn sharply: a huge repulsion, so the positive charge is packed into a tiny <b>nucleus</b> that also holds nearly all the mass. His <b>nuclear model</b>: electrons move round the nucleus at high speed, held by electric attraction, like planets round the Sun.</p>
+    <div class="qgrid" id="q4"></div>
+  </section>
+
+  <!-- 5 · Z, A -->
+  <section class="stack">
+    <div>
+      <h2>5 · Atomic number, mass number, isotopes</h2>
+      <p class="lede">The protons fix the element: <b>atomic number Z</b> = number of protons (= number of electrons in a neutral atom). Protons and neutrons together are <b>nucleons</b>; <b>mass number A</b> = Z + N. Build two nuclei and compare.</p>
+    </div>
+    <div class="panel stack">
+      <div class="blds" id="blds"></div>
+      <p class="big" id="relT" style="text-align:center"></p>
+      <p class="cap key" id="relC"></p>
+      <div class="row"><span class="muted">Try:</span><div class="chips" id="pairs"><button class="chip" data-k="0">¹²C / ¹⁴C</button><button class="chip" data-k="1">³⁵Cl / ³⁷Cl</button><button class="chip" data-k="2">¹⁴C / ¹⁴N</button><button class="chip" data-k="3">¹⁴C / ¹⁶O</button><button class="chip" data-k="4">¹H / ²H</button><button class="chip" data-k="5">³²S²⁻ / ⁴⁰Ar</button></div></div>
+    </div>
+    <div class="three">
+      <p class="cap"><b>Isotopes</b>: same Z, different A (different number of neutrons). Hydrogen: protium ¹H (99.985 %), deuterium ²H, tritium ³H (traces). Chemistry depends on the electrons, which follow Z, so isotopes react alike.</p>
+      <p class="cap"><b>Isobars</b>: same A, different Z: different elements, e.g. ¹⁴C and ¹⁴N.</p>
+      <p class="cap"><b>Isotones</b> <span class="hw">JEE</span>: same number of neutrons N, e.g. ¹⁴C, ¹⁵N and ¹⁶O all have 8.</p>
+    </div>
+    <p class="cap">For an ion, count the electrons separately: fewer electrons than protons → cation, more → anion. N = A − Z holds for atoms and ions alike. Electrons in the drawing sit on a ring for counting only <span class="hw">schematic, not to scale</span>.</p>
+    <div class="qgrid" id="q5"></div>
+  </section>
+
+  <!-- 6 · collapse -->
+  <section class="stack">
+    <div>
+      <h2>6 · Why Rutherford's atom should collapse</h2>
+      <p class="lede">An electron going round a circle is accelerating (its direction keeps changing). Maxwell's theory says an accelerating charge radiates light, so it loses energy. Press Play to see what classical physics predicts.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row"><button class="btn primary" id="colPlay">Play</button><span class="hw">classical prediction: this does NOT happen</span></div>
+        <div class="svgbox"><svg id="col" viewBox="0 0 400 300" role="img" aria-label="Electron spiralling into the nucleus, classical prediction" style="min-width:300px;max-width:520px;margin:0 auto"></svg></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="colKv"></dl>
+        <p class="cap key">The classical estimate for hydrogen: the electron spirals in after about <b><span id="tcol"></span> s</b>, less than a fiftieth of a nanosecond. Real atoms last for ever. And as it spiralled, its orbit frequency would rise smoothly, so the light given off would be a continuous smear of colours, not the sharp lines atoms actually emit (section 12).</p>
+        <p class="cap">Why not let the electron stand still? Then nothing stops the attraction pulling it straight into the nucleus. The model also says nothing about how electrons are arranged or what energies they have. These failures led to Bohr's model.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q6"></div>
+  </section>
+
+  <!-- 7 · EM wave -->
+  <section class="stack">
+    <div>
+      <h2>7 · Light is a wave of electric and magnetic fields</h2>
+      <p class="lede">An oscillating charge sends out an electric field and a magnetic field that oscillate at right angles to each other and to the direction of travel. No medium is needed; in vacuum every such wave moves at the same speed c. Stretch the wave and watch the counters.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row"><button class="btn primary" id="emPlay">Pause</button><span class="muted">slowed down enormously</span></div>
+        <div class="svgbox"><svg id="emw" viewBox="0 0 680 270" role="img" aria-label="Electromagnetic wave with electric and magnetic fields" style="min-width:560px"></svg></div>
+        <div class="legend"><span><i style="background:var(--c1)"></i>E field, along y (up–down)</span><span><i style="background:var(--c2)"></i>B field, along z (in and out of the page, drawn slanting)</span><span>wave travels along x</span></div>
+        <div class="slider"><label for="emL">wavelength λ</label><input type="range" id="emL" min="60" max="300" step="1" value="150"><output id="emLo"></output></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="emKv"></dl>
+        <p class="cap key"><b>c = νλ</b>. All waves move at the same c, so a longer wave means fewer crests passing each second. <b>Frequency ν</b> = crests per second (hertz, Hz = s⁻¹). <b>Wavenumber ν̄ = 1/λ</b> = waves per unit length; chemists quote it per centimetre (cm⁻¹).</p>
+        <p class="cap">c = 2.99792458 × 10⁸ m s⁻¹ (exactly, by definition of the metre). Wave speed and λ, ν in general: <a href="../../physics/waves/travelling-waves.html">Travelling Waves</a>.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q7"></div>
+  </section>
+
+  <!-- 8 · spectrum -->
+  <section class="stack">
+    <div>
+      <h2>8 · The electromagnetic spectrum</h2>
+      <p class="lede">Radio waves, microwaves, light, X-rays and γ-rays are all the same kind of wave. Only the wavelength differs, by a factor of more than 10¹⁶. Drag the marker along the strip (or on the visible band below it).</p>
+    </div>
+    <div class="panel stack">
+      <div class="svgbox"><svg id="spec" viewBox="0 0 680 220" role="img" aria-label="Electromagnetic spectrum on a log scale with draggable marker" style="min-width:560px"></svg></div>
+      <div class="row"><span class="muted">Jump to:</span><div class="chips" id="specJ"></div></div>
+      <div class="two">
+        <dl class="kv" id="specKv"></dl>
+        <div class="stack">
+          <p class="cap key">Everything follows from λ: ν = c/λ, ν̄ = 1/λ, photon energy <b>E = hν = hc/λ</b> (section 9). Shorter wavelength → higher frequency → more energy per photon.</p>
+          <p class="cap">Region boundaries are conventions and overlap <span class="hw">approximate</span>. Visible: about 400 nm (violet) to 750 nm (red), i.e. 7.5 to 4.0 × 10¹⁴ Hz; the colours drawn are approximate.</p>
+        </div>
+      </div>
+    </div>
+    <div class="qgrid" id="q8"></div>
+  </section>
+
+  <!-- 9 · black body, Planck -->
+  <section class="stack">
+    <div>
+      <h2>9 · Hot bodies and Planck's quantum</h2>
+      <p class="lede">A heated iron rod glows dull red, then brighter orange, then white, and very hot bodies look bluish. An ideal absorber and emitter, a <b>black body</b> (best approximated by a cavity with a tiny hole), gives out a spectrum that depends only on its temperature. Classical wave theory could not explain its shape. Nor could it explain the photoelectric effect (section 10), how the heat capacity of solids changes with temperature, or the line spectra of atoms (section 12). All of these say that energy is taken in and given out in fixed amounts.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="bb" viewBox="0 0 640 280" role="img" aria-label="Black-body spectrum and the classical prediction" style="min-width:520px"></svg></div>
+        <div class="slider"><label for="bbT">temperature T</label><input type="range" id="bbT" min="1500" max="8000" step="50" value="4000"><output id="bbTo"></output></div>
+        <div class="row"><label class="muted"><input type="checkbox" id="bbSame"> same scale for every T</label><button class="btn" id="bbPin">Pin this curve</button><button class="btn" id="bbUnpin">Clear pins</button></div>
+        <p class="muted" id="bbInfo"></p>
+        <div class="legend"><span><i style="background:var(--photon)"></i>measured shape (Planck's law)</span><span><i style="background:var(--muted)"></i>classical wave theory</span><span><i style="background:var(--ink);opacity:.45"></i>pinned curves</span></div>
+      </div>
+      <div class="panel stack">
+        <p class="cap key">The curve rises, peaks, and falls; as T goes up, the peak moves to shorter wavelengths. Classical theory (dashed) agrees at long wavelengths but shoots up without limit at short ones, predicting endless ultraviolet energy <span class="hw">JEE: “ultraviolet catastrophe”</span>.</p>
+        <p class="cap"><b>Planck (1900)</b> fixed it by assuming the oscillating atoms in the walls can give out or take in energy only in whole packets, <b>quanta</b>, of size <b>E = hν</b>, with h = 6.626 × 10⁻³⁴ J s. High-frequency packets are so large that hardly any get emitted, which pulls the curve down. More on these curves: <a href="../../physics/thermodynamics/heat-transfer.html">Heat Transfer</a> (Wien's and Stefan's laws).</p>
+      </div>
+    </div>
+    <div class="panel stack">
+      <h3>Ramp or staircase?</h3>
+      <div class="split">
+        <div class="stack"><div class="svgbox"><svg id="stair" viewBox="0 0 520 200" role="img" aria-label="Energy allowed in steps of h nu" style="min-width:420px"></svg></div><div class="legend"><span><i style="background:var(--muted)"></i>classical: any amount (dashed)</span><span><i style="background:var(--ink)"></i>Planck: whole quanta only (steps)</span></div></div>
+        <div class="stack">
+          <div class="chips" id="stairC" role="group" aria-label="Radiation"><button class="chip" data-k="700">red 700 nm</button><button class="chip" data-k="450">blue 450 nm</button><button class="chip" data-k="250">UV 250 nm</button></div>
+          <p class="cap key" id="stairCap"></p>
+        </div>
+      </div>
+    </div>
+    <div class="qgrid" id="q9"></div>
+  </section>
+
+  <!-- 10 · photoelectric -->
+  <section class="stack">
+    <div>
+      <h2>10 · The photoelectric effect lab</h2>
+      <p class="lede">Light falls on a clean metal plate in a vacuum, and electrons may fly off to a collector. <b>Predict first:</b> if dim red light ejects nothing, will very bright red light do it? Then try it.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="metal" role="group" aria-label="Metal"></div>
+        <div class="svgbox"><svg id="pe" viewBox="0 0 680 260" role="img" aria-label="Light ejecting electrons from a metal plate" style="min-width:560px"></svg></div>
+        <div class="slider"><label for="peF">frequency ν</label><input type="range" id="peF" min="3" max="15" step="0.05" value="5"><output id="peFo"></output></div>
+        <div class="slider"><label for="peI">brightness</label><input type="range" id="peI" min="0" max="100" step="1" value="60"><output id="peIo"></output></div>
+        <div class="row"><button class="btn" id="pePlay">Pause</button></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="peKv"></dl>
+        <p class="cap key" id="peCap"></p>
+      </div>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <h3>Maximum kinetic energy against frequency</h3>
+        <div class="svgbox"><svg id="peG" viewBox="0 0 640 300" role="img" aria-label="Kinetic energy of photoelectrons against frequency for several metals" style="min-width:520px"></svg></div>
+      </div>
+      <div class="panel stack">
+        <p class="cap key"><b>Einstein (1905):</b> light is a stream of <b>photons</b>, each of energy hν. One photon gives all its energy to one electron, at once. Part pays the <b>work function</b> W₀ = hν₀ (the cost of escaping the metal); the rest is kinetic energy: <b>hν = W₀ + ½mₑv²</b>.</p>
+        <p class="cap">So every metal gives a straight line of <b>slope h</b>, the same for all (the lines are parallel), starting at its own <b>threshold frequency ν₀</b>. Brighter light means more photons, so more electrons (a bigger current), but no single electron gets more energy. Electrons come out with no delay, because one photon is enough.</p>
+        <p class="cap"><span class="hw">JEE</span> A reverse voltage that just stops the fastest electrons, the <b>stopping potential</b> V₀, measures KE<sub>max</sub> = eV₀.</p>
+        <p class="muted">Work functions depend on how clean the surface is and on the crystal face, so books quote slightly different values. These are typical measured values for clean surfaces. NCERT's table uses slightly different ones (Na 2.3 eV, K 2.25 eV, Mg 3.7 eV); use the book's values when a question gives no value.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q10"></div>
+  </section>
+
+  <!-- 11 · dual nature -->
+  <section class="stack">
+    <div>
+      <h2>11 · Wave or particle? Both</h2>
+      <p class="lede">Interference and diffraction need waves; the black body and the photoelectric effect need particles. Watch light pass through two narrow slits, one photon at a time.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row"><button class="btn primary" id="dsPlay">Play</button><button class="btn" id="dsClr">Clear</button><span class="muted" id="dsN"></span></div>
+        <div class="svgbox"><svg id="ds" viewBox="0 0 640 220" role="img" aria-label="Photons arriving one by one build an interference pattern" style="min-width:520px"></svg></div>
+        <p class="muted">Schematic: pattern for two narrow slits; photon positions drawn at random from it.</p>
+      </div>
+      <div class="panel stack">
+        <p class="cap key">Each photon lands at <b>one point</b>, like a particle. But where they land builds up bright and dark <b>fringes</b>, the interference pattern of a wave. Light travels as a wave and interacts with matter (screen, metal, eye) as particles. This is its <b>dual behaviour</b>.</p>
+        <p class="cap">Electrons turn out to have the same dual nature (de Broglie): <a href="bohr-model.html">Bohr's Model</a>.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q11"></div>
+  </section>
+
+  <!-- 12 · spectra -->
+  <section class="stack">
+    <div>
+      <h2>12 · Continuous and line spectra</h2>
+      <p class="lede">A prism bends violet light most and red least, spreading white light into a rainbow with no gaps: a <b>continuous spectrum</b>. Hot hydrogen gas does something very different. Predict what its spectrum looks like, then switch it on.</p>
+    </div>
+    <div class="panel stack">
+      <div class="chips" id="spk" role="group" aria-label="Spectrum type"><button class="chip" data-k="c">White light: continuous</button><button class="chip" data-k="e">Hydrogen: emission</button><button class="chip" data-k="a">White light through hydrogen: absorption</button><button class="chip" data-k="all">All three</button></div>
+      <div class="svgbox"><svg id="sp" viewBox="0 0 680 262" role="img" aria-label="Continuous, emission and absorption spectra" style="min-width:560px"></svg></div>
+      <p class="muted">Hydrogen's lines at their measured wavelengths; colours approximate. Visible light here is 400–750 nm; Hε (397 nm) lies just beyond the violet end, in the near ultraviolet, so it is drawn grey in the shaded strip.</p>
+    </div>
+    <div class="three">
+      <p class="cap"><b>Emission spectrum</b>: excite atoms (heat, electric discharge) and record the light they give back. Gas atoms give only certain wavelengths: bright <b>lines</b> on black, a <b>line</b> or <b>atomic spectrum</b>.</p>
+      <p class="cap"><b>Absorption spectrum</b>: shine white light through the gas. Its atoms remove exactly the wavelengths they would emit, leaving dark lines: the photographic negative of the emission spectrum. (Hydrogen's <i>visible</i> dark lines need some atoms already excited, as in the hot outer layers of a star; cool hydrogen absorbs only its ultraviolet lines.)</p>
+      <p class="cap"><b>Fingerprints</b>: every element has its own unique set of lines. Bunsen identified elements this way; Rb, Cs, Tl, In, Ga and Sc were discovered by their spectra, and helium was found in the Sun before it was found on Earth.</p>
+    </div>
+    <p class="cap key">Lines mean an atom can only lose energy in certain fixed amounts: its energy is <b>quantised</b>. Why hydrogen gives exactly these lines, and the full Lyman, Balmer and Paschen series: <a href="bohr-model.html">Bohr's Model of the Hydrogen Atom</a>.</p>
+    <div class="qgrid" id="q12"></div>
+    <div><button class="btn" id="qreset">Reset all answers</button></div>
+  </section>
+
+  <p class="cap">Next: <a href="bohr-model.html">Bohr's Model</a>, then <a href="orbitals-configuration.html">Orbitals and Electronic Configuration</a>. Periodic trends built on these: <a href="../inorganic/periodic-table.html">Periodic Table</a>.</p>
+
+  <footer>
+    <p><b>Models used:</b> uniform fields between the cathode-ray plates, with no fringing (schematic tube, true to scale only inside); oil drops treated as spheres with simple air drag, speeds not to scale, simulated drop masses and measurement scatter; α particles and nuclei as point charges repelling by Coulomb's law (nucleus fixed, electrons ignored), with the nucleus drawn far too large in the foil picture; Thomson atom as a uniform ball of positive charge; classical collapse time from the radiation of an accelerating charge (classical prediction, wrong for real atoms); electromagnetic waves in vacuum; black body as Planck's ideal radiator; photoelectric emission from a clean surface with no stray light. Spectrum region boundaries and drawn colours are approximate.</p>
+    <p><b>Based on:</b> NCERT Chemistry Class 11, "Structure of Atom"; NCERT Physics Class 12, "Dual Nature of Radiation and Matter", "Atoms" and "Nuclei"; P. W. Atkins, <i>Physical Chemistry</i>. Constants: CODATA recommended values. Work functions: CRC Handbook of Chemistry and Physics. Hydrogen line wavelengths: NIST Atomic Spectra Database.</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA (CODATA 2022; exact values marked) =================== */
+const C={
+  e:1.602176634e-19,          /* C, exact */
+  me:9.1093837139e-31,        /* kg */
+  mp:1.67262192595e-27,       /* kg */
+  mn:1.67492750056e-27,       /* kg */
+  meU:5.485799090441e-4, mpU:1.0072764665789, mnU:1.00866491606, /* u */
+  emq:1.75882000838e11,       /* e/me, C kg^-1 (magnitude) */
+  h:6.62607015e-34,           /* J s, exact */
+  c:299792458,                /* m s^-1, exact */
+  NA:6.02214076e23,           /* mol^-1, exact */
+  kB:1.380649e-23,            /* J K^-1, exact */
+  u:1.66053906892e-27,        /* kg */
+  re:2.8179403205e-15,        /* classical electron radius, m */
+  a0:5.29177210544e-11,       /* Bohr radius, m */
+  k:8.9875517862e9            /* 1/(4 pi eps0), N m^2 C^-2 */
+};
+const G=9.8;  /* m s^-2 */
+/* Work functions, eV, clean polycrystalline surfaces (CRC Handbook, via its table of electron work functions) */
+const METALS=[{s:'Cs',n:'caesium',W:1.95},{s:'K',n:'potassium',W:2.29},{s:'Na',n:'sodium',W:2.75},{s:'Mg',n:'magnesium',W:3.66}];
+/* Hydrogen Balmer lines, wavelengths in air, nm (NIST ASD) */
+const H_LINES=[{n:'Hα',l:656.279},{n:'Hβ',l:486.135},{n:'Hγ',l:434.0472},{n:'Hδ',l:410.1734},{n:'Hε',l:397.0075}];
+/* Ion masses for canal rays: standard atomic weights (u) */
+const GASES={H:{ion:'H⁺',A:1.008,z:1},He:{ion:'He⁺',A:4.0026,z:1,also:{ion:'He²⁺',z:2}},Ne:{ion:'Ne⁺',A:20.180,z:1}};
+const R0_NUC=1.2e-15;   /* m, nuclear radius constant, R = R0 A^(1/3) (NCERT Physics 12, Nuclei) */
+const AU={Z:79,A:197};
+const CRICKET_R=0.036;  /* m, cricket ball radius (circumference about 22.4–22.9 cm) */
+const VIS=[400,750];    /* nm, visible range used by NCERT */
+const ELEM=['','H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg','Al','Si','P','S','Cl','Ar','K','Ca'];
+const EV=C.e;
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NS='http://www.w3.org/2000/svg', TAU=2*Math.PI;
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function txt(parent,attrs,s){const t=el('text',attrs,parent);t.textContent=s;return t;}
+function set(e,attrs){for(const k in attrs)e.setAttribute(k,attrs[k]);}
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function press(box,k){box.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===String(k)));}
+const fmt=(v,d)=>(+v).toFixed(d);
+const SUP={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','+':'⁺'};
+const SUB={'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉'};
+const sup=s=>String(s).split('').map(c=>SUP[c]||c).join('');
+const sub=s=>String(s).split('').map(c=>SUB[c]||c).join('');
+/* a × 10^n with Unicode superscript */
+function sci(v,d){if(v===0)return '0';let n=Math.floor(Math.log10(Math.abs(v)));let m=v/10**n;if(Math.abs(+m.toFixed(d))>=10){m/=10;n++;}return n===0?m.toFixed(d):m.toFixed(d)+' × 10'+sup(n);}
+function lamStr(l){ /* metres → string with a sensible unit */
+  const U=[[1e3,'km'],[1,'m'],[1e-2,'cm'],[1e-3,'mm'],[1e-6,'µm'],[1e-9,'nm'],[1e-12,'pm'],[1e-15,'fm']];
+  for(const [f,u] of U){if(l>=f*0.9999){const v=l/f;return (v>=100?v.toFixed(0):v>=10?v.toFixed(1):v.toFixed(2))+' '+u;}}
+  return sci(l,2)+' m';
+}
+/* approximate colour of visible light (simple piecewise fit; approximate) */
+function wlColor(w){
+  let r=0,g=0,b=0;
+  if(w>=380&&w<440){r=-(w-440)/60;b=1;}else if(w<490){g=(w-440)/50;b=1;}else if(w<510){g=1;b=-(w-510)/20;}
+  else if(w<580){r=(w-510)/70;g=1;}else if(w<645){r=1;g=-(w-645)/65;}else if(w<=780){r=1;}
+  let f=1; if(w<420)f=0.3+0.7*(w-380)/40; else if(w>700)f=0.3+0.7*(780-w)/80;
+  const t=x=>Math.round(255*Math.pow(Math.max(0,x)*f,0.8));
+  return `rgb(${t(r)},${t(g)},${t(b)})`;
+}
+const isVis=nm=>nm>=VIS[0]&&nm<=VIS[1];
+function pathOf(f,x0,x1,N,sx,sy){let d='';for(let i=0;i<=N;i++){const x=x0+(x1-x0)*i/N;d+=(i?'L':'M')+sx(x).toFixed(1)+' '+sy(f(x)).toFixed(1);}return d;}
+function arrowD(x1,y1,x2,y2,h){const a=Math.atan2(y2-y1,x2-x1);return `M${x1} ${y1}L${x2} ${y2}M${x2-h*Math.cos(a-0.45)} ${y2-h*Math.sin(a-0.45)}L${x2} ${y2}L${x2-h*Math.cos(a+0.45)} ${y2-h*Math.sin(a+0.45)}`;}
+/* one animation loop, paused off-screen */
+const SCENES=[]; let lastTs=0, looping=false;
+function loop(ts){const dt=lastTs?Math.min(0.05,(ts-lastTs)/1000):0; lastTs=ts; let any=false;
+  SCENES.forEach(s=>{if(s.on&&s.vis){s.tick(dt);any=true;}}); if(any) requestAnimationFrame(loop); else {looping=false;lastTs=0;}}
+function kick(){if(!looping){looping=true;lastTs=0;requestAnimationFrame(loop);}}
+function scene(svg,btn,tick,startOn){
+  const s={on:startOn===undefined?!RM:(startOn&&!RM),vis:true,tick,btn};
+  SCENES.push(s); const lab=()=>{btn.textContent=s.on?'Pause':'Play';}; lab();
+  btn.addEventListener('click',()=>{s.on=!s.on;lab();if(s.onToggle)s.onToggle();kick();});
+  s.stop=()=>{s.on=false;lab();}; s.start=()=>{if(RM)return;s.on=true;lab();kick();};
+  if('IntersectionObserver' in window){new IntersectionObserver(es=>{es.forEach(e=>{s.vis=e.isIntersecting;});kick();}).observe(svg);}
+  return s;
+}
+function chipGroup(box,key,def,valid,cb){
+  let v=load(key); if(!valid(v)) v=def; press(box,v);
+  box.addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;v=b.dataset.k;press(box,v);store(key,v);cb(v);});
+  return v;
+}
+
+/* =================== 1 · CATHODE-RAY TUBE =================== */
+(function(){
+  const svg=$('crt'), PX=4;              /* 4 px per mm, true scale */
+  const XP0=150, XP1=270, XS=590, Y0=120; /* plates 3 cm, screen 8 cm beyond plates */
+  const L=0.03, D=0.08, GAP=0.005;        /* m: plate length, plate-to-screen, half-gap */
+  const S={p:'e'};
+  /* tube */
+  el('path',{d:`M20 70 Q20 40 50 40 H${XP1+20} L${XS} 10 V230 L${XP1+20} 200 H50 Q20 200 20 170 Z`,fill:'none',stroke:'var(--line)','stroke-width':2},svg);
+  el('rect',{x:34,y:96,width:8,height:48,fill:'var(--muted)'},svg);
+  txt(svg,{x:38,y:90,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'cathode −');
+  el('rect',{x:96,y:80,width:6,height:36,fill:'var(--muted)'},svg); el('rect',{x:96,y:124,width:6,height:36,fill:'var(--muted)'},svg);
+  txt(svg,{x:99,y:74,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'anode +');
+  /* plates */
+  el('rect',{x:XP0,y:Y0-GAP*1000*PX-5,width:XP1-XP0,height:5,fill:'var(--muted)'},svg);
+  el('rect',{x:XP0,y:Y0+GAP*1000*PX,width:XP1-XP0,height:5,fill:'var(--muted)'},svg);
+  txt(svg,{x:XP0-6,y:Y0-GAP*1000*PX,'font-size':12,fill:'var(--muted)','text-anchor':'end'},'+');
+  txt(svg,{x:XP0-6,y:Y0+GAP*1000*PX+8,'font-size':12,fill:'var(--muted)','text-anchor':'end'},'−');
+  const eArr=el('g',{},svg), bSym=el('g',{},svg);
+  for(let x=XP0+15;x<XP1;x+=30) el('path',{d:arrowD(x,Y0-16,x,Y0+16,5),stroke:'var(--c1)','stroke-width':1.3,fill:'none'},eArr);
+  for(let x=XP0+30;x<XP1;x+=30){txt(bSym,{x,y:Y0-26,'font-size':13,fill:'var(--c2)','text-anchor':'middle'},'⊗');txt(bSym,{x,y:Y0+36,'font-size':13,fill:'var(--c2)','text-anchor':'middle'},'⊗');}
+  /* screen */
+  el('line',{x1:XS,x2:XS,y1:14,y2:226,stroke:'var(--photon)','stroke-width':4,opacity:.45},svg);
+  txt(svg,{x:XS-8,y:240,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'ZnS screen');
+  el('line',{x1:XS-4,x2:XS+4,y1:Y0,y2:Y0,stroke:'var(--muted)'},svg);
+  const beam=el('path',{fill:'none',stroke:'var(--e)','stroke-width':2.2},svg);
+  const mA=el('circle',{r:3,fill:'none',stroke:'var(--muted)','stroke-dasharray':'2 2'},svg), tA=txt(svg,{'font-size':11,fill:'var(--muted)'},'A');
+  const mC=el('circle',{r:3,fill:'none',stroke:'var(--muted)','stroke-dasharray':'2 2'},svg), tC=txt(svg,{'font-size':11,fill:'var(--muted)'},'C');
+  const tB=txt(svg,{x:XS+10,y:Y0+4,'font-size':11,fill:'var(--muted)'},'B');
+  const spot=el('circle',{r:6,fill:'var(--photon)'},svg);
+  /* trajectory: returns {pts, y (m, positive = up), hit} */
+  function run(E,B,v,qm,eOn,bOn){
+    /* q/m signed: electron −, proton +. a_y = (q/m)(−E + v_x B)  (E points down, B into page). a_x = (q/m)(−v_y B) */
+    const Ee=eOn?E:0, Bb=bOn?B:0, N=400, T=L/v*1.2; let x=0,y=0,vx=v,vy=0; const pts=[[0,0]]; let t=0, hit=false;
+    const dt=L/v/N;
+    while(x<L&&t<T*3){
+      const ax=qm*(-vy*Bb), ay=qm*(-Ee+vx*Bb);
+      vx+=ax*dt; vy+=ay*dt; x+=vx*dt; y+=vy*dt; t+=dt;
+      if(Math.abs(y)>GAP){hit=true;pts.push([x,Math.sign(y)*GAP]);break;}
+      if(pts.length<2||x-pts[pts.length-1][0]>0.0005) pts.push([x,y]);
+    }
+    if(!hit){const ys=y+vy/vx*D; pts.push([L+D,ys]); return {pts,y:ys,hit,y1:y};}
+    return {pts,y:null,hit};
+  }
+  const X=x=>x<=L?XP0+x/L*(XP1-XP0):XP1+(x-L)/D*(XS-XP1);
+  const Yp=y=>Y0-y*1000*PX;
+  const clampY=y=>Math.max(16,Math.min(224,y));
+  function draw(){
+    const E=+$('crtE').value*1e3, B=+$('crtB').value*1e-3, v=+$('crtV').value*1e7;
+    const eOn=$('crtEon').checked, bOn=$('crtBon').checked;
+    $('crtEo').textContent=fmt(E/1e3,1)+' kV/m'; $('crtBo').textContent=fmt(B*1e3,2)+' mT'; $('crtVo').textContent=fmt(v/1e7,2)+' ×10⁷ m/s';
+    const qm=S.p==='e'?-C.emq:C.e/C.mp;
+    eArr.setAttribute('visibility',eOn?'visible':'hidden'); bSym.setAttribute('visibility',bOn?'visible':'hidden');
+    const r=run(E,B,v,qm,eOn,bOn);
+    let d='M44 '+Y0+' L'+XP0+' '+Y0; r.pts.forEach(p=>{d+=' L'+X(p[0]).toFixed(1)+' '+clampY(Yp(p[1])).toFixed(1);});
+    set(beam,{d,stroke:S.p==='e'?'var(--e)':'var(--nuc)'});
+    if(r.hit){set(spot,{visibility:'hidden'});} else {set(spot,{visibility:'visible',cx:XS,cy:clampY(Yp(r.y))});}
+    /* reference spots A (E only) and C (B only) */
+    const rA=run(E,B,v,qm,true,false), rC=run(E,B,v,qm,false,true);
+    const yA=rA.hit?null:Yp(rA.y), yC=rC.hit?null:Yp(rC.y);
+    const showA=yA!==null&&yA>14&&yA<226&&E>0, showC=yC!==null&&yC>14&&yC<226&&B>0;
+    set(mA,{cx:XS,cy:yA||0,visibility:showA?'visible':'hidden'}); set(tA,{x:XS+10,y:(yA||0)+4,visibility:showA?'visible':'hidden'});
+    let yCl=(yC||0)+4; if(showA&&Math.abs(yCl-((yA||0)+4))<13) yCl=(yA||0)+4+(yC>yA?13:-13);
+    set(mC,{cx:XS,cy:yC||0,visibility:showC?'visible':'hidden'}); set(tC,{x:XS+24,y:yCl,visibility:showC?'visible':'hidden'});
+    tB.setAttribute('visibility',(showA&&Math.abs(yA-Y0)<13)||(showC&&Math.abs(yC-Y0)<13)?'hidden':'visible');
+    /* readouts */
+    const q=C.e, FE=eOn?q*E:0, FB=bOn?q*v*B:0;
+    const ymm=r.hit?null:r.y*1000;
+    $('crtKv').innerHTML=`<dt>electric force eE</dt><dd>${sci(FE,2)} N ${eOn?(S.p==='e'?'↑':'↓'):''}</dd><dt>magnetic force evB</dt><dd>${sci(FB,2)} N ${bOn?(S.p==='e'?'↓':'↑'):''}</dd><dt>spot on screen</dt><dd>${r.hit?'beam hits a plate':(Math.abs(ymm)<0.05?'centre (0 mm)':fmt(Math.abs(ymm),Math.abs(ymm)<0.1?4:1)+' mm '+(ymm>0?'up':'down'))}</dd><dt>speed that balances, E/B</dt><dd>${B>0?sci(E/B,2)+' m/s':'—'}</dd>`;
+    let cap;
+    const bal=eOn&&bOn&&B>0&&Math.abs(E-v*B)/(v*B)<0.02;
+    if(S.p==='p') cap=`A proton has the same size of charge but is ${fmt(C.mp/C.me,0)} times heavier, so in the same fields it bends ${fmt(C.mp/C.me,0)} times less, the other way: the spot barely moves. Deflection depends on <b>charge ÷ mass</b>. The balance speed E/B is the same as for the electron, because both forces scale with the charge.`;
+    else if(!eOn&&!bOn) cap='No field: the beam goes straight to the centre, point B.';
+    else if(eOn&&!bOn) cap='Electric field only: the negative beam bends toward the + plate and hits point A.';
+    else if(!eOn&&bOn) cap='Magnetic field only: the beam curves the other way and hits point C.';
+    else if(bal) cap=`<b>Balanced:</b> eE = evB, so the beam is undeflected and <b>v = E/B</b> = ${sci(E/B,3)} m/s. This is how Thomson measured the speed of the electrons.`;
+    else cap=`Both fields on, not balanced: the ${FE>FB?'electric':'magnetic'} force wins. Adjust E or B until the spot returns to B (eE = evB).`;
+    $('crtCap').innerHTML=cap;
+    $('crtM').disabled=!(bal&&S.p==='e');
+    S.bal=bal; S.E=E; S.B=B; S.v=v; S.yA=rA.hit?null:rA.y;
+  }
+  $('crtM').addEventListener('click',()=>{
+    if(!S.bal||S.yA===null) return;
+    const vb=S.E/S.B, y=S.yA;            /* E-only deflection on the screen, m */
+    const em=y*vb*vb/(S.E*L*(L/2+D));
+    const o=$('crtMo'); o.hidden=false;
+    o.innerHTML=`Step 1, balanced: v = E/B = ${sci(vb,3)} m/s. Step 2, switch off B: the spot moves to A, ${fmt(y*1000,2)} mm up. With E alone the beam leaves the plates displaced and tilted, so y = (e/m)(EL/v²)(L/2 + D). Step 3: e/m = yv²/(EL(L/2 + D)) = <b>${sci(em,4)} C kg⁻¹</b>. (Accepted: ${sci(C.emq,4)}; the small difference comes from the step-by-step simulation.)`;
+  });
+  S.p=chipGroup($('crtP'),'at1-crtp','e',v=>v==='e'||v==='p',v=>{S.p=v;draw();});
+  ['crtE','crtB','crtV'].forEach(id=>$(id).addEventListener('input',()=>{$('crtMo').hidden=true;draw();}));
+  ['crtEon','crtBon'].forEach(id=>$(id).addEventListener('change',draw));
+  $('emVal').textContent=sci(C.emq,6);
+  draw();
+})();
+
+/* =================== 2 · MILLIKAN =================== */
+const HIST=[];
+(function(){
+  const svg=$('mil'), YT=50, YB=220, XL=60, XR=330, d=0.015; /* plate gap 1.5 cm */
+  el('rect',{x:XL,y:YT-8,width:XR-XL,height:8,fill:'var(--muted)'},svg);
+  el('rect',{x:XL,y:YB,width:XR-XL,height:8,fill:'var(--muted)'},svg);
+  el('rect',{x:(XL+XR)/2-6,y:YT-8,width:12,height:8,fill:'var(--surface)'},svg);
+  txt(svg,{x:XL-8,y:YT,'font-size':13,fill:'var(--muted)','text-anchor':'end'},'+');
+  txt(svg,{x:XL-8,y:YB+8,'font-size':13,fill:'var(--muted)','text-anchor':'end'},'−');
+  txt(svg,{x:(XL+XR)/2,y:YT-14,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'oil mist enters here');
+  txt(svg,{x:XR+10,y:YT+4,'font-size':11,fill:'var(--muted)'},'d = 1.5 cm');
+  /* X-ray beam and telescope */
+  el('path',{d:`M${XR+60} 160 L${XR+10} 150`,stroke:'var(--muted)','stroke-dasharray':'4 3',fill:'none'},svg);
+  txt(svg,{x:XR+64,y:166,'font-size':11,fill:'var(--muted)'},'X-rays');
+  el('rect',{x:XR+58,y:100,width:90,height:16,rx:3,fill:'none',stroke:'var(--muted)'},svg);
+  txt(svg,{x:XR+64,y:94,'font-size':11,fill:'var(--muted)'},'telescope');
+  const drop=el('circle',{r:7,fill:'var(--photon)',stroke:'var(--ink)','stroke-width':1},svg);
+  const minus=txt(svg,{'font-size':10,fill:'var(--ink)','text-anchor':'middle'},'−');
+  const fW=el('path',{stroke:'var(--ink)','stroke-width':2,fill:'none'},svg), fE=el('path',{stroke:'var(--c1)','stroke-width':2,fill:'none'},svg), fD=el('path',{stroke:'var(--muted)','stroke-width':2,fill:'none'},svg);
+  const lW=txt(svg,{'font-size':11,fill:'var(--ink)'},'mg'), lE=txt(svg,{'font-size':11,fill:'var(--c1)'},'qE'), lD=txt(svg,{'font-size':11,fill:'var(--muted)'},'drag');
+  const S={m:0,n:0,y:(YT+YB)/2,vy:0};
+  function newDrop(){S.m=(2+Math.random()*4)*1e-15;S.n=1+Math.floor(Math.random()*5);S.y=YT+40;}
+  function forces(){const V=+$('milV').value, q=S.n*C.e, Fe=q*V/d, W=S.m*G;return {V,q,Fe,W,net:Fe-W};}
+  function draw(){
+    const f=forces(), x=(XL+XR)/2, y=S.y;
+    set(drop,{cx:x,cy:y}); set(minus,{x,y:y+3.5});
+    const sc=40/f.W, hov=Math.abs(f.net)<0.002*f.W;
+    set(fW,{d:arrowD(x,y+9,x,y+9+40,6)}); set(lW,{x:x+8,y:y+44});
+    const lenE=Math.min(80,f.Fe*sc); set(fE,{d:arrowD(x,y-9,x,y-9-lenE,6),visibility:lenE>3?'visible':'hidden'}); set(lE,{x:x+8,y:y-9-Math.min(lenE,60)+4,visibility:lenE>3?'visible':'hidden'});
+    /* drag opposes motion; equals net force in magnitude at terminal speed */
+    const lenD=Math.min(60,Math.abs(f.net)*sc), up=f.net<0; /* moving down → drag up */
+    set(fD,{d:up?arrowD(x-22,y,x-22,y-lenD,6):arrowD(x-22,y,x-22,y+lenD,6),visibility:lenD>3&&!hov?'visible':'hidden'});
+    set(lD,{x:x-58,y:y+(up?-lenD/2:lenD/2)+4,visibility:lenD>3&&!hov?'visible':'hidden'});
+    $('milVo').textContent=f.V+' V';
+    const st=hov?'hovering':f.net>0?'rising':'falling';
+    $('milKv').innerHTML=`<dt>drop mass m</dt><dd>${sci(S.m,2)} kg</dd><dt>weight mg</dt><dd>${sci(f.W,3)} N</dd><dt>electric force qV/d</dt><dd>${sci(f.Fe,3)} N</dd><dt>drop is</dt><dd>${st}</dd>`;
+    $('milCap').innerHTML=hov?`<b>Hovering.</b> qV/d = mg, so q = mgd/V = ${sci(f.W*d/f.V,3)} C = <b>${fmt(f.W*d/f.V/C.e,2)} e</b>. Record it.`:`Adjust V until the drop hovers. It is ${st}: the electric force is ${f.net>0?'bigger':'smaller'} than the weight.`;
+    $('milRec').disabled=!hov;
+  }
+  function tick(dt){const f=forces(); const hov=Math.abs(f.net)<0.002*f.W;
+    if(!hov){S.y-=Math.max(-90,Math.min(90,60*f.net/f.W))*dt; if(S.y>YB-9||S.y<YT+9) S.y=(YT+YB)/2;}
+    draw();}
+  $('milV').addEventListener('input',draw);
+  document.querySelectorAll('[data-dv]').forEach(b=>b.addEventListener('click',()=>{const s=$('milV');s.value=Math.max(0,Math.min(6000,+s.value+ +b.dataset.dv));draw();}));
+  $('milNew').addEventListener('click',()=>{newDrop();draw();});
+  $('milRec').addEventListener('click',()=>{const f=forces();HIST.push({q:f.W*d/f.V,you:true});drawHist();newDrop();draw();});
+  newDrop(); draw();
+  scene(svg,$('milPlay'),tick);
+})();
+let drawHist;
+(function(){ /* histogram */
+  const svg=$('hist'), X0=40, X1=660, Y0=150, QM=10e-19, BW=0.1e-19, H=110;
+  const X=q=>X0+q/QM*(X1-X0);
+  el('line',{x1:X0,x2:X1,y1:Y0,y2:Y0,stroke:'var(--muted)'},svg);
+  for(let q=0;q<=10;q++){el('line',{x1:X(q*1e-19),x2:X(q*1e-19),y1:Y0,y2:Y0+4,stroke:'var(--muted)'},svg);txt(svg,{x:X(q*1e-19),y:Y0+16,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle','font-family':'IBM Plex Mono,monospace'},q);}
+  txt(svg,{x:X1,y:Y0+32,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'charge on drop (× 10⁻¹⁹ C)');
+  for(let n=1;n*C.e<QM;n++){const x=X(n*C.e);el('line',{x1:x,x2:x,y1:20,y2:Y0,stroke:'var(--e)','stroke-dasharray':'3 3',opacity:.6},svg);txt(svg,{x,y:14,'font-size':11,fill:'var(--e)','text-anchor':'middle'},n+'e');}
+  const bars=el('g',{},svg);
+  drawHist=function(){
+    const nb=Math.round(QM/BW), cnt=new Array(nb).fill(0), you=new Array(nb).fill(0);
+    HIST.forEach(h=>{const i=Math.floor(h.q/BW);if(i>=0&&i<nb){cnt[i]++;if(h.you)you[i]++;}});
+    const mx=Math.max(5,...cnt); let g='';
+    const w=(X1-X0)/nb;
+    cnt.forEach((c,i)=>{if(!c)return;const h=c/mx*H;g+=`<rect x="${(X0+i*w+0.5).toFixed(1)}" y="${(Y0-h).toFixed(1)}" width="${(w-1).toFixed(1)}" height="${h.toFixed(1)}" fill="var(--photon)"/>`;
+      if(you[i]){const hy=you[i]/mx*H;g+=`<rect x="${(X0+i*w+0.5).toFixed(1)}" y="${(Y0-hy).toFixed(1)}" width="${(w-1).toFixed(1)}" height="${hy.toFixed(1)}" fill="var(--ink)"/>`;}});
+    bars.innerHTML=g;
+    const ny=HIST.filter(h=>h.you).length;
+    $('histN').textContent=HIST.length?`${HIST.length} drops${ny?` (${ny} yours, dark)`:''}`:'No drops yet.';
+  };
+  function gauss(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(TAU*v);}
+  $('histSim').addEventListener('click',()=>{for(let i=0;i<150;i++){const n=1+Math.floor(Math.random()*6);HIST.push({q:n*C.e*(1+0.03*gauss())});}drawHist();});
+  $('histClr').addEventListener('click',()=>{HIST.length=0;drawHist();});
+  drawHist();
+  $('meVal').textContent=sci(C.e/C.emq,4);
+})();
+
+/* =================== 3 · CANAL RAYS, PARTICLES =================== */
+(function(){
+  const svg=$('emb'), X0=40, X1=610, LO=5, HI=12; /* log10 range of e/m */
+  const X=v=>X0+(Math.log10(v)-LO)/(HI-LO)*(X1-X0);
+  el('line',{x1:X0,x2:X1,y1:150,y2:150,stroke:'var(--muted)'},svg);
+  for(let p=LO;p<=HI;p++){el('line',{x1:X(10**p),x2:X(10**p),y1:150,y2:155,stroke:'var(--muted)'},svg);txt(svg,{x:X(10**p),y:169,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'},'10'+sup(p));}
+  txt(svg,{x:X1,y:185,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'charge ÷ mass (C kg⁻¹)');
+  const rows=[{y:28,lab:'cathode ray (any gas)'},{y:68,lab:''},{y:108,lab:''}];
+  const bars=rows.map(r=>({b:el('rect',{x:X0,y:r.y,height:20,rx:3},svg),t:txt(svg,{y:r.y+14,'font-size':12,fill:'var(--ink)'},''),v:txt(svg,{y:r.y+14,'font-size':11,fill:'var(--muted)','font-family':'IBM Plex Mono,monospace'},'')}));
+  function draw(g){
+    const G0=GASES[g], m1=G0.A*C.u-G0.z*C.me;
+    const list=[{v:C.emq,lab:'electron (from any gas)',col:'var(--e)'},{v:G0.z*C.e/m1,lab:'canal ray '+G0.ion,col:'var(--nuc)'}];
+    if(G0.also){const m2=G0.A*C.u-G0.also.z*C.me;list.push({v:G0.also.z*C.e/m2,lab:'canal ray '+G0.also.ion,col:'var(--nuc)'});}
+    bars.forEach((b,i)=>{const it=list[i];if(!it){set(b.b,{visibility:'hidden'});b.t.textContent='';b.v.textContent='';return;}
+      const w=X(it.v)-X0; set(b.b,{width:w,fill:it.col,opacity:.75,visibility:'visible'});
+      /* label inside if wide, else to the right */
+      b.t.textContent=it.lab; set(b.t,{x:X0+6,fill:'var(--surface)'});
+      if(w<it.lab.length*7+16){set(b.t,{x:X0+w+6,fill:'var(--ink)'});}
+      b.v.textContent=sci(it.v,2); set(b.v,{x:(w<it.lab.length*7+16)?X0+w+it.lab.length*7+14:X0+w+6});});
+    $('gasCap').innerHTML=`Cathode rays: the same e/m (${sci(C.emq,3)} C kg⁻¹) whatever the gas or electrode, because they are always electrons. Canal rays from ${g==='H'?'hydrogen':g==='He'?'helium':'neon'}: ${list.slice(1).map(x=>x.lab.replace('canal ray ','')+' '+sci(x.v,2)+' C kg⁻¹').join('; ')}. Their mass, and so e/m, depends on the gas: they are the gas atoms' <b>positive ions</b>, left behind when electrons are knocked off. Even the lightest (H⁺) has e/m ${fmt(C.mp/C.me,0)} times smaller than the electron's.`;
+  }
+  draw(chipGroup($('gas'),'at1-gas','H',v=>v in GASES,draw));
+  /* particle cards */
+  const P=[['e','electron','var(--e)','e⁻',`−${sci(C.e,6)} C`,'−1',sci(C.me,4)+' kg',fmt(C.meU,5)+' u ≈ 0'],
+           ['p','proton','var(--nuc)','p',`+${sci(C.e,6)} C`,'+1',sci(C.mp,4)+' kg',fmt(C.mpU,5)+' u ≈ 1'],
+           ['n','neutron','var(--neu)','n','0','0',sci(C.mn,4)+' kg',fmt(C.mnU,5)+' u ≈ 1']];
+  $('pcards').innerHTML=P.map(p=>`<div class="card"><span class="ball" style="background:${p[2]}">${p[0]}</span><div><b>${p[1]}</b><br>charge ${p[4]} (relative ${p[5]})<br>mass <span class="mono">${p[6]}</span><br><span class="mono">${p[7]}</span></div></div>`).join('')
+    +`<p class="muted" style="grid-column:1/-1">A proton is ${fmt(C.mp/C.me,0)} times as heavy as an electron; a neutron is slightly heavier than a proton. 1 u = ${sci(C.u,4)} kg.</p>`;
+  /* rays */
+  const r=$('rays'), BX=[170,290,410];
+  [['paper',BX[0],8],['aluminium',BX[1],14],['lead',BX[2],24]].forEach(([n,x,w])=>{el('rect',{x,y:18,width:w,height:110,fill:'var(--muted)',opacity:.3},r);txt(r,{x:x+w/2,y:144,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},n);});
+  [['α',38,BX[0],'var(--nuc)'],['β',73,BX[1],'var(--e)'],['γ',108,BX[2]+30,'var(--photon)']].forEach(([n,y,x2,col])=>{
+    el('path',{d:arrowD(60,y,x2-2,y,7),stroke:col,'stroke-width':2.2,fill:'none',...(n==='γ'?{'stroke-dasharray':'6 4'}:{})},r);
+    txt(r,{x:44,y:y+5,'font-size':15,'font-weight':600,fill:col,'text-anchor':'middle'},n);});
+  txt(r,{x:BX[2]+66,y:112,'font-size':11,fill:'var(--muted)'},'weakened, not stopped');
+})();
+
+/* =================== 4 · FOIL AND IMPACT PARAMETER =================== */
+(function(){
+  const svg=$('foil'), W=680, H=300, R=26, DCL=0.15; /* atom radius px; closest approach px (nucleus enlarged) */
+  const COLS=[300,352,404], ROWS=[]; for(let y=22;y<H;y+=46) ROWS.push(y);
+  const NUC=[]; COLS.forEach((x,i)=>ROWS.forEach(y=>NUC.push([x,y+(i%2?23:0)])));
+  const S={m:'R',tracks:[],cnt:{T:[0,0,0,0],R:[0,0,0,0]}};
+  el('line',{x1:20,x2:80,y1:14,y2:14,stroke:'var(--muted)'},svg);
+  txt(svg,{x:20,y:10,'font-size':10.5,fill:'var(--muted)'},'α source →');
+  const atomsT=el('g',{},svg), atomsR=el('g',{},svg), trk=el('g',{},svg);
+  NUC.forEach(([x,y])=>{
+    el('circle',{cx:x,cy:y,r:R,fill:'var(--nuc)',opacity:.13},atomsT);
+    for(let k=0;k<4;k++){const a=k*1.7+x*0.03;el('circle',{cx:x+R*0.55*Math.cos(a),cy:y+R*0.55*Math.sin(a),r:2.4,fill:'var(--e)'},atomsT);}
+    el('circle',{cx:x,cy:y,r:R,fill:'none',stroke:'var(--line)','stroke-dasharray':'2 3'},atomsR);
+    el('circle',{cx:x,cy:y,r:2.2,fill:'var(--nuc)'},atomsR);
+  });
+  const K=DCL/2;
+  function shoot(y0){
+    let x=-5,y=y0,vx=1,vy=0; const pts=[[x,y]]; let n=0;
+    while(n<20000&&x>-10&&x<W+10&&y>-10&&y<H+10){
+      let ax=0,ay=0,rmin=1e9;
+      for(const [nx,ny] of NUC){const dx=x-nx,dy=y-ny;if(Math.abs(dx)>60||Math.abs(dy)>60)continue;const r2=dx*dx+dy*dy,r=Math.sqrt(r2);rmin=Math.min(rmin,r);
+        if(S.m==='R'){const f=K/(r2*r);ax+=f*dx;ay+=f*dy;}
+        else if(r<R){const f=K/(R*R*R);ax+=f*dx;ay+=f*dy;}}
+      const dt=S.m==='R'?Math.max(0.002,Math.min(2,0.02*rmin)):2;
+      vx+=ax*dt;vy+=ay*dt;x+=vx*dt;y+=vy*dt;n++;
+      const l=pts[pts.length-1]; if(Math.hypot(x-l[0],y-l[1])>3) pts.push([x,y]);
+    }
+    pts.push([x,y]);
+    return {pts,th:Math.abs(Math.atan2(vy,vx))*180/Math.PI};
+  }
+  const cat=th=>th<5?0:th<30?1:th<90?2:3;
+  /* bar chart */
+  const fb=$('fbar'), LAB=['< 5°','5–30°','30–90°','> 90° (back)'], BX=86, BW=210;
+  const bR=[],bT=[];
+  LAB.forEach((l,i)=>{const y=14+i*38;txt(fb,{x:BX-6,y:y+15,'font-size':11,fill:'var(--muted)','text-anchor':'end'},l);bR.push(el('rect',{x:BX,y,height:20,rx:3,fill:i<2?'var(--muted)':'var(--nuc)'},fb));bT.push(txt(fb,{y:y+15,'font-size':11.5,fill:'var(--ink)','font-family':'IBM Plex Mono,monospace'},''));});
+  txt(fb,{x:BX,y:166,'font-size':11,fill:'var(--muted)'},'number of α by deflection');
+  function drawBars(){const c=S.cnt[S.m], tot=c.reduce((a,b)=>a+b,0), mx=Math.max(1,...c);
+    c.forEach((v,i)=>{const w=v/mx*(BW-95);set(bR[i],{width:Math.max(0.5,w)});set(bT[i],{x:BX+w+6});bT[i].textContent=v+(tot?` (${fmt(100*v/tot,0)}%)`:'');});
+    const t=S.m==='T';
+    $('foilCap').innerHTML=!tot?(t?'<b>Predict:</b> the positive charge is spread thinly through the whole atom. Can it turn a fast α round?':'<b>Predict:</b> all the positive charge sits in a tiny nucleus. What happens to an α that passes very close to one?')
+      :t?'Thomson atom: every α gets through with only tiny deflections. Spread-out charge can only push gently, and the α is far heavier than the electrons. A bounce-back is impossible in this model.'
+      :'Nuclear atom: most α pass through empty space almost undeflected, some are turned a little, and the very few that pass close to a nucleus are turned through large angles, even back toward the source. This is what Geiger and Marsden saw.';
+  }
+  function drawAll(){atomsT.setAttribute('visibility',S.m==='T'?'visible':'hidden');atomsR.setAttribute('visibility',S.m==='R'?'visible':'hidden');
+    trk.innerHTML=S.tracks.filter(t=>t.m===S.m).map(t=>{const big=t.th>=30;return `<path d="M${t.pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join('L')}" fill="none" stroke="${big?'var(--nuc)':'var(--ink)'}" stroke-width="${big?1.6:1}" opacity="${big?0.95:0.35}"/>`;}).join('');
+    drawBars();}
+  $('fire').addEventListener('click',()=>{
+    for(let i=0;i<60;i++){const y0=20+Math.random()*(H-40);const r=shoot(y0);r.m=S.m;S.tracks.push(r);S.cnt[S.m][cat(r.th)]++;}
+    const own=S.tracks.filter(t=>t.m===S.m); if(own.length>240){const drop=own.length-240;let k=0;S.tracks=S.tracks.filter(t=>t.m!==S.m||k++>=drop);}
+    drawAll();});
+  $('fclr').addEventListener('click',()=>{S.tracks=S.tracks.filter(t=>t.m!==S.m);S.cnt[S.m]=[0,0,0,0];drawAll();});
+  S.m=chipGroup($('model'),'at1-model','T',v=>v==='T'||v==='R',v=>{S.m=v;drawAll();});
+  drawAll();
+
+  /* one nucleus */
+  const sv=$('imp'), NX=420, NY=240, PXF=2, VH=380; /* 2 px per fm */
+  const ke2=C.k*C.e*C.e/(1.602176634e-13)*1e15; /* MeV fm */
+  const RAU=R0_NUC*Math.cbrt(AU.A)*1e15;          /* fm */
+  el('line',{x1:0,x2:680,y1:NY,y2:NY,stroke:'var(--line)','stroke-dasharray':'3 4'},sv);
+  const rmin=el('circle',{cx:NX,cy:NY,fill:'none',stroke:'var(--muted)','stroke-dasharray':'3 3'},sv);
+  el('circle',{cx:NX,cy:NY,r:RAU*PXF,fill:'var(--nuc)',opacity:.85},sv);
+  el('path',{d:`M${NX+RAU*PXF*0.8} ${NY+RAU*PXF*0.8}L${NX+118} ${NY+118}`,stroke:'var(--muted)','stroke-width':1,fill:'none'},sv);
+  txt(sv,{x:NX+122,y:NY+122,'font-size':11,fill:'var(--muted)'},'gold nucleus, +79e');
+  txt(sv,{x:NX+122,y:NY+136,'font-size':10.5,fill:'var(--muted)'},'dashed: closest approach');
+  const aim=el('path',{fill:'none',stroke:'var(--muted)','stroke-dasharray':'2 3'},sv);
+  const bBr=el('path',{fill:'none',stroke:'var(--accent)'},sv), bLab=txt(sv,{'font-size':12,fill:'var(--accent)'},'b');
+  const tr=el('path',{fill:'none',stroke:'var(--nuc)','stroke-width':2.2},sv);
+  const arc=el('path',{fill:'none',stroke:'var(--accent)','stroke-width':1.5},sv), thT=txt(sv,{'font-size':12,fill:'var(--accent)'},'θ');
+  el('path',{d:`M20 ${VH-14} H${20+20*PXF}`,stroke:'var(--muted)','stroke-width':2},sv); txt(sv,{x:20+20*PXF+6,y:VH-10,'font-size':11,fill:'var(--muted)'},'20 fm');
+  txt(sv,{x:12,y:16,'font-size':11,fill:'var(--muted)'},'α (+2e) →');
+  function draw(){
+    const b=+$('impB').value, K=+$('impK').value, d=2*AU.Z*ke2/K;
+    $('impBo').textContent=fmt(b,1)+' fm'; $('impKo').textContent=fmt(K,1)+' MeV';
+    /* integrate in fm, speed 1, k = d/2 */
+    /* start far away (2 × 10⁴ fm) so the final direction is the true scattering angle; draw only the part in view */
+    const FAR=2e4, inView=(x,y)=>x>-NX/PXF-20&&x<(680-NX)/PXF+20&&y>-(VH-NY)/PXF&&y<NY/PXF+20;
+    let x=-FAR, y=b, vx=1, vy=0, rm=1e9; const kk=d/2; let D='', n=0, lx=1e9, ly=1e9;
+    while(n<200000&&x*x+y*y<=FAR*FAR*1.0001){
+      const r2=x*x+y*y,r=Math.sqrt(r2); rm=Math.min(rm,r); const dt=Math.max(0.002,0.004*r);
+      const f=kk/(r2*r); vx+=f*x*dt; vy+=f*y*dt; x+=vx*dt; y+=vy*dt; n++;
+      if(inView(x,y)&&Math.hypot(x-lx,y-ly)>1.5){D+=(D?'L':'M')+(NX+x*PXF).toFixed(1)+' '+(NY-y*PXF).toFixed(1);lx=x;ly=y;}
+    }
+    set(tr,{d:D});
+    const th=Math.atan2(vy,vx), thF=2*Math.atan(d/(2*Math.max(b,1e-9)));
+    set(rmin,{r:rm*PXF});
+    const yb=NY-b*PXF;
+    set(aim,{d:`M${NX-200} ${yb}H${NX+120}`});
+    set(bBr,{d:`M${NX+130} ${NY}V${yb}M${NX+126} ${NY}H${NX+134}M${NX+126} ${yb}H${NX+134}`,visibility:b>3?'visible':'hidden'}); set(bLab,{x:NX+138,y:(NY+yb)/2+4,visibility:b>3?'visible':'hidden'});
+    /* outgoing asymptote through the final point, and the angle arc at the far end of the aim line */
+    $('impKv').innerHTML=`<dt>impact parameter b</dt><dd>${fmt(b,1)} fm</dd><dt>head-on closest approach d</dt><dd>${fmt(d,1)} fm</dd><dt>closest this α gets</dt><dd>${fmt(rm,1)} fm</dd><dt>deflection θ (path above)</dt><dd>${fmt(Math.abs(th)*180/Math.PI,1)}°</dd><dt>from tan(θ/2) = d/2b</dt><dd>${fmt(thF*180/Math.PI,1)}°</dd>`;
+    $('impCap').innerHTML=b<0.5?`Head-on: the α slows, stops ${fmt(d,1)} fm from the centre and comes straight back (θ = 180°). It never touches the nucleus (radius about ${fmt(RAU,0)} fm): the repulsion turns it round.`
+      :`Passing at b = ${fmt(b,1)} fm it is turned through ${fmt(Math.abs(th)*180/Math.PI,0)}°. ${Math.abs(th)>Math.PI/2?'Sent backwards.':b>40?'Even a near miss on this scale is a tiny target compared with the whole atom.':'Closer aim, bigger turn.'} Since almost all aims miss by thousands of fm, almost all α go nearly straight.`;
+    /* draw angle arc at the nucleus between incoming direction and outgoing direction */
+    const ar=34, a0=0, a1=-th; /* screen angles */
+    const sx=NX+ar*Math.cos(a0), sy=NY+ar*Math.sin(a0), ex=NX+ar*Math.cos(a1), ey=NY+ar*Math.sin(a1);
+    const large=Math.abs(th)>Math.PI?1:0, sweep=th>0?0:1;
+    set(arc,{d:`M${NX} ${NY}L${sx} ${sy}M${sx} ${sy}A${ar} ${ar} 0 ${large} ${sweep} ${ex} ${ey}M${NX} ${NY}L${NX+70*Math.cos(a1)} ${NY+70*Math.sin(a1)}`,visibility:Math.abs(th)>0.05?'visible':'hidden'});
+    const am=a1/2; set(thT,{x:NX+(ar+12)*Math.cos(am)-4,y:NY+(ar+12)*Math.sin(am)+4,visibility:Math.abs(th)>0.25?'visible':'hidden'});
+  }
+  $('impB').addEventListener('input',draw); $('impK').addEventListener('input',draw); draw();
+  /* true scale */
+  $('rAu').textContent=fmt(RAU,0);
+  $('cball').textContent=fmt(CRICKET_R*1e-10/1e-15/1000,1);
+  $('atomEdge').textContent=fmt(1e-10/1e-15*PXF*0.26e-3,0); /* CSS px ≈ 0.26 mm */
+})();
+
+/* =================== 5 · NUCLEUS BUILDER =================== */
+(function(){
+  const box=$('blds');
+  const B=[{p:6,n:6,e:6},{p:6,n:8,e:6}];
+  const LIM={p:[1,20],n:[0,24],e:[0,22]};
+  box.innerHTML=B.map((_,i)=>`<div class="bld"><div class="sym" id="sym${i}"></div>
+    <svg id="nuc${i}" viewBox="0 0 220 200" style="width:100%;max-width:240px;height:auto" role="img" aria-label="Nucleus ${i+1}"></svg>
+    <div class="ctl">${['p','n','e'].map(k=>`<span class="step"><span style="color:${k==='p'?'var(--nuc)':k==='n'?'var(--neu)':'var(--e)'}">${k==='p'?'protons':k==='n'?'neutrons':'electrons'}</span><button class="btn" data-b="${i}" data-k="${k}" data-d="-1" aria-label="fewer">−</button><output id="o${k}${i}"></output><button class="btn" data-b="${i}" data-k="${k}" data-d="1" aria-label="more">+</button></span>`).join('')}</div>
+    <p class="muted" id="inf${i}" style="text-align:center"></p></div>`).join('');
+  const G=[0,1].map(i=>{const s=$('nuc'+i);const ring=el('circle',{cx:110,cy:100,r:88,fill:'none',stroke:'var(--line)','stroke-dasharray':'2 3'},s);return {s,dots:el('g',{},s),el:el('g',{},s)};});
+  function dots(i){const {p,n,e}=B[i], A=p+n; let g='', pp=0;
+    for(let j=0;j<A;j++){const r=7.6*Math.sqrt(j+0.5), a=j*2.39996, x=110+r*Math.cos(a), y=100+r*Math.sin(a);
+      const isP=Math.floor((j+1)*p/A)>Math.floor(j*p/A);
+      g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="${isP?'var(--nuc)':'var(--neu)'}" stroke="var(--surface)" stroke-width="1"/>`;}
+    G[i].dots.innerHTML=g;
+    let ge=''; for(let j=0;j<e;j++){const a=-Math.PI/2+j*TAU/Math.max(e,1);ge+=`<circle cx="${(110+88*Math.cos(a)).toFixed(1)}" cy="${(100+88*Math.sin(a)).toFixed(1)}" r="4" fill="var(--e)"/>`;}
+    G[i].el.innerHTML=ge;}
+  function symHTML(b){const A=b.p+b.n, ch=b.p-b.e;const cs=ch===0?'':(Math.abs(ch)===1?'':Math.abs(ch))+(ch>0?'+':'−');
+    return `<span class="pre"><span>${A}</span><span>${b.p}</span></span>${ELEM[b.p]}<span class="chg">${cs}</span>`;}
+  function draw(){
+    B.forEach((b,i)=>{['p','n','e'].forEach(k=>{$('o'+k+i).textContent=b[k];});$('sym'+i).innerHTML=symHTML(b);dots(i);
+      const ch=b.p-b.e; $('inf'+i).textContent=`Z = ${b.p}, N = ${b.n}, A = ${b.p+b.n}; ${ch===0?'neutral atom':ch>0?'cation, charge +'+ch:'anion, charge '+ch}`;});
+    const [a,b]=B, A1=a.p+a.n, A2=b.p+b.n; let t,c;
+    if(a.p===b.p&&a.n===b.n){t='Same nucleus';c=a.e===b.e?'Identical atoms.':'Same nucleus, different numbers of electrons: the same element as different ions or atom.';}
+    else if(a.p===b.p){t='Isotopes';c=`Same Z = ${a.p} (both ${ELEM[a.p]}), different neutrons (${a.n} vs ${b.n}), so different A. Same chemistry, slightly different mass.`;}
+    else if(A1===A2){t='Isobars';c=`Same A = ${A1}, different Z: different elements (${ELEM[a.p]} and ${ELEM[b.p]}) with the same number of nucleons.`;}
+    else if(a.n===b.n){t='Isotones';c=`Same number of neutrons N = ${a.n}, different Z and A.`;}
+    else {t='No special relation';c='Different Z, different A and different N.';}
+    if(a.e===b.e&&a.p!==b.p) c+=` Both have ${a.e} electrons: <b>isoelectronic</b>.`;
+    $('relT').textContent=t; $('relC').innerHTML=c;
+  }
+  box.addEventListener('click',e=>{const bt=e.target.closest('button[data-k]');if(!bt)return;const b=B[+bt.dataset.b],k=bt.dataset.k;
+    const nv=b[k]+ +bt.dataset.d; if(nv<LIM[k][0]||nv>LIM[k][1])return;
+    const wasNeutral=b.e===b.p; b[k]=nv; if(k==='p'&&wasNeutral&&b.p<=LIM.e[1]) b.e=b.p; press($('pairs'),''); draw();});
+  const PAIRS=[[[6,6,6],[6,8,6]],[[17,18,17],[17,20,17]],[[6,8,6],[7,7,7]],[[6,8,6],[8,8,8]],[[1,0,1],[1,1,1]],[[16,16,18],[18,22,18]]];
+  $('pairs').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;const P=PAIRS[+b.dataset.k];
+    P.forEach((v,i)=>{B[i]={p:v[0],n:v[1],e:v[2]};});press($('pairs'),b.dataset.k);draw();});
+  draw();
+})();
+
+/* =================== 6 · CLASSICAL COLLAPSE =================== */
+(function(){
+  const svg=$('col'), CX=200, CY=150, R0=120;
+  const TF=C.a0**3/(4*C.re*C.re*C.c);  /* classical fall time, s */
+  $('tcol').textContent=sci(TF,1);
+  el('circle',{cx:CX,cy:CY,r:R0,fill:'none',stroke:'var(--line)','stroke-dasharray':'3 4'},svg);
+  txt(svg,{x:CX,y:CY-R0-8,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'starting orbit');
+  el('circle',{cx:CX,cy:CY,r:6,fill:'var(--nuc)'},svg);
+  const trail=el('path',{fill:'none',stroke:'var(--e)','stroke-width':1.4,opacity:.55},svg);
+  const ed=el('circle',{r:6,fill:'var(--e)'},svg);
+  const waves=el('g',{},svg);
+  const S={t:0,a:0,pts:[]};
+  function rad(t){const f=1-t; return f<=0?0:R0*Math.cbrt(f);}
+  function draw(){
+    const r=Math.max(6,rad(S.t)); const x=CX+r*Math.cos(S.a), y=CY+r*Math.sin(S.a);
+    set(ed,{cx:x,cy:y});
+    set(trail,{d:S.pts.length?'M'+S.pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join('L'):''});
+    $('colKv').innerHTML=`<dt>orbit radius</dt><dd>${fmt(C.a0*1e12*Math.max(0,rad(S.t))/R0,1)} pm</dd><dt>time since start</dt><dd>${fmt(Math.min(1,S.t)*TF*1e12,1)} ps</dd><dt>energy</dt><dd>${S.t>=1?'all radiated away':'leaking out as light'}</dd>`;
+  }
+  function tick(dt){
+    if(S.t>=1){S.hold=(S.hold||0)+dt;if(S.hold>1.5){S.t=0;S.a=0;S.pts=[];S.hold=0;}draw();return;}
+    const r=Math.max(6,rad(S.t)); const w=1.6*Math.pow(R0/r,1.5); S.a+=Math.min(w,25)*dt; S.t+=dt/7;
+    S.pts.push([CX+r*Math.cos(S.a),CY+r*Math.sin(S.a)]); if(S.pts.length>900)S.pts.shift();
+    draw();}
+  draw();
+  scene(svg,$('colPlay'),tick,false);
+})();
+
+/* =================== 7 · EM WAVE =================== */
+(function(){
+  const svg=$('emw'), X0=90, X1=640, Y0=125, A=58, CPX=90; /* display speed px/s */
+  const OX=-0.45, OY=0.32; /* z axis (toward you) drawn slanting down-left, as in a 3-D sketch */
+  el('line',{x1:X0,x2:X1+20,y1:Y0,y2:Y0,stroke:'var(--muted)'},svg);
+  el('path',{d:arrowD(X1-10,Y0,X1+28,Y0,7),stroke:'var(--muted)',fill:'none'},svg);
+  txt(svg,{x:X1+24,y:Y0+18,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'x: travel');
+  el('line',{x1:X0,x2:X0,y1:Y0-A-14,y2:Y0+A+14,stroke:'var(--line)'},svg);
+  el('path',{d:arrowD(X0,Y0,X0+OX*95,Y0+OY*95,6),stroke:'var(--muted)',fill:'none'},svg);
+  el('path',{d:arrowD(X0,Y0,X0,Y0-A-16,6),stroke:'var(--muted)',fill:'none'},svg);
+  const stE=el('g',{},svg), stB=el('g',{},svg);
+  const wE=el('path',{fill:'none',stroke:'var(--c1)','stroke-width':2.4},svg);
+  const wB=el('path',{fill:'none',stroke:'var(--c2)','stroke-width':2,'stroke-dasharray':'6 3'},svg);
+  txt(svg,{x:X0+6,y:Y0-A-10,'font-size':12,'font-weight':600,fill:'var(--c1)'},'E along y');
+  txt(svg,{x:4,y:Y0+OY*95+18,'font-size':12,'font-weight':600,fill:'var(--c2)'},'B along z');
+  txt(svg,{x:4,y:Y0+OY*95+32,'font-size':11,fill:'var(--c2)'},'(toward you)');
+  const lb=el('path',{fill:'none',stroke:'var(--accent)'},svg), lt=txt(svg,{'font-size':12,fill:'var(--accent)','text-anchor':'middle'},'λ');
+  /* watch point */
+  const XW=560; el('line',{x1:XW,x2:XW,y1:Y0-A-20,y2:Y0+A+10,stroke:'var(--ink)','stroke-dasharray':'2 3'},svg);
+  txt(svg,{x:XW,y:Y0-A-26,'font-size':11,fill:'var(--ink)','text-anchor':'middle'},'watch point');
+  const flash=el('circle',{cx:XW,cy:Y0-A,r:6,fill:'var(--photon)'},svg);
+  /* unit ruler */
+  const RU0=X0+20, RU1=X0+320, RY=255;
+  el('path',{d:`M${RU0} ${RY-5}V${RY}H${RU1}V${RY-5}`,fill:'none',stroke:'var(--muted)'},svg);
+  txt(svg,{x:RU1+8,y:RY+3,'font-size':11,fill:'var(--muted)'},'one unit of length');
+  const ticks=el('g',{},svg);
+  const S={t:0,crest:0,lastPh:0,rate:0,count:0};
+  function draw(){
+    const lam=+$('emL').value, k=TAU/lam, w=TAU*CPX/lam;
+    const f=x=>Math.sin(k*(x-X0)-w*S.t);
+    set(wE,{d:pathOf(x=>A*f(x),X0,X1,260,x=>x,y=>Y0-y)});
+    let d='';for(let i=0;i<=260;i++){const x=X0+(X1-X0)*i/260, b=A*0.8*f(x);d+=(i?'L':'M')+(x+OX*b).toFixed(1)+' '+(Y0+OY*b).toFixed(1);}
+    set(wB,{d});
+    let g='';for(let x=X0+lam/8;x<X1;x+=lam/8){const v=A*f(x);g+=`<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${Y0}" y2="${(Y0-v).toFixed(1)}" stroke="var(--c1)" stroke-width="1" opacity=".45"/>`;}
+    stE.innerHTML=g;
+    let gb='';for(let x=X0+lam/8;x<X1;x+=lam/8){const b=A*0.8*f(x);gb+=`<line x1="${x.toFixed(1)}" x2="${(x+OX*b).toFixed(1)}" y1="${Y0}" y2="${(Y0+OY*b).toFixed(1)}" stroke="var(--c2)" stroke-width="1" opacity=".45"/>`;}
+    stB.innerHTML=gb;
+    set(lb,{d:`M${X0+110} ${Y0-A-22}V${Y0-A-28}H${X0+110+lam}V${Y0-A-22}`}); set(lt,{x:X0+110+lam/2,y:Y0-A-32});
+    const val=f(XW); set(flash,{opacity:val>0.97?1:0.12});
+    let tg='';for(let j=0;j*lam<=RU1-RU0+0.1;j++){const x=RU0+j*lam;tg+=`<line x1="${x}" x2="${x}" y1="${RY-14}" y2="${RY}" stroke="var(--accent)" stroke-width="2"/>`;}
+    ticks.innerHTML=tg;
+    $('emLo').textContent=lam+' px';
+    $('emKv').innerHTML=`<dt>speed (fixed)</dt><dd>${CPX} px/s</dd><dt>wavelength λ</dt><dd>${lam} px</dd><dt>frequency ν = c/λ</dt><dd>${fmt(CPX/lam,2)} crests/s</dd><dt>wavenumber ν̄ = 1/λ</dt><dd>${fmt((RU1-RU0)/lam,2)} waves per unit</dd>`;
+  }
+  $('emL').addEventListener('input',draw);
+  draw();
+  scene(svg,$('emPlay'),dt=>{S.t+=dt;draw();});
+})();
+
+/* =================== 8 · SPECTRUM =================== */
+let setLam;
+(function(){
+  const svg=$('spec'), X0=30, X1=650, LO=-13, HI=4, Y=40, H=34;
+  const X=l=>X0+(Math.log10(l)-LO)/(HI-LO)*(X1-X0), Linv=x=>10**(LO+(x-X0)/(X1-X0)*(HI-LO));
+  const REG=[['γ-rays',1e-13,1e-11],['X-rays',1e-11,1e-8],['UV',1e-8,4e-7],['',4e-7,7.5e-7],['infrared',7.5e-7,1e-3],['microwave',1e-3,1],['radio',1,1e4]];
+  REG.forEach(([n,a,b],i)=>{if(!n)return;el('rect',{x:X(a),y:Y,width:X(b)-X(a),height:H,fill:i%2?'var(--line)':'var(--bg)',stroke:'var(--line)'},svg);txt(svg,{x:(X(a)+X(b))/2,y:Y+H/2+4,'font-size':11.5,fill:'var(--ink)','text-anchor':'middle'},n);});
+  /* visible sliver on the strip */
+  const vg=el('linearGradient',{id:'visg'},el('defs',{},svg));
+  for(let i=0;i<=20;i++){const w=VIS[0]+(VIS[1]-VIS[0])*i/20;el('stop',{offset:(i*5)+'%','stop-color':wlColor(w)},vg);}
+  el('rect',{x:X(4e-7),y:Y,width:X(7.5e-7)-X(4e-7),height:H,fill:'url(#visg)'},svg);
+  /* axis */
+  for(let p=LO;p<=HI;p++){const x=X(10**p);el('line',{x1:x,x2:x,y1:Y+H,y2:Y+H+5,stroke:'var(--muted)'},svg);if((p-LO)%2===0)txt(svg,{x,y:Y+H+17,'font-size':10,fill:'var(--muted)','text-anchor':'middle'},'10'+sup(p));}
+  txt(svg,{x:X0,y:Y-8,'font-size':11,fill:'var(--muted)'},'← higher frequency, bigger photons');
+  txt(svg,{x:X1,y:Y-8,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'longer wavelength (m) →');
+  /* zoom of visible */
+  const ZX0=150, ZX1=530, ZY=150, ZH=28, Z=nm=>ZX0+(nm-VIS[0])/(VIS[1]-VIS[0])*(ZX1-ZX0), Zinv=x=>VIS[0]+(x-ZX0)/(ZX1-ZX0)*(VIS[1]-VIS[0]);
+  el('path',{d:`M${X(4e-7)} ${Y+H+20}L${ZX0} ${ZY-4}M${X(7.5e-7)} ${Y+H+20}L${ZX1} ${ZY-4}`,stroke:'var(--line)',fill:'none'},svg);
+  el('rect',{x:ZX0,y:ZY,width:ZX1-ZX0,height:ZH,fill:'url(#visg)'},svg);
+  [400,500,600,700,750].forEach(nm=>{el('line',{x1:Z(nm),x2:Z(nm),y1:ZY+ZH,y2:ZY+ZH+4,stroke:'var(--muted)'},svg);txt(svg,{x:Z(nm),y:ZY+ZH+16,'font-size':10,fill:'var(--muted)','text-anchor':'middle'},nm);});
+  txt(svg,{x:ZX1+16,y:ZY+ZH+16,'font-size':10,fill:'var(--muted)'},'nm');
+  txt(svg,{x:ZX0-8,y:ZY+18,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'visible light');
+  const hit=el('rect',{x:X0,y:Y-4,width:X1-X0,height:H+8,fill:'transparent',class:'drag'},svg);
+  const zhit=el('rect',{x:ZX0,y:ZY-4,width:ZX1-ZX0,height:ZH+8,fill:'transparent',class:'drag'},svg);
+  const mk=el('g',{'pointer-events':'none'},svg);
+  const mLine=el('line',{y1:Y-6,y2:Y+H+6,stroke:'var(--ink)','stroke-width':2.5},mk);
+  const mKnob=el('circle',{cy:Y+H+6,r:5,fill:'var(--ink)'},mk);
+  const zLine=el('line',{y1:ZY-4,y2:ZY+ZH+4,stroke:'var(--ink)','stroke-width':2.5,'pointer-events':'none'},svg);
+  const S={l:+(load('at1-lam')||5.8e-7)}; if(!(S.l>=1e-13&&S.l<=1e4)) S.l=5.8e-7;
+  const JUMPS=[['FM radio, 100 MHz',C.c/100e6],['microwave oven, 2.45 GHz',C.c/2.45e9],['infrared, 10 µm',10e-6],['sodium yellow, 580 nm',580e-9],['UV, 250 nm',250e-9],['X-rays, 0.1 nm',0.1e-9]];
+  $('specJ').innerHTML=JUMPS.map((j,i)=>`<button class="chip" data-k="${i}">${j[0]}</button>`).join('');
+  $('specJ').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;setLam(JUMPS[+b.dataset.k][1]);});
+  function region(l){if(l>=4e-7&&l<=7.5e-7)return 'visible';for(const [n,a,b] of REG){if(n&&l>=a&&l<b)return n;}return l<1e-13?'γ-rays':'radio';}
+  setLam=function(l){S.l=Math.max(1e-13,Math.min(1e4,l));store('at1-lam',S.l);draw();};
+  function draw(){
+    const l=S.l, x=X(l), nm=l*1e9;
+    set(mLine,{x1:x,x2:x}); set(mKnob,{cx:x});
+    const inV=isVis(nm); set(zLine,{x1:Z(Math.max(VIS[0],Math.min(VIS[1],nm))),x2:Z(Math.max(VIS[0],Math.min(VIS[1],nm))),visibility:inV?'visible':'hidden'});
+    const nu=C.c/l, E=C.h*nu;
+    $('specKv').innerHTML=`<dt>wavelength λ</dt><dd>${lamStr(l)}</dd><dt>frequency ν = c/λ</dt><dd>${sci(nu,3)} Hz</dd><dt>wavenumber ν̄</dt><dd>${sci(1/(l*100),3)} cm⁻¹</dd><dt>photon energy hν</dt><dd>${sci(E,3)} J</dd><dt></dt><dd>${sci(E/EV,3)} eV</dd><dt>per mole of photons</dt><dd>${sci(E*C.NA/1000,3)} kJ mol⁻¹</dd><dt>region</dt><dd>${region(l)}${inV?' <span style="display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-1px;background:'+wlColor(nm)+'"></span>':''}</dd>`;
+  }
+  function drag(target,inv){let on=false;
+    const pick=e=>{const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.getScreenCTM().inverse());setLam(inv(q.x));};
+    target.addEventListener('pointerdown',e=>{on=true;try{target.setPointerCapture(e.pointerId);}catch(_){}pick(e);});
+    target.addEventListener('pointermove',e=>{if(on)pick(e);});
+    target.addEventListener('pointerup',()=>{on=false;}); target.addEventListener('pointercancel',()=>{on=false;});}
+  drag(hit,x=>Linv(Math.max(X0,Math.min(X1,x)))); drag(zhit,x=>Zinv(Math.max(ZX0,Math.min(ZX1,x)))*1e-9);
+  draw();
+})();
+
+/* =================== 9 · BLACK BODY, STAIRCASE =================== */
+(function(){
+  const svg=$('bb'), X0=50, X1=620, Y0=240, YT=20, LMAX=3e-6;
+  const X=l=>X0+l/LMAX*(X1-X0);
+  /* visible band */
+  const g=el('linearGradient',{id:'bbvis'},el('defs',{},svg));
+  for(let i=0;i<=10;i++){const w=VIS[0]+(VIS[1]-VIS[0])*i/10;el('stop',{offset:(i*10)+'%','stop-color':wlColor(w)},g);}
+  el('rect',{x:X(4e-7),y:YT,width:X(7.5e-7)-X(4e-7),height:Y0-YT,fill:'url(#bbvis)',opacity:.22},svg);
+  txt(svg,{x:(X(4e-7)+X(7.5e-7))/2,y:Y0-6,'font-size':10.5,fill:'var(--ink)','text-anchor':'middle'},'visible');
+  el('line',{x1:X0,x2:X1,y1:Y0,y2:Y0,stroke:'var(--muted)'},svg); el('line',{x1:X0,x2:X0,y1:YT,y2:Y0,stroke:'var(--muted)'},svg);
+  for(let u=0;u<=3;u+=0.5){el('line',{x1:X(u*1e-6),x2:X(u*1e-6),y1:Y0,y2:Y0+4,stroke:'var(--muted)'},svg);txt(svg,{x:X(u*1e-6),y:Y0+16,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'},u);}
+  txt(svg,{x:X1,y:Y0+32,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'wavelength (µm)');
+  const yLab=txt(svg,{x:X0+4,y:YT-6,'font-size':11,fill:'var(--muted)'},'');
+  const pinG=el('g',{},svg); const PINS=[];
+  const SIG=5.670374419e-8; /* Stefan–Boltzmann constant, W m^-2 K^-4 (CODATA) */
+  const rj=el('path',{fill:'none',stroke:'var(--muted)','stroke-width':1.6,'stroke-dasharray':'6 4'},svg);
+  const pl=el('path',{fill:'none',stroke:'var(--photon)','stroke-width':2.6},svg);
+  const pk=el('line',{stroke:'var(--photon)','stroke-dasharray':'2 3'},svg), pkT=txt(svg,{'font-size':11,fill:'var(--photon)'},'');
+  const cT=txt(svg,{'font-size':11,fill:'var(--muted)'},'classical');
+  function draw(){
+    const T=+$('bbT').value; $('bbTo').textContent=T+' K';
+    const P=l=>2*Math.PI*C.h*C.c*C.c/(l**5)/(Math.exp(C.h*C.c/(l*C.kB*T))-1);
+    const RJ=l=>2*Math.PI*C.c*C.kB*T/(l**4);
+    const same=$('bbSame').checked, Tref=same?8000:T;
+    const Pref=l=>2*Math.PI*C.h*C.c*C.c/(l**5)/(Math.exp(C.h*C.c/(l*C.kB*Tref))-1);
+    const lm=2.897771955e-3/T, mx=Pref(2.897771955e-3/Tref)*1.15;
+    yLab.textContent=same?'intensity (one scale for all T: 8000 K fills the chart)':'intensity (each T scaled to fit)';
+    const yy=v=>Math.max(YT-2,Y0-v/mx*(Y0-YT));
+    set(pl,{d:pathOf(P,0.05e-6,LMAX,300,X,yy)});
+    /* classical curve: only where it is on the chart */
+    let d='',on=false;for(let i=0;i<=300;i++){const l=0.05e-6+(LMAX-0.05e-6)*i/300,v=RJ(l)/mx;if(v>1.02){on=false;continue;}d+=(on?'L':'M')+X(l).toFixed(1)+' '+yy(RJ(l)).toFixed(1);on=true;}
+    set(rj,{d});
+    /* find where classical enters the chart, label there */
+    let lc=0.05e-6;for(let i=0;i<=300;i++){const l=0.05e-6+(LMAX-0.05e-6)*i/300;if(RJ(l)/mx<=1){lc=l;break;}}
+    set(cT,{x:X(lc)-6,y:YT+12,'text-anchor':'end'});
+    set(pk,{x1:X(lm),x2:X(lm),y1:Y0,y2:yy(P(lm))}); set(pkT,{x:X(lm)+5,y:Math.min(Y0-20,yy(P(lm))-8)}); pkT.textContent='peak '+fmt(lm*1e6,2)+' µm';
+    /* pinned curves, drawn on the same scale as the current one */
+    pinG.innerHTML=PINS.map(Tp=>{const Pp=l=>2*Math.PI*C.h*C.c*C.c/(l**5)/(Math.exp(C.h*C.c/(l*C.kB*Tp))-1);
+      return `<path d="${pathOf(Pp,0.05e-6,LMAX,200,X,yy)}" fill="none" stroke="var(--ink)" stroke-width="1.4" opacity=".45"/>`;}).join('');
+    let info=`Total output σT⁴ = ${sci(SIG*T**4,2)} W m⁻². Peak at λ = b/T = ${fmt(lm*1e6,2)} µm.`;
+    if(PINS.length){const Tp=PINS[PINS.length-1];info+=` Against the last pinned curve (${Tp} K): T is ${fmt(T/Tp,2)}×, so the total output is (${fmt(T/Tp,2)})⁴ = ${fmt((T/Tp)**4,1)}×.`;}
+    if(!same) info+=' Tick “same scale” to see how much bigger hotter curves really are.';
+    $('bbInfo').textContent=info;
+  }
+  $('bbT').addEventListener('input',draw); $('bbSame').addEventListener('change',draw);
+  $('bbPin').addEventListener('click',()=>{const T=+$('bbT').value;if(!PINS.includes(T)){PINS.push(T);if(PINS.length>4)PINS.shift();}draw();});
+  $('bbUnpin').addEventListener('click',()=>{PINS.length=0;draw();});
+  draw();
+  /* staircase */
+  const st=$('stair'), SX0=60, SX1=500, SY0=180, SYT=20, EMAX=8*EV;
+  const SY=E=>SY0-E/EMAX*(SY0-SYT);
+  el('line',{x1:SX0,x2:SX1,y1:SY0,y2:SY0,stroke:'var(--muted)'},st); el('line',{x1:SX0,x2:SX0,y1:SYT,y2:SY0,stroke:'var(--muted)'},st);
+  txt(st,{x:SX0+6,y:SYT-6,'font-size':11,fill:'var(--muted)'},'energy');
+  for(let ev=0;ev<=6;ev+=2){txt(st,{x:SX0-6,y:SY(ev*EV)+4,'font-size':10,fill:'var(--muted)','text-anchor':'end'},ev+' eV');}
+  el('path',{d:`M${SX0} ${SY0}L${SX1} ${SYT}`,stroke:'var(--muted)','stroke-dasharray':'5 4',fill:'none'},st);
+  const stair=el('path',{fill:'none','stroke-width':2.6},st), stT=el('g',{},st);
+  function drawS(nm){const E=C.h*C.c/(nm*1e-9);let d=`M${SX0} ${SY0}`;let n=0;const nmax=Math.floor(EMAX/E);
+    const w=(SX1-SX0)/(nmax+1); let lab='';
+    for(n=1;n<=nmax;n++){const x=SX0+n*w;d+=`H${x.toFixed(1)}V${SY(n*E).toFixed(1)}`;if(n<=3)lab+=`<text x="${(x+4).toFixed(1)}" y="${(SY(n*E)-5).toFixed(1)}" font-size="11" fill="var(--ink)">${n===1?'':n}hν</text>`;}
+    d+=`H${SX1}`; const col=nm>=VIS[0]&&nm<=VIS[1]?wlColor(nm):'var(--muted)';
+    set(stair,{d,stroke:col}); stT.innerHTML=lab;
+    $('stairCap').innerHTML=`Light of ${nm} nm${nm<VIS[0]?' (ultraviolet)':''}: one quantum is hν = hc/λ = ${sci(E,2)} J = ${fmt(E/EV,2)} eV. Energy can only be 0, hν, 2hν, 3hν …, like standing on stairs, never between steps. Shorter wavelength → bigger steps.`;}
+  drawS(+chipGroup($('stairC'),'at1-stair','450',v=>['700','450','250'].includes(v),v=>drawS(+v)));
+})();
+
+/* =================== 10 · PHOTOELECTRIC =================== */
+(function(){
+  const svg=$('pe'), PX=230, PY0=70, PY1=200, CX=560;
+  $('metal').innerHTML=METALS.map(m=>`<button class="chip" data-k="${m.s}">${m.n} (${m.s})</button>`).join('');
+  /* tube */
+  el('rect',{x:200,y:40,width:400,height:190,rx:40,fill:'none',stroke:'var(--line)','stroke-width':2},svg);
+  txt(svg,{x:400,y:58,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'vacuum');
+  el('rect',{x:PX,y:PY0,width:12,height:PY1-PY0,fill:'var(--muted)'},svg);
+  const mLab=txt(svg,{x:PX+6,y:PY0-8,'font-size':11,fill:'var(--ink)','text-anchor':'middle'},'');
+  el('rect',{x:CX,y:PY0,width:8,height:PY1-PY0,fill:'var(--muted)',opacity:.6},svg);
+  txt(svg,{x:CX+4,y:PY0-8,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'collector');
+  /* lamp and beam */
+  el('circle',{cx:50,cy:60,r:20,fill:'none',stroke:'var(--muted)','stroke-width':2},svg);
+  txt(svg,{x:50,y:96,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'lamp');
+  const beam=el('path',{d:`M68 52 L${PX} ${PY0+10} L${PX} ${PY1-10} L70 72 Z`},svg);
+  const phot=el('g',{},svg), elec=el('g',{},svg);
+  /* ammeter */
+  el('path',{d:`M${PX+6} ${PY1} V244 H${CX+4} V${PY1}`,fill:'none',stroke:'var(--muted)'},svg);
+  el('circle',{cx:470,cy:244,r:13,fill:'var(--surface)',stroke:'var(--muted)'},svg); txt(svg,{x:470,y:248,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'A');
+  const curT=txt(svg,{x:490,y:226,'font-size':11,fill:'var(--ink)','font-family':'IBM Plex Mono,monospace'},'');
+  const S={m:'K',ph:[],el:[],acc:0,accP:0,flow:0};
+  const met=()=>METALS.find(m=>m.s===S.m);
+  function state(){const nu=+$('peF').value*1e14, I=+$('peI').value/100, W=met().W*EV, E=C.h*nu, KE=E-W;return {nu,I,W,E,KE,nu0:W/C.h,on:KE>0&&I>0};}
+  function readout(){
+    const s=state(), lam=C.c/s.nu*1e9;
+    $('peFo').textContent=fmt(s.nu/1e14,2)+' ×10¹⁴ Hz'; $('peIo').textContent=fmt(s.I*100,0)+' %';
+    mLab.textContent=met().n;
+    const col=isVis(lam)?wlColor(lam):'var(--muted)';
+    set(beam,{fill:col,opacity:0.12+0.4*s.I});
+    const v=s.KE>0?Math.sqrt(2*s.KE/C.me):0;
+    $('peKv').innerHTML=`<dt>light</dt><dd>λ = ${fmt(lam,0)} nm (${lam<VIS[0]?'ultraviolet':lam>VIS[1]?'infrared':'visible'})</dd><dt>photon energy hν</dt><dd>${fmt(s.E/EV,2)} eV</dd><dt>work function W₀</dt><dd>${fmt(met().W,2)} eV</dd><dt>threshold ν₀ = W₀/h</dt><dd>${fmt(s.nu0/1e14,2)} ×10¹⁴ Hz (λ₀ = ${fmt(C.c/s.nu0*1e9,0)} nm)</dd><dt>KE<sub>max</sub> = hν − W₀</dt><dd>${s.KE>0?fmt(s.KE/EV,2)+' eV = '+sci(s.KE,2)+' J':'none emitted'}</dd><dt>fastest electron</dt><dd>${s.KE>0?sci(v,2)+' m/s':'—'}</dd><dt>stopping potential</dt><dd>${s.KE>0?fmt(s.KE/EV,2)+' V':'—'}</dd><dt>current</dt><dd>${s.on?'∝ brightness: '+fmt(s.I*100,0)+' units':'0'}</dd>`;
+    curT.textContent='I = '+(s.on?fmt(s.I*100,0):'0');
+    $('peCap').innerHTML=s.KE<=0?`<b>Nothing comes out</b>, however bright you make it. Each photon carries only ${fmt(s.E/EV,2)} eV, less than the ${fmt(met().W,2)} eV needed to free one electron, and electrons do not save up energy from several photons. Raise ν above ${fmt(s.nu0/1e14,2)} × 10¹⁴ Hz.`
+      :s.I===0?'Above threshold, but no light, so no photons and no current.'
+      :`<b>Electrons fly off at once.</b> Each photon gives one electron ${fmt(s.E/EV,2)} eV; ${fmt(met().W,2)} eV is spent escaping, so the fastest have ${fmt(s.KE/EV,2)} eV. Brightness changes how <i>many</i> (the current), frequency changes how <i>fast</i>.`;
+    drawG(s);
+  }
+  /* graph */
+  const g=$('peG'), GX0=50, GX1=620, GY0=245, GYT=20, NUM=15e14, KEM=4.5;
+  const GX=n=>GX0+n/NUM*(GX1-GX0), GY=k=>GY0-k/KEM*(GY0-GYT);
+  el('line',{x1:GX0,x2:GX1,y1:GY0,y2:GY0,stroke:'var(--muted)'},g); el('line',{x1:GX0,x2:GX0,y1:GYT,y2:GY0,stroke:'var(--muted)'},g);
+  for(let n=0;n<=15;n+=5){el('line',{x1:GX(n*1e14),x2:GX(n*1e14),y1:GY0,y2:GY0+4,stroke:'var(--muted)'},g);txt(g,{x:GX(n*1e14),y:GY0+28,'font-size':10.5,fill:'var(--muted)','text-anchor':'middle'},n);}
+  txt(g,{x:GX1,y:GY0+46,'font-size':11,fill:'var(--muted)','text-anchor':'end'},'frequency ν (×10¹⁴ Hz)');
+  for(let k=0;k<=4;k++){txt(g,{x:GX0-6,y:GY(k)+4,'font-size':10.5,fill:'var(--muted)','text-anchor':'end'},k);}
+  txt(g,{x:GX0+4,y:GYT-6,'font-size':11,fill:'var(--muted)'},'KE of fastest electron (eV)');
+  const lines=METALS.map(m=>{const n0=m.W*EV/C.h, n1=Math.min(NUM,(KEM*EV+m.W*EV)/C.h);
+    const ln=el('line',{x1:GX(n0),y1:GY0,x2:GX(n1),y2:GY((C.h*n1-m.W*EV)/EV),'stroke-width':2},g);
+    const t=txt(g,{x:GX(n0),y:GY0+14,'font-size':11,'text-anchor':'middle'},m.s);return {m,ln,t};});
+  const slopeT=txt(g,{'font-size':11,fill:'var(--muted)'},'');
+  const vline=el('line',{y1:GYT,y2:GY0,stroke:'var(--ink)','stroke-dasharray':'2 3'},g);
+  const dot=el('circle',{r:6,fill:'var(--photon)',stroke:'var(--ink)'},g);
+  function drawG(s){
+    lines.forEach(L=>{const on=L.m.s===S.m;set(L.ln,{stroke:on?'var(--accent)':'var(--muted)',opacity:on?1:.55});set(L.t,{fill:on?'var(--accent)':'var(--muted)','font-weight':on?600:400});});
+    set(vline,{x1:GX(s.nu),x2:GX(s.nu)});
+    set(dot,{cx:GX(s.nu),cy:GY(Math.max(0,s.KE/EV))});
+    const L=lines.find(l=>l.m.s===S.m); const n0=s.nu0, xm=Math.min(NUM*0.98,n0+3.2e14);
+    set(slopeT,{x:GX(xm)+8,y:GY((C.h*xm-s.W)/EV)+14}); slopeT.textContent='slope h';
+  }
+  /* animation */
+  function tick(dt){
+    const s=state(), lam=C.c/s.nu*1e9, col=isVis(lam)?wlColor(lam):'var(--muted)';
+    S.accP+=dt*s.I*14; while(S.accP>1){S.accP--;const t=Math.random();S.ph.push({x:68,y:52+t*20,tx:PX,ty:PY0+10+t*(PY1-PY0-20),u:0});}
+    S.ph.forEach(p=>{p.u+=dt*2.2;});
+    const arrived=S.ph.filter(p=>p.u>=1).length; S.ph=S.ph.filter(p=>p.u<1);
+    if(s.KE>0){for(let i=0;i<arrived;i++){const f=Math.random();S.el.push({x:PX+14,y:PY0+15+Math.random()*(PY1-PY0-30),v:30+260*Math.sqrt(f*s.KE/(4.5*EV))});}}
+    S.el.forEach(e=>{e.x+=e.v*dt;}); S.el=S.el.filter(e=>e.x<CX-2);
+    phot.innerHTML=S.ph.map(p=>{const x=p.x+(p.tx-p.x)*p.u,y=p.y+(p.ty-p.y)*p.u;return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${col}" stroke="var(--photon)" stroke-width=".8"/>`;}).join('');
+    elec.innerHTML=S.el.map(e=>`<circle cx="${e.x.toFixed(1)}" cy="${e.y.toFixed(1)}" r="3.2" fill="var(--e)"/>`).join('');
+  }
+  S.m=chipGroup($('metal'),'at1-metal','K',v=>METALS.some(m=>m.s===v),v=>{S.m=v;readout();});
+  ['peF','peI'].forEach(id=>$(id).addEventListener('input',readout));
+  readout();
+  scene(svg,$('pePlay'),tick);
+})();
+
+/* =================== 11 · DOUBLE SLIT, ONE PHOTON AT A TIME =================== */
+(function(){
+  const svg=$('ds'), SX=120, SCX=560, Y0=110, HH=90;
+  el('rect',{x:SX-3,y:10,width:6,height:Y0-22,fill:'var(--muted)'},svg); el('rect',{x:SX-3,y:Y0-12,width:6,height:24,fill:'var(--muted)'},svg); el('rect',{x:SX-3,y:Y0+22,width:6,height:84-12,fill:'var(--muted)'},svg);
+  txt(svg,{x:SX,y:214,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'two slits');
+  el('path',{d:arrowD(20,Y0,SX-14,Y0,7),stroke:'var(--photon)','stroke-width':2,fill:'none'},svg);
+  txt(svg,{x:20,y:Y0-10,'font-size':11,fill:'var(--muted)'},'light');
+  el('rect',{x:SCX,y:Y0-HH,width:30,height:2*HH,fill:'var(--bg)',stroke:'var(--line)'},svg);
+  txt(svg,{x:SCX+15,y:214,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'screen');
+  const curve=el('path',{fill:'none',stroke:'var(--muted)','stroke-width':1.2,opacity:0},svg);
+  const pts=el('g',{},svg);
+  const I=y=>{const u=y/HH; const env=Math.exp(-u*u*2.2); return env*Math.cos(u*Math.PI*3.5)**2;};
+  let d='';for(let i=0;i<=200;i++){const y=-HH+2*HH*i/200;d+=(i?'L':'M')+(SCX+36+I(y)*50).toFixed(1)+' '+(Y0+y).toFixed(1);} set(curve,{d});
+  const S={n:0,acc:0};
+  function add(k){let s='';for(let i=0;i<k;i++){let y;do{y=(Math.random()*2-1)*HH;}while(Math.random()>I(y));s+=`<circle cx="${(SCX+3+Math.random()*24).toFixed(1)}" cy="${(Y0+y).toFixed(1)}" r="1.4" fill="var(--photon)"/>`;S.n++;}
+    pts.insertAdjacentHTML('beforeend',s); $('dsN').textContent=S.n+' photons'; set(curve,{opacity:Math.min(1,S.n/400)});}
+  $('dsClr').addEventListener('click',()=>{pts.innerHTML='';S.n=0;$('dsN').textContent='';set(curve,{opacity:0});});
+  const sc=scene(svg,$('dsPlay'),dt=>{S.acc+=dt*(S.n<40?6:S.n<300?40:160);const k=Math.floor(S.acc);S.acc-=k;if(k)add(k);if(S.n>=1500)sc.stop();},false);
+  add(25); $('dsN').textContent=S.n+' photons so far. Press Play.';
+})();
+
+/* =================== 12 · SPECTRA =================== */
+(function(){
+  const svg=$('sp'), X0=60, X1=640, LO=380, HI=VIS[1];
+  const X=nm=>X0+(nm-LO)/(HI-LO)*(X1-X0);
+  const g=el('linearGradient',{id:'spg'},el('defs',{},svg));
+  for(let i=0;i<=30;i++){const w=LO+(HI-LO)*i/30;el('stop',{offset:(i*100/30).toFixed(2)+'%','stop-color':wlColor(w)},g);}
+  const ROWS=[{k:'c',y:10,lab:'continuous'},{k:'e',y:70,lab:'H emission'},{k:'a',y:168,lab:'H absorption'}];
+  const rowG={};
+  ROWS.forEach(r=>{const G0=el('g',{},svg);rowG[r.k]=G0;
+    txt(G0,{x:X0-6,y:r.y+28,'font-size':11,fill:'var(--muted)','text-anchor':'end'},r.lab.split(' ')[0]);
+    if(r.lab.includes(' '))txt(G0,{x:X0-6,y:r.y+42,'font-size':11,fill:'var(--muted)','text-anchor':'end'},r.lab.split(' ')[1]);
+    if(r.k==='e'){el('rect',{x:X0,y:r.y,width:X1-X0,height:50,fill:'#05070a'},G0);H_LINES.forEach(h=>el('rect',{x:X(h.l)-1.6,y:r.y,width:3.2,height:50,fill:isVis(h.l)?wlColor(h.l):'#8a909c'},G0));}
+    else{el('rect',{x:X0,y:r.y,width:X1-X0,height:50,fill:'url(#spg)'},G0);if(r.k==='a')H_LINES.forEach(h=>el('rect',{x:X(h.l)-1.4,y:r.y,width:2.8,height:50,fill:'#05070a'},G0));}
+  });
+  /* line labels under emission row, staggered so they never overlap */
+  const labs=el('g',{},rowG.e);
+  H_LINES.forEach((h,i)=>{const row=i<3?0:i-2;txt(labs,{x:X(h.l),y:134+row*12,'font-size':10.5,fill:'var(--ink)','text-anchor':i===4?'start':'middle',fill:isVis(h.l)?'var(--ink)':'var(--muted)'},`${h.n} ${fmt(h.l,1)} nm${isVis(h.l)?'':' (near-UV)'}`);});
+  const ax=el('g',{},svg);
+  [450,500,550,600,650,700,750].forEach(nm=>{el('line',{x1:X(nm),x2:X(nm),y1:224,y2:228,stroke:'var(--muted)'},ax);txt(ax,{x:X(nm),y:240,'font-size':10,fill:'var(--muted)','text-anchor':'middle'},nm);});
+  txt(ax,{x:X1,y:254,'font-size':10.5,fill:'var(--muted)','text-anchor':'end'},'wavelength (nm)');
+  el('line',{x1:X0,x2:X1,y1:224,y2:224,stroke:'var(--muted)'},ax);
+  /* 380–400 nm: outside the visible range used on this page */
+  ROWS.forEach(r=>el('rect',{x:X0,y:r.y,width:X(VIS[0])-X0,height:50,fill:'var(--surface)',opacity:.55,'pointer-events':'none'},svg));
+  el('line',{x1:X(VIS[0]),x2:X(VIS[0]),y1:4,y2:224,stroke:'var(--muted)','stroke-dasharray':'2 3'},ax);
+  txt(ax,{x:(X0+X(VIS[0]))/2,y:240,'font-size':10,fill:'var(--muted)','text-anchor':'middle'},'UV');
+  /* rows stay hidden behind a placeholder until revealed, so the student predicts first */
+  const seen={c:true}, ph={};
+  ROWS.forEach(r=>{if(r.k==='c')return;const G1=el('g',{},svg);ph[r.k]=G1;
+    el('rect',{x:X0,y:r.y,width:X1-X0,height:50,fill:'var(--bg)',stroke:'var(--line)','stroke-dasharray':'4 4'},G1);
+    txt(G1,{x:(X0+X1)/2,y:r.y+30,'font-size':12,fill:'var(--muted)','text-anchor':'middle'},'Predict: what will this look like? Then press the chip above.');
+    txt(G1,{x:X0-6,y:r.y+28,'font-size':11,fill:'var(--muted)','text-anchor':'end'},r.lab.split(' ')[0]);
+    txt(G1,{x:X0-6,y:r.y+42,'font-size':11,fill:'var(--muted)','text-anchor':'end'},r.lab.split(' ')[1]);});
+  function show(k){if(k==='all'){seen.e=seen.a=true;}else seen[k]=true;
+    ROWS.forEach(r=>{rowG[r.k].setAttribute('visibility',seen[r.k]?'visible':'hidden');if(ph[r.k])ph[r.k].setAttribute('visibility',seen[r.k]?'hidden':'visible');});}
+  const sk=$('spk'); press(sk,'c'); show('c');
+  sk.addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;press(sk,b.dataset.k);show(b.dataset.k);});
+})();
+
+/* =================== QUIZZES (numbers computed here) =================== */
+const Q=(()=>{
+  const e=C.e, me=C.me, NA=C.NA, h=C.h, c=C.c;
+  const n1g=1e-3/me, mMol=NA*me, qMol=NA*e;
+  /* 2.2 */
+  const eCH4=10*NA, nC14=7e-3/14*8*NA, mnC14=nC14*1.675e-27, pNH3=34e-3/17*10*NA, mpNH3=pNH3*C.mp;
+  /* 2.5–2.12 */
+  const nu25=c/580e-9, wn25=1/(580e-7);
+  const E26a=h*3e15, E26b=h*c/0.5e-10;
+  const nu27=1/2e-10, l27=c*2e-10, wn27=1/(l27*100);
+  const E28=h*c/4000e-12, n28=1/E28;
+  const E29=h*c/4e-7, KE29=E29-2.13*1.602e-19, v29=Math.sqrt(2*KE29/me);
+  const IE210=h*c/242e-9*NA/1000;
+  const n211=25/(h*c/0.57e-6);
+  const nu212=c/6800e-10, W212=h*nu212;
+  /* 2.35–2.39 */
+  const n235=0.20/0.15e-9, r236=2.4e-2/2e8/2, n237=1.6e-2/2.6e-10;
+  const n238=2.5e-16/e, n239=1.282e-18/e;
+  /* 2.42–2.44 */
+  const p242=81/2.317, p243=(37-1.111)/2.111, p244=(56+3*1.304)/2.304;
+  return [
+ {s:'q1',q:'In Thomson’s tube the fields are balanced and the spot sits at the centre. You swap the electrons for protons moving at the same speed. The spot:',
+  o:['stays at the centre','moves 1836 times further','moves to point A'],a:0,
+  why:'Balance needs eE = evB, i.e. v = E/B. The charge cancels, so any charged particle at that speed passes straight. Switch to the proton on the panel to check.'},
+ {s:'q1',q:'Exercise 2.1: how many electrons together weigh one gram?',
+  o:[sci(n1g,2),sci(n1g/1836,2),sci(NA,2)],a:0,
+  why:`n = 1 g ÷ mₑ = 10⁻³ kg ÷ ${sci(me,3)} kg = ${sci(n1g,3)} electrons.`},
+ {s:'q1',q:'Exercise 2.1 (ii): mass and charge of one mole of electrons?',
+  o:[`${sci(mMol,3)} kg; ${sci(qMol,3)} C`,`${sci(mMol*1000,3)} kg; ${sci(e,3)} C`,`1 g; ${sci(qMol,3)} C`],a:0,
+  why:`Mass = N<sub>A</sub>mₑ = ${sci(mMol,3)} kg (about 0.55 mg). Charge = N<sub>A</sub>e = ${fmt(qMol,0)} C (one faraday, as you will meet in electrochemistry).`},
+ {s:'q2',q:'Exercise 2.38: a particle carries 2.5 × 10⁻¹⁶ C of static charge. How many electrons is that?',
+  o:[fmt(n238,0),sci(n238*1000,2),fmt(n238/2,0)],a:0,
+  why:`n = q/e = 2.5 × 10⁻¹⁶ ÷ ${sci(e,4)} = ${fmt(n238,0)} (about 1.56 × 10³).`},
+ {s:'q2',q:'Exercise 2.39: an oil drop has charge −1.282 × 10⁻¹⁸ C. How many electrons are on it?',
+  o:[fmt(n239,0),fmt(n239*2,0),'12.82'],a:0,
+  why:`n = 1.282 × 10⁻¹⁸ ÷ ${sci(e,4)} = ${fmt(n239,2)} ≈ ${fmt(n239,0)}. A whole number, as every Millikan charge must be.`},
+ {s:'q2',q:'A student reports a drop with charge 2.4 × 10⁻¹⁹ C. What do you conclude?',
+  o:['It carries 1.5 electrons','The measurement is wrong: charge must be a whole multiple of e','e must be 2.4 × 10⁻¹⁹ C'],a:1,
+  why:`2.4 × 10⁻¹⁹ C ÷ ${sci(e,3)} C = ${fmt(2.4e-19/e,2)}, not a whole number. No drop ever carries a fraction of e, so this one was mismeasured.`},
+ {s:'q3',q:'Exercise 2.2 (ii): how many neutrons are in 7 mg of ¹⁴C, and what is their mass? (mₙ = 1.675 × 10⁻²⁷ kg)',
+  o:[`${sci(nC14,3)}; ${sci(mnC14,3)} kg`,`${sci(nC14*6/8,3)}; ${sci(mnC14*6/8,3)} kg`,`${sci(nC14/8,3)}; ${sci(mnC14/8,3)} kg`],a:0,
+  why:`7 mg ÷ 14 g mol⁻¹ = 5 × 10⁻⁴ mol of atoms. Each ¹⁴C has 14 − 6 = 8 neutrons: 8 × 5 × 10⁻⁴ × N<sub>A</sub> = ${sci(nC14,3)}; mass ${sci(mnC14,3)} kg.`},
+ {s:'q3',q:'Exercise 2.2 (iii): how many protons in 34 mg of NH₃? Does the answer change with temperature and pressure?',
+  o:[`${sci(pNH3,3)}; no`,`${sci(pNH3,3)}; yes`,`${sci(pNH3*7/10,3)}; no`],a:0,
+  why:`34 mg ÷ 17 g mol⁻¹ = 2 × 10⁻³ mol; each NH₃ has 7 + 3 = 10 protons, so ${sci(pNH3,3)} protons (mass ${sci(mpNH3,3)} kg). A given mass has a fixed number of molecules; T and p change only its volume.`},
+ {s:'q3',q:'Exercise 2.2 (i): total electrons in one mole of methane?',
+  o:[sci(eCH4,3),sci(NA,3),sci(6*NA,3)],a:0,
+  why:`CH₄ has 6 + 4 × 1 = 10 electrons per molecule, so 10 N<sub>A</sub> = ${sci(eCH4,3)}.`},
+ {s:'q4',q:'Exercise 2.40: the foil is changed from gold to aluminium (a much lighter atom, Z = 13). What changes?',
+  o:['More α bounce back','Far fewer large deflections; almost none back','No change at all'],a:1,
+  why:'A nucleus with charge 13e repels much less than one with 79e, so the distance of closest approach is about six times smaller and a strong turn needs a much closer hit. A light nucleus also recoils. Large-angle and backward scattering become very rare.'},
+ {s:'q4',q:'Exercise 2.35: carbon atoms of diameter 0.15 nm are laid side by side along a 20 cm scale. How many fit?',
+  o:[sci(n235,2),sci(n235/2,2),sci(n235*10,2)],a:0,
+  why:`20 cm ÷ 0.15 nm = 0.20 m ÷ 1.5 × 10⁻¹⁰ m = ${sci(n235,2)} atoms.`},
+ {s:'q4',q:'Exercise 2.36 / 2.37: 2 × 10⁸ carbon atoms in a row are 2.4 cm long. Radius of a carbon atom?',
+  o:[`${fmt(r236*1e12,0)} pm`,`${fmt(r236*2e12,0)} pm`,`${fmt(r236*1e9,1)} pm`],a:0,
+  why:`Diameter = 2.4 × 10⁻² m ÷ 2 × 10⁸ = ${sci(2*r236,1)} m, so radius = ${sci(r236,1)} m = ${fmt(r236*1e12,0)} pm. (2.37: a zinc atom 2.6 Å across has radius 130 pm, and ${sci(n237,3)} of them fit in 1.6 cm.)`},
+ {s:'q4',q:'An α particle aimed at impact parameter b is turned through 60°. Aimed at b/2 instead, it is turned through:',
+  o:['30°','more than 60° but less than 120°','exactly 120°'],a:1,
+  why:`tan(θ/2) = d/2b. At 60°, tan 30° = 0.577; halving b doubles it to 1.155, so θ/2 = ${fmt(Math.atan(2*Math.tan(Math.PI/6))*180/Math.PI,1)}° and θ = ${fmt(2*Math.atan(2*Math.tan(Math.PI/6))*180/Math.PI,1)}°. Bigger, but not double. Try it with the slider.`},
+ {s:'q5',q:'Exercise 2.3: how many protons and neutrons in ⁵⁶₂₆Fe?',
+  o:['26 p, 30 n','26 p, 56 n','30 p, 26 n'],a:0,why:'Z = 26 protons; N = A − Z = 56 − 26 = 30. (Likewise ¹³₆C: 6, 7; ¹⁶₈O: 8, 8; ²⁴₁₂Mg: 12, 12; ⁸⁸₃₈Sr: 38, 50.)'},
+ {s:'q5',q:'Exercise 2.4: the complete symbol for Z = 92, A = 233?',
+  o:['²³³₉₂U','⁹²₂₃₃U','²³³₉₂Np'],a:0,why:'Mass number top left, atomic number bottom left; Z = 92 is uranium. Similarly Z = 17, A = 35 is ³⁵₁₇Cl and Z = 4, A = 9 is ⁹₄Be.'},
+ {s:'q5',q:'Exercise 2.41: why can ⁷⁹₃₅Br be written as ⁷⁹Br, but ³⁵₇₉Br is wrong?',
+  o:['The symbol Br already fixes Z = 35, and A must be at least Z','Bromine has no isotope of mass 79','Subscripts are optional for metals only'],a:0,
+  why:'Every bromine atom has Z = 35, so the subscript adds nothing. ³⁵₇₉Br would claim 79 protons (that is gold) and only 35 nucleons, which is impossible.'},
+ {s:'q5',q:'Exercise 2.42: mass number 81, with 31.7 % more neutrons than protons. The atom is:',
+  o:['⁸¹₃₅Br','⁸¹₃₆Kr','⁸¹₃₄Se'],a:0,
+  why:`p + 1.317p = 81 → p = 81/2.317 = ${fmt(p242,2)} ≈ 35 (bromine), n = 46. Symbol ⁸¹₃₅Br.`},
+ {s:'q5',q:'Exercise 2.43: an ion of mass number 37, charge −1, with 11.1 % more neutrons than electrons. The ion is:',
+  o:['³⁷₁₇Cl⁻','³⁷₁₈Ar⁻','³⁷₁₆S⁻'],a:0,
+  why:`Electrons = p + 1 and n = 1.111(p + 1). Then p + 1.111(p + 1) = 37 → p = ${fmt(p243,2)} ≈ 17 (chlorine), n = 20, electrons = 18: ³⁷₁₇Cl⁻.`},
+ {s:'q5',q:'Exercise 2.44: an ion of mass number 56, charge +3, with 30.4 % more neutrons than electrons. The ion is:',
+  o:['⁵⁶₂₆Fe³⁺','⁵⁶₂₃V³⁺','⁵⁶₂₉Cu³⁺'],a:0,
+  why:`Electrons = p − 3 and n = 1.304(p − 3). Then p + 1.304(p − 3) = 56 → p = ${fmt(p244,2)} ≈ 26 (iron), electrons 23, n = 30: ⁵⁶₂₆Fe³⁺.`},
+ {s:'q5',q:'¹⁴₆C and ¹⁶₈O are:',
+  o:['isotopes','isobars','isotones'],a:2,why:'Neutrons: 14 − 6 = 8 and 16 − 8 = 8. Same N, different Z and A: isotones. Build them above to check.'},
+ {s:'q6',q:'According to classical physics, why should the electron in Rutherford’s atom spiral in?',
+  o:['Gravity pulls it in','Moving in a circle it accelerates, so it radiates energy','Its charge leaks to the nucleus'],a:1,
+  why:'Circular motion means a continually changing direction, an acceleration. An accelerating charge emits electromagnetic waves (Maxwell), so the orbit shrinks. Planets are uncharged and do not have this problem.'},
+ {s:'q7',q:'Exercise 2.5: sodium yellow light, λ = 580 nm. Frequency and wavenumber?',
+  o:[`${sci(nu25,2)} Hz; ${sci(wn25,3)} cm⁻¹`,`${sci(nu25,2)} Hz; ${sci(wn25*100,3)} cm⁻¹`,`${sci(nu25/10,2)} Hz; ${sci(wn25,3)} cm⁻¹`],a:0,
+  why:`ν = c/λ = ${sci(c,3)} ÷ 580 × 10⁻⁹ = ${sci(nu25,3)} Hz. ν̄ = 1/λ = 1/(580 × 10⁻⁷ cm) = ${sci(wn25,3)} cm⁻¹. Jump to it on the spectrum strip.`},
+ {s:'q7',q:'Exercise 2.7: a light wave has period 2.0 × 10⁻¹⁰ s. Its wavelength, frequency and wavenumber?',
+  o:[`${fmt(l27*100,0)} cm; ${sci(nu27,1)} Hz; ${fmt(wn27,3)} cm⁻¹`,`${fmt(l27*100,0)} cm; ${sci(nu27,1)} Hz; ${fmt(1/l27,1)} cm⁻¹`,`${fmt(l27*1000,0)} cm; ${sci(nu27*2,1)} Hz; ${fmt(wn27,3)} cm⁻¹`],a:0,
+  why:`ν = 1/T = ${sci(nu27,1)} Hz; λ = c/ν = ${fmt(l27,3)} m = ${fmt(l27*100,0)} cm; ν̄ = 1/λ = ${fmt(wn27,3)} cm⁻¹ (= ${fmt(1/l27,1)} m⁻¹). A microwave.`},
+ {s:'q8',q:'Exercise 2.45: arrange in increasing frequency: microwave oven (a), amber traffic light (b), FM radio (c), cosmic rays (d), X-rays (e).',
+  o:['c < a < b < e < d','a < c < b < e < d','c < a < b < d < e'],a:0,
+  why:'Longest wavelength = lowest frequency: FM radio (about 3 m) < microwaves (about 12 cm) < amber light (about 600 nm) < X-rays (about 0.1 nm) < cosmic rays, the most energetic of all.'},
+ {s:'q8',q:'Exercise 2.6: energy of a photon of (i) ν = 3 × 10¹⁵ Hz and (ii) λ = 0.50 Å?',
+  o:[`${sci(E26a,3)} J; ${sci(E26b,3)} J`,`${sci(E26b,3)} J; ${sci(E26a,3)} J`,`${sci(E26a*10,3)} J; ${sci(E26b/10,3)} J`],a:0,
+  why:`(i) E = hν = ${sci(h,4)} × 3 × 10¹⁵ = ${sci(E26a,3)} J (ultraviolet). (ii) E = hc/λ = ${sci(E26b,3)} J (X-ray): shorter wavelength, bigger photon.`},
+ {s:'q9',q:'Exercise 2.8: how many photons of λ = 4000 pm provide 1 J?',
+  o:[sci(n28,3),sci(n28*1000,3),sci(n28/1000,3)],a:0,
+  why:`One photon: hc/λ = ${sci(E28,3)} J (λ = 4 × 10⁻⁹ m, soft X-ray). Photons = 1 J ÷ that = ${sci(n28,3)}.`},
+ {s:'q9',q:'Exercise 2.11: a 25 W bulb emits yellow light of λ = 0.57 µm. Photons per second?',
+  o:[sci(n211,3),sci(n211/25,3),sci(n211*1e3,3)],a:0,
+  why:`Energy per photon = hc/λ = ${sci(h*c/0.57e-6,3)} J. Rate = 25 J s⁻¹ ÷ that = ${sci(n211,3)} s⁻¹.`},
+ {s:'q10',q:'Very bright red light on potassium ejects nothing. What will eject electrons?',
+  o:['Even brighter red light','Shining the red light for longer','Weak violet or ultraviolet light'],a:2,
+  why:`Each red photon (about 1.8 eV) is below potassium's work function (${METALS.find(m=>m.s==='K').W} eV), and brightness only adds more such photons. A single photon of higher frequency is enough, at once.`},
+ {s:'q10',q:'Exercise 2.9: λ = 4 × 10⁻⁷ m on a metal with W₀ = 2.13 eV. Photon energy, KE of the electron and its speed?',
+  o:[`${fmt(E29/1.602e-19,2)} eV; ${fmt(KE29/1.602e-19,2)} eV; ${sci(v29,2)} m/s`,`${fmt(E29/1.602e-19,2)} eV; ${fmt(E29/1.602e-19+2.13,2)} eV; ${sci(v29*1.5,2)} m/s`,`${fmt(KE29/1.602e-19,2)} eV; ${fmt(E29/1.602e-19,2)} eV; ${sci(v29/2,2)} m/s`],a:0,
+  why:`E = hc/λ = ${sci(E29,3)} J = ${fmt(E29/1.602e-19,2)} eV. KE = ${fmt(E29/1.602e-19,2)} − 2.13 = ${fmt(KE29/1.602e-19,2)} eV = ${sci(KE29,3)} J. v = √(2KE/mₑ) = ${sci(v29,2)} m s⁻¹.`},
+ {s:'q10',q:'Exercise 2.10: radiation of λ = 242 nm is just enough to ionise a sodium atom. Ionisation energy in kJ mol⁻¹?',
+  o:[fmt(IE210,0),fmt(IE210/NA*1000*1e19,2),fmt(IE210*2,0)],a:0,
+  why:`Per atom: hc/λ = ${sci(h*c/242e-9,3)} J. Per mole: × N<sub>A</sub> = ${fmt(IE210,0)} kJ mol⁻¹.`},
+ {s:'q10',q:'Exercise 2.12: electrons come out with zero speed at λ = 6800 Å. Threshold frequency and work function?',
+  o:[`${sci(nu212,2)} Hz; ${sci(W212,2)} J`,`${sci(nu212*2,2)} Hz; ${sci(W212*2,2)} J`,`${sci(1/6800e-10,2)} Hz; ${sci(W212,2)} J`],a:0,
+  why:`Zero KE means hν = W₀ exactly: ν₀ = c/λ = ${sci(nu212,3)} Hz, W₀ = hν₀ = ${sci(W212,3)} J = ${fmt(W212/EV,2)} eV.`},
+ {s:'q11',q:'Which observation needs light to be particles (photons)?',
+  o:['Interference fringes','Diffraction round an edge','The photoelectric threshold frequency'],a:2,
+  why:'Interference and diffraction are wave effects. A threshold that no brightness can beat only makes sense if energy arrives in packets of hν, one packet per electron.'},
+ {s:'q12',q:'White light from a hot star passes through hydrogen in the star’s outer layers, then a prism. What do you see?',
+  o:['A rainbow with dark lines at hydrogen’s emission wavelengths','Bright lines on black','A plain rainbow'],a:0,
+  why:'The atoms absorb exactly the wavelengths they would emit, so those are missing: an absorption spectrum, the negative of the emission spectrum. Pick “All three” above to compare.'},
+ {s:'q12',q:'In 1868 the Sun’s spectrum showed a line that matched no element known on Earth. Which element was discovered this way?',
+  o:['Neon','Helium','Hydrogen'],a:1,
+  why:'Helium’s lines were seen in sunlight before helium was found on Earth: every element has its own line fingerprint.'}
+  ];
+})();
+const SUPN='⁰¹²³⁴⁵⁶⁷⁸⁹', SUBN='₀₁₂₃₄₅₆₇₈₉';
+function stackIso(s){return s.replace(/([⁰¹²³⁴⁵⁶⁷⁸⁹]+)([₀₁₂₃₄₅₆₇₈₉]+)/g,(m,a,b)=>`<span class="iso"><span>${[...a].map(c=>SUPN.indexOf(c)).join('')}</span><span>${[...b].map(c=>SUBN.indexOf(c)).join('')}</span></span>`);}
+function renderQuiz(){
+  ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11','q12'].forEach(id=>{
+    $(id).innerHTML=Q.map((q,i)=>q.s!==id?'':`<div class="panel"><p class="qn">Q${i+1}</p><p>${stackIso(q.q)}</p>
+      <div class="opts" data-i="${i}">${q.o.map((o,j)=>q.o[(j+i*2+1)%q.o.length]).map((o,j)=>{const jj=(j+i*2+1)%q.o.length;return `<button class="opt" data-j="${jj}">${stackIso(o)}</button>`;}).join('')}</div><div class="why" hidden></div></div>`).join('');
+  });
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.qgrid .opt'); if(!b||b.disabled) return;
+  const box=b.parentElement, q=Q[+box.dataset.i], j=+b.dataset.j;
+  box.querySelectorAll('.opt').forEach(x=>{const k=+x.dataset.j;x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+  const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+stackIso(q.why);
+});
+$('qreset').onclick=renderQuiz;
+renderQuiz(); document.querySelectorAll('.stackme').forEach(e=>{e.innerHTML=stackIso(e.innerHTML);}); kick();
+</script>
+</body>
+</html>

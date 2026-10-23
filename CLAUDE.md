@@ -28,6 +28,7 @@ Branches follow the syllabus split:
 **Shared topics are cross-linked, never duplicated.** When physics and chemistry (or maths) cover the same idea, it gets one home page, in the subject whose syllabus treats it most fully. The other subject's index lists it as a "shared with <subject>" row linking there, and its own modules link to it for the foundation instead of re-teaching it. Where the subjects use different conventions (e.g. the sign of work in the first law), the shared page shows both on the same picture and explains why each field chose its own. Current shared foundations:
 
 - Thermodynamics (laws, PV diagrams, engines, sign conventions) → `physics/thermodynamics/`. Chemistry-only topics (enthalpy, Hess's law, entropy and Gibbs energy of reactions, spontaneity) go in `chemistry/physical/` and link back to it.
+- Atomic structure (Bohr model, hydrogen spectrum, photoelectric effect, de Broglie, uncertainty) → `chemistry/physical/` (Class 11 Chemistry teaches it first). The Class 12 physics chapters "Atoms" and "Dual Nature of Radiation and Matter" link there and add only what is physics-only.
 
 Create a subject or branch folder only when its first module is written. File names are lowercase-kebab-case.
 
@@ -62,6 +63,7 @@ Handbook scans and coaching sites (Byju's and similar) summarise books into form
 - Every module starts with `<nav class="back"><a href="../index.html">← <Subject></a></nav>`, linking to its subject index.
 - Use relative links only, so the site works on GitHub Pages and locally.
 - Keep data in clearly marked arrays or blocks near the top of the script, so values are easy to check and update.
+- Predict-then-check options are displayed in a shuffled order (each option keeps its original index for marking), so the correct answer's position gives nothing away. Check the spread of displayed correct positions before shipping.
 - `localStorage` is only for small conveniences (remembered tab/filter). Wrap it in try/catch, and use a key unique to the module.
 
 ## Adding a module

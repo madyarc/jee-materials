@@ -10,10 +10,13 @@ Interactive pages for building intuition across the JEE syllabus (CBSE + JEE). P
 
 | # | Module | Branch | What it does |
 |---|---|---|---|
-| 01 | [Atom-Size Periodic Table](chemistry/inorganic/periodic-table.html) | Inorganic | Atoms drawn to scale; overlays for IE, ΔegH, EN, Z_eff; exception spotlight; compare two elements; trend strips |
-| 02 | [Electronic Effects Ladder](chemistry/organic/effects-ladder.html) | Organic | I / R / hyperconjugation / steric effects with Hammett σ, pKa and stability data; rank-it quizzes |
-| 03 | [Mechanism Player](chemistry/organic/mechanism-player.html) | Organic | Step-by-step curved-arrow mechanisms, energy profiles, SN1/SN2/E1/E2 decision table |
+| 01 | [Inside the Atom, and What Light Is](chemistry/physical/atom-and-light.html) | Physical | Cathode rays and e/m; Millikan; gold-foil scattering; isotopes; EM spectrum; Planck; photoelectric lab |
+| 02 | [Bohr's Atom and the Hydrogen Spectrum](chemistry/physical/bohr-model.html) | Physical | Click-to-jump energy levels with photons on a spectrum strip; series and limits; H-like ions; de Broglie on the orbit; uncertainty |
+| 03 | [Orbitals and Electron Configuration](chemistry/physical/orbitals-configuration.html) | Physical | Quantum-number address; orbital shapes and nodes; radial probability; aufbau simulator H–Kr; Cr/Cu; ions and magnetism |
 | ↗ | [Thermodynamics sign conventions](physics/thermodynamics/laws-and-pv.html#signs) | Shared with physics | Why chemistry uses ΔU = q + w and physics ΔQ = ΔU + ΔW, on one picture |
+| 04 | [Atom-Size Periodic Table](chemistry/inorganic/periodic-table.html) | Inorganic | Atoms drawn to scale; overlays for IE, ΔegH, EN, Z_eff; exception spotlight; compare two elements; trend strips |
+| 05 | [Electronic Effects Ladder](chemistry/organic/effects-ladder.html) | Organic | I / R / hyperconjugation / steric effects with Hammett σ, pKa and stability data; rank-it quizzes |
+| 06 | [Mechanism Player](chemistry/organic/mechanism-player.html) | Organic | Step-by-step curved-arrow mechanisms, energy profiles, SN1/SN2/E1/E2 decision table |
 
 ### Physics — [`physics/`](physics/index.html)
 
@@ -61,7 +64,7 @@ chemistry/
   index.html               chemistry module list
   CLAUDE.md                chemistry-specific rules
   DATA-SOURCES.md          sources and verification log
-  inorganic/  organic/  physical/
+  physical/  inorganic/  organic/  (+ SYLLABUS.md checklist)
 physics/                   mechanics/  thermodynamics/  waves/  (+ SYLLABUS.md checklist)
 maths/                     same structure: trigonometry/  algebra/ …
 ```

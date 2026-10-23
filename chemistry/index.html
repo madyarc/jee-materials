@@ -35,6 +35,7 @@ p{margin:0}
 .mod p{color:var(--muted);font-size:15px;margin-top:4px}
 .mod .tags{font:500 12px var(--f-mono);color:var(--muted);margin-top:6px}
 .planned{font-size:15px;color:var(--muted)}
+.group{font:600 12px var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 0;padding-bottom:6px;border-bottom:1px solid var(--line)}
 .planned ul{margin:6px 0 0;padding-left:18px}
 .back a{font-size:14px;color:var(--muted);text-decoration:none}
 .back a:hover{color:var(--accent)}
@@ -45,34 +46,55 @@ footer{font-size:13px;color:var(--muted)}
 <div class="wrap">
   <nav class="back"><a href="../index.html">← All subjects</a></nav>
   <header>
-    <h1>Chemistry Intuition Lab</h1>
+    <h1>Chemistry</h1>
     <p class="lede">Tools for seeing why chemistry trends happen, not just memorising them. Every number on these pages is checked against a published source, and every rule of thumb is labelled as one.</p>
   </header>
 
-  <nav class="mods" aria-label="Modules">
-    <a class="mod" href="inorganic/periodic-table.html">
+  <nav class="mods" aria-label="Modules" style="border-top:0">
+    <h3 class="group">Physical chemistry</h3>
+    <a class="mod" href="physical/atom-and-light.html">
       <span class="num">01</span>
-      <div><h2>Atom-Size Periodic Table</h2>
-      <p>Each atom drawn to scale. Overlay ionization enthalpy, electron gain enthalpy, electronegativity or Z<sub>eff</sub>, and spotlight exactly where size stops predicting the answer, with the reason.</p>
-      <p class="tags">inorganic · periodic trends</p></div>
+      <div><h2>Inside the Atom, and What Light Is</h2>
+      <p>Redo the experiments that found the electron, its charge and the nucleus: cathode rays, Millikan's drops, gold-foil scattering. Then light as a wave and as photons: the EM spectrum, Planck's quanta and a photoelectric lab.</p>
+      <p class="tags">structure of atom · photoelectric effect</p></div>
     </a>
-    <a class="mod" href="organic/effects-ladder.html">
+    <a class="mod" href="physical/bohr-model.html">
       <span class="num">02</span>
-      <div><h2>Electronic Effects Ladder</h2>
-      <p>Inductive, resonance, hyperconjugation and steric effects measured with Hammett σ, pK<sub>a</sub> and stability data. Rank each ladder yourself before revealing the answer.</p>
-      <p class="tags">organic · effects</p></div>
+      <div><h2>Bohr's Atom and the Hydrogen Spectrum</h2>
+      <p>Click two energy levels and watch the electron jump, the photon leave and the line land on the spectrum. Series and their limits, hydrogen-like ions, and why a de Broglie wave on the orbit allows only whole-number n.</p>
+      <p class="tags">Bohr model · spectra · de Broglie</p></div>
     </a>
-    <a class="mod" href="organic/mechanism-player.html">
+    <a class="mod" href="physical/orbitals-configuration.html">
       <span class="num">03</span>
-      <div><h2>Mechanism Player</h2>
-      <p>Curved-arrow mechanisms step by step: SN1, SN2, E1, E2, addition to C=C, aromatic nitration and cyanohydrin formation, plus an SN1/SN2/E1/E2 decision table.</p>
-      <p class="tags">organic · mechanisms</p></div>
+      <div><h2>Orbitals and Electron Configuration</h2>
+      <p>Build the electron cloud dot by dot, give every electron its four-quantum-number address, see orbital shapes, nodes and radial probability, then fill H to Kr box by box: Pauli, Hund, the Cr and Cu exceptions, ions and magnetism.</p>
+      <p class="tags">quantum numbers · orbitals · aufbau</p></div>
     </a>
     <a class="mod" href="../physics/thermodynamics/laws-and-pv.html#signs">
       <span class="num">↗</span>
       <div><h2>Thermodynamics: first law and sign conventions</h2>
       <p>Shared with physics. The laws, PV work and engines are taught once, on the physics pages. This link opens the section showing why chemistry writes ΔU = q + w (work done <i>on</i> the system) while physics writes ΔQ = ΔU + ΔW (work done <i>by</i> it), on the same picture.</p>
       <p class="tags">shared with physics · physical chemistry</p></div>
+    </a>
+    <h3 class="group">Inorganic chemistry</h3>
+    <a class="mod" href="inorganic/periodic-table.html">
+      <span class="num">04</span>
+      <div><h2>Atom-Size Periodic Table</h2>
+      <p>Each atom drawn to scale. Overlay ionization enthalpy, electron gain enthalpy, electronegativity or Z<sub>eff</sub>, and spotlight exactly where size stops predicting the answer, with the reason.</p>
+      <p class="tags">inorganic · periodic trends</p></div>
+    </a>
+    <h3 class="group">Organic chemistry</h3>
+    <a class="mod" href="organic/effects-ladder.html">
+      <span class="num">05</span>
+      <div><h2>Electronic Effects Ladder</h2>
+      <p>Inductive, resonance, hyperconjugation and steric effects measured with Hammett σ, pK<sub>a</sub> and stability data. Rank each ladder yourself before revealing the answer.</p>
+      <p class="tags">organic · effects</p></div>
+    </a>
+    <a class="mod" href="organic/mechanism-player.html">
+      <span class="num">06</span>
+      <div><h2>Mechanism Player</h2>
+      <p>Curved-arrow mechanisms step by step: SN1, SN2, E1, E2, addition to C=C, aromatic nitration and cyanohydrin formation, plus an SN1/SN2/E1/E2 decision table.</p>
+      <p class="tags">organic · mechanisms</p></div>
     </a>
   </nav>
 

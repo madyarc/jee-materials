@@ -22,11 +22,11 @@ Done: Ch 2–7 (all of mechanics), Ch 10–12 (thermal physics), Ch 13–14 (osc
 
 ## Chemistry
 
-Done: Ch 3 (periodic trends), Ch 8 (electronic effects, mechanisms), thermodynamics shared via physics.
+Done: Ch 2 Structure of atom, Ch 3 (periodic trends), Ch 8 (electronic effects, mechanisms), thermodynamics shared via physics.
 
 | NCERT chapter | What's left | Visual value | Why |
 |---|---|---|---|
-| 2 Structure of atom | Bohr model and hydrogen spectrum (series as energy-level jumps), de Broglie, quantum numbers, orbital shapes (s, p, d), nodes, aufbau / Hund / Pauli filling | ★★★ | Orbitals and energy-level jumps are the textbook case for graphics |
+| ✅ 2 Structure of atom | Bohr model and hydrogen spectrum (series as energy-level jumps), de Broglie, quantum numbers, orbital shapes (s, p, d), nodes, aufbau / Hund / Pauli filling | ★★★ | Orbitals and energy-level jumps are the textbook case for graphics |
 | 4 Chemical bonding | VSEPR shapes (3D, rotatable), hybridisation, sigma/pi overlap, MO diagrams and bond order (O₂ paramagnetism), dipole moments, hydrogen bonding | ★★★ | 3D shapes and MO filling are hard to see on paper |
 | 6 Equilibrium | Dynamic equilibrium, Q vs K, Le Chatelier (push the system, watch it respond), pH scale, weak acids/bases, buffers, common-ion effect, Ksp | ★★★ | Le Chatelier and buffers are intuitive once animated; heavy JEE weight |
 | 5 Thermodynamics (chemistry-only parts) | Enthalpy, Hess's law as energy cycles, bond enthalpies, Born–Haber cycle, entropy, Gibbs energy and spontaneity (ΔH–TΔS map) | ★★★ | Energy-cycle diagrams; links to the shared physics pages |

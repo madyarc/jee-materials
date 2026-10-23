@@ -1,0 +1,1054 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Orbitals and Electron Configuration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Math&family=Noto+Sans+Symbols+2&text=%E2%86%90%E2%86%91%E2%86%92%E2%86%93%E2%86%94%E2%86%97%E2%87%8C%E2%87%92%E2%87%94%E2%88%82%E2%88%88%E2%88%92%E2%88%93%E2%88%9A%E2%88%9D%E2%88%9E%E2%88%AB%E2%89%88%E2%89%A0%E2%89%A1%E2%89%A4%E2%89%A5%E2%89%AA%E2%89%AB%E2%8A%95%E2%8A%97%E2%8A%99%E2%8A%A5%E2%96%B2%E2%96%B6%E2%97%80%E2%97%8B%E2%97%8F%E2%9C%93%E2%9C%97%E2%9D%9A%E2%9F%82%E2%9F%A8%E2%9F%A9&display=swap">
+<style>
+html,body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+
+/* Layout: (1) orbit vs orbital, dot sampling  (2) quantum-number address builder  (3) orbital shapes, slices with nodes
+   (4) radial probability plots  (5) orbital energies, H vs multi-electron, (n + l)  (6) aufbau simulator to Kr
+   (7) Cr and Cu, exchange pairs  (8) ions and magnetism */
+:root{
+  --bg:#f5f6f9; --surface:#ffffff; --ink:#1a2130; --muted:#5a6375; --line:#dce0e8;
+  --accent:#2c56cc; --flag:#cf3f33; --ok:#2d8a4e;
+  --e:#2c56cc; --nuc:#cf3f33; --neu:#5a6375; --photon:#b8860b;
+  --ph1:#2c56cc; --ph2:#c7741a;
+  --s:#1f8f87; --p:#7a52c7; --d:#c7741a; --f:#b0377a;
+  --f-display:"Bricolage Grotesque","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Math","Noto Sans Symbols 2",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono","Noto Sans Math","Noto Sans Symbols 2",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --e:#7d9dff; --nuc:#ff7b6f; --neu:#97a0b0; --photon:#e0b84a;
+  --ph1:#7d9dff; --ph2:#f0a04b;
+  --s:#3cb8ad; --p:#a585f0; --d:#f0a04b; --f:#e86fae; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f131a; --surface:#161b24; --ink:#e5e8ee; --muted:#97a0b0; --line:#29303c;
+  --accent:#7d9dff; --flag:#ff7b6f; --ok:#5cc983;
+  --e:#7d9dff; --nuc:#ff7b6f; --neu:#97a0b0; --photon:#e0b84a;
+  --ph1:#7d9dff; --ph2:#f0a04b;
+  --s:#3cb8ad; --p:#a585f0; --d:#f0a04b; --f:#e86fae; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 4px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--muted)}
+.muted{color:var(--muted);font-size:13.5px}
+.hw{font:500 11px var(--f-mono);color:var(--flag);border:1px solid var(--flag);border-radius:4px;padding:0 5px;white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.split{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;height:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.chip:focus-visible,.btn:focus-visible,.opt:focus-visible,.el:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:500 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.btn[disabled]{opacity:.45;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.big{font:600 18px var(--f-display)}
+.cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
+.cap.key{border-left-color:var(--accent)}
+.cap.warn{border-left-color:var(--flag)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;margin-right:5px;vertical-align:3px}
+.verdict{padding:8px 10px;border-radius:8px;background:var(--bg);font-size:14px}
+svg text{font-family:var(--f-body)}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.qn{font:600 12px var(--f-mono);color:var(--accent);margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.opt{text-align:left;font:500 14px var(--f-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--flag);color:var(--flag)}
+.why{margin-top:8px;border-left:3px solid var(--ok);padding:4px 0 4px 10px;font-size:14px}
+footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.back a{font:500 13px var(--f-body);color:var(--accent);text-decoration:none}.back a:hover{text-decoration:underline}
+.drag{cursor:ew-resize;touch-action:none}
+.step{display:inline-flex;align-items:center;gap:8px}
+.step .btn{min-width:34px;font:600 15px var(--f-mono);padding:4px 8px}
+.step output{font:500 14px var(--f-mono);min-width:9ch;text-align:center}
+.steps{display:grid;grid-template-columns:auto auto;gap:6px 12px;align-items:center;justify-content:start}
+.steps>span:nth-child(odd){color:var(--muted);font-size:13.5px}
+/* nested address */
+.addr{border:2px solid var(--line);border-radius:10px;padding:6px 8px 8px;font-size:13px}
+.addr .lab{font:500 12.5px var(--f-mono);display:block;margin-bottom:4px}
+.addr.bad{border-color:var(--flag);border-style:dashed}
+.addr.bad>.lab{color:var(--flag)}
+/* shape viewer */
+.shape{position:relative;width:100%;max-width:380px;aspect-ratio:1;margin:0 auto}
+.shape canvas,.shape svg{position:absolute;inset:0;width:100%;height:100%}
+/* periodic strip */
+.ptab{display:grid;grid-template-columns:repeat(18,minmax(28px,1fr));gap:3px;min-width:560px}
+.el{font:500 12px var(--f-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-bottom-width:3px;border-radius:5px;padding:4px 0;cursor:pointer;text-align:center}
+.el[aria-pressed="true"]{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.el.xs{outline:1.5px dashed var(--flag);outline-offset:1px}
+sup{font-size:.72em;line-height:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="back"><a href="../index.html">← Chemistry</a></nav>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <h1>Orbitals and Electron Configuration</h1>
+    <p class="lede">Bohr gave the electron a track. Quantum mechanics replaced the track with a cloud: you can only say how likely the electron is to be found at each place. This page builds that cloud, gives every orbital its address (n, l, m<sub>l</sub>, m<sub>s</sub>), shows the shapes and their nodes, and then fills the orbitals of every element from hydrogen to krypton, including the two that break the pattern.</p>
+  </header>
+
+  <!-- 1 · orbit vs orbital -->
+  <section class="stack">
+    <div>
+      <h2>1 · An orbit or an orbital?</h2>
+      <p class="lede">Left: Bohr’s hydrogen atom, a definite circular path. Right: what you would get if you could catch a 1s electron again and again and mark where it was each time. Press <b>Measure</b> and watch the picture build up.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="oo" viewBox="0 0 640 330" role="img" aria-label="A Bohr orbit beside a dot cloud of electron positions" style="min-width:560px"></svg></div>
+        <div class="row"><button class="btn primary" id="ooplay">Play</button>
+          <button class="btn" id="m1">Measure once</button><button class="btn" id="m100">Measure ×100</button><button class="btn" id="m1000">×1000</button><button class="btn" id="mclr">Clear</button></div>
+        <div class="row"><label class="muted"><input type="checkbox" id="o90"> boundary sphere (90 %)</label><label class="muted"><input type="checkbox" id="oa0"> Bohr radius a₀</label></div>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="ookv"></dl>
+        <p class="cap key" id="oocap"></p>
+        <p class="cap">An <b>orbital</b> is a wave function ψ, one of the solutions of the Schrödinger equation for the electron. ψ itself has no physical meaning. <b>|ψ|²</b> is the <b>probability density</b>: the probability per unit volume. Probability of finding the electron in a small volume = |ψ|² × that volume.</p>
+        <p class="cap">An <b>orbit</b> needs the exact position and the exact velocity at every instant. The uncertainty principle forbids knowing both, so a Bohr orbit can never be observed (see <a href="bohr-model.html">Bohr’s model</a>).</p>
+      </div>
+    </div>
+    <p class="cap">Why draw a boundary at 90 % and not 100 %? |ψ|² falls off with distance but never becomes exactly zero, so no sphere of finite size holds the electron for certain. The 90 % surface is the conventional “shape” of an orbital.</p>
+    <div class="qgrid" id="q1"></div>
+  </section>
+
+  <!-- 2 · quantum numbers -->
+  <section class="stack">
+    <div>
+      <h2>2 · Four quantum numbers: an address</h2>
+      <p class="lede">Each electron in an atom has an address, like house → floor → flat → bed. Shell n, then subshell l, then orbital m<sub>l</sub>, then spin m<sub>s</sub>. Step the numbers, including values that are not allowed, and see what the atom accepts.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="qt" viewBox="0 0 440 250" role="img" aria-label="All orbitals of one shell, arranged by subshell" style="min-width:380px"></svg></div>
+        <div class="legend"><span>each box = one orbital (holds 2 electrons, ↑↓)</span><span>boxes stacked by m<sub>l</sub></span></div>
+      </div>
+      <div class="panel stack">
+        <div class="steps">
+          <span>principal n</span><span class="step"><button class="btn" id="nd" aria-label="decrease n">−</button><output id="no"></output><button class="btn" id="nu" aria-label="increase n">+</button></span>
+          <span>azimuthal l</span><span class="step"><button class="btn" id="ld" aria-label="decrease l">−</button><output id="lo"></output><button class="btn" id="lu" aria-label="increase l">+</button></span>
+          <span>magnetic m<sub>l</sub></span><span class="step"><button class="btn" id="md" aria-label="decrease m l">−</button><output id="mo"></output><button class="btn" id="mu" aria-label="increase m l">+</button></span>
+          <span>spin m<sub>s</sub></span><span class="chips" id="msc" role="group" aria-label="spin"><button class="chip" data-k="1">+½ ↑</button><button class="chip" data-k="-1">−½ ↓</button></span>
+        </div>
+        <div id="addr"></div>
+        <p class="cap key" id="qcap"></p>
+        <dl class="kv" id="qkv"></dl>
+      </div>
+    </div>
+    <p class="cap">The rules come out of solving the Schrödinger equation: <b>n = 1, 2, 3 …</b> (shell K, L, M, N…: size and, mostly, energy); <b>l = 0 … n − 1</b> (shape: s, p, d, f, g); <b>m<sub>l</sub> = −l … +l</b>, so 2l + 1 orbitals in a subshell (orientation); <b>m<sub>s</sub> = ±½</b>, the electron’s own spin. Spin was added in 1925 (Uhlenbeck and Goudsmit) because some spectral lines turned out to be close doublets that n, l, m<sub>l</sub> could not explain. The “spinning top” picture of spin is only a picture: spin is a built-in property, like charge.</p>
+    <div class="qgrid" id="q2"></div>
+  </section>
+
+  <!-- 3 · shapes -->
+  <section class="stack">
+    <div>
+      <h2>3 · Shapes and nodes</h2>
+      <p class="lede">A thin slice through the nucleus. Dot density ∝ |ψ|², the colour is the sign (phase) of ψ. Pick an orbital, count its nodes (places where the dots vanish), then reveal.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="shc" role="group" aria-label="Orbital"></div>
+        <div class="shape"><canvas id="shcv" aria-hidden="true"></canvas><svg id="shsv" viewBox="0 0 360 360" role="img" aria-label="Cross-section of the chosen orbital"></svg></div>
+        <div class="legend"><span><i style="background:var(--ph1);height:8px;border-radius:4px"></i>ψ positive</span><span><i style="background:var(--ph2);height:8px;border-radius:4px"></i>ψ negative</span><span><i style="background:var(--ink);height:1px;border-top:1px dashed var(--ink)"></i>node</span></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="shname"></p>
+        <div class="row"><button class="btn primary" id="shrev">Reveal the nodes</button><label class="muted"><input type="checkbox" id="shall"> always show</label></div>
+        <dl class="kv" id="shkv"></dl>
+        <p class="cap key" id="shcap"></p>
+        <p class="cap">Colours are the sign of ψ, not charge: the electron cloud is all negative. The sign matters later, when orbitals overlap to form bonds.</p>
+      </div>
+    </div>
+    <p class="cap">Node counting: <b>radial nodes = n − l − 1</b> (spheres), <b>angular nodes = l</b> (planes, or the two cones of d<sub>z²</sub>), <b>total = n − 1</b>. The three p orbitals are the same shape pointing along x, y and z; four d orbitals are four-leaf clovers and d<sub>z²</sub> is a dumbbell with a ring. All five 3d orbitals have the same energy in a free atom. There is no simple match between m<sub>l</sub> = −1, 0, +1 and the labels x, y, z.</p>
+    <div class="qgrid" id="q3"></div>
+  </section>
+
+  <!-- 4 · radial -->
+  <section class="stack">
+    <div>
+      <h2>4 · How far from the nucleus? Radial probability</h2>
+      <p class="lede">|ψ|² of a 1s electron is largest right at the nucleus, yet the most likely <i>distance</i> is a₀ = 52.9 pm. Both are true. The plot adds up the probability in a thin shell of radius r: |ψ|² × the shell’s area 4πr². Drag the line to measure how much of the cloud lies inside it.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="row"><span class="muted" style="min-width:2.4em">A</span><div class="chips" id="ra" role="group" aria-label="Orbital A"></div></div>
+        <div class="row"><span class="muted" style="min-width:2.4em">B</span><div class="chips" id="rb" role="group" aria-label="Orbital B"></div></div>
+        <div class="svgbox"><svg id="rp" viewBox="0 0 640 300" role="img" aria-label="Radial probability distributions" style="min-width:440px"></svg></div>
+        <div class="legend" id="rleg"></div>
+        <label class="muted"><input type="checkbox" id="rpsi"> also show |ψ|² of A along a line from the nucleus (scaled to fit)</label>
+        <h3>ψ itself, and ψ², for 1s and 2s</h3>
+        <div class="svgbox"><svg id="rwf" viewBox="0 0 640 200" role="img" aria-label="Wave function and its square for 1s and 2s" style="min-width:440px"></svg></div>
+        <p class="muted">Along a line from the nucleus; each curve scaled to fit. ψ of 2s changes sign at its node; ψ² cannot be negative, so it just touches zero there.</p>
+      </div>
+      <div class="panel stack">
+        <dl class="kv" id="rkv"></dl>
+        <p class="cap key" id="rcap"></p>
+        <h3>Why the peak is not at the nucleus (orbital A)</h3>
+        <div class="svgbox"><svg id="rprod" viewBox="0 0 320 170" role="img" aria-label="Probability density times shell area"></svg></div>
+        <div class="legend"><span><i style="background:var(--muted)"></i>|ψ|² (falls)</span><span><i style="background:var(--ink);height:1px"></i>4πr² (grows)</span><span><i style="background:var(--accent)"></i>product</span></div>
+      </div>
+    </div>
+    <p class="cap"><b>Penetration.</b> Compare 2s with 2p (or 3s, 3p, 3d; or 4s with 3d). The s curve has small inner humps close to the nucleus. An outer electron in an s orbital spends part of its time <i>inside</i> the inner shells, where it feels more of the nuclear charge. So s electrons are shielded less and held more tightly than p, and p more than d: s &lt; p &lt; d in energy for the same n. That is why 4s fills before 3d. Effective nuclear charge across the periodic table: <a href="../inorganic/periodic-table.html">Atom-Size Periodic Table</a>.</p>
+    <div class="qgrid" id="q4"></div>
+  </section>
+
+  <!-- 5 · energies -->
+  <section class="stack">
+    <div>
+      <h2>5 · Orbital energies: hydrogen vs everything else</h2>
+      <p class="lede">With one electron, energy depends on n only: 2s and 2p are the same (degenerate). With more electrons, repulsion and shielding split each shell, and the levels can overtake those of the next shell. Step through the filling order.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="svgbox"><svg id="en" viewBox="0 0 640 360" role="img" aria-label="Energy ladders for hydrogen and for many-electron atoms" style="min-width:460px"></svg></div>
+        <div class="row"><button class="btn" id="eb" aria-label="previous">◀</button><button class="btn primary" id="ef">Fill next ▶</button><button class="btn" id="er">Restart</button></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="ebig"></p>
+        <p class="cap key" id="ecap"></p>
+        <p class="cap"><span class="hw">rule of thumb</span> <b>(n + l) rule:</b> lower n + l fills first; on a tie, lower n first. It is a guide, not a law: the real order depends on the atom, and exceptions exist (section 7).</p>
+        <p class="cap">The energy of the same orbital falls as the nuclear charge grows: E<sub>2s</sub>(H) &gt; E<sub>2s</sub>(Li) &gt; E<sub>2s</sub>(Na) &gt; E<sub>2s</sub>(K). In hydrogen, 1s is the ground state; an electron in 2s, 2p or higher is in an excited state.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q5"></div>
+  </section>
+
+  <!-- 6 · aufbau -->
+  <section class="stack">
+    <div>
+      <h2>6 · Build the atoms, H to Kr</h2>
+      <p class="lede">Three rules fill the boxes. <b>Aufbau:</b> lowest energy first. <b>Pauli:</b> at most two electrons per orbital, with opposite spins (no two electrons share all four quantum numbers). <b>Hund:</b> in a set of equal-energy orbitals, spread out with parallel spins before pairing. Pick an element, or switch on “I place it” and put the next electron in yourself.</p>
+    </div>
+    <div class="panel stack">
+      <div class="svgbox"><div class="ptab" id="ptab" role="group" aria-label="Elements 1 to 36"></div></div>
+      <div class="row"><span class="step"><button class="btn" id="zd" aria-label="previous element">−</button><output id="zo" style="min-width:13ch"></output><button class="btn" id="zu" aria-label="next element">+</button></span>
+        <label class="muted"><input type="checkbox" id="zplace"> I place the next electron</label></div>
+      <div class="svgbox"><svg id="bx" viewBox="0 24 640 226" style="max-width:780px;margin:0 auto;min-width:520px" role="img" aria-label="Orbital box diagram"></svg></div>
+      <p class="verdict" id="zmsg"></p>
+    </div>
+    <div class="two">
+      <div class="panel stack"><dl class="kv" id="zkv"></dl></div>
+      <div class="panel stack">
+        <p class="cap">Boxes are drawn in filling order and climb with energy (schematic, not to scale). The electrons in the noble-gas core ([He], [Ne], [Ar]) are <b>core electrons</b>; those added in the outermost shell are <b>valence electrons</b>, and they decide the chemistry: why Na reacts like K, why Ne and Ar hardly react at all.</p>
+        <p class="cap">After Kr the same pattern repeats: 5s, 4d, 5p (Rb to Xe); then 6s, 4f, 5d, 6p; then 7s, 5f, 6d.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q6"></div>
+  </section>
+
+  <!-- 7 · Cr and Cu -->
+  <section class="stack">
+    <div>
+      <h2>7 · Chromium and copper break the pattern</h2>
+      <p class="lede">The filling order predicts Cr = [Ar] 3d⁴4s² and Cu = [Ar] 3d⁹4s². Spectroscopy finds 3d⁵4s¹ and 3d¹⁰4s¹: one 4s electron moves into 3d. 4s and 3d are so close in energy here that a small extra stability tips the balance.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="xc" role="group" aria-label="Element"><button class="chip" data-k="24">Chromium</button><button class="chip" data-k="29">Copper</button></div>
+        <div class="svgbox"><svg id="xs" viewBox="0 0 640 300" role="img" aria-label="Exchange pairs in the expected and actual configurations" style="min-width:460px"></svg></div>
+        <p class="muted">Each arc joins two 3d electrons with the same spin: one possible exchange (as in NCERT’s exchange diagram).</p>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="xbig"></p>
+        <p class="cap key" id="xcap"></p>
+        <p class="cap"><span class="hw">textbook explanation</span> Half-filled (d⁵) and full (d¹⁰) subshells are extra stable because (i) the electrons are spread symmetrically and shield each other little, (ii) there is less repulsion, and (iii) the number of same-spin pairs that can exchange places, and so the exchange energy, is largest. Exchange energy is also the reason behind Hund’s rule. A full account needs more quantum mechanics than this counting.</p>
+        <p class="cap">Lower in the table: Mo (4d⁵5s¹) and Ag (4d¹⁰5s¹) copy Cr and Cu, and Pd (4d¹⁰5s⁰) fits the full-subshell idea by giving up both 5s electrons. But W (5d⁴6s²) is <i>not</i> half-filled, although it sits below Cr. For these heavier atoms the levels are so close that no simple rule predicts them. Learn Cr and Cu; treat the heavier ones as data.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q7"></div>
+  </section>
+
+  <!-- 8 · ions -->
+  <section class="stack">
+    <div>
+      <h2>8 · Ions and magnetism <span class="hw">JEE</span></h2>
+      <p class="lede">Filling goes 4s before 3d, but when a transition metal forms a cation the <b>4s electrons leave first</b>: they are the outermost (highest n). Once 3d is occupied it lies below 4s. Pick an atom and a charge.</p>
+    </div>
+    <div class="split">
+      <div class="panel stack">
+        <div class="chips" id="ipre" role="group" aria-label="Preset ions"></div>
+        <div class="row"><span class="step"><button class="btn" id="izd" aria-label="previous element">−</button><output id="izo" style="min-width:5ch"></output><button class="btn" id="izu" aria-label="next element">+</button></span>
+          <span class="muted">charge</span><span class="step"><button class="btn" id="icd" aria-label="lower charge">−</button><output id="ico" style="min-width:4ch"></output><button class="btn" id="icu" aria-label="higher charge">+</button></span></div>
+        <div class="svgbox"><svg id="ibx" viewBox="0 16 640 234" role="img" aria-label="Orbital boxes of the ion" style="min-width:520px"></svg></div>
+        <div class="legend"><span><span style="color:var(--e);font-weight:600">↑↓</span> electrons in the ion</span><span><span style="color:var(--flag);font-weight:600">1 2</span> removed, in this order</span><span><span style="color:var(--ok);font-weight:600">↑</span> added (anion)</span></div>
+      </div>
+      <div class="panel stack">
+        <p class="big" id="ibig"></p>
+        <dl class="kv" id="ikv"></dl>
+        <p class="cap key" id="icap"></p>
+        <p class="cap"><span class="hw">spin-only formula</span> Unpaired electrons make a substance <b>paramagnetic</b> (drawn into a magnet); all paired means <b>diamagnetic</b>. For 3d ions the magnetic moment is close to the spin-only value <b>µ = √(n(n + 2)) BM</b>, n = number of unpaired electrons.</p>
+      </div>
+    </div>
+    <div class="qgrid" id="q8"></div>
+    <div><button class="btn" id="qreset">Reset all answers</button></div>
+  </section>
+
+  <p class="cap">Before this: <a href="atom-and-light.html">The Atom and Light</a> and <a href="bohr-model.html">Bohr’s Model</a>. Where these configurations lead: <a href="../inorganic/periodic-table.html">Atom-Size Periodic Table</a> (size, ionization enthalpy and Z<sub>eff</sub> trends).</p>
+
+  <footer>
+    <p><b>Models used:</b> shapes, nodes and radial curves are the exact hydrogen-atom orbitals (one electron, Z = 1, r in units of the Bohr radius a₀ = 52.9 pm); orbitals of other atoms are similar but contracted, so they are used here as a model. Dot pictures are random samples of |ψ|²: a thin slice through the nucleus in section 3, and the full cloud seen from one side in section 1. Energy ladders for many-electron atoms and box heights are schematic, not to scale. Configurations are for free gaseous atoms and ions in their ground state. Magnetic moments: spin-only approximation.</p>
+    <p><b>Based on:</b> NCERT Chemistry Class 11, “Structure of Atom”; NCERT Chemistry Class 12, “The d- and f-Block Elements” (ions, magnetic moment); P. W. Atkins, <i>Physical Chemistry</i> (hydrogen-atom wave functions). Ground-state configurations as measured by atomic spectroscopy (NIST atomic spectra data).</p>
+  </footer>
+</div>
+
+<script>
+/* =================== DATA =================== */
+/* Ground-state configurations of the free atoms, Z = 1–36 (NIST Atomic Spectra Database, ground configurations). */
+const ELEMENTS=[
+ ['H','Hydrogen','1s1'],['He','Helium','1s2'],
+ ['Li','Lithium','[He] 2s1'],['Be','Beryllium','[He] 2s2'],['B','Boron','[He] 2s2 2p1'],['C','Carbon','[He] 2s2 2p2'],
+ ['N','Nitrogen','[He] 2s2 2p3'],['O','Oxygen','[He] 2s2 2p4'],['F','Fluorine','[He] 2s2 2p5'],['Ne','Neon','[He] 2s2 2p6'],
+ ['Na','Sodium','[Ne] 3s1'],['Mg','Magnesium','[Ne] 3s2'],['Al','Aluminium','[Ne] 3s2 3p1'],['Si','Silicon','[Ne] 3s2 3p2'],
+ ['P','Phosphorus','[Ne] 3s2 3p3'],['S','Sulphur','[Ne] 3s2 3p4'],['Cl','Chlorine','[Ne] 3s2 3p5'],['Ar','Argon','[Ne] 3s2 3p6'],
+ ['K','Potassium','[Ar] 4s1'],['Ca','Calcium','[Ar] 4s2'],['Sc','Scandium','[Ar] 3d1 4s2'],['Ti','Titanium','[Ar] 3d2 4s2'],
+ ['V','Vanadium','[Ar] 3d3 4s2'],['Cr','Chromium','[Ar] 3d5 4s1'],['Mn','Manganese','[Ar] 3d5 4s2'],['Fe','Iron','[Ar] 3d6 4s2'],
+ ['Co','Cobalt','[Ar] 3d7 4s2'],['Ni','Nickel','[Ar] 3d8 4s2'],['Cu','Copper','[Ar] 3d10 4s1'],['Zn','Zinc','[Ar] 3d10 4s2'],
+ ['Ga','Gallium','[Ar] 3d10 4s2 4p1'],['Ge','Germanium','[Ar] 3d10 4s2 4p2'],['As','Arsenic','[Ar] 3d10 4s2 4p3'],
+ ['Se','Selenium','[Ar] 3d10 4s2 4p4'],['Br','Bromine','[Ar] 3d10 4s2 4p5'],['Kr','Krypton','[Ar] 3d10 4s2 4p6']
+];
+/* Ground configurations of gaseous 3d-metal cations, charges +1 to +3 (NIST ASD). Main-group ions follow the simple rule. */
+const ION_NIST={
+ 'Sc1':'[Ar] 3d1 4s1','Sc2':'[Ar] 3d1','Sc3':'[Ar]',
+ 'Ti1':'[Ar] 3d2 4s1','Ti2':'[Ar] 3d2','Ti3':'[Ar] 3d1',
+ 'V1':'[Ar] 3d4','V2':'[Ar] 3d3','V3':'[Ar] 3d2',
+ 'Cr1':'[Ar] 3d5','Cr2':'[Ar] 3d4','Cr3':'[Ar] 3d3',
+ 'Mn1':'[Ar] 3d5 4s1','Mn2':'[Ar] 3d5','Mn3':'[Ar] 3d4',
+ 'Fe1':'[Ar] 3d6 4s1','Fe2':'[Ar] 3d6','Fe3':'[Ar] 3d5',
+ 'Co1':'[Ar] 3d8','Co2':'[Ar] 3d7','Co3':'[Ar] 3d6',
+ 'Ni1':'[Ar] 3d9','Ni2':'[Ar] 3d8','Ni3':'[Ar] 3d7',
+ 'Cu1':'[Ar] 3d10','Cu2':'[Ar] 3d9','Cu3':'[Ar] 3d8',
+ 'Zn1':'[Ar] 3d10 4s1','Zn2':'[Ar] 3d10','Zn3':'[Ar] 3d9'
+};
+/* Nonmetals that form common anions, and the most negative charge allowed here */
+const ANION={H:1,N:3,O:2,F:1,P:3,S:2,Cl:1,As:3,Se:2,Br:1};
+const A0_PM=52.9177210903;        /* Bohr radius, CODATA 2018, pm */
+const E_H_EV=13.598434599702;     /* ionization energy of H, NIST ASD, eV */
+const EV_J=1.602176634e-19;       /* J per eV, exact */
+const FILL=['1s','2s','2p','3s','3p','4s','3d','4p','5s','4d','5p','6s','4f','5d','6p','7s']; /* NCERT order */
+const SHOWN=['1s','2s','2p','3s','3p','4s','3d','4p'];  /* subshells drawn in the box diagrams */
+
+/* =================== HELPERS =================== */
+const $=id=>document.getElementById(id);
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NS='http://www.w3.org/2000/svg', TAU=2*Math.PI;
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function txt(parent,attrs,s){const t=el('text',attrs,parent);t.textContent=s;return t;}
+function set(e,attrs){for(const k in attrs)e.setAttribute(k,attrs[k]);}
+function store(k,v){try{localStorage.setItem('at3-'+k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem('at3-'+k);}catch(e){return null;}}
+function press(box,k){box.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===String(k)));}
+const fmt=(v,d)=>(+v).toFixed(d);
+const LET='spdfgh';
+const SUPD={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','+':'⁺','-':'⁻'};
+const sup=s=>String(s).split('').map(c=>SUPD[c]||c).join('');
+const ionName=(sym,q)=>sym+(q===0?'':sup((Math.abs(q)>1?Math.abs(q):'')+(q>0?'+':'-')));
+const subN=s=>+s[0], subL=s=>LET.indexOf(s[1]), cap=s=>2*(2*subL(s)+1);
+const lCol=l=>['var(--s)','var(--p)','var(--d)','var(--f)','var(--muted)','var(--muted)'][l];
+const fact=n=>{let f=1;for(let i=2;i<=n;i++)f*=i;return f;};
+const comb=(a,b)=>b<0||b>a?0:fact(a)/(fact(b)*fact(a-b));
+/* hydrogen radial function R_nl(r)/r^l, Z = 1, r in a0 (associated Laguerre form, Atkins) */
+function Rred(n,l,r){const rho=2*r/n, a=2*l+1, m=n-l-1; let L=0;
+  for(let k=0;k<=m;k++) L+=(k%2?-1:1)*comb(m+a,m-k)*Math.pow(rho,k)/fact(k);
+  const N=Math.sqrt(Math.pow(2/n,3)*fact(n-l-1)/(2*n*fact(n+l)));
+  return N*Math.exp(-rho/2)*Math.pow(2/n,l)*L;}
+const Rnl=(n,l,r)=>Rred(n,l,r)*Math.pow(r,l);
+const Prad=(n,l,r)=>{const R=Rnl(n,l,r);return r*r*R*R;};   /* radial probability, ∫P dr = 1 */
+const RN={};function radialNodes(n,l){if(RN[n+''+l])return RN[n+''+l];const out=[];let prev=Rred(n,l,1e-6);
+  for(let r=0.01;r<80;r+=0.01){const v=Rred(n,l,r);if(v*prev<0){let a=r-0.01,b=r;for(let i=0;i<40;i++){const m=(a+b)/2;if(Rred(n,l,a)*Rred(n,l,m)<=0)b=m;else a=m;}out.push((a+b)/2);}prev=v;}
+  return RN[n+''+l]=out;}
+function cumP(n,l,R){let s=0;const h=0.005;for(let r=h/2;r<R;r+=h)s+=Prad(n,l,r)*h;return s;}
+const PK={};function peakR(n,l){const key=n+''+l;if(key in PK)return PK[key];let best=0,br=0;for(let r=0.005;r<80;r+=0.005){const p=Prad(n,l,r);if(p>best){best=p;br=r;}}let a=br-0.01,b=br+0.01;for(let i=0;i<60;i++){const m1=a+(b-a)/3,m2=b-(b-a)/3;if(Prad(n,l,m1)<Prad(n,l,m2))a=m1;else b=m2;}return PK[key]=(a+b)/2;}
+function pathOf(f,x0,x1,N,sx,sy){let d='';for(let i=0;i<=N;i++){const x=x0+(x1-x0)*i/N;d+=(i?'L':'M')+sx(x).toFixed(1)+' '+sy(f(x)).toFixed(1);}return d;}
+function arrowD(x1,y1,x2,y2,h){const a=Math.atan2(y2-y1,x2-x1);return `M${x1} ${y1}L${x2} ${y2}M${x2-h*Math.cos(a-0.45)} ${y2-h*Math.sin(a-0.45)}L${x2} ${y2}L${x2-h*Math.cos(a+0.45)} ${y2-h*Math.sin(a+0.45)}`;}
+/* configurations */
+const CORE={'[He]':'1s2','[Ne]':'1s2 2s2 2p6','[Ar]':'1s2 2s2 2p6 3s2 3p6'};
+function parseCfg(s){const occ={};s.replace(/\[(He|Ne|Ar)\]/,m=>CORE[m]).trim().split(/\s+/).forEach(t=>{if(t)occ[t.slice(0,2)]=+t.slice(2);});return occ;}
+function aufbau(nE){const occ={};let left=nE;for(const s of FILL){if(left<=0)break;const k=Math.min(cap(s),left);occ[s]=k;left-=k;}return occ;}
+const sortNL=a=>a.sort((x,y)=>subN(x)-subN(y)||subL(x)-subL(y));
+function cfgHTML(occ,core){ /* written in order of n, then l (NCERT Table 2.6 style) */
+  let keys=sortNL(Object.keys(occ).filter(k=>occ[k]>0)), pre='';
+  if(core){for(const c of ['[Ar]','[Ne]','[He]']){const co=parseCfg(c);if(Object.keys(co).every(k=>occ[k]===co[k])&&keys.some(k=>!(k in co))){keys=keys.filter(k=>!(k in co));pre=c+' ';break;}}}
+  return (pre+keys.map(k=>`${k}<sup>${occ[k]}</sup>`).join(' ')).trim()||'(no electrons)';}
+const nElec=occ=>Object.values(occ).reduce((a,b)=>a+b,0);
+function unpaired(occ){let u=0;for(const s in occ){const k=2*subL(s)+1, c=occ[s];u+=c<=k?c:2*k-c;}return u;}
+function sameOcc(a,b){const ks=new Set([...Object.keys(a),...Object.keys(b)]);for(const k of ks)if((a[k]||0)!==(b[k]||0))return false;return true;}
+function blockOf(Z){const occ=aufbau(Z);let last='1s';for(const s of FILL)if(occ[s])last=s;return last[1];}
+/* one animation loop (from the house style) */
+const SCENES=[]; let lastTs=0, looping=false;
+function loop(ts){const dt=lastTs?Math.min(0.05,(ts-lastTs)/1000):0; lastTs=ts; let any=false;
+  SCENES.forEach(s=>{if(s.on&&s.vis){s.tick(dt);any=true;}}); if(any) requestAnimationFrame(loop); else {looping=false;lastTs=0;}}
+function kick(){if(!looping){looping=true;lastTs=0;requestAnimationFrame(loop);}}
+function scene(svg,btn,tick,startOn){
+  const s={on:startOn===undefined?!RM:(startOn&&!RM),vis:true,tick,btn};
+  SCENES.push(s); const lab=()=>{btn.textContent=s.on?'Pause':'Play';}; lab();
+  btn.addEventListener('click',()=>{s.on=!s.on;lab();kick();});
+  if('IntersectionObserver' in window){new IntersectionObserver(es=>{es.forEach(e=>{s.vis=e.isIntersecting;});kick();}).observe(svg);}
+  return s;
+}
+
+/* =================== BOX DIAGRAM (sections 6 and 8) =================== */
+const BW=28, BH=26, GAP=14;
+const layoutFor=order=>{const L={};let x=(640-(18*BW+7*GAP))/2;
+  order.forEach((s,i)=>{const k=2*subL(s)+1;L[s]={x,y:196-i*22,k};x+=k*BW+GAP;});return L;};
+const ION_ORDER=['1s','2s','2p','3s','3p','3d','4s','4p'];  /* energy order once 3d is occupied (ions of Sc–Zn and later) */
+const LAYOUTS={fill:layoutFor(SHOWN),ion:layoutFor(ION_ORDER)};
+function arrowsIn(c,k){const up=Math.min(c,k), dn=Math.max(0,c-k);return Array.from({length:k},(_,i)=>({u:i<up,d:i<dn}));}
+/* draw into group g. occ: electrons present; opts.ghost: {sub:[order numbers]} removed; opts.added: {sub:count}; opts.hi: sub highlighted */
+function drawBoxes(g,occ,opts){
+  opts=opts||{}; let h=''; const ionOrd=opts.order==='ion', LY=LAYOUTS[ionOrd?'ion':'fill'];
+  for(const s of (ionOrd?ION_ORDER:SHOWN)){const P=LY[s], l=subL(s), c=occ[s]||0, A=arrowsIn(c,P.k);
+    const ghosts=(opts.ghost&&opts.ghost[s])||[], addN=(opts.added&&opts.added[s])||0;
+    const full=arrowsIn(c+ghosts.length,P.k);   /* arrangement before removal */
+    for(let i=0;i<P.k;i++){const x=P.x+i*BW, y=P.y;
+      const hi=opts.hi===s;
+      h+=`<rect x="${x}" y="${y}" width="${BW}" height="${BH}" fill="${hi?'var(--bg)':'var(--surface)'}" stroke="${lCol(l)}" stroke-width="${hi?2.4:1.4}" data-s="${s}" data-i="${i}" class="bxr"/>`;
+      if(A[i].u) h+=`<path d="${arrowD(x+9,y+21,x+9,y+5,5)}" stroke="var(--e)" stroke-width="2" fill="none"/>`;
+      if(A[i].d) h+=`<path d="${arrowD(x+19,y+5,x+19,y+21,5)}" stroke="var(--e)" stroke-width="2" fill="none"/>`;
+    }
+    /* removed electrons: faded arrows where they were, plus order numbers */
+    if(ghosts.length){let gi=0;
+      for(let i=P.k-1;i>=0&&gi<ghosts.length;i--){ if(full[i].d&&!A[i].d){h+=ghostArrow(P.x+i*BW+19,P.y,false,ghosts[gi++]);} }
+      for(let i=P.k-1;i>=0&&gi<ghosts.length;i--){ if(full[i].u&&!A[i].u){h+=ghostArrow(P.x+i*BW+9,P.y-(full[i].d&&!A[i].d?16:0),true,ghosts[gi++],P.y);} }
+    }
+    if(addN){ /* recolour the last added arrows */
+      const before=arrowsIn(c-addN,P.k);
+      for(let i=0;i<P.k;i++){const x=P.x+i*BW,y=P.y;
+        if(A[i].u&&!before[i].u) h+=`<path d="${arrowD(x+9,y+21,x+9,y+5,5)}" stroke="var(--ok)" stroke-width="2.4" fill="none"/>`;
+        if(A[i].d&&!before[i].d) h+=`<path d="${arrowD(x+19,y+5,x+19,y+21,5)}" stroke="var(--ok)" stroke-width="2.4" fill="none"/>`;}
+    }
+    h+=`<text x="${P.x+P.k*BW/2}" y="${P.y+BH+15}" font-size="12.5" font-weight="600" fill="${lCol(l)}" text-anchor="middle">${s}</text>`;
+  }
+  h+=`<path d="${arrowD(14,214,14,40,6)}" stroke="var(--muted)" fill="none"/><text x="20" y="44" font-size="11" fill="var(--muted)">${ionOrd?'energy in the ion: 3d now below 4s':(opts.label||'energy (filling order)')}</text>`;
+  g.innerHTML=h;
+}
+function ghostArrow(x,y,up,num,yb){
+  const ya=yb===undefined?y:yb, d=up?arrowD(x,ya+21,x,ya+5,5):arrowD(x,ya+5,x,ya+21,5);
+  return `<path d="${d}" stroke="var(--flag)" stroke-width="1.6" fill="none" opacity=".45" stroke-dasharray="2 2"/><circle cx="${x}" cy="${y-9}" r="7" fill="var(--surface)" stroke="var(--flag)"/><text x="${x}" y="${y-5.5}" font-size="9.5" font-weight="600" fill="var(--flag)" text-anchor="middle">${num}</text>`;
+}
+
+/* =================== 1 · ORBIT vs ORBITAL =================== */
+(function(){
+  const svg=$('oo'), SC=30, CY=165, BX=150, CX=475, RMAX=5.2;
+  el('rect',{x:0,y:0,width:640,height:330,fill:'none'},svg);
+  txt(svg,{x:BX,y:22,'font-size':13,'font-weight':600,fill:'var(--ink)','text-anchor':'middle'},'Bohr orbit: a definite path');
+  txt(svg,{x:CX,y:22,'font-size':13,'font-weight':600,fill:'var(--ink)','text-anchor':'middle'},'1s orbital: where it is found');
+  el('line',{x1:315,x2:315,y1:36,y2:316,stroke:'var(--line)'},svg);
+  el('circle',{cx:BX,cy:CY,r:SC,fill:'none',stroke:'var(--muted)','stroke-width':1.5},svg);
+  el('circle',{cx:BX,cy:CY,r:4,fill:'var(--nuc)'},svg);
+  const be=el('circle',{cx:BX+SC,cy:CY,r:5,fill:'var(--e)'},svg);
+  const trail=el('path',{fill:'none',stroke:'var(--e)','stroke-width':2,opacity:.5},svg);
+  txt(svg,{x:BX,y:CY+SC+22,'font-size':11.5,fill:'var(--muted)','text-anchor':'middle'},'r = a₀ = 52.9 pm, always');
+  txt(svg,{x:BX,y:CY+SC+38,'font-size':11.5,fill:'var(--muted)','text-anchor':'middle'},'position and velocity known at every instant');
+  /* scale bar */
+  el('path',{d:`M${BX-SC} 300V306H${BX}V300`,fill:'none',stroke:'var(--muted)'},svg);
+  txt(svg,{x:BX-SC/2,y:320,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'1 a₀');
+  /* cloud */
+  const clip=el('clipPath',{id:'ooclip'},el('defs',{},svg)); el('rect',{x:320,y:34,width:320,height:286},clip);
+  const dots=el('g',{'clip-path':'url(#ooclip)'},svg);
+  el('circle',{cx:CX,cy:CY,r:3.5,fill:'var(--nuc)'},svg);
+  const R90=(()=>{let a=0,b=10;for(let i=0;i<60;i++){const m=(a+b)/2;(1-Math.exp(-2*m)*(1+2*m+2*m*m)<0.9)?a=m:b=m;}return a;})();
+  const c90=el('circle',{cx:CX,cy:CY,r:R90*SC,fill:'none',stroke:'var(--ink)','stroke-width':1.5,'stroke-dasharray':'6 4'},svg);
+  const t90=txt(svg,{x:CX+R90*SC*0.72+6,y:CY-R90*SC*0.72-4,'font-size':11.5,fill:'var(--ink)'},'90 %');
+  const ca0=el('circle',{cx:CX,cy:CY,r:SC,fill:'none',stroke:'var(--photon)','stroke-width':1.8},svg);
+  const ta0=txt(svg,{x:CX,y:CY-SC-6,'font-size':11.5,fill:'var(--photon)','text-anchor':'middle'},'a₀');
+  let N=0, inside=0, last=null;
+  function sample(){const r=-(Math.log(1-Math.random())+Math.log(1-Math.random())+Math.log(1-Math.random()))/2; /* r²e^(−2r): gamma(3, ½) */
+    const z=2*Math.random()-1, ph=TAU*Math.random(), s=Math.sqrt(1-z*z);
+    return {r,x:r*s*Math.cos(ph),y:r*z};}
+  function add(k){
+    if(last) set(last,{r:1.3,fill:'var(--e)',opacity:.55});
+    const frag=document.createDocumentFragment();
+    for(let i=0;i<k;i++){if(N>=4000)break;const p=sample();N++;if(p.r<=R90)inside++;
+      if(Math.abs(p.x)<RMAX*1.3&&Math.abs(p.y)<RMAX*1.3){const c=el('circle',{cx:(CX+p.x*SC).toFixed(1),cy:(CY-p.y*SC).toFixed(1),r:1.3,fill:'var(--e)',opacity:.55});frag.appendChild(c);last=c;}}
+    dots.appendChild(frag);
+    if(k===1&&last) set(last,{r:4,opacity:1});
+    info();
+  }
+  function info(){
+    set(c90,{visibility:$('o90').checked?'visible':'hidden'}); set(t90,{visibility:$('o90').checked?'visible':'hidden'});
+    set(ca0,{visibility:$('oa0').checked?'visible':'hidden'}); set(ta0,{visibility:$('oa0').checked?'visible':'hidden'});
+    $('ookv').innerHTML=`<dt>measurements</dt><dd>${N}${N>=4000?' (max)':''}</dd><dt>inside the 90 % sphere</dt><dd>${N?fmt(100*inside/N,1)+' %':'–'}</dd><dt>its radius</dt><dd>${fmt(R90,2)} a₀ = ${fmt(R90*A0_PM,0)} pm</dd>`;
+    $('oocap').innerHTML=N<30?'<b>Predict:</b> will the dots land on the Bohr circle? Measure a few times, then many times.'
+      :'No two measurements agree, and none follows a path. Only the <b>pattern</b> is predictable: dense near the nucleus, thinning out, with no edge. That pattern is the orbital. Every 1s orbital is a sphere: the same in all directions.';
+  }
+  $('m1').onclick=()=>add(1); $('m100').onclick=()=>add(100); $('m1000').onclick=()=>add(1000);
+  $('mclr').onclick=()=>{dots.innerHTML='';N=0;inside=0;last=null;info();};
+  $('o90').onchange=info; $('oa0').onchange=info;
+  let th=0;
+  function drawB(){set(be,{cx:BX+SC*Math.cos(th),cy:CY-SC*Math.sin(th)});
+    const a0=th-1.2;set(trail,{d:`M${BX+SC*Math.cos(a0)} ${CY-SC*Math.sin(a0)}A${SC} ${SC} 0 0 0 ${BX+SC*Math.cos(th)} ${CY-SC*Math.sin(th)}`});}
+  drawB(); info();
+  scene(svg,$('ooplay'),dt=>{th+=dt*2.2;drawB();});
+})();
+
+/* =================== 2 · QUANTUM NUMBERS =================== */
+(function(){
+  const svg=$('qt'), CX=262, B=26, Y0=40, DY=38;
+  const S={n:3,l:2,m:-1,s:1};
+  try{const v=JSON.parse(load('qn')||'null');if(v&&v.n)Object.assign(S,v);}catch(e){}
+  const g=el('g',{},svg);
+  function valid(){if(S.l>S.n-1)return 'l';if(Math.abs(S.m)>S.l)return 'm';return '';}
+  function draw(){
+    const bad=valid(); let h='';
+    h+=`<text x="10" y="20" font-size="12.5" font-weight="600" fill="var(--ink)">shell n = ${S.n} (${'KLMNO'[S.n-1]})</text>`;
+    const rows=Math.max(S.n,S.l+1);
+    for(let l=0;l<rows;l++){const y=Y0+l*DY, ok=l<=S.n-1, k=2*l+1;
+      const lab=`${S.n}${LET[l]}`;
+      h+=`<text x="10" y="${y+17}" font-size="13" font-weight="600" fill="${ok?lCol(l):'var(--flag)'}">${lab}</text><text x="40" y="${y+17}" font-size="11.5" fill="${ok?'var(--muted)':'var(--flag)'}">l = ${l}</text>`;
+      if(!ok){h+=`<rect x="${CX-k*B/2}" y="${y}" width="${k*B}" height="${B-4}" fill="none" stroke="var(--flag)" stroke-dasharray="4 3"/><text x="${CX}" y="${y+15}" font-size="11.5" fill="var(--flag)" text-anchor="middle">not allowed: l ≤ n − 1 = ${S.n-1}</text>`;continue;}
+      for(let m=-l;m<=l;m++){const x=CX+m*B-B/2, sel=l===S.l&&m===S.m&&!bad;
+        h+=`<rect x="${x}" y="${y}" width="${B}" height="${B-4}" fill="${sel?'var(--bg)':'var(--surface)'}" stroke="${sel?'var(--accent)':lCol(l)}" stroke-width="${sel?2.6:1.2}"/>`;
+        if(sel) h+=`<path d="${S.s>0?arrowD(x+B/2,y+18,x+B/2,y+4,5):arrowD(x+B/2,y+4,x+B/2,y+18,5)}" stroke="var(--e)" stroke-width="2" fill="none"/>`;
+      }
+      if(l===S.l&&bad==='m'){const x=CX+S.m*B-B/2;h+=`<rect x="${x}" y="${y}" width="${B}" height="${B-4}" fill="none" stroke="var(--flag)" stroke-width="2" stroke-dasharray="4 3"/>`;}
+    }
+    /* m_l scale along the bottom */
+    const yb=Y0+rows*DY+4;
+    for(let m=-5;m<=5;m++){const x=CX+m*B;h+=`<text x="${x}" y="${yb}" font-size="10.5" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono,monospace">${m>0?'+'+m:m<0?'−'+(-m):m}</text>`;}
+    h+=`<text x="${CX+5*B+16}" y="${yb}" font-size="10.5" fill="var(--muted)">m<tspan font-size="8" dy="2">l</tspan></text>`;
+    g.innerHTML=h;
+    set(svg,{viewBox:`0 0 440 ${yb+10}`});
+    $('no').textContent='n = '+S.n; $('lo').textContent='l = '+S.l; $('mo').innerHTML='m<sub>l</sub> = '+(S.m>0?'+':S.m<0?'−':'')+Math.abs(S.m);
+    press($('msc'),S.s);
+    $('nd').disabled=S.n<=1; $('nu').disabled=S.n>=5; $('ld').disabled=S.l<=0; $('lu').disabled=S.l>=5; $('md').disabled=S.m<=-5; $('mu').disabled=S.m>=5;
+    /* nested address */
+    const sp=S.s>0?'+½ ↑':'−½ ↓', lOk=S.l<=S.n-1, mOk=Math.abs(S.m)<=S.l;
+    $('addr').innerHTML=`<div class="addr"><span class="lab">n = ${S.n} → shell ${'KLMNO'[S.n-1]}</span>
+      <div class="addr${lOk?'':' bad'}"><span class="lab">l = ${S.l} → ${S.n}${LET[S.l]} subshell${lOk?'':' ✗'}</span>
+      <div class="addr${mOk&&lOk?'':' bad'}"><span class="lab">m<sub>l</sub> = ${S.m<0?'−':''}${Math.abs(S.m)} → one of ${2*S.l+1} ${LET[S.l]} orbital${S.l?'s':''}${mOk?'':' ✗'}</span>
+      <div class="addr"><span class="lab">m<sub>s</sub> = ${sp}</span></div></div></div></div>`;
+    $('qcap').innerHTML=bad==='l'?`<b>Not allowed.</b> For n = ${S.n}, l can only be 0 to ${S.n-1}. A ${S.n}${LET[S.l]} orbital does not exist; ${LET[S.l]} orbitals first appear in shell n = ${S.l+1}.`
+      :bad==='m'?`<b>Not allowed.</b> For l = ${S.l}, m<sub>l</sub> runs from −${S.l} to +${S.l} only (${2*S.l+1} values).`
+      :`<b>Allowed.</b> n = ${S.n}, l = ${S.l}, m<sub>l</sub> = ${S.m<0?'−':''}${Math.abs(S.m)}, m<sub>s</sub> = ${sp} is one electron in a ${S.n}${LET[S.l]} orbital. Pauli: no other electron in the atom can have all four numbers the same, so this orbital holds at most one more electron, with m<sub>s</sub> = ${S.s>0?'−½':'+½'}.`;
+    const orbs=[];for(let l=0;l<S.n;l++)orbs.push(2*l+1);
+    $('qkv').innerHTML=`<dt>subshells in shell ${S.n}</dt><dd>${S.n}</dd><dt>orbitals</dt><dd>${orbs.join(' + ')} = ${S.n*S.n} = n²</dd><dt>max electrons</dt><dd>2 × ${S.n*S.n} = ${2*S.n*S.n} = 2n²</dd>`+(lOk?`<dt>${S.n}${LET[S.l]} subshell</dt><dd>${2*S.l+1} orbitals, ${2*(2*S.l+1)} electrons</dd>`:'');
+    store('qn',JSON.stringify(S));
+  }
+  $('nd').onclick=()=>{S.n--;draw();}; $('nu').onclick=()=>{S.n++;draw();};
+  $('ld').onclick=()=>{S.l--;draw();}; $('lu').onclick=()=>{S.l++;draw();};
+  $('md').onclick=()=>{S.m--;draw();}; $('mu').onclick=()=>{S.m++;draw();};
+  $('msc').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;S.s=+b.dataset.k;draw();});
+  draw();
+})();
+
+/* =================== 3 · SHAPES =================== */
+const ORBS=[ /* plane: [horizontal axis, vertical axis]; ang: angular factor as a polynomial in x, y, z */
+ {k:'1s',n:1,l:0,pl:['x','z'],ang:()=>1},
+ {k:'2s',n:2,l:0,pl:['x','z'],ang:()=>1},
+ {k:'3s',n:3,l:0,pl:['x','z'],ang:()=>1},
+ {k:'2px',n:2,l:1,pl:['x','z'],ang:(x,y,z)=>x,lab:'2pₓ',nod:[{t:'v',w:'yz plane'}]},
+ {k:'2py',n:2,l:1,pl:['y','z'],ang:(x,y,z)=>y,lab:'2p<sub>y</sub>',nod:[{t:'v',w:'xz plane'}]},
+ {k:'2pz',n:2,l:1,pl:['x','z'],ang:(x,y,z)=>z,lab:'2p<sub>z</sub>',nod:[{t:'h',w:'xy plane'}]},
+ {k:'3pz',n:3,l:1,pl:['x','z'],ang:(x,y,z)=>z,lab:'3p<sub>z</sub>',nod:[{t:'h',w:'xy plane'}]},
+ {k:'3dxy',n:3,l:2,pl:['x','y'],ang:(x,y,z)=>x*y,lab:'3d<sub>xy</sub>',nod:[{t:'h',w:'xz plane'},{t:'v',w:'yz plane'}]},
+ {k:'3dyz',n:3,l:2,pl:['y','z'],ang:(x,y,z)=>y*z,lab:'3d<sub>yz</sub>',nod:[{t:'h',w:'xy plane'},{t:'v',w:'xz plane'}]},
+ {k:'3dxz',n:3,l:2,pl:['x','z'],ang:(x,y,z)=>x*z,lab:'3d<sub>xz</sub>',nod:[{t:'h',w:'xy plane'},{t:'v',w:'yz plane'}]},
+ {k:'3dx2y2',n:3,l:2,pl:['x','y'],ang:(x,y,z)=>(x*x-y*y)/2,lab:'3d<sub>x²−y²</sub>',nod:[{t:'d',a:45,w:'plane x = y'},{t:'d',a:-45,w:'plane x = −y'}]},
+ {k:'3dz2',n:3,l:2,pl:['x','z'],ang:(x,y,z)=>(3*z*z-(x*x+y*y+z*z))/(2*Math.sqrt(3)),lab:'3d<sub>z²</sub>',nod:[{t:'cone'}]}
+];
+(function(){
+  const cv=$('shcv'), svg=$('shsv'), box=$('shc'), SZ=360;
+  box.innerHTML=ORBS.map(o=>`<button class="chip" data-k="${o.k}">${o.lab||o.k}</button>`).join('');
+  let cur=ORBS.find(o=>o.k===load('orb'))||ORBS[3], shown=false;
+  const over=el('g',{},svg), nodes=el('g',{},svg);
+  function colours(){const cs=getComputedStyle(document.documentElement);return {p:cs.getPropertyValue('--ph1').trim(),m:cs.getPropertyValue('--ph2').trim()};}
+  function psi(o,h,v){const c={x:0,y:0,z:0};c[o.pl[0]]=h;c[o.pl[1]]=v;const r=Math.hypot(c.x,c.y,c.z);return Rred(o.n,o.l,r)*o.ang(c.x,c.y,c.z);}
+  function halfW(o){let a=0;for(let r=0.5;r<80;r+=0.5){if(cumP(o.n,o.l,r)>0.97){a=r;break;}}return Math.max(3,a*1.05);}
+  let pts=[];
+  function sample(o){
+    const W=halfW(o); let mx=0;
+    for(let i=0;i<=160;i++)for(let j=0;j<=160;j++){const v=psi(o,-W+2*W*i/160,-W+2*W*j/160);mx=Math.max(mx,v*v);}
+    pts=[]; let tries=0;
+    while(pts.length<6000&&tries<900000){tries++;const h=(2*Math.random()-1)*W, v=(2*Math.random()-1)*W, p=psi(o,h,v);
+      if(Math.random()*mx<p*p) pts.push([h,v,p>0]);}
+    return W;
+  }
+  let W=1;
+  function paint(){
+    const dpr=Math.min(2,window.devicePixelRatio||1), px=Math.round(cv.clientWidth*dpr)||SZ;
+    cv.width=px; cv.height=px; const ctx=cv.getContext('2d'), k=px/(2*W), col=colours();
+    ctx.clearRect(0,0,px,px); ctx.globalAlpha=0.55; const rr=Math.max(1,1.05*dpr);
+    for(const pos of [true,false]){ctx.fillStyle=pos?col.p:col.m;
+      for(const p of pts) if(p[2]===pos) ctx.fillRect(px/2+p[0]*k-rr/2,px/2-p[1]*k-rr/2,rr,rr);}
+  }
+  function overlay(){
+    const s=SZ/(2*W), C=SZ/2; let h='';
+    h+=`<line x1="8" x2="${SZ-8}" y1="${C}" y2="${C}" stroke="var(--muted)" stroke-width=".8" opacity=".6"/><line y1="8" y2="${SZ-8}" x1="${C}" x2="${C}" stroke="var(--muted)" stroke-width=".8" opacity=".6"/>`;
+    h+=`<text x="${SZ-10}" y="${C-6}" font-size="13" font-style="italic" fill="var(--muted)" text-anchor="end">${cur.pl[0]}</text><text x="${C+7}" y="20" font-size="13" font-style="italic" fill="var(--muted)">${cur.pl[1]}</text>`;
+    h+=`<circle cx="${C}" cy="${C}" r="2.5" fill="var(--nuc)"/>`;
+    /* scale bar */
+    const bar=W>10?5:1;
+    h+=`<path d="M14 ${SZ-20}V${SZ-14}H${14+bar*s}V${SZ-20}" fill="none" stroke="var(--ink)"/><text x="${14+bar*s/2}" y="${SZ-22}" font-size="11.5" fill="var(--ink)" text-anchor="middle">${bar} a₀</text>`;
+    over.innerHTML=h;
+    let n='';
+    if(shown){
+      radialNodes(cur.n,cur.l).forEach(r=>{n+=`<circle cx="${C}" cy="${C}" r="${r*s}" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="5 4"/>`;});
+      (cur.nod||[]).forEach(d=>{const L=SZ/2-6;
+        if(d.t==='h') n+=`<line x1="${C-L}" x2="${C+L}" y1="${C}" y2="${C}" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+        if(d.t==='v') n+=`<line y1="${C-L}" y2="${C+L}" x1="${C}" x2="${C}" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+        if(d.t==='d'){const a=d.a*Math.PI/180;n+=`<line x1="${C-L*Math.cos(a)}" y1="${C+L*Math.sin(a)}" x2="${C+L*Math.cos(a)}" y2="${C-L*Math.sin(a)}" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="5 4"/>`;}
+        if(d.t==='cone'){const t=Math.acos(1/Math.sqrt(3));[[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([sx,sy])=>{n+=`<line x1="${C}" y1="${C}" x2="${C+sx*L*Math.sin(t)}" y2="${C-sy*L*Math.cos(t)}" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="5 4"/>`;});}
+      });
+    }
+    nodes.innerHTML=n;
+  }
+  function info(){
+    const nr=cur.n-cur.l-1, na=cur.l, rn=radialNodes(cur.n,cur.l);
+    $('shname').innerHTML=(cur.lab||cur.k)+` <span class="muted">n = ${cur.n}, l = ${cur.l}</span>`;
+    $('shrev').hidden=$('shall').checked; $('shrev').textContent=shown?'Hide the nodes':'Reveal the nodes';
+    if(!shown){$('shkv').innerHTML='';$('shcap').innerHTML='<b>Predict first:</b> how many spherical nodes (dot-free rings) and how many flat nodes (dot-free lines through the nucleus) does it have? Then reveal.';return;}
+    const angW=cur.k==='3dz2'?'two cones at 54.7° to the z axis':(cur.nod||[]).map(d=>d.w).join(', ');
+    $('shkv').innerHTML=`<dt>radial nodes n − l − 1</dt><dd>${nr}${rn.length?' (r = '+rn.map(r=>fmt(r,2)).join(', ')+' a₀)':''}</dd><dt>angular nodes l</dt><dd>${na}${na?' ('+angW+')':''}</dd><dt>total n − 1</dt><dd>${nr+na}</dd>`;
+    const capx={
+      '1s':'No nodes at all. |ψ|² is largest at the nucleus and falls smoothly. The 1s orbital is a sphere.',
+      '2s':'One spherical node: an inner ball and an outer shell, with opposite signs of ψ. Still spherical, just bigger than 1s.',
+      '3s':'Two spherical nodes, three layers, alternating sign. Size grows: 1s &lt; 2s &lt; 3s.',
+      '2px':'Two lobes along x, opposite signs, with a nodal plane (yz) through the nucleus where the electron is never found.',
+      '2py':'The same dumbbell turned to point along y. 2pₓ, 2p<sub>y</sub>, 2p<sub>z</sub> have identical shape, size and energy.',
+      '2pz':'Along z, with the xy plane as its node.',
+      '3pz':'Like 2p<sub>z</sub> but bigger, with one extra spherical node: each lobe has a small inner part of opposite sign.',
+      '3dxy':'Four lobes between the x and y axes. Nodal planes: xz and yz.',
+      '3dyz':'Four lobes between the y and z axes.',
+      '3dxz':'Four lobes between the x and z axes.',
+      '3dx2y2':'Four lobes along the x and y axes. Nodal planes run diagonally (x = ±y).',
+      '3dz2':'The odd one out: two lobes along z and a ring (doughnut) round the middle, of opposite sign. Its two angular nodes are cones, not planes, but it still counts l = 2 of them.'};
+    $('shcap').innerHTML=capx[cur.k];
+  }
+  function choose(o){cur=o;store('orb',o.k);press(box,o.k);shown=$('shall').checked;W=sample(o);paint();overlay();info();}
+  box.addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;choose(ORBS.find(o=>o.k===b.dataset.k));});
+  $('shrev').onclick=()=>{shown=!shown;overlay();info();};
+  $('shall').onchange=()=>{shown=$('shall').checked;overlay();info();};
+  if(window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener('change',paint);
+  window.addEventListener('resize',()=>{clearTimeout(window.__shT);window.__shT=setTimeout(paint,150);});
+  choose(cur);
+})();
+
+/* =================== 4 · RADIAL PROBABILITY =================== */
+(function(){
+  const LIST=[['1s',1,0],['2s',2,0],['2p',2,1],['3s',3,0],['3p',3,1],['3d',3,2],['4s',4,0]];
+  const svg=$('rp'), X0=52, X1=620, Y0=255, Y1=22;
+  $('ra').innerHTML=LIST.map(o=>`<button class="chip" data-k="${o[0]}">${o[0]}</button>`).join('');
+  $('rb').innerHTML='<button class="chip" data-k="none">none</button>'+LIST.map(o=>`<button class="chip" data-k="${o[0]}">${o[0]}</button>`).join('');
+  const S={a:load('ra')||'2s',b:load('rb')||'2p',r:1};
+  const get=k=>LIST.find(o=>o[0]===k);
+  const grid=el('g',{},svg);
+  const shB=el('path',{opacity:.16},svg), shA=el('path',{opacity:.2},svg);
+  const psiC=el('path',{fill:'none',stroke:'var(--muted)','stroke-width':1.6,'stroke-dasharray':'2 3'},svg);
+  const cB=el('path',{fill:'none','stroke-width':2.4,'stroke-dasharray':'7 4'},svg), cA=el('path',{fill:'none','stroke-width':2.6},svg);
+  const marks=el('g',{},svg);
+  const cur=el('line',{y1:Y1-6,y2:Y0,stroke:'var(--ink)','stroke-width':1.5},svg);
+  const curT=txt(svg,{y:Y1-10,'font-size':11.5,fill:'var(--ink)','text-anchor':'middle'},'');
+  const hit=el('rect',{x:X0,y:Y1-20,width:X1-X0,height:Y0-Y1+20,fill:'transparent',class:'drag'},svg);
+  let xmax=10, ymax=1;
+  const sx=r=>X0+r/xmax*(X1-X0), sy=p=>Y0-p/ymax*(Y0-Y1);
+  function layout(){
+    const A=get(S.a), B=S.b==='none'?null:get(S.b);
+    press($('ra'),S.a); press($('rb'),S.b);
+    const sel=[A].concat(B?[B]:[]);
+    let r99=0; sel.forEach(o=>{for(let r=1;r<80;r+=0.5){if(cumP(o[1],o[2],r)>0.995){r99=Math.max(r99,r);break;}}});
+    xmax=Math.ceil(r99/5)*5;
+    ymax=0; sel.forEach(o=>{for(let r=0.01;r<xmax;r+=0.02)ymax=Math.max(ymax,Prad(o[1],o[2],r));}); ymax*=1.18;
+    S.r=Math.min(S.r,xmax);
+    /* axes */
+    let h=`<line x1="${X0}" x2="${X1}" y1="${Y0}" y2="${Y0}" stroke="var(--muted)"/><line x1="${X0}" x2="${X0}" y1="${Y0}" y2="${Y1-4}" stroke="var(--muted)"/>`;
+    const step=xmax<=10?1:xmax<=20?2:5;
+    for(let r=0;r<=xmax+1e-9;r+=step){h+=`<line x1="${sx(r)}" x2="${sx(r)}" y1="${Y0}" y2="${Y0+4}" stroke="var(--muted)"/><text x="${sx(r)}" y="${Y0+17}" font-size="11" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono,monospace">${r}</text>`;}
+    h+=`<text x="${X1}" y="${Y0+34}" font-size="11.5" fill="var(--muted)" text-anchor="end">distance from nucleus r (units of a₀ = 52.9 pm)</text>`;
+    h+=`<text transform="translate(16 ${(Y0+Y1)/2}) rotate(-90)" font-size="11.5" fill="var(--muted)" text-anchor="middle">radial probability P(r)  (= 4πr²ψ² for s)</text>`;
+    grid.innerHTML=h;
+    const draw=(o,path,sh,dash)=>{if(!o){set(path,{d:''});set(sh,{d:''});return;}
+      const col=lCol(o[2]); set(path,{stroke:col,d:pathOf(r=>Prad(o[1],o[2],r),0,xmax,400,sx,sy)}); set(sh,{fill:col});};
+    draw(A,cA,shA); draw(B,cB,shB);
+    /* peaks and radial nodes */
+    let m='', labs=[];
+    sel.forEach((o,i)=>{const col=lCol(o[2]);
+      radialNodes(o[1],o[2]).forEach(r=>{m+=`<circle cx="${sx(r)}" cy="${Y0}" r="4.5" fill="var(--surface)" stroke="${col}" stroke-width="2"/>`;});
+      const pr=peakR(o[1],o[2]), py=sy(Prad(o[1],o[2],pr));
+      let ly=py-10; labs.forEach(L=>{if(Math.abs(L.x-sx(pr))<95&&Math.abs(L.y-ly)<15)ly=L.y-16;});
+      if(ly<Y1-2) ly=py+20;
+      labs.push({x:sx(pr),y:ly});
+      m+=`<circle cx="${sx(pr)}" cy="${py}" r="3.5" fill="${col}"/><text x="${sx(pr)+(sx(pr)>X1-90?-6:6)}" y="${ly}" font-size="11.5" fill="${col}" font-weight="600" text-anchor="${sx(pr)>X1-90?'end':'start'}">${o[0]} peak ${fmt(pr,2)} a₀</text>`;
+    });
+    marks.innerHTML=m;
+    $('rleg').innerHTML=`<span><i style="background:${lCol(A[2])}"></i>A: ${A[0]} (solid)</span>`+(B?`<span><i style="background:${lCol(B[2])};height:2px;border-top:2px dashed ${lCol(B[2])};background:none"></i>B: ${B[0]} (dashed)</span>`:'')+`<span>○ on the axis: radial node</span>`;
+    /* product mini-plot */
+    const P=$('rprod'), px0=34, px1=310, py0=140, py1=14, f=r=>Rnl(A[1],A[2],r)**2;
+    let fm=0, pm=0; for(let r=0.001;r<xmax;r+=xmax/400){fm=Math.max(fm,f(r));pm=Math.max(pm,Prad(A[1],A[2],r));}
+    const qx=r=>px0+r/xmax*(px1-px0), qy=v=>py0-v*(py0-py1);
+    P.innerHTML=`<line x1="${px0}" x2="${px1}" y1="${py0}" y2="${py0}" stroke="var(--muted)"/><line x1="${px0}" x2="${px0}" y1="${py0}" y2="${py1}" stroke="var(--muted)"/>`+
+      `<path d="${pathOf(r=>Math.min(1.05,f(r)/fm),0,xmax,300,qx,qy)}" fill="none" stroke="var(--muted)" stroke-width="2"/>`+
+      `<path d="${pathOf(r=>(r/(xmax*0.45))**2,0,xmax*0.45,200,qx,qy)}" fill="none" stroke="var(--ink)" stroke-width="1.2"/>`+
+      `<path d="${pathOf(r=>Prad(A[1],A[2],r)/pm,0,xmax,300,qx,qy)}" fill="none" stroke="var(--accent)" stroke-width="2.4"/>`+
+      `<text x="${px1}" y="${py0+16}" font-size="11" fill="var(--muted)" text-anchor="end">r →  (each curve scaled to fit)</text>`+
+      `<text x="${px0+4}" y="${py0+16}" font-size="11" fill="var(--muted)">0</text>`;
+    move();
+  }
+  function move(){
+    const A=get(S.a), B=S.b==='none'?null:get(S.b), r=S.r;
+    set(cur,{x1:sx(r),x2:sx(r)}); set(curT,{x:Math.min(X1-30,Math.max(X0+30,sx(r)))}); curT.textContent=`r = ${fmt(r,2)} a₀`;
+    const shade=o=>o?pathOf(t=>Prad(o[1],o[2],t),0,r,Math.max(2,Math.round(200*r/xmax)),sx,sy)+`L${sx(r)} ${Y0}L${sx(0)} ${Y0}Z`:'';
+    set(shA,{d:shade(A)}); set(shB,{d:shade(B)});
+    const show=$('rpsi').checked;
+    if(show){let fm=0;for(let t=0;t<xmax;t+=xmax/400)fm=Math.max(fm,Rnl(A[1],A[2],t)**2);
+      set(psiC,{d:pathOf(t=>Rnl(A[1],A[2],t)**2/fm*ymax/1.18,0,xmax,400,sx,sy),visibility:'visible'});}
+    else set(psiC,{visibility:'hidden'});
+    const pa=cumP(A[1],A[2],r), pb=B?cumP(B[1],B[2],r):null;
+    $('rkv').innerHTML=`<dt>inside r: ${A[0]}</dt><dd>${fmt(100*pa,1)} %</dd>`+(B?`<dt>inside r: ${B[0]}</dt><dd>${fmt(100*pb,1)} %</dd>`:'')+
+      `<dt>most probable r (${A[0]})</dt><dd>${fmt(peakR(A[1],A[2]),2)} a₀ = ${fmt(peakR(A[1],A[2])*A0_PM,0)} pm</dd><dt>radial nodes (${A[0]})</dt><dd>${A[1]-A[2]-1}</dd>`;
+    let c;
+    if(S.a==='1s') c='For 1s, |ψ|² is largest at r = 0, but a shell of radius r has area 4πr², which is zero at the nucleus and grows outward. The product peaks at exactly <b>r = a₀</b>, the radius of Bohr’s first orbit: the one number Bohr got right.';
+    else if(B&&B[1]>=A[1]&&A[2]<B[2]&&r<=4) c=`Inside r = ${fmt(r,1)} a₀ (deep inside, where inner electrons would be), ${A[0]} has ${fmt(100*pa,1)} % of its probability and ${B[0]} only ${fmt(100*pb,1)} %. ${A[0]} <b>penetrates</b> closer to the nucleus.`;
+    else c=`${A[0]} has ${A[1]-A[2]-1} radial node${A[1]-A[2]-1===1?'':'s'} (n − l − 1) and ${A[1]-A[2]} hump${A[1]-A[2]===1?'':'s'}. The highest hump sets its size; bigger n means farther out. Drag the line close to the nucleus to compare penetration.`;
+    $('rcap').innerHTML=c;
+  }
+  function rFrom(e){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const p=pt.matrixTransform(svg.getScreenCTM().inverse());return Math.max(0,Math.min(xmax,(p.x-X0)/(X1-X0)*xmax));}
+  let drag=false;
+  hit.addEventListener('pointerdown',e=>{drag=true;try{hit.setPointerCapture(e.pointerId);}catch(_){}S.r=rFrom(e);move();});
+  hit.addEventListener('pointermove',e=>{if(drag){S.r=rFrom(e);move();}});
+  hit.addEventListener('pointerup',()=>{drag=false;}); hit.addEventListener('pointercancel',()=>{drag=false;});
+  $('ra').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;S.a=b.dataset.k;store('ra',S.a);layout();});
+  $('rb').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;S.b=b.dataset.k;store('rb',S.b);layout();});
+  $('rpsi').onchange=move;
+  layout();
+})();
+
+/* ψ(r) and ψ²(r) for 1s and 2s (NCERT Fig 2.12) */
+(function(){
+  const svg=$('rwf'), RM_=10, panels=[{x0:44,x1:300,t:'ψ(r)',sq:false},{x0:370,x1:626,t:'ψ²(r)',sq:true}], Y0=165, YT=26;
+  let h='';
+  panels.forEach(P=>{
+    const sx=r=>P.x0+r/RM_*(P.x1-P.x0);
+    /* ψ: −0.3…1 of each curve's own max |ψ|; ψ²: 0…1 */
+    const lo=P.sq?0:-0.3, yz=v=>Y0-(v-lo)/(1-lo)*(Y0-YT), yAx=yz(0);
+    h+=`<text x="${(P.x0+P.x1)/2}" y="14" font-size="12.5" font-weight="600" fill="var(--ink)" text-anchor="middle">${P.t}</text>`;
+    h+=`<line x1="${P.x0}" x2="${P.x1}" y1="${yAx}" y2="${yAx}" stroke="var(--muted)"/><line x1="${P.x0}" x2="${P.x0}" y1="${YT-4}" y2="${Y0}" stroke="var(--muted)"/>`;
+    for(let r=0;r<=RM_;r+=2) h+=`<text x="${sx(r)}" y="${Y0+16}" font-size="10.5" fill="var(--muted)" text-anchor="middle" font-family="IBM Plex Mono,monospace">${r}</text>`;
+    h+=`<text x="${P.x1}" y="${Y0+30}" font-size="10.5" fill="var(--muted)" text-anchor="end">r (a₀)</text>`;
+    if(!P.sq) h+=`<text x="${P.x0-6}" y="${yAx+4}" font-size="10.5" fill="var(--muted)" text-anchor="end">0</text>`;
+    [[1,'1s','7 0'],[2,'2s','6 4']].forEach(([n,lab,dash])=>{
+      let mx=0; for(let r=0;r<=RM_;r+=0.01){const v=Rnl(n,0,r);mx=Math.max(mx,P.sq?v*v:Math.abs(v));}
+      const f=r=>{const v=Rnl(n,0,r);return P.sq?v*v/mx:v/mx;};
+      h+=`<path d="${pathOf(f,0,RM_,300,sx,yz)}" fill="none" stroke="${n===1?'var(--ink)':'var(--s)'}" stroke-width="2.2" stroke-dasharray="${dash==='7 0'?'none':dash}"/>`;
+      const lx=n===1?1.1:(P.sq?6.5:8); h+=`<text x="${sx(lx)+4}" y="${(!P.sq&&n===2)?Y0-4:Math.min(Y0-4,yz(f(lx))-6)}" font-size="11.5" font-weight="600" fill="${n===1?'var(--ink)':'var(--s)'}">${lab}</text>`;
+    });
+    h+=`<circle cx="${sx(2)}" cy="${yAx}" r="4.5" fill="var(--surface)" stroke="var(--s)" stroke-width="2"/>`;
+    h+=`<text x="${sx(2)+8}" y="${P.sq?yAx-10:Y0-4}" font-size="10.5" fill="var(--s)">${P.sq?'node: ψ² = 0':'node: ψ changes sign'}</text>`;
+  });
+  svg.innerHTML=h;
+})();
+
+/* =================== 5 · ENERGY LADDERS =================== */
+(function(){
+  const svg=$('en'), YB=330, YT=40, YTH=66;
+  let h='';
+  /* hydrogen, to scale */
+  const HX=40, HC=[40,80,120,160]; /* E in eV, −14..0 → YB..YT */
+  const yH=E=>YB-(E+14)/14*(YB-YTH);
+  h+=`<text x="${HX+80}" y="18" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">Hydrogen (to scale)</text>`;
+  ['s','p','d','f'].forEach((c,l)=>{h+=`<text x="${HX+HC[l]-20+14}" y="34" font-size="12" font-weight="600" fill="${lCol(l)}" text-anchor="middle">${c}</text>`;});
+  for(let n=1;n<=4;n++){const E=-E_H_EV/(n*n), y=yH(E);
+    for(let l=0;l<n;l++) h+=`<line x1="${HX+HC[l]-20}" x2="${HX+HC[l]+8}" y1="${y}" y2="${y}" stroke="${lCol(l)}" stroke-width="3"/>`;
+    h+=`<text x="${HX-4}" y="${y+4}" font-size="11" fill="var(--muted)" text-anchor="end">n=${n}</text>`;
+    if(n<=2) h+=`<text x="${HX+HC[n-1]+14}" y="${y+4}" font-size="10.5" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${fmt(E,1).replace('-','−')} eV</text>`;}
+  h+=`<line x1="${HX-30}" x2="${HX+175}" y1="${yH(0)}" y2="${yH(0)}" stroke="var(--line)" stroke-dasharray="3 4"/><text x="${HX+175}" y="${yH(0)-4}" font-size="10.5" fill="var(--muted)" text-anchor="end">0 (free electron)</text>`;
+  h+=`<line x1="250" x2="250" y1="10" y2="${YB+10}" stroke="var(--line)"/>`;
+  /* many-electron, schematic */
+  const MX=290, MC=[0,76,152,228], step=(YB-YT-6)/(FILL.length-1);
+  h+=`<text x="${MX+150}" y="18" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">Many-electron atom (schematic order)</text>`;
+  ['s','p','d','f'].forEach((c,l)=>{h+=`<text x="${MX+MC[l]+17}" y="34" font-size="12" font-weight="600" fill="${lCol(l)}" text-anchor="middle">${c}</text>`;});
+  svg.innerHTML=h;
+  const bars=FILL.map((s,i)=>{const l=subL(s), y=YB-i*step, x=MX+MC[l];
+    const b=el('line',{x1:x,x2:x+34,y1:y,y2:y,stroke:lCol(l),'stroke-width':3},svg);
+    const t=txt(svg,{x:x+40,y:y+4,'font-size':11.5,fill:lCol(l),'font-weight':600},s);
+    const nl=txt(svg,{x:x+60,y:y+4,'font-size':10.5,fill:'var(--muted)','font-family':'IBM Plex Mono,monospace'},'');
+    return {b,t,nl,s,x,y};});
+  const ptr=el('path',{fill:'none',stroke:'var(--accent)','stroke-width':2},svg);
+  let k=-1;
+  function draw(){
+    bars.forEach((B,i)=>{const done=i<=k, now=i===k;
+      set(B.b,{opacity:done?1:.3,'stroke-width':now?5:3}); set(B.t,{opacity:done?1:.4});
+      B.nl.textContent=done?'n+l='+(subN(B.s)+subL(B.s)):'';});
+    if(k<0){set(ptr,{d:''});$('ebig').textContent='Empty atom';$('ecap').innerHTML='Press <b>Fill next</b>. On the left, all subshells of one shell sit at one level (hydrogen). On the right they spread apart: s lowest, then p, d, f.';}
+    else{const B=bars[k]; set(ptr,{d:arrowD(B.x-34,B.y,B.x-6,B.y,6)});
+      const s=B.s, nl=subN(s)+subL(s), ties=FILL.filter(t=>t!==s&&subN(t)+subL(t)===nl);
+      const later=ties.filter(t=>subN(t)>subN(s)), earlier=ties.filter(t=>subN(t)<subN(s));
+      $('ebig').innerHTML=`${k+1}. ${s}: n + l = ${subN(s)} + ${subL(s)} = ${nl}`;
+      let c=`Holds ${cap(s)} electrons (${2*subL(s)+1} orbital${subL(s)?'s':''} × 2). `;
+      if(later.length) c+=`Ties with ${later.join(', ')} (also ${nl}); lower n goes first, so ${s} comes before ${later.join(' and ')}. `;
+      if(earlier.length) c+=`${earlier.join(', ')} had the same n + l but lower n, so ${earlier.length>1?'they':'it'} came first. `;
+      if(s==='4s') c+='<b>4s before 3d</b>: 4s has n + l = 4, 3d has 5. The penetrating 4s electron (section 4) beats the bigger-looking 3d.';
+      if(s==='4f') c+='4f fills only after 6s: n + l = 7 versus 6.';
+      $('ecap').innerHTML=c;}
+    $('eb').disabled=k<0; $('ef').disabled=k>=FILL.length-1;
+  }
+  $('ef').onclick=()=>{if(k<FILL.length-1){k++;draw();}};
+  $('eb').onclick=()=>{if(k>=0){k--;draw();}};
+  $('er').onclick=()=>{k=-1;draw();};
+  draw();
+})();
+
+/* =================== 6 · AUFBAU SIMULATOR =================== */
+const POS=[[1,1],[1,18],[2,1],[2,2],[2,13],[2,14],[2,15],[2,16],[2,17],[2,18],[3,1],[3,2],[3,13],[3,14],[3,15],[3,16],[3,17],[3,18]];
+for(let g=1;g<=18;g++)POS.push([4,g]);
+const GS=ELEMENTS.map(e=>parseCfg(e[2]));
+const isExc=Z=>Z>=1&&Z<=36&&!sameOcc(GS[Z-1],aufbau(Z));
+(function(){
+  const tab=$('ptab'), svg=$('bx'), g=el('g',{},svg);
+  const blk={s:'var(--s)',p:'var(--p)',d:'var(--d)'};
+  tab.innerHTML=ELEMENTS.map((e,i)=>`<button class="el${isExc(i+1)?' xs':''}" data-z="${i+1}" style="grid-row:${POS[i][0]};grid-column:${POS[i][1]};border-bottom-color:${blk[blockOf(i+1)]}" title="${e[1]}">${e[0]}</button>`).join('');
+  let Z=+(load('z')||8); if(!(Z>=1&&Z<=36))Z=8;
+  let placing=false, msg='';
+  function render(){
+    tab.querySelectorAll('.el').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.z===Z));
+    const E=ELEMENTS[Z-1], occ=GS[Z-1];
+    $('zo').textContent=`${Z} ${E[0]} ${E[1]}`;
+    $('zd').disabled=Z<=1; $('zu').disabled=Z>=36;
+    if(placing&&Z<36){
+      drawBoxes(g,occ,{});
+      const nx=ELEMENTS[Z];
+      $('zmsg').innerHTML=msg||`<b>Your turn:</b> ${nx[1]} (Z = ${Z+1}) has one more electron. Click the box where it goes.`;
+    }else{
+      const prev=Z>1?GS[Z-2]:{}, added={};
+      if(Z>1){for(const s of SHOWN){const d=(occ[s]||0)-(prev[s]||0);if(d>0)added[s]=d;}}
+      drawBoxes(g,occ,{added:isExc(Z)||isExc(Z-1)?{}:added});
+      if(placing&&Z>=36) $('zmsg').innerHTML='Krypton is the last element shown here. Pick a lighter element to keep placing.';
+      else if(isExc(Z)){const a=aufbau(Z);$('zmsg').innerHTML=`<b>Exception.</b> The filling order predicts ${cfgHTML(a,true)}; the real atom is ${cfgHTML(occ,true)}. See section 7.`;}
+      else $('zmsg').innerHTML=Z===1?'One electron, in the lowest orbital: 1s.':`The newest electron is drawn in <span style="color:var(--ok);font-weight:600">green</span>.`+(isExc(Z-1)?` (${ELEMENTS[Z-2][0]} before it was an exception, so the change is not a single step.)`:'');
+    }
+    const u=unpaired(occ), nmax=Math.max(...Object.keys(occ).map(subN)), outer=Object.keys(occ).filter(s=>subN(s)===nmax).reduce((a,s)=>a+occ[s],0);
+    $('zkv').innerHTML=`<dt>configuration</dt><dd>${cfgHTML(occ,false)}</dd><dt>short form</dt><dd>${cfgHTML(occ,true)}</dd><dt>outermost shell</dt><dd>n = ${nmax}, ${outer} electron${outer>1?'s':''}</dd><dt>unpaired electrons</dt><dd>${u}</dd><dt>as a free atom</dt><dd>${u?'paramagnetic':'diamagnetic'}</dd><dt>block</dt><dd>${blockOf(Z)}-block</dd>`;
+    store('z',Z);
+  }
+  /* the student's click in "I place it" mode */
+  svg.addEventListener('click',e=>{
+    if(!placing||Z>=36) return; const r=e.target.closest('.bxr'); if(!r) return;
+    const s=r.dataset.s, i=+r.dataset.i, occ=GS[Z-1], next=GS[Z], k=2*subL(s)+1, c=occ[s]||0, A=arrowsIn(c,k)[i];
+    if(isExc(Z+1)){Z++;msg='';render();$('zmsg').innerHTML=`<b>Surprise!</b> ${ELEMENTS[Z-1][1]} does not just add one electron: a 4s electron also moves into 3d, giving ${cfgHTML(GS[Z-1],true)}. See section 7. Click on for the next one.`;return;}
+    let target=null; for(const t of SHOWN) if((next[t]||0)>(occ[t]||0)) target=t;
+    if(isExc(Z)) target=Object.keys(next).find(t=>(next[t]||0)>(occ[t]||0))||target;
+    let why='';
+    if(A.u&&A.d) why='That orbital is full. <b>Pauli:</b> two electrons per orbital, no more.';
+    else if(s!==target){const lower=FILL.indexOf(s)>FILL.indexOf(target);why=lower?`<b>Aufbau:</b> ${target} is lower in energy and still has room. Fill it first.`:`${s} is already full or not next. The next free level is ${target}.`;}
+    else if(A.u&&c<k) why='<b>Hund:</b> there is still an empty orbital in this subshell. Electrons spread out (parallel spins) before they pair.';
+    if(why){msg='<span style="color:var(--flag)">Not there.</span> '+why+' Try again.';render();return;}
+    Z++; msg=''; render();
+    $('zmsg').innerHTML=`<span style="color:var(--ok)">Right.</span> ${ELEMENTS[Z-1][1]}: ${cfgHTML(GS[Z-1],true)}. `+(c<k&&s[1]!=='s'?'Any empty box of the subshell is equivalent; it is drawn in the first one. ':'')+(Z<36?'Click where the next one goes.':'');
+  });
+  tab.addEventListener('click',e=>{const b=e.target.closest('.el');if(!b)return;Z=+b.dataset.z;msg='';render();});
+  $('zd').onclick=()=>{if(Z>1){Z--;msg='';render();}}; $('zu').onclick=()=>{if(Z<36){Z++;msg='';render();}};
+  $('zplace').onchange=()=>{placing=$('zplace').checked;msg='';svg.style.cursor=placing?'pointer':'';render();};
+  render();
+})();
+
+/* =================== 7 · Cr AND Cu =================== */
+const pairs=n=>n*(n-1)/2;
+function exchangePairs(c){const up=Math.min(c,5), dn=Math.max(0,c-5);return pairs(up)+pairs(dn);}
+(function(){
+  const svg=$('xs'); let Z=+(load('xz')||24); if(Z!==24&&Z!==29)Z=24;
+  function panel(ox,title,occ,good){
+    const d=occ['3d']||0, s=occ['4s']||0, A=arrowsIn(d,5), W=34, y=150; let h='';
+    h+=`<text x="${ox+130}" y="22" font-size="13" font-weight="600" fill="${good?'var(--ok)':'var(--muted)'}" text-anchor="middle">${title}</text>`;
+    h+=`<text x="${ox+130}" y="40" font-size="12.5" fill="var(--ink)" text-anchor="middle">[Ar] 3d${sup(d)} 4s${sup(s)}</text>`;
+    const cx=i=>ox+10+i*W+W/2;
+    /* arcs: up-spin pairs above, down-spin pairs below */
+    for(let i=0;i<5;i++)for(let j=i+1;j<5;j++){
+      if(A[i].u&&A[j].u){const hgt=14+(j-i)*16;h+=`<path d="M${cx(i)-6} ${y} C${cx(i)-6} ${y-hgt*1.3} ${cx(j)-6} ${y-hgt*1.3} ${cx(j)-6} ${y}" fill="none" stroke="var(--e)" stroke-width="1.3" opacity=".75"/>`;}
+      if(A[i].d&&A[j].d){const hgt=14+(j-i)*16;h+=`<path d="M${cx(i)+6} ${y+30} C${cx(i)+6} ${y+30+hgt*1.3} ${cx(j)+6} ${y+30+hgt*1.3} ${cx(j)+6} ${y+30}" fill="none" stroke="var(--d)" stroke-width="1.3" opacity=".8"/>`;}
+    }
+    for(let i=0;i<5;i++){const x=ox+10+i*W;
+      h+=`<rect x="${x}" y="${y}" width="${W}" height="30" fill="var(--surface)" stroke="var(--d)" stroke-width="1.4"/>`;
+      if(A[i].u) h+=`<path d="${arrowD(x+11,y+25,x+11,y+5,5)}" stroke="var(--e)" stroke-width="2" fill="none"/>`;
+      if(A[i].d) h+=`<path d="${arrowD(x+23,y+5,x+23,y+25,5)}" stroke="var(--e)" stroke-width="2" fill="none"/>`;}
+    h+=`<text x="${ox+10+2.5*W}" y="${y+97}" font-size="12" font-weight="600" fill="var(--d)" text-anchor="middle">3d</text>`;
+    const sx=ox+10+5*W+14;
+    h+=`<rect x="${sx}" y="${y}" width="${W}" height="30" fill="var(--surface)" stroke="var(--s)" stroke-width="1.4"/>`;
+    if(s>=1) h+=`<path d="${arrowD(sx+11,y+25,sx+11,y+5,5)}" stroke="var(--e)" stroke-width="2" fill="none"/>`;
+    if(s>=2) h+=`<path d="${arrowD(sx+23,y+5,sx+23,y+25,5)}" stroke="var(--e)" stroke-width="2" fill="none"/>`;
+    h+=`<text x="${sx+W/2}" y="${y+97}" font-size="12" font-weight="600" fill="var(--s)" text-anchor="middle">4s</text>`;
+    const up=Math.min(d,5), dn=Math.max(0,d-5);
+    h+=`<text x="${ox+130}" y="${y+124}" font-size="12.5" fill="var(--ink)" text-anchor="middle">3d exchange pairs: ${pairs(up)}${dn?' + '+pairs(dn):''} = <tspan font-weight="700">${exchangePairs(d)}</tspan></text>`;
+    return h;
+  }
+  function draw(){
+    press($('xc'),Z); store('xz',Z);
+    const real=GS[Z-1], pred=aufbau(Z), E=ELEMENTS[Z-1];
+    svg.innerHTML=panel(10,'Filling order predicts',pred,false)+`<line x1="320" x2="320" y1="10" y2="290" stroke="var(--line)"/>`+panel(330,'Real atom (spectroscopy)',real,true);
+    const dp=pred['3d'], dr=real['3d'];
+    $('xbig').innerHTML=`${E[1]}: ${cfgHTML(real,true)}`;
+    $('xcap').innerHTML=Z===24
+      ?`Moving one electron 4s → 3d gives five parallel spins, one in each 3d orbital: a <b>half-filled</b> subshell. Same-spin pairs that can exchange: ${exchangePairs(dp)} → ${exchangePairs(dr)}. Unpaired electrons: ${unpaired(pred)} → ${unpaired(real)}.`
+      :`Moving one electron 4s → 3d completes the 3d subshell: <b>fully filled</b>. Exchange pairs: ${exchangePairs(dp)} → ${exchangePairs(dr)}. The 4s² pair has opposite spins, so it adds no exchange either way.`;
+  }
+  $('xc').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;Z=+b.dataset.k;draw();});
+  draw();
+})();
+
+/* =================== 8 · IONS =================== */
+function ionCfg(Z,q){ /* returns {occ, ghost, added, nist, rule} */
+  const sym=ELEMENTS[Z-1][0], neu=GS[Z-1];
+  if(q<0){const occ=aufbau(Z-q), added={};for(const s in occ){const d=occ[s]-(neu[s]||0);if(d>0)added[s]=d;}return {occ,added,ghost:{}};}
+  /* rule: remove from the highest n first, then highest l */
+  const rule=Object.assign({},neu), order=[];
+  for(let i=0;i<q;i++){const ks=sortNL(Object.keys(rule).filter(s=>rule[s]>0));if(!ks.length)break;const s=ks[ks.length-1];rule[s]--;order.push(s);}
+  const nist=ION_NIST[sym+q]?parseCfg(ION_NIST[sym+q]):null;
+  const occ=nist||rule, ghost={};
+  if(nist&&!sameOcc(nist,rule)){for(const s in neu){const d=(neu[s]||0)-(occ[s]||0);if(d>0)ghost[s]=Array.from({length:d},(_,i)=>'×');}}
+  else order.forEach((s,i)=>{(ghost[s]=ghost[s]||[]).push(String(i+1));});
+  return {occ,ghost,added:{},rule,nist,differs:!!nist&&!sameOcc(nist,rule)};
+}
+(function(){
+  const PRE=[[26,2],[26,3],[25,2],[29,1],[29,2],[30,2],[24,3],[22,3],[11,1],[8,-2],[9,-1],[1,-1]];
+  $('ipre').innerHTML=PRE.map(([z,q])=>`<button class="chip" data-k="${z},${q}">${ionName(ELEMENTS[z-1][0],q)}</button>`).join('');
+  let Z=26,q=2; try{const v=(load('ion')||'').split(',');if(v.length===2&&+v[0]>=1&&+v[0]<=36){Z=+v[0];q=+v[1];}}catch(e){}
+  const g=el('g',{},$('ibx'));
+  const qmin=z=>-(ANION[ELEMENTS[z-1][0]]||0), qmax=z=>Math.min(3,z);
+  function draw(){
+    q=Math.max(qmin(Z),Math.min(qmax(Z),q));
+    const sym=ELEMENTS[Z-1][0], R=ionCfg(Z,q), nE=Z-q, u=unpaired(R.occ);
+    drawBoxes(g,R.occ,{ghost:R.ghost,added:R.added,order:(Z>=21&&nE>=19&&(R.occ['3d']||0)>0)?'ion':'fill',label:q<0?'energy (filling order)':undefined});
+    press($('ipre'),Z+','+q);
+    $('izo').textContent=sym; $('ico').textContent=q>0?'+'+q:q<0?'−'+(-q):'0';
+    $('izd').disabled=Z<=1; $('izu').disabled=Z>=36; $('icd').disabled=q<=qmin(Z); $('icu').disabled=q>=qmax(Z);
+    $('ibig').innerHTML=`${ionName(sym,q)}: ${cfgHTML(R.occ,true)}`;
+    const iso=nE>=1&&nE<=36&&sameOcc(R.occ,GS[nE-1])?ELEMENTS[nE-1][0]:null;
+    const mu=Math.sqrt(u*(u+2));
+    $('ikv').innerHTML=`<dt>electrons</dt><dd>${Z} − (${q>0?'+'+q:q<0?'−'+(-q):0}) = ${nE}</dd><dt>configuration</dt><dd>${cfgHTML(R.occ,false)}</dd>`+
+      (iso?`<dt>isoelectronic with</dt><dd>${iso} (same ${nE} electrons, same configuration)</dd>`:(nE>=1&&nE<=36?`<dt>same electron count as</dt><dd>${ELEMENTS[nE-1][0]}, but a different arrangement</dd>`:''))+
+      `<dt>unpaired electrons</dt><dd>${u}</dd><dt>magnetic</dt><dd>${u?'paramagnetic':'diamagnetic'}</dd><dt>spin-only µ</dt><dd>√(${u}×${u+2}) = ${fmt(mu,2)} BM</dd>`;
+    let c;
+    if(q===0) c='A neutral atom. Raise the charge to remove electrons.';
+    else if(q<0) c=`Added electrons go into the next free place in the filling order (green). ${ionName(sym,q)} reaches a noble-gas configuration${iso?' (that of '+iso+')':''}.`;
+    else if(R.differs) c=`<span class="hw">near-tie</span> The simple rule gives ${cfgHTML(R.rule,true)}. Spectroscopy of the free gas ion finds ${cfgHTML(R.nist,true)}: for some +1 ions 4s and 3d are almost equal in energy. For 2+ and 3+ ions of Sc to Zn the rule always matches.`;
+    else if(Z>=21&&Z<=30) c=`The numbered electrons left in that order: ${[(R.ghost['4s']||[]).length?'4s first':'',(R.ghost['3d']||[]).length?'then 3d':''].filter(Boolean).join(', ')}. The highest shell (n = 4) empties before 3d, even though 4s filled first.${Z===26&&q===3?' Fe³⁺ is 3d⁵, half-filled: the textbook reason why Fe²⁺ is easily oxidised to Fe³⁺.':''}${Z===25&&q===2?' Mn²⁺ is 3d⁵ too: five unpaired electrons, strongly paramagnetic.':''}`;
+    else c=`Electrons leave from the outermost shell first (numbered).`;
+    $('icap').innerHTML=c;
+    store('ion',Z+','+q);
+  }
+  $('ipre').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;[Z,q]=b.dataset.k.split(',').map(Number);draw();});
+  $('izd').onclick=()=>{if(Z>1){Z--;draw();}}; $('izu').onclick=()=>{if(Z<36){Z++;draw();}};
+  $('icd').onclick=()=>{q--;draw();}; $('icu').onclick=()=>{q++;draw();};
+  draw();
+})();
+
+/* =================== QUIZZES (numbers computed here) =================== */
+const symZ=s=>ELEMENTS.findIndex(e=>e[0]===s)+1;
+const qnOK=(n,l,m)=>n>=1&&l>=0&&l<=n-1&&Math.abs(m)<=l;
+const SETS={a:[0,0,0],b:[1,0,0],c:[1,1,0],d:[2,1,0],e:[3,3,-3],f:[3,1,0]};
+const badSets=Object.keys(SETS).filter(k=>!qnOK(...SETS[k]));
+const unp=s=>unpaired(GS[symZ(s)-1]);
+const outerZ=t=>{const s=t.slice(0,2),c=+t.slice(2);return ELEMENTS.findIndex((e,i)=>{const o=GS[i];const top=sortNL(Object.keys(o)).pop();return top===s&&o[s]===c;})+1;};
+const elecs=(s,q)=>symZ(s)-q;
+const isoGroups=(()=>{const L=[['Na',1],['K',1],['Mg',2],['Ca',2],['S',-2],['Ar',0]],m={};L.forEach(([s,q])=>{const n=elecs(s,q);(m[n]=m[n]||[]).push(ionName(s,q));});return m;})();
+const p2s=cumP(2,0,1), p2p=cumP(2,1,1), pk1=peakR(1,0);
+const fe3=unpaired(ionCfg(26,3).occ), fe2=unpaired(ionCfg(26,2).occ);
+const ord62=(()=>{const L=[[1,4,2],[2,3,2],[3,4,1],[4,3,2],[5,3,1],[6,4,1]];const key=o=>FILL.indexOf(o[1]+LET[o[2]]);
+  const s=L.slice().sort((a,b)=>key(a)-key(b));let out='';s.forEach((o,i)=>{out+=(i?(key(o)===key(s[i-1])?' = ':' < '):'')+o[0];});return out;})();
+const QUIZ=[
+ {s:'q1',q:'Why is the boundary surface of an orbital drawn to enclose 90 % of the probability, not 100 %?',
+  o:['|ψ|² never becomes exactly zero at any finite distance','The electron is never found outside it','A 100 % surface would be smaller'],a:0,
+  why:'Probability density falls off with distance but never reaches zero, so a 100 % surface would have to be infinitely large. Measure ×1000 above: a few dots always land outside the 90 % sphere.'},
+ {s:'q1',q:'The value of |ψ|² at a point gives:',
+  o:['the probability of finding the electron exactly at that point','the probability per unit volume near that point','the charge of the electron at that point'],a:1,
+  why:'|ψ|² is a probability <i>density</i>. Multiply by a small volume to get a probability. A single point has zero volume.'},
+ {s:'q2',q:'Of the sets (n, l, m<sub>l</sub>, m<sub>s</sub>): (a) 0, 0, 0, +½; (b) 1, 0, 0, −½; (c) 1, 1, 0, +½; (d) 2, 1, 0, −½; (e) 3, 3, −3, +½; (f) 3, 1, 0, +½. Which are NOT possible?',
+  o:['a, c and e','c and e only','a and c only','e only'],a:['a','c','e'].join()===badSets.join()?0:1,
+  why:`Impossible: ${badSets.join(', ')}. (a) n cannot be 0. (c) for n = 1, l can only be 0. (e) for n = 3, l is at most 2. Try (c) and (e) on the steppers.`},
+ {s:'q2',q:'What is the lowest value of n that allows g orbitals (l = 4) to exist?',
+  o:['3','4','5','6'],a:2,why:'l can be at most n − 1, so l = 4 needs n ≥ 5. g orbitals first appear in the fifth shell.'},
+ {s:'q2',q:'How many electrons in an atom can have n = 4 and m<sub>s</sub> = −½?',
+  o:[String(4*4),String(2*4*4),'8','4'],a:0,
+  why:`Shell n = 4 has n² = ${4*4} orbitals. Each orbital holds exactly one electron with m<sub>s</sub> = −½, so ${4*4}. (And n = 3, l = 0 allows just 2: the one 3s orbital.)`},
+ {s:'q2',q:'Which of the orbitals 1p, 2s, 2p, 3f can exist?',
+  o:['2s and 2p only','all four','2s, 2p and 3f','1p and 2s'],a:0,
+  why:`1p would need l = 1 with n = 1, and 3f would need l = 3 with n = 3: both break l ≤ n − 1. ${['1p','2s','2p','3f'].filter(o=>qnOK(+o[0],LET.indexOf(o[1]),0)).join(' and ')} exist.`},
+ {s:'q3',q:'How many radial and angular nodes does a 3p orbital have?',
+  o:[`${3-1-1} radial, 1 angular`,'2 radial, 0 angular','0 radial, 2 angular','1 radial, 2 angular'],a:0,
+  why:`Radial: n − l − 1 = 3 − 1 − 1 = ${3-1-1}. Angular: l = 1. Total n − 1 = 2. Pick 3p<sub>z</sub> above and reveal.`},
+ {s:'q3',q:'An orbital has 2 radial nodes and 1 angular node. Which is it?',
+  o:['3p','4p','4d','3d'],a:1,why:'One angular node means l = 1 (a p orbital). n − l − 1 = 2 gives n = 4. So 4p.'},
+ {s:'q3',q:'3d<sub>z²</sub> has l = 2 angular nodes, yet no nodal plane. What are its angular nodes?',
+  o:['Two cones around the z axis','Two spheres','The xy plane, counted twice'],a:0,
+  why:`The angular part 3z² − r² is zero where cos²θ = 1/3, i.e. θ = ${fmt(Math.acos(1/Math.sqrt(3))*180/Math.PI,1)}° from the z axis: a double cone. Reveal the nodes of 3d<sub>z²</sub> above.`},
+ {s:'q4',q:'For a hydrogen 1s electron, the most probable distance from the nucleus is:',
+  o:['0, at the nucleus','a₀ = 52.9 pm','2a₀','There is none'],a:1,
+  why:`The radial probability peaks at r = ${fmt(pk1,2)} a₀ = ${fmt(pk1*A0_PM,1)} pm. |ψ|² itself is largest at the nucleus, but the shell there has no volume.`},
+ {s:'q4',q:'Within r = 1 a₀ of the nucleus, which has more of its probability: a 2s or a 2p electron?',
+  o:['2s','2p','equal'],a:p2s>p2p?0:1,
+  why:`2s: ${fmt(100*p2s,1)} %, 2p: ${fmt(100*p2p,1)} % (set A = 2s, B = 2p and drag the line to 1). The inner hump of 2s penetrates; this lowers its energy below 2p in a many-electron atom.`},
+ {s:'q5',q:'NCERT Ex 2.62. Order by energy: 1) 4d 2) 3d 3) 4p 4) 3d 5) 3p 6) 4p (n, l given by the labels).',
+  o:[ord62,'5 < 2 = 4 < 1 < 3 = 6','2 = 4 < 5 < 3 = 6 < 1','5 < 3 = 6 < 2 = 4 < 1'],a:0,
+  why:`n + l: 3p = 4; 3d = 5; 4p = 5 (tie with 3d, but higher n, so above it); 4d = 6. Electrons in the same subshell (2 and 4; 3 and 6) have the same energy whatever their m<sub>l</sub> and m<sub>s</sub>. Order: ${ord62}.`},
+ {s:'q5',q:'In which order are 6s, 4f, 5d and 6p filled?',
+  o:[FILL.filter(s=>['6s','4f','5d','6p'].includes(s)).join(' < '),'4f < 5d < 6s < 6p','6s < 5d < 4f < 6p'],a:0,
+  why:'n + l: 6s = 6, 4f = 7, 5d = 7, 6p = 7. 6s first; the other three all have n + l = 7, so lower n first: 4f, 5d, 6p.'},
+ {s:'q5',q:'In a hydrogen atom, how do the energies of 3s and 3d compare?',
+  o:['3s lower','3d lower','equal'],a:2,
+  why:`With one electron there is no shielding: energy depends on n only, E = −${fmt(E_H_EV,1)} eV/n² = −${fmt(E_H_EV/9,2)} eV for every n = 3 orbital (−${fmt(E_H_EV*EV_J/9*1e19,2)} × 10⁻¹⁹ J per atom).`},
+ {s:'q6',q:'NCERT Ex 2.66. Unpaired electrons in P, Si, Cr, Fe and Kr?',
+  o:[['P','Si','Cr','Fe','Kr'].map(unp).join(', '),'3, 2, 4, 4, 0','5, 4, 6, 2, 0','3, 2, 6, 2, 0'],a:0,
+  why:`P 3p³: ${unp('P')}; Si 3p²: ${unp('Si')}; Cr 3d⁵4s¹: ${unp('Cr')}; Fe 3d⁶4s²: ${unp('Fe')}; Kr: ${unp('Kr')}. Check each in the simulator.`},
+ {s:'q6',q:'Atomic numbers of the elements whose outermost electrons are 3s¹, 2p³ and 3p⁵?',
+  o:[['3s1','2p3','3p5'].map(outerZ).join(', '),'11, 5, 15','3, 7, 17','19, 7, 35'],a:0,
+  why:`${['3s1','2p3','3p5'].map(t=>ELEMENTS[outerZ(t)-1][1]+' ('+outerZ(t)+')').join(', ')}.`},
+ {s:'q6',q:'In which element does the first pair of electrons appear in the 2p subshell?',
+  o:['Carbon','Nitrogen','Oxygen','Fluorine'],a:2,
+  why:'Hund: the three 2p orbitals take one electron each first (B, C, N). The 4th 2p electron must pair: oxygen, 2p⁴. Try placing it yourself.'},
+ {s:'q7',q:'NCERT Ex 2.26. An atom has 29 electrons and 35 neutrons. Its configuration?',
+  o:[cfgHTML(GS[28],true),cfgHTML(aufbau(29),true),'[Ar] 3d<sup>10</sup> 4s<sup>2</sup> 4p<sup>1</sup>'],a:0,
+  why:`29 electrons in a neutral atom means 29 protons: copper (mass number 29 + 35 = 64). Copper is an exception: ${cfgHTML(GS[28],true)}, not ${cfgHTML(aufbau(29),true)}.`},
+ {s:'q7',q:'How many same-spin pairs (possible exchanges) are there in a d⁵ subshell, and in d⁴?',
+  o:[`${exchangePairs(5)} and ${exchangePairs(4)}`,'5 and 4','20 and 16','10 and 10'],a:0,
+  why:`Five parallel spins can be paired in 5 × 4 / 2 = ${exchangePairs(5)} ways; four in 4 × 3 / 2 = ${exchangePairs(4)}.`},
+ {s:'q8',q:'NCERT Ex 2.22. Group the isoelectronic species among Na⁺, K⁺, Mg²⁺, Ca²⁺, S²⁻, Ar.',
+  o:[Object.keys(isoGroups).map(k=>isoGroups[k].join(', ')+' ('+k+' e⁻)').join('; '),'Na⁺, K⁺ (alkali ions); Mg²⁺, Ca²⁺; S²⁻, Ar','all six have 18 electrons'],a:0,
+  why:`Count electrons = Z − charge: ${Object.keys(isoGroups).map(k=>isoGroups[k].join(', ')+' have '+k).join('; ')}.`},
+ {s:'q8',q:'Which has more unpaired electrons, Fe²⁺ or Fe³⁺?',
+  o:[`Fe³⁺ (${fe3})`,`Fe²⁺ (${fe2})`,'equal'],a:fe3>fe2?0:1,
+  why:`Fe²⁺ = [Ar] 3d⁶: ${fe2} unpaired, µ = ${fmt(Math.sqrt(fe2*(fe2+2)),2)} BM. Fe³⁺ = [Ar] 3d⁵: ${fe3} unpaired, µ = ${fmt(Math.sqrt(fe3*(fe3+2)),2)} BM. Both lose the 4s pair first.`},
+ {s:'q8',q:'NCERT Ex 2.23. The configuration of O²⁻ is:',
+  o:[cfgHTML(ionCfg(8,-2).occ,false),'1s<sup>2</sup> 2s<sup>2</sup> 2p<sup>4</sup>','1s<sup>2</sup> 2s<sup>2</sup> 2p<sup>2</sup>'],a:0,
+  why:`O has 8 electrons; O²⁻ has 10, the same as Ne. (Likewise H⁻ = 1s², like He; Na⁺ and F⁻ are also neon-like.)`}
+];
+/* deterministic per-question shuffle of the displayed order; data-j keeps the original index used by the key */
+function perm(i,n){let x=Math.imul(i+1,934443)>>>0;const r=()=>{x^=x<<13;x>>>=0;x^=x>>>17;x^=x<<5;x>>>=0;return x/4294967296;};
+  const p=[...Array(n).keys()];for(let k=n-1;k>0;k--){const j=Math.floor(r()*(k+1));[p[k],p[j]]=[p[j],p[k]];}return p;}
+function renderQuiz(){
+  ['q1','q2','q3','q4','q5','q6','q7','q8'].forEach(id=>{
+    $(id).innerHTML=QUIZ.map((q,i)=>q.s!==id?'':`<div class="panel"><p class="qn">Q${i+1}</p><p>${q.q}</p>
+      <div class="opts" data-i="${i}">${perm(i,q.o.length).map(j=>`<button class="opt" data-j="${j}">${q.o[j]}</button>`).join('')}</div><div class="why" hidden></div></div>`).join('');
+  });
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.qgrid .opt'); if(!b||b.disabled) return;
+  const box=b.parentElement, q=QUIZ[+box.dataset.i], j=+b.dataset.j;
+  box.querySelectorAll('.opt').forEach(x=>{const k=+x.dataset.j;x.disabled=true;if(k===q.a)x.classList.add('right');else if(k===j)x.classList.add('wrong');});
+  const w=box.nextElementSibling; w.hidden=false; w.innerHTML=(j===q.a?'<b>Right.</b> ':'<b>Not quite.</b> ')+q.why;
+});
+$('qreset').onclick=renderQuiz;
+renderQuiz(); kick();
+</script>
+</body>
+</html>

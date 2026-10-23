@@ -12,14 +12,17 @@ The project-wide rules in the root [`CLAUDE.md`](../CLAUDE.md) apply. This file 
 
 ## Layout
 
-- `physical/` — physical chemistry (none yet)
-- `inorganic/` — `periodic-table.html` (Module 01)
-- `organic/` — `effects-ladder.html` (Module 02), `mechanism-player.html` (Module 03)
+- `physical/` — atomic structure: `atom-and-light.html`, `bohr-model.html`, `orbitals-configuration.html`. These are the shared home of the Bohr model, spectra, photoelectric effect and de Broglie (see the root `CLAUDE.md`).
+- `inorganic/` — `periodic-table.html`
+- `organic/` — `effects-ladder.html`, `mechanism-player.html`
 
-Module numbers are per subject and are referenced across pages ("Module 2's σ map"), so don't renumber existing modules.
+`chemistry/index.html` lists modules grouped by branch (physical, inorganic, organic) in NCERT chapter order, numbered down the page. Numbers are display order only: renumber freely when inserting, and never refer to a module by its number on a page (link to it by name).
+
+`SYLLABUS.md` is the coverage checklist, built from the NCERT chapter text before building a chapter (see the root `CLAUDE.md`).
 
 ## Visual rules
 
+- Atomic-structure colour tokens: `--e` (electron), `--nuc` (nucleus/proton), `--neu` (neutron), `--photon`, `--ph1`/`--ph2` (orbital phase), `--s` `--p` `--d` `--f` (subshells). Reuse them on later chapters. Spectral lines are drawn in their approximate real colour in the visible band (labelled approximate), --muted outside it.
 - In the periodic table, circle area ∝ (covalent radius)². Use one radius type throughout (Cordero 2008 covalent radii).
 - Curved arrows in mechanisms are red and always go **from** an electron pair (lone pair or bond) **to** where it ends up.
 
@@ -27,6 +30,6 @@ Module numbers are per subject and are referenced across pages ("Module 2's σ m
 
 - More mechanisms (aldol, Cannizzaro, esterification, SN at acyl carbon, halogenation of benzene, Friedel–Crafts).
 - Inorganic: ionic radii and isoelectronic series, lattice/hydration enthalpy trends, oxidation-state stability (inert pair effect).
-- Acidity/basicity explorer combining Modules 1 and 2 (e.g. HX acidity, oxoacids).
+- Acidity/basicity explorer combining the periodic table and the effects ladder (e.g. HX acidity, oxoacids).
 - Physical: equilibrium, kinetics, electrochemistry.
 - Thermodynamics: the laws, PV work and the sign conventions live in `physics/thermodynamics/` (shared, see the root `CLAUDE.md`), and the chemistry index links there. Chemistry-only pages to add in `physical/`: enthalpy and Hess's law, bond enthalpies, entropy and Gibbs energy, spontaneity. These use the IUPAC convention (ΔU = q + w) and link back to the shared page's sign-convention section (`#signs`).
