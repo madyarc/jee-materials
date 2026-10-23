@@ -48,7 +48,7 @@ Every formula was checked against the NCERT Class 11 Chemistry rationalised text
 | Spin-only µ = √(n(n+2)) BM | NCERT Class 12 Chemistry, "The d- and f-Block Elements" |
 | Cricket ball 155.9–163 g, circumference 22.4–22.9 cm | MCC Laws of Cricket, Law 4 |
 
-Simulated or schematic, labelled on the pages: Millikan drop masses (±3 % scatter); the gold-foil picture exaggerates large deflections (~1 % back-scattered) with the nucleus drawn ~10 000× too big; Zeeman/Stark patterns; visible-band colours (approximate); orbital slices use hydrogen ψ for all atoms (a model for many-electron atoms).
+Simulated or schematic, labelled on the pages: Millikan drop masses (±3 % scatter); the gold-foil picture exaggerates large deflections (~1 % back-scattered) with the nucleus drawn ~10 000× too big; Zeeman/Stark patterns; visible-band colours (approximate); orbital slices use hydrogen ψ for all atoms (a model for many-electron atoms). Thomson e/m procedure uses the small-angle deflection formula (gives 1.7646×10¹¹ vs CODATA 1.7588×10¹¹ C kg⁻¹, stated on the page). Slit patterns (§11) are Fraunhofer single- and double-slit intensities (standard optics, e.g. NCERT Class 12 Physics "Wave Optics"); the which-slit detector is idealised.
 
 Errors and inconsistencies in NCERT (not repeated on the pages):
 - §2.2.5: a classical electron would spiral in after 10⁻⁸ s; the standard estimate is ≈ 1.6×10⁻¹¹ s.

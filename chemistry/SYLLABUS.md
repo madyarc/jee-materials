@@ -44,7 +44,7 @@ Module: `physical/atom-and-light.html`
 - [x] KE_max vs ν graph: straight lines, slope h, intercept ν₀, parallel for different metals **[JEE]** — §10 graph
 - [x] Stopping potential eV₀ = KE_max **[JEE]** — §10 readout + cap
 - [x] Problems 2.8, 2.9 (threshold λ, KE) — §10 lab readouts
-- [x] Dual behaviour of radiation: wave in propagation (interference, diffraction), particle when interacting with matter — §11 photon-by-photon double slit
+- [x] Dual behaviour of radiation: wave in propagation (interference, diffraction), particle when interacting with matter — §11 photon-by-photon single/double slit; which-slit detector (beyond the syllabus)
 - [x] Continuous spectrum (prism, red bends least); emission vs absorption spectra (absorption = negative of emission) — §12 strips
 - [x] Line (atomic) spectra unique to each element, fingerprints; elements found by spectroscopy (Rb, Cs, Tl, In, Ga, Sc; He in the Sun) — §12 caps + Q34
 - [x] Hydrogen line spectrum exists (series named, explained on bohr-model.html) — §12 strip (NIST Balmer lines) + link to bohr-model.html

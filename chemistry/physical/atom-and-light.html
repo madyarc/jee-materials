@@ -68,7 +68,7 @@ p{margin:0}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .slider{display:flex;align-items:center;gap:10px;font-size:13.5px;flex-wrap:wrap}
 .slider label{color:var(--muted);min-width:8.2em}
-.slider input{flex:1 1 150px;min-width:120px;accent-color:var(--accent)}
+.slider input{flex:1 1 110px;min-width:100px;accent-color:var(--accent)}
 .slider output{font:500 13px var(--f-mono);min-width:13ch;text-align:right}
 .big{font:600 18px var(--f-display)}
 .cap{border-left:3px solid var(--line);padding:2px 0 2px 10px;font-size:14px;max-width:80ch}
@@ -133,11 +133,11 @@ footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direct
       </div>
       <div class="panel stack">
         <div class="slider"><label for="crtE">electric field E</label><input type="range" id="crtE" min="0" max="40" step="0.5" value="20"><output id="crtEo"></output></div>
-        <div class="slider"><label for="crtB">magnetic field B</label><input type="range" id="crtB" min="0" max="2" step="0.01" value="0.60"><output id="crtBo"></output></div>
+        <div class="slider"><label for="crtB">magnetic field B</label><input type="range" id="crtB" min="0" max="2" step="0.001" value="0.600"><output id="crtBo"></output></div>
         <div class="slider"><label for="crtV">beam speed v</label><input type="range" id="crtV" min="1" max="5" step="0.05" value="2.5"><output id="crtVo"></output></div>
         <dl class="kv" id="crtKv"></dl>
         <p class="cap key" id="crtCap"></p>
-        <div class="row"><button class="btn" id="crtM">Measure e/m the way Thomson did</button></div>
+        <div class="row"><button class="btn primary" id="crtM">Measure e/m the way Thomson did: step 1</button><button class="btn" id="crtMr" hidden>Start again</button></div>
         <p class="cap" id="crtMo" hidden></p>
       </div>
     </div>
@@ -155,7 +155,7 @@ footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direct
       <div class="panel stack">
         <div class="svgbox"><svg id="mil" viewBox="0 0 520 260" role="img" aria-label="Oil drop between charged plates" style="min-width:420px"></svg></div>
         <div class="slider"><label for="milV">plate voltage V</label><input type="range" id="milV" min="0" max="6000" step="1" value="1500"><output id="milVo"></output></div>
-        <div class="row"><span class="muted">fine:</span><button class="btn" data-dv="-10">−10 V</button><button class="btn" data-dv="-1">−1 V</button><button class="btn" data-dv="1">+1 V</button><button class="btn" data-dv="10">+10 V</button></div>
+        <div class="row"><span class="muted">fine:</span><button class="btn" data-dv="-100">−100 V</button><button class="btn" data-dv="-10">−10 V</button><button class="btn" data-dv="-1">−1 V</button><button class="btn" data-dv="1">+1 V</button><button class="btn" data-dv="10">+10 V</button><button class="btn" data-dv="100">+100 V</button></div>
         <div class="row"><button class="btn primary" id="milRec" disabled>Record this drop's charge</button><button class="btn" id="milNew">New drop</button><button class="btn" id="milPlay">Pause</button></div>
       </div>
       <div class="panel stack">
@@ -169,7 +169,7 @@ footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direct
       <p class="muted">Each hovering drop you record adds one mark. Or add 150 simulated drops, each measured with about ±3 % scatter.</p>
       <div class="svgbox"><svg id="hist" viewBox="0 0 680 190" role="img" aria-label="Histogram of measured drop charges" style="min-width:560px"></svg></div>
       <div class="row"><button class="btn" id="histSim">Add 150 simulated drops</button><button class="btn" id="histClr">Clear</button><span class="muted" id="histN"></span></div>
-      <p class="cap key">The charges pile up at 1e, 2e, 3e … and nowhere in between. Charge is <b>quantised</b>: q = ne, with e = 1.602176634 × 10⁻¹⁹ C. Combining e with Thomson's e/m gives the electron's mass, mₑ = e ÷ (e/mₑ) = <span class="mono" id="meVal"></span> kg.</p>
+      <p class="cap key">The charges pile up at 1e, 2e, 3e … and nowhere in between. Charge is <b>quantised</b>: q = ne, with e = 1.602176634 × 10⁻¹⁹ C. Your own drops carry a small reading error (a drop that drifts by less than about 1.5 % looks still), so they scatter a little round the lines, as real measurements do. Combining e with Thomson's e/m gives the electron's mass, mₑ = e ÷ (e/mₑ) = <span class="mono" id="meVal"></span> kg.</p>
     </div>
     <div class="qgrid" id="q2"></div>
   </section>
@@ -393,19 +393,27 @@ footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direct
   <section class="stack">
     <div>
       <h2>11 · Wave or particle? Both</h2>
-      <p class="lede">Interference and diffraction need waves; the black body and the photoelectric effect need particles. Watch light pass through two narrow slits, one photon at a time.</p>
+      <p class="lede">Interference and diffraction need waves; the black body and the photoelectric effect need particles. So which is light? Send it through slits one photon at a time and look at the screen.</p>
+      <p class="muted" style="margin-top:6px"><span class="hw">beyond the syllabus</span> Not asked in JEE, but this is what quantum mechanics really says.</p>
     </div>
     <div class="split">
       <div class="panel stack">
-        <div class="row"><button class="btn primary" id="dsPlay">Play</button><button class="btn" id="dsClr">Clear</button><span class="muted" id="dsN"></span></div>
-        <div class="svgbox"><svg id="ds" viewBox="0 0 640 220" role="img" aria-label="Photons arriving one by one build an interference pattern" style="min-width:520px"></svg></div>
-        <p class="muted">Schematic: pattern for two narrow slits; photon positions drawn at random from it.</p>
+        <h3>Observing light as it leaves the slit: particle-like hits, a wave-like pattern</h3>
+        <div class="row"><div class="chips" id="slitN" role="group" aria-label="Number of slits"><button class="chip" data-k="1">Single slit</button><button class="chip" data-k="2">Double slit</button></div>
+          <label class="muted"><input type="checkbox" id="dsWatch"> watch which slit <span class="hw">idealised detector</span></label></div>
+        <div class="svgbox"><svg id="ds" viewBox="0 0 580 320" role="img" aria-label="Photons passing a single or double slit and landing on a screen" style="min-width:480px"></svg></div>
+        <div class="row"><button class="btn primary" id="dsPlay">Play</button><button class="btn" id="dsMany">+1000 photons</button><button class="btn" id="dsClr">Clear screen</button><span class="muted" id="dsN"></span></div>
+        <div class="legend"><span><b class="dot" style="background:var(--photon)"></b>one photon's hit</span><span><i style="background:var(--muted)"></i>predicted pattern (wave model)</span><span>Slits drawn magnified; screen far away (drawn close)</span></div>
       </div>
       <div class="panel stack">
-        <p class="cap key">Each photon lands at <b>one point</b>, like a particle. But where they land builds up bright and dark <b>fringes</b>, the interference pattern of a wave. Light travels as a wave and interacts with matter (screen, metal, eye) as particles. This is its <b>dual behaviour</b>.</p>
-        <p class="cap">Electrons turn out to have the same dual nature (de Broglie): <a href="bohr-model.html">Bohr's Model</a>.</p>
+        <div class="slider"><label for="dsL">wavelength λ</label><input type="range" id="dsL" min="400" max="700" step="10" value="550"><output id="dsLo"></output></div>
+        <div class="slider"><label for="dsA">slit width a</label><input type="range" id="dsA" min="10" max="60" step="1" value="30"><output id="dsAo"></output></div>
+        <div class="slider" id="dsDrow"><label for="dsD">slit separation d</label><input type="range" id="dsD" min="100" max="500" step="10" value="200"><output id="dsDo"></output></div>
+        <dl class="kv" id="dsKv"></dl>
+        <p class="cap key" id="dsCap"></p>
       </div>
     </div>
+    <p class="cap">Each photon lands at <b>one point</b>, like a particle. But where they land builds up the bright and dark bands of a <b>wave</b> pattern, and with two slits open the pattern is not just two single-slit patterns added up. Light travels as a wave and gives up its energy to matter (screen, metal, eye) as particles: its <b>dual behaviour</b>. Electrons turn out to behave the same way (de Broglie): <a href="bohr-model.html">Bohr's Model</a>.</p>
     <div class="qgrid" id="q11"></div>
   </section>
 
@@ -433,7 +441,7 @@ footer{font-size:12px;color:var(--muted);max-width:92ch;display:flex;flex-direct
   <p class="cap">Next: <a href="bohr-model.html">Bohr's Model</a>, then <a href="orbitals-configuration.html">Orbitals and Electronic Configuration</a>. Periodic trends built on these: <a href="../inorganic/periodic-table.html">Periodic Table</a>.</p>
 
   <footer>
-    <p><b>Models used:</b> uniform fields between the cathode-ray plates, with no fringing (schematic tube, true to scale only inside); oil drops treated as spheres with simple air drag, speeds not to scale, simulated drop masses and measurement scatter; α particles and nuclei as point charges repelling by Coulomb's law (nucleus fixed, electrons ignored), with the nucleus drawn far too large in the foil picture; Thomson atom as a uniform ball of positive charge; classical collapse time from the radiation of an accelerating charge (classical prediction, wrong for real atoms); electromagnetic waves in vacuum; black body as Planck's ideal radiator; photoelectric emission from a clean surface with no stray light. Spectrum region boundaries and drawn colours are approximate.</p>
+    <p><b>Models used:</b> uniform fields between the cathode-ray plates, with no fringing (schematic tube, true to scale only inside); oil drops treated as spheres with simple air drag, speeds not to scale, simulated drop masses and measurement scatter; α particles and nuclei as point charges repelling by Coulomb's law (nucleus fixed, electrons ignored), with the nucleus drawn far too large in the foil picture; Thomson atom as a uniform ball of positive charge; classical collapse time from the radiation of an accelerating charge (classical prediction, wrong for real atoms); electromagnetic waves in vacuum; black body as Planck's ideal radiator; photoelectric emission from a clean surface with no stray light; slit patterns from the far-screen (Fraunhofer) wave model with slits drawn magnified and an idealised which-path detector. Spectrum region boundaries and drawn colours are approximate.</p>
     <p><b>Based on:</b> NCERT Chemistry Class 11, "Structure of Atom"; NCERT Physics Class 12, "Dual Nature of Radiation and Matter", "Atoms" and "Nuclei"; P. W. Atkins, <i>Physical Chemistry</i>. Constants: CODATA recommended values. Work functions: CRC Handbook of Chemistry and Physics. Hydrogen line wavelengths: NIST Atomic Spectra Database.</p>
   </footer>
 </div>
@@ -572,7 +580,7 @@ function chipGroup(box,key,def,valid,cb){
   function draw(){
     const E=+$('crtE').value*1e3, B=+$('crtB').value*1e-3, v=+$('crtV').value*1e7;
     const eOn=$('crtEon').checked, bOn=$('crtBon').checked;
-    $('crtEo').textContent=fmt(E/1e3,1)+' kV/m'; $('crtBo').textContent=fmt(B*1e3,2)+' mT'; $('crtVo').textContent=fmt(v/1e7,2)+' ×10⁷ m/s';
+    $('crtEo').textContent=fmt(E/1e3,1)+' kV/m'; $('crtBo').textContent=fmt(B*1e3,3)+' mT'; $('crtVo').textContent=fmt(v/1e7,2)+' ×10⁷ m/s';
     const qm=S.p==='e'?-C.emq:C.e/C.mp;
     eArr.setAttribute('visibility',eOn?'visible':'hidden'); bSym.setAttribute('visibility',bOn?'visible':'hidden');
     const r=run(E,B,v,qm,eOn,bOn);
@@ -600,19 +608,47 @@ function chipGroup(box,key,def,valid,cb){
     else if(bal) cap=`<b>Balanced:</b> eE = evB, so the beam is undeflected and <b>v = E/B</b> = ${sci(E/B,3)} m/s. This is how Thomson measured the speed of the electrons.`;
     else cap=`Both fields on, not balanced: the ${FE>FB?'electric':'magnetic'} force wins. Adjust E or B until the spot returns to B (eE = evB).`;
     $('crtCap').innerHTML=cap;
-    $('crtM').disabled=!(bal&&S.p==='e');
     S.bal=bal; S.E=E; S.B=B; S.v=v; S.yA=rA.hit?null:rA.y;
   }
-  $('crtM').addEventListener('click',()=>{
-    if(!S.bal||S.yA===null) return;
-    const vb=S.E/S.B, y=S.yA;            /* E-only deflection on the screen, m */
-    const em=y*vb*vb/(S.E*L*(L/2+D));
-    const o=$('crtMo'); o.hidden=false;
-    o.innerHTML=`Step 1, balanced: v = E/B = ${sci(vb,3)} m/s. Step 2, switch off B: the spot moves to A, ${fmt(y*1000,2)} mm up. With E alone the beam leaves the plates displaced and tilted, so y = (e/m)(EL/v²)(L/2 + D). Step 3: e/m = yv²/(EL(L/2 + D)) = <b>${sci(em,4)} C kg⁻¹</b>. (Accepted: ${sci(C.emq,4)}; the small difference comes from the step-by-step simulation.)`;
+  /* Thomson's measurement as three visible steps; every click does something and says what */
+  const M={step:0,log:[]};
+  const mBtn=$('crtM'), mOut=$('crtMo'), mRe=$('crtMr');
+  function mShow(){mOut.hidden=!M.log.length;mOut.innerHTML=M.log.map(l=>'<span style="display:block;margin-bottom:4px">'+l+'</span>').join('');
+    mBtn.textContent=M.step===0?'Measure e/m the way Thomson did: step 1':M.step===1?'Step 2: switch off B':M.step===2?'Step 3: work out e/m':'Measure again';
+    mRe.hidden=M.step===0;}
+  function mReset(){M.step=0;M.log=[];mShow();}
+  mBtn.addEventListener('click',()=>{
+    if(M.step===0||M.step===3){
+      M.log=[];
+      if(S.p!=='e'){S.p='e';press($('crtP'),'e');store('at1-crtp','e');M.log.push('Switched to electrons (cathode rays).');}
+      const v=+$('crtV').value*1e7; let E=+$('crtE').value*1e3;
+      if(E<1000){E=10000;M.log.push('E was zero, so it is set to 10 kV/m.');}
+      if(E/v>2e-3){E=Math.floor(2e-3*v/500)*500;M.log.push(`E lowered to ${fmt(E/1e3,1)} kV/m so the balancing B stays within the 2 mT range.`);}
+      const bad=e=>{const r=run(e,0,v,-C.emq,true,false);return r.hit||Math.abs(r.y)>0.025;}; /* must clear the plates and land on the 5 cm screen */
+      if(bad(E)){let e2=E;while(e2>500&&bad(e2))e2-=500;
+        M.log.push(`With E = ${fmt(E/1e3,1)} kV/m alone the beam would ${run(E,0,v,-C.emq,true,false).hit?'hit the + plate':'miss the screen'}, so E is first lowered to ${fmt(e2/1e3,1)} kV/m, the largest value that keeps spot A on the screen.`);E=e2;}
+      const Bm=Math.round(E/v*1e6)/1e3; /* mT, to the slider's 0.001 mT */
+      $('crtE').value=E/1e3; $('crtB').value=Bm; $('crtEon').checked=true; $('crtBon').checked=true; draw();
+      M.E=E; M.B=Bm*1e-3; M.v=E/M.B;
+      M.log.push(`<b>Step 1.</b> Both fields on, B adjusted to ${fmt(Bm,3)} mT: the spot is back at the centre, so eE = evB and the electrons' speed is <b>v = E/B = ${sci(M.v,3)} m/s</b>.`);
+      M.step=1;
+    } else if(M.step===1){
+      $('crtE').value=M.E/1e3; $('crtBon').checked=false; $('crtEon').checked=true; draw();
+      const r=run(M.E,0,M.v,-C.emq,true,false); M.y=r.y;
+      M.log.push(`<b>Step 2.</b> B switched off: the electric force alone pulls the beam toward the + plate, and the spot moves to A, <b>y = ${fmt(r.y*1000,2)} mm</b> up.`);
+      M.step=2;
+    } else if(M.step===2){
+      const em=M.y*M.v*M.v/(M.E*L*(L/2+D));
+      M.log.push(`<b>Step 3.</b> In the plates the beam is pushed sideways for a time L/v, so it leaves displaced and tilted; on the screen y = (e/m)(EL/v²)(L/2 + D). So e/m = yv²/(EL(L/2 + D)) = <b>${sci(em,4)} C kg⁻¹</b>. Accepted value: ${sci(C.emq,4)} C kg⁻¹ (the small difference is the small-angle approximation in that formula).`);
+      M.step=3;
+    }
+    mShow();
   });
-  S.p=chipGroup($('crtP'),'at1-crtp','e',v=>v==='e'||v==='p',v=>{S.p=v;draw();});
-  ['crtE','crtB','crtV'].forEach(id=>$(id).addEventListener('input',()=>{$('crtMo').hidden=true;draw();}));
-  ['crtEon','crtBon'].forEach(id=>$(id).addEventListener('change',draw));
+  mRe.addEventListener('click',mReset);
+  mShow();
+  S.p=chipGroup($('crtP'),'at1-crtp','e',v=>v==='e'||v==='p',v=>{S.p=v;if(typeof M!=='undefined'&&M.step)mReset();draw();});
+  ['crtE','crtB','crtV'].forEach(id=>$(id).addEventListener('input',()=>{if(M.step)mReset();draw();}));
+  ['crtEon','crtBon'].forEach(id=>$(id).addEventListener('change',()=>{if(M.step)mReset();draw();}));
   $('emVal').textContent=sci(C.emq,6);
   draw();
 })();
@@ -638,25 +674,28 @@ const HIST=[];
   const fW=el('path',{stroke:'var(--ink)','stroke-width':2,fill:'none'},svg), fE=el('path',{stroke:'var(--c1)','stroke-width':2,fill:'none'},svg), fD=el('path',{stroke:'var(--muted)','stroke-width':2,fill:'none'},svg);
   const lW=txt(svg,{'font-size':11,fill:'var(--ink)'},'mg'), lE=txt(svg,{'font-size':11,fill:'var(--c1)'},'qE'), lD=txt(svg,{'font-size':11,fill:'var(--muted)'},'drag');
   const S={m:0,n:0,y:(YT+YB)/2,vy:0};
+  const HOV=0.015, NEAR=0.05; /* by eye, a drop drifting slower than this looks stationary: ±1.5 % hover, ±5 % "nearly" */
   function newDrop(){S.m=(2+Math.random()*4)*1e-15;S.n=1+Math.floor(Math.random()*5);S.y=YT+40;}
   function forces(){const V=+$('milV').value, q=S.n*C.e, Fe=q*V/d, W=S.m*G;return {V,q,Fe,W,net:Fe-W};}
   function draw(){
     const f=forces(), x=(XL+XR)/2, y=S.y;
     set(drop,{cx:x,cy:y}); set(minus,{x,y:y+3.5});
-    const sc=40/f.W, hov=Math.abs(f.net)<0.002*f.W;
+    const sc=40/f.W, hov=Math.abs(f.net)<HOV*f.W, near=!hov&&Math.abs(f.net)<NEAR*f.W;
     set(fW,{d:arrowD(x,y+9,x,y+9+40,6)}); set(lW,{x:x+8,y:y+44});
-    const lenE=Math.min(80,f.Fe*sc); set(fE,{d:arrowD(x,y-9,x,y-9-lenE,6),visibility:lenE>3?'visible':'hidden'}); set(lE,{x:x+8,y:y-9-Math.min(lenE,60)+4,visibility:lenE>3?'visible':'hidden'});
+    const lenE=Math.max(0,Math.min(80,f.Fe*sc,y-9-(YT+6))); set(fE,{d:arrowD(x,y-9,x,y-9-lenE,6),visibility:lenE>3?'visible':'hidden'}); set(lE,{x:x+8,y:Math.max(YT+16,y-9-Math.min(lenE,60)+4),visibility:lenE>3?'visible':'hidden'});
     /* drag opposes motion; equals net force in magnitude at terminal speed */
     const lenD=Math.min(60,Math.abs(f.net)*sc), up=f.net<0; /* moving down → drag up */
     set(fD,{d:up?arrowD(x-22,y,x-22,y-lenD,6):arrowD(x-22,y,x-22,y+lenD,6),visibility:lenD>3&&!hov?'visible':'hidden'});
     set(lD,{x:x-58,y:y+(up?-lenD/2:lenD/2)+4,visibility:lenD>3&&!hov?'visible':'hidden'});
     $('milVo').textContent=f.V+' V';
-    const st=hov?'hovering':f.net>0?'rising':'falling';
+    const st=hov?'hovering':(near?'nearly hovering, ':'')+(f.net>0?'rising':'falling')+(near?' slowly':'');
     $('milKv').innerHTML=`<dt>drop mass m</dt><dd>${sci(S.m,2)} kg</dd><dt>weight mg</dt><dd>${sci(f.W,3)} N</dd><dt>electric force qV/d</dt><dd>${sci(f.Fe,3)} N</dd><dt>drop is</dt><dd>${st}</dd>`;
-    $('milCap').innerHTML=hov?`<b>Hovering.</b> qV/d = mg, so q = mgd/V = ${sci(f.W*d/f.V,3)} C = <b>${fmt(f.W*d/f.V/C.e,2)} e</b>. Record it.`:`Adjust V until the drop hovers. It is ${st}: the electric force is ${f.net>0?'bigger':'smaller'} than the weight.`;
+    $('milCap').innerHTML=hov?`<b>Hovering</b> (as far as you can tell by eye). qV/d = mg, so q = mgd/V = ${sci(f.W*d/f.V,3)} C = <b>${fmt(f.W*d/f.V/C.e,2)} e</b>. Record it.`
+      :near?`<b>Nearly hovering: fine-tune</b> with the ±1 V and ±10 V buttons. The drop is ${f.net>0?'rising':'falling'} slowly: the electric force is a little ${f.net>0?'bigger':'smaller'} than the weight.`
+      :`Adjust V until the drop hovers. It is ${st}: the electric force is ${f.net>0?'bigger':'smaller'} than the weight. Use the slider to get close, then the buttons.`;
     $('milRec').disabled=!hov;
   }
-  function tick(dt){const f=forces(); const hov=Math.abs(f.net)<0.002*f.W;
+  function tick(dt){const f=forces(); const hov=Math.abs(f.net)<HOV*f.W;
     if(!hov){S.y-=Math.max(-90,Math.min(90,60*f.net/f.W))*dt; if(S.y>YB-9||S.y<YT+9) S.y=(YT+YB)/2;}
     draw();}
   $('milV').addEventListener('input',draw);
@@ -1143,25 +1182,85 @@ let setLam;
   scene(svg,$('pePlay'),tick);
 })();
 
-/* =================== 11 · DOUBLE SLIT, ONE PHOTON AT A TIME =================== */
+/* =================== 11 · SLITS, ONE PHOTON AT A TIME =================== */
 (function(){
-  const svg=$('ds'), SX=120, SCX=560, Y0=110, HH=90;
-  el('rect',{x:SX-3,y:10,width:6,height:Y0-22,fill:'var(--muted)'},svg); el('rect',{x:SX-3,y:Y0-12,width:6,height:24,fill:'var(--muted)'},svg); el('rect',{x:SX-3,y:Y0+22,width:6,height:84-12,fill:'var(--muted)'},svg);
-  txt(svg,{x:SX,y:214,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'two slits');
-  el('path',{d:arrowD(20,Y0,SX-14,Y0,7),stroke:'var(--photon)','stroke-width':2,fill:'none'},svg);
-  txt(svg,{x:20,y:Y0-10,'font-size':11,fill:'var(--muted)'},'light');
-  el('rect',{x:SCX,y:Y0-HH,width:30,height:2*HH,fill:'var(--bg)',stroke:'var(--line)'},svg);
-  txt(svg,{x:SCX+15,y:214,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'screen');
-  const curve=el('path',{fill:'none',stroke:'var(--muted)','stroke-width':1.2,opacity:0},svg);
-  const pts=el('g',{},svg);
-  const I=y=>{const u=y/HH; const env=Math.exp(-u*u*2.2); return env*Math.cos(u*Math.PI*3.5)**2;};
-  let d='';for(let i=0;i<=200;i++){const y=-HH+2*HH*i/200;d+=(i?'L':'M')+(SCX+36+I(y)*50).toFixed(1)+' '+(Y0+y).toFixed(1);} set(curve,{d});
-  const S={n:0,acc:0};
-  function add(k){let s='';for(let i=0;i<k;i++){let y;do{y=(Math.random()*2-1)*HH;}while(Math.random()>I(y));s+=`<circle cx="${(SCX+3+Math.random()*24).toFixed(1)}" cy="${(Y0+y).toFixed(1)}" r="1.4" fill="var(--photon)"/>`;S.n++;}
-    pts.insertAdjacentHTML('beforeend',s); $('dsN').textContent=S.n+' photons'; set(curve,{opacity:Math.min(1,S.n/400)});}
-  $('dsClr').addEventListener('click',()=>{pts.innerHTML='';S.n=0;$('dsN').textContent='';set(curve,{opacity:0});});
-  const sc=scene(svg,$('dsPlay'),dt=>{S.acc+=dt*(S.n<40?6:S.n<300?40:160);const k=Math.floor(S.acc);S.acc-=k;if(k)add(k);if(S.n>=1500)sc.stop();},false);
-  add(25); $('dsN').textContent=S.n+' photons so far. Press Play.';
+  /* Fraunhofer model, screen distance DIST: single slit I = sinc²(πay/λD); double slit × cos²(πdy/λD).
+     With an (idealised) which-path detector the cos² factor is lost: sum of two single-slit patterns. */
+  const svg=$('ds'), BX=150, SX0=372, SX1=410, CX0=416, CA=78, Y0=150, YH=125, YMAX=0.040, DIST=1.0, SP=0.22; /* SP: px per µm for the magnified slits */
+  const S={n:2,dots:0,acc:0,flash:0,flashK:0,full:false};
+  const Ypx=y=>Y0-y/YMAX*YH;
+  /* static parts */
+  el('path',{d:arrowD(20,Y0,BX-16,Y0,7),stroke:'var(--photon)','stroke-width':2,fill:'none'},svg);
+  txt(svg,{x:20,y:Y0-12,'font-size':11,fill:'var(--muted)'},'light,');
+  txt(svg,{x:20,y:Y0+22,'font-size':11,fill:'var(--muted)'},'one photon');
+  txt(svg,{x:20,y:Y0+36,'font-size':11,fill:'var(--muted)'},'at a time');
+  el('rect',{x:SX0,y:Y0-YH,width:SX1-SX0,height:2*YH,fill:'var(--bg)',stroke:'var(--line)'},svg);
+  txt(svg,{x:(SX0+SX1)/2,y:Y0+YH+16,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'screen');
+  el('line',{x1:CX0,x2:CX0,y1:Y0-YH,y2:Y0+YH,stroke:'var(--line)'},svg);
+  el('path',{d:`M${BX+8} ${Y0+YH+10}H${SX0-8}`,stroke:'var(--muted)',fill:'none','stroke-dasharray':'4 3'},svg);
+  txt(svg,{x:(BX+SX0)/2,y:Y0+YH+24,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'D = 1 m (drawn short)');
+  const barrier=el('g',{},svg), bLab=txt(svg,{x:BX,y:Y0-YH-6,'font-size':11,fill:'var(--muted)','text-anchor':'middle'},'');
+  const flashes=[el('circle',{r:9,fill:'none',stroke:'var(--photon)','stroke-width':2.5,opacity:0},svg),el('circle',{r:9,fill:'none',stroke:'var(--photon)','stroke-width':2.5,opacity:0},svg)];
+  const eyes=el('g',{},svg);
+  const dots=el('g',{},svg), last=el('circle',{r:5,fill:'none',stroke:'var(--ink)','stroke-width':1.5,opacity:0},svg);
+  const curve=el('path',{fill:'none',stroke:'var(--muted)','stroke-width':1.4},svg);
+  const wBr=el('path',{fill:'none',stroke:'var(--accent)'},svg), wT1=txt(svg,{'font-size':11,fill:'var(--accent)'},'2λD/a'), wT2=txt(svg,{'font-size':11,fill:'var(--accent)','font-family':'IBM Plex Mono,monospace'},'');
+  const fBr=el('path',{fill:'none',stroke:'var(--accent)'},svg), fT1=txt(svg,{'font-size':11,fill:'var(--accent)','text-anchor':'end'},'β = λD/d'), fT2=txt(svg,{'font-size':11,fill:'var(--accent)','text-anchor':'end','font-family':'IBM Plex Mono,monospace'},'');
+  function P(){return {lam:+$('dsL').value*1e-9,a:+$('dsA').value*1e-6,d:+$('dsD').value*1e-6,watch:S.n===2&&$('dsWatch').checked};}
+  function I(y,p){const b=Math.PI*p.a*y/(p.lam*DIST);let v=Math.abs(b)<1e-9?1:(Math.sin(b)/b)**2;
+    if(S.n===2&&!p.watch){v*=Math.cos(Math.PI*p.d*y/(p.lam*DIST))**2;}return v;}
+  function openings(p){const a=Math.max(3,p.a*1e6*SP);if(S.n===1)return [[Y0-a/2,Y0+a/2]];const h=p.d*1e6*SP/2;return [[Y0-h-a/2,Y0-h+a/2],[Y0+h-a/2,Y0+h+a/2]];}
+  function drawBarrier(p){
+    const op=openings(p), top=Y0-YH, bot=Y0+YH; let g='', y=top;
+    op.forEach(([a,b])=>{g+=`<rect x="${BX-4}" y="${y.toFixed(1)}" width="8" height="${(a-y).toFixed(1)}" fill="var(--ink)" opacity=".75"/>`;y=b;});
+    g+=`<rect x="${BX-4}" y="${y.toFixed(1)}" width="8" height="${(bot-y).toFixed(1)}" fill="var(--ink)" opacity=".75"/>`;
+    barrier.innerHTML=g; bLab.textContent=S.n===1?'single slit (magnified)':'double slit (magnified)';
+    op.forEach((o,k)=>set(flashes[k],{cx:BX,cy:(o[0]+o[1])/2}));
+    /* detector marks beside each slit when watching */
+    eyes.innerHTML=p.watch?op.map(o=>`<g><circle cx="${BX+18}" cy="${((o[0]+o[1])/2).toFixed(1)}" r="5" fill="none" stroke="var(--muted)"/><circle cx="${BX+18}" cy="${((o[0]+o[1])/2).toFixed(1)}" r="1.8" fill="var(--muted)"/></g>`).join('')+`<text x="${BX+28}" y="${(op[0][0]-8).toFixed(1)}" font-size="10.5" fill="var(--muted)">detectors</text>`:'';
+  }
+  function sample(p){for(let t=0;t<20000;t++){const y=(Math.random()*2-1)*YMAX;if(Math.random()<I(y,p))return y;}return 0;}
+  function add(k,show){const p=P();let s='',ly=0;const cap=8000;
+    for(let i=0;i<k&&S.dots<cap;i++){const y=sample(p);ly=y;s+=`<circle cx="${(SX0+3+Math.random()*(SX1-SX0-6)).toFixed(1)}" cy="${Ypx(y).toFixed(1)}" r="1.3" fill="var(--photon)"/>`;S.dots++;}
+    dots.insertAdjacentHTML('beforeend',s); S.full=S.dots>=cap;
+    if(show&&k){set(last,{cx:(SX0+SX1)/2,cy:Ypx(ly),opacity:1});if(p.watch){S.flashK=Math.random()<0.5?0:1;S.flash=1;}}
+    count();}
+  function count(){$('dsN').textContent=S.full?`${S.dots} photons: screen full, clear it to go on.`:`${S.dots} photon${S.dots===1?'':'s'}`;}
+  function clear(msg){dots.innerHTML='';S.dots=0;S.full=false;set(last,{opacity:0});count();if(msg)$('dsN').textContent=msg;}
+  function draw(){
+    const p=P();
+    $('dsLo').textContent=$('dsL').value+' nm'; $('dsAo').textContent=$('dsA').value+' µm'; $('dsDo').textContent=$('dsD').value+' µm';
+    $('dsDrow').style.visibility=S.n===2?'visible':'hidden'; $('dsWatch').disabled=S.n!==2;
+    drawBarrier(p);
+    let d='';for(let i=0;i<=500;i++){const y=-YMAX+2*YMAX*i/500;d+=(i?'L':'M')+(CX0+I(y,p)*CA).toFixed(1)+' '+Ypx(y).toFixed(1);}
+    set(curve,{d});
+    const W=2*p.lam*DIST/p.a, beta=p.lam*DIST/p.d, wide=W/2>YMAX;
+    const yw1=Ypx(Math.min(W/2,YMAX)), yw2=Ypx(-Math.min(W/2,YMAX)), xb=CX0+CA+8;
+    set(wBr,{d:`M${xb-4} ${yw1}H${xb}V${yw2}H${xb-4}`});
+    set(wT1,{x:xb+5,y:Y0-4}); set(wT2,{x:xb+5,y:Y0+10}); wT2.textContent=fmt(W*1000,1)+' mm';
+    const fr=S.n===2&&!p.watch; const yf=Ypx(beta);
+    set(fBr,{d:`M${SX0-4} ${Y0}H${SX0-8}V${yf}H${SX0-4}`,visibility:fr?'visible':'hidden'});
+    set(fT1,{x:SX0-12,y:Y0-26,visibility:fr?'visible':'hidden'}); set(fT2,{x:SX0-12,y:Y0-12,visibility:fr?'visible':'hidden'}); fT2.textContent=fmt(beta*1000,2)+' mm';
+    $('dsKv').innerHTML=`<dt>screen distance D</dt><dd>1 m</dd><dt>central bright band 2λD/a</dt><dd>${fmt(W*1000,1)} mm${wide?' (wider than this screen)':''}</dd>`+(S.n===2?`<dt>fringe spacing β = λD/d</dt><dd>${p.watch?'— (no fringes)':fmt(beta*1000,2)+' mm'}</dd><dt>fringes inside the central band</dt><dd>${p.watch?'—':'about '+fmt(W/beta,0)+' (= 2d/a)'}</dd>`:'');
+    $('dsCap').innerHTML=S.n===1?'<b>Single slit:</b> a bright, wide centre with fainter bands either side. Narrow the slit (smaller a) and the pattern spreads out: the central band is 2λD/a wide.'
+      :p.watch?'<b>Watching which slit:</b> every photon is caught at one slit (the flash) and the fringes vanish. The screen now shows two single-slit patterns added together. Knowing the path destroys the interference.'
+      :'<b>Double slit, not watching:</b> fine fringes, spacing β = λD/d, inside the single-slit envelope. Each photon still lands as a single dot; only the pile-up shows the wave.';
+  }
+  function changed(){clear(S.dots?'Settings changed: screen cleared.':'');draw();}
+  const slitBox=$('slitN'); let v0=load('at1-slit'); S.n=v0==='1'?1:2; press(slitBox,S.n);
+  slitBox.addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;S.n=+b.dataset.k;press(slitBox,S.n);store('at1-slit',S.n);changed();});
+  ['dsL','dsA','dsD'].forEach(id=>$(id).addEventListener('input',changed));
+  $('dsWatch').addEventListener('change',changed);
+  $('dsMany').addEventListener('click',()=>{if(S.full){$('dsN').textContent='Screen full: clear it first.';return;}add(1000,false);});
+  $('dsClr').addEventListener('click',()=>clear(''));
+  const sc=scene(svg,$('dsPlay'),dt=>{
+    if(S.full){sc.stop();count();return;}
+    S.acc+=dt*(S.dots<60?5:30); const k=Math.floor(S.acc); S.acc-=k; if(k) add(k,true);
+    if(S.flash>0){S.flash=Math.max(0,S.flash-dt*3);}
+    flashes.forEach((f,i)=>set(f,{opacity:i===S.flashK&&P().watch?S.flash:0}));
+    set(last,{opacity:Math.max(0,+last.getAttribute('opacity')-dt*2)});
+  },false);
+  draw(); add(20,false);
 })();
 
 /* =================== 12 · SPECTRA =================== */
@@ -1316,6 +1415,12 @@ const Q=(()=>{
  {s:'q11',q:'Which observation needs light to be particles (photons)?',
   o:['Interference fringes','Diffraction round an edge','The photoelectric threshold frequency'],a:2,
   why:'Interference and diffraction are wave effects. A threshold that no brightness can beat only makes sense if energy arrives in packets of hν, one packet per electron.'},
+ {s:'q11',q:'Double slit, photons sent one at a time. An idealised detector now records which slit each photon goes through. The fringes:',
+  o:['stay exactly the same','disappear, leaving the broad single-slit pattern','become twice as bright'],a:1,
+  why:'Once the path is known, each photon behaves as if only its own slit were open, so the screen shows two single-slit patterns added together: no fringes. Tick “watch which slit” above to see it.'},
+ {s:'q11',q:'Light passes through one narrow slit. On the screen straight behind the slit there is:',
+  o:['a dark band','the brightest band, twice as wide as the side bands','no light at all'],a:1,
+  why:'Straight ahead, waves from every part of the slit arrive in step, so the centre is the brightest. It is 2λD/a wide; the first dark bands sit where a sin θ = λ on either side. Try the single-slit chip.'},
  {s:'q12',q:'White light from a hot star passes through hydrogen in the star’s outer layers, then a prism. What do you see?',
   o:['A rainbow with dark lines at hydrogen’s emission wavelengths','Bright lines on black','A plain rainbow'],a:0,
   why:'The atoms absorb exactly the wavelengths they would emit, so those are missing: an absorption spectrum, the negative of the emission spectrum. Pick “All three” above to compare.'},
